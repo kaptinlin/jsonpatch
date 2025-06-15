@@ -1,0 +1,328 @@
+---
+description: Go High-Performance Development Rules for Cursor Code Generation
+globs:
+alwaysApply: true
+---
+
+# Go Development Rules & Performance Guidelines
+
+## Core Principles
+
+### 1. Code Quality Standards
+- **All comments and documentation must be in English**
+- **Follow Go conventions and idioms**
+- **Prioritize correctness over performance**
+- **Gradual optimization with measurement**
+
+### 2. Performance Philosophy
+- **Conservative optimization first** - Use proven safe patterns
+- **Measure before optimize** - Data-driven decisions only
+- **Single change iteration** - One optimization at a time
+- **Immediate rollback** - Any >2% performance regression
+
+## ✅ Proven Effective Optimization Patterns
+
+### String Operations
+```go
+// ✅ Use strings.Builder with pre-allocation
+func buildPath(parts []string) string {
+    if len(parts) == 0 {
+        return ""
+    }
+    
+    estimatedSize := len(parts)*10 + len(parts) - 1
+    var builder strings.Builder
+    builder.Grow(estimatedSize)
+    
+    for i, part := range parts {
+        if i > 0 {
+            builder.WriteByte('/')
+        }
+        builder.WriteString(part)
+    }
+    return builder.String()
+}
+
+// ❌ Avoid repeated string concatenation
+// result += "/" + part // Creates new allocation each time
+```
+
+### Boolean Logic Simplification
+```go
+// ✅ Use XOR for condition simplification
+func testCondition(isEqual, notFlag bool) bool {
+    return isEqual != notFlag  // Simple and efficient
+}
+
+// ❌ Avoid complex branching for simple logic
+if notFlag { return !isEqual } else { return isEqual }
+```
+
+### Type Specialization
+```go
+// ✅ Handle simple types efficiently
+func cloneValue(value interface{}) interface{} {
+    switch v := value.(type) {
+    case string, int, float64, bool, nil:
+        return v // Simple types need no deep copy
+    default:
+        return deepClone(v) // Complex types only
+    }
+}
+```
+
+### Inline Simple Operations
+```go
+// ✅ Inline simple logic to avoid function call overhead
+if len(path) > 0 {
+    if old, err := GetValue(doc, path); err == nil {
+        oldValue = old
+    }
+}
+
+// ❌ Avoid wrapper functions for trivial operations
+```
+
+### Merge Repeated Type Checks
+```go
+// ✅ Single type assertion for multiple operations
+switch v := container.(type) {
+case map[string]interface{}:
+    if k, ok := key.(string); ok {
+        oldValue, exists := v[k]  // Get value and check existence
+        if !exists {
+            return nil, ErrNotFound
+        }
+        delete(v, k)
+        return oldValue, nil
+    }
+}
+```
+
+## ❌ Dangerous Anti-Patterns
+
+### Over-Abstraction
+```go
+// ❌ Avoid complex caching structures
+type pathCache struct {
+    parent   interface{}
+    key      interface{}
+    isMap    bool
+    isSlice  bool
+    // ... complex state
+}
+
+// ✅ Keep it simple and direct
+switch parent := parent.(type) {
+case map[string]interface{}:
+    // Direct handling
+case []interface{}:
+    // Direct handling
+}
+```
+
+### Micro-Wrapper Removal
+```go
+// ❌ Don't remove existing wrapper functions without verification
+// Even simple wrappers may have compiler optimization considerations
+func parseArrayIndex(s string) (int, error) {
+    return ParseArrayIndex(s) // Keep existing wrappers
+}
+```
+
+### Library Function Replacement
+```go
+// ❌ Don't replace mature library implementations
+// Trust optimized library functions like jsonpointer.Get
+```
+
+## Error Handling Standards
+
+### Error Definition
+```go
+// Define base errors clearly
+var (
+    ErrPathNotFound     = errors.New("path not found")
+    ErrInvalidOperation = errors.New("invalid operation")
+    ErrTypeMismatch     = errors.New("type mismatch")
+)
+
+// Static errors: return directly
+func validatePath(path string) error {
+    if path == "" {
+        return ErrPathNotFound
+    }
+    return nil
+}
+
+// Dynamic errors: wrap with context
+func checkOperation(op string) error {
+    if !isValidOp(op) {
+        return fmt.Errorf("%w: operation %q not supported", ErrInvalidOperation, op)
+    }
+    return nil
+}
+```
+
+### Error Handling Rules
+- **Static errors**: Return predefined error constants
+- **Dynamic errors**: Use `fmt.Errorf("%w: context", baseError, ...)`
+- **Error checking**: Use `errors.Is()` for type-safe checks
+- **Error definitions**: Centralize in `errors.go`
+
+## Code Documentation Standards
+
+### Function Comments
+```go
+// FunctionName describes what this function does in Go context.
+// It implements the same functionality as the reference implementation.
+// 
+// Returns an error if the operation cannot be completed.
+func FunctionName(param Type) (ReturnType, error) {
+    // implementation
+}
+```
+
+### Package Comments
+```go
+// Package name provides core functionality for JSON operations.
+// It implements RFC 6902 JSON Patch with performance optimizations.
+//
+// Basic usage:
+//
+//	patch, err := jsonpatch.DecodePatch(patchData)
+//	if err != nil {
+//		return err
+//	}
+//	result, err := patch.Apply(document)
+//
+package name
+```
+
+## Testing Standards
+
+### Test Structure
+```go
+func TestFunctionName(t *testing.T) {
+    tests := []struct {
+        name    string
+        input   interface{}
+        want    interface{}
+        wantErr bool
+    }{
+        {
+            name:  "valid case",
+            input: "test",
+            want:  "expected",
+        },
+        {
+            name:    "error case",
+            input:   nil,
+            wantErr: true,
+        },
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            result, err := FunctionName(tt.input)
+            if (err != nil) != tt.wantErr {
+                t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
+                return
+            }
+            if !tt.wantErr {
+                assert.Equal(t, tt.want, result)
+            }
+        })
+    }
+}
+```
+
+### Benchmark Tests
+```go
+func BenchmarkFunctionName(b *testing.B) {
+    input := createTestData()
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        _, err := FunctionName(input)
+        if err != nil {
+            b.Fatal(err)
+        }
+    }
+}
+```
+
+## Optimization Risk Assessment
+
+### High Risk (Avoid)
+- [ ] Introducing new structs or complex types
+- [ ] Removing existing wrapper functions
+- [ ] Replacing mature library functions
+- [ ] Large algorithmic changes
+
+### Medium Risk (Careful)
+- [ ] Changing existing algorithm logic
+- [ ] Memory allocation patterns
+- [ ] Concurrency modifications
+
+### Low Risk (Safe)
+- [ ] Boolean/string logic simplification
+- [ ] Removing obvious duplicate code
+- [ ] Type specialization for simple types
+- [ ] Function inlining for trivial operations
+
+## Verification Checklist
+
+Before any performance-related changes:
+- [ ] **Functionality**: `go test ./...` passes
+- [ ] **Benchmarks**: `go test -bench=. -benchmem -count=5`
+- [ ] **Comparison**: Use `benchstat` to compare before/after
+- [ ] **Rollback ready**: Immediate rollback for >2% regression
+
+## Git Commit Standards
+
+Use conventional commits in English:
+- `feat: add new functionality`
+- `fix: resolve bug in operation`
+- `perf: optimize string building performance`
+- `refactor: simplify boolean logic`
+- `test: add benchmark for core operations`
+- `docs: update API documentation`
+
+## Development Priorities
+
+### High Priority (Safe)
+1. String operation optimization with `strings.Builder`
+2. Boolean logic simplification with XOR
+3. Obvious duplicate code merging
+
+### Medium Priority (Measured)
+1. Type specialization for different types
+2. Function inlining for simple operations
+3. Memory allocation optimization
+
+### Low Priority (High Risk)
+1. Algorithm improvements (need thorough validation)
+2. Data structure changes (may affect architecture)
+3. Concurrency optimization (complex, error-prone)
+
+### Forbidden (Extreme Risk)
+1. Complex abstractions (caches, object pools)
+2. Mature library replacement
+3. Large-scale refactoring
+
+## Success Criteria
+
+### Must Achieve
+- ✅ **Clear Go code** following conventions
+- ✅ **Complete documentation** in English
+- ✅ **Zero data races** under race detector
+- ✅ **Comprehensive tests** with good coverage
+
+### Should Achieve
+- ✅ **Significant performance improvement** over naive implementation
+- ✅ **Minimal allocations** in hot paths
+- ✅ **High test coverage** >80%
+
+## Key Principle
+
+**Simplicity over complexity, practicality over perfection. Ensure correctness and maintainability first, then optimize incrementally based on actual usage patterns and measurements.**
