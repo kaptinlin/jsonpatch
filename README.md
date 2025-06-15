@@ -123,6 +123,14 @@ Beyond RFC 6902 for enhanced functionality:
 - **`split`** - Object splitting
 - **`merge`** - Object merging
 
+## 📖 Documentation
+
+For detailed documentation on specific operation types:
+
+- **[JSON Patch Operations](docs/json-patch.md)** - Complete guide to standard RFC 6902 operations
+- **[JSON Predicate Operations](docs/json-predicate.md)** - Advanced querying and conditional operations
+- **[JSON Patch Extended Operations](docs/json-patch-extended.md)** - Extended operations for specialized use cases
+
 ## 📚 API Reference
 
 ### Core Functions
@@ -257,44 +265,6 @@ if err != nil {
 }
 ```
 
-## 🚀 Advanced Features
-
-### Custom Regex Matchers
-
-```go
-customMatcher := func(pattern string, ignoreCase bool) jsonpatch.RegexMatcher {
-    flags := ""
-    if ignoreCase {
-        flags = "(?i)"
-    }
-    
-    re, _ := regexp.Compile(flags + pattern)
-    return func(value string) bool {
-        return re.MatchString(value)
-    }
-}
-
-options := jsonpatch.ApplyPatchOptions{
-    JsonPatchOptions: jsonpatch.JsonPatchOptions{
-        CreateMatcher: customMatcher,
-    },
-}
-```
-
-### Performance Optimization
-
-```go
-// For large patches, use mutate mode to avoid deep copying
-if len(patch) > 100 {
-    options := jsonpatch.ApplyPatchOptions{Mutate: true}
-    result, err := jsonpatch.ApplyPatch(doc, patch, options)
-}
-
-// For concurrent access, use immutable mode
-options := jsonpatch.ApplyPatchOptions{Mutate: false}
-result, err := jsonpatch.ApplyPatch(doc, patch, options)
-```
-
 ## 📈 Best Practices
 
 ### 1. Always Use Test Operations for Critical Updates
@@ -337,14 +307,6 @@ patch := []jsonpatch.Operation{
     {"op": "add", "path": "/lastModified", "value": time.Now()},
 }
 ```
-
-## 📖 Documentation
-
-For detailed documentation on specific operation types:
-
-- **[JSON Patch Operations](docs/json-patch.md)** - Complete guide to standard RFC 6902 operations
-- **[JSON Predicate Operations](docs/json-predicate.md)** - Advanced querying and conditional operations
-- **[JSON Patch Extended Operations](docs/json-patch-extended.md)** - Extended operations for specialized use cases
 
 ## 🔗 Related Specifications
 
