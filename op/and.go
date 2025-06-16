@@ -68,15 +68,15 @@ func (o *OpAndOperation) Test(doc interface{}) (bool, error) {
 }
 
 // Apply applies the AND operation.
-func (o *OpAndOperation) Apply(doc any) (internal.OpResult, error) {
+func (o *OpAndOperation) Apply(doc any) (internal.OpResult[any], error) {
 	ok, err := o.Test(doc)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 	if !ok {
-		return internal.OpResult{}, ErrAndTestFailed
+		return internal.OpResult[any]{}, ErrAndTestFailed
 	}
-	return internal.OpResult{Doc: doc}, nil
+	return internal.OpResult[any]{Doc: doc}, nil
 }
 
 // ToJSON serializes the operation to JSON format.

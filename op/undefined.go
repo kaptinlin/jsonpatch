@@ -48,11 +48,11 @@ func (o *OpUndefinedOperation) Not() bool {
 }
 
 // Apply applies the undefined operation.
-func (o *OpUndefinedOperation) Apply(doc any) (internal.OpResult, error) {
+func (o *OpUndefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if !o.checkPathUndefined(doc) {
-		return internal.OpResult{}, ErrUndefinedTestFailed
+		return internal.OpResult[any]{}, ErrUndefinedTestFailed
 	}
-	return internal.OpResult{Doc: doc}, nil
+	return internal.OpResult[any]{Doc: doc}, nil
 }
 
 // ToJSON serializes the operation to JSON format.

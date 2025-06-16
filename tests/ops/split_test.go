@@ -28,7 +28,7 @@ func TestSplitOp(t *testing.T) {
 					"pos":  1,
 				},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 			require.NoError(t, err)
 			expected := []interface{}{
 				map[string]interface{}{
@@ -65,7 +65,7 @@ func TestSplitOp(t *testing.T) {
 					"pos":  1,
 				},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 			require.NoError(t, err)
 			expected := []interface{}{
 				map[string]interface{}{
@@ -90,7 +90,7 @@ func TestSplitOp(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
 		t.Run("string", func(t *testing.T) {
 			t.Run("can split string in two", func(t *testing.T) {
-				state := "1234"
+				var state interface{} = "1234"
 				operations := []internal.Operation{
 					{
 						"op":   "split",
@@ -98,14 +98,14 @@ func TestSplitOp(t *testing.T) {
 						"pos":  2,
 					},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				require.NoError(t, err)
 				expected := []interface{}{"12", "34"}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("can split string in two at pos=1", func(t *testing.T) {
-				state := "1234"
+				var state interface{} = "1234"
 				operations := []internal.Operation{
 					{
 						"op":   "split",
@@ -113,14 +113,14 @@ func TestSplitOp(t *testing.T) {
 						"pos":  1,
 					},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				require.NoError(t, err)
 				expected := []interface{}{"1", "234"}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("can split string in two from beginning", func(t *testing.T) {
-				state := "1234"
+				var state interface{} = "1234"
 				operations := []internal.Operation{
 					{
 						"op":   "split",
@@ -128,14 +128,14 @@ func TestSplitOp(t *testing.T) {
 						"pos":  0,
 					},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				require.NoError(t, err)
 				expected := []interface{}{"", "1234"}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("can split string in two from end", func(t *testing.T) {
-				state := "1234"
+				var state interface{} = "1234"
 				operations := []internal.Operation{
 					{
 						"op":   "split",
@@ -143,14 +143,14 @@ func TestSplitOp(t *testing.T) {
 						"pos":  4,
 					},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				require.NoError(t, err)
 				expected := []interface{}{"1234", ""}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("can split string in two when pos is greater than string length", func(t *testing.T) {
-				state := "12345"
+				var state interface{} = "12345"
 				operations := []internal.Operation{
 					{
 						"op":   "split",
@@ -158,14 +158,14 @@ func TestSplitOp(t *testing.T) {
 						"pos":  99999,
 					},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				require.NoError(t, err)
 				expected := []interface{}{"12345", ""}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("takes characters from end if pos is negative", func(t *testing.T) {
-				state := "12345"
+				var state interface{} = "12345"
 				operations := []internal.Operation{
 					{
 						"op":   "split",
@@ -173,14 +173,14 @@ func TestSplitOp(t *testing.T) {
 						"pos":  -1,
 					},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				require.NoError(t, err)
 				expected := []interface{}{"1234", "5"}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("takes characters from end if pos is negative - 2", func(t *testing.T) {
-				state := "12345"
+				var state interface{} = "12345"
 				operations := []internal.Operation{
 					{
 						"op":   "split",
@@ -188,14 +188,14 @@ func TestSplitOp(t *testing.T) {
 						"pos":  -2,
 					},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				require.NoError(t, err)
 				expected := []interface{}{"123", "45"}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("when negative pos overflows, first element is empty", func(t *testing.T) {
-				state := "12345"
+				var state interface{} = "12345"
 				operations := []internal.Operation{
 					{
 						"op":   "split",
@@ -203,7 +203,7 @@ func TestSplitOp(t *testing.T) {
 						"pos":  -7,
 					},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				require.NoError(t, err)
 				expected := []interface{}{"", "12345"}
 				assert.Equal(t, expected, result.Doc)
@@ -212,7 +212,7 @@ func TestSplitOp(t *testing.T) {
 
 		t.Run("SlateTextNode", func(t *testing.T) {
 			t.Run("splits simple SlateTextNode", func(t *testing.T) {
-				state := map[string]interface{}{
+				var state interface{} = map[string]interface{}{
 					"text": "foo bar",
 				}
 				operations := []internal.Operation{
@@ -222,7 +222,7 @@ func TestSplitOp(t *testing.T) {
 						"pos":  3,
 					},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				require.NoError(t, err)
 				expected := []interface{}{
 					map[string]interface{}{"text": "foo"},
@@ -232,7 +232,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("preserves text node attributes", func(t *testing.T) {
-				state := map[string]interface{}{
+				var state interface{} = map[string]interface{}{
 					"text": "foo bar",
 					"foo":  "bar",
 				}
@@ -243,7 +243,7 @@ func TestSplitOp(t *testing.T) {
 						"pos":  3,
 					},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				require.NoError(t, err)
 				expected := []interface{}{
 					map[string]interface{}{"text": "foo", "foo": "bar"},
@@ -253,7 +253,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("can add custom attributes", func(t *testing.T) {
-				state := map[string]interface{}{
+				var state interface{} = map[string]interface{}{
 					"text": "foo bar",
 					"foo":  "bar",
 				}
@@ -265,7 +265,7 @@ func TestSplitOp(t *testing.T) {
 						"props": map[string]interface{}{"baz": "qux"},
 					},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				require.NoError(t, err)
 				expected := []interface{}{
 					map[string]interface{}{"text": "foo", "foo": "bar", "baz": "qux"},
@@ -275,7 +275,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("custom attributes can overwrite node attributes", func(t *testing.T) {
-				state := map[string]interface{}{
+				var state interface{} = map[string]interface{}{
 					"text": "foo bar",
 					"foo":  "bar",
 				}
@@ -287,7 +287,7 @@ func TestSplitOp(t *testing.T) {
 						"props": map[string]interface{}{"foo": "1"},
 					},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				require.NoError(t, err)
 				expected := []interface{}{
 					map[string]interface{}{"text": "foo", "foo": "1"},
@@ -299,7 +299,7 @@ func TestSplitOp(t *testing.T) {
 
 		t.Run("SlateElementNode", func(t *testing.T) {
 			t.Run("splits simple node", func(t *testing.T) {
-				state := map[string]interface{}{
+				var state interface{} = map[string]interface{}{
 					"children": []interface{}{
 						map[string]interface{}{"text": "foo"},
 						map[string]interface{}{"text": "bar"},
@@ -313,7 +313,7 @@ func TestSplitOp(t *testing.T) {
 						"pos":  1,
 					},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				require.NoError(t, err)
 				expected := []interface{}{
 					map[string]interface{}{
@@ -332,7 +332,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("can provide custom attributes", func(t *testing.T) {
-				state := map[string]interface{}{
+				var state interface{} = map[string]interface{}{
 					"children": []interface{}{
 						map[string]interface{}{"text": "foo"},
 						map[string]interface{}{"text": "bar"},
@@ -347,7 +347,7 @@ func TestSplitOp(t *testing.T) {
 						"props": map[string]interface{}{"f": 1},
 					},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				require.NoError(t, err)
 				expected := []interface{}{
 					map[string]interface{}{
@@ -368,7 +368,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("carries over node attributes", func(t *testing.T) {
-				state := map[string]interface{}{
+				var state interface{} = map[string]interface{}{
 					"a": 1,
 					"children": []interface{}{
 						map[string]interface{}{"text": "foo"},
@@ -384,7 +384,7 @@ func TestSplitOp(t *testing.T) {
 						"props": map[string]interface{}{"f": 2},
 					},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				require.NoError(t, err)
 				expected := []interface{}{
 					map[string]interface{}{
@@ -407,7 +407,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("can overwrite node attributes", func(t *testing.T) {
-				state := map[string]interface{}{
+				var state interface{} = map[string]interface{}{
 					"a": 1,
 					"c": 3,
 					"children": []interface{}{
@@ -424,7 +424,7 @@ func TestSplitOp(t *testing.T) {
 						"props": map[string]interface{}{"f": 2, "a": 2},
 					},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				require.NoError(t, err)
 				expected := []interface{}{
 					map[string]interface{}{
@@ -460,7 +460,7 @@ func TestSplitOp(t *testing.T) {
 					"pos":  1,
 				},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 			require.NoError(t, err)
 			expected := map[string]interface{}{"foo": []interface{}{"a", "b"}}
 			assert.Equal(t, expected, result.Doc)
@@ -476,7 +476,7 @@ func TestSplitOp(t *testing.T) {
 					"props": map[string]interface{}{"z": "x"},
 				},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 			require.NoError(t, err)
 			expected := map[string]interface{}{
 				"foo": []interface{}{
@@ -497,7 +497,7 @@ func TestSplitOp(t *testing.T) {
 					"props": map[string]interface{}{"z": "x"},
 				},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 			require.NoError(t, err)
 			expected := map[string]interface{}{
 				"foo": []interface{}{
@@ -517,7 +517,7 @@ func TestSplitOp(t *testing.T) {
 					"pos":  1,
 				},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 			require.NoError(t, err)
 			expected := map[string]interface{}{"foo": []interface{}{true, true}}
 			assert.Equal(t, expected, result.Doc)
@@ -532,7 +532,7 @@ func TestSplitOp(t *testing.T) {
 					"pos":  9,
 				},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 			require.NoError(t, err)
 			expected := map[string]interface{}{"foo": []interface{}{float64(9), float64(1)}}
 			assert.Equal(t, expected, result.Doc)
@@ -549,7 +549,7 @@ func TestSplitOp(t *testing.T) {
 					"pos":  0,
 				},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 			require.NoError(t, err)
 			expected := []interface{}{1, map[string]interface{}{"children": []interface{}{}}, map[string]interface{}{"children": []interface{}{map[string]interface{}{"text": "a"}, map[string]interface{}{"text": "b"}}}, 2}
 			assert.Equal(t, expected, result.Doc)
@@ -565,7 +565,7 @@ func TestSplitOp(t *testing.T) {
 					"props": map[string]interface{}{"a": "b"},
 				},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 			require.NoError(t, err)
 			expected := []interface{}{
 				1,

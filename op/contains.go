@@ -32,16 +32,16 @@ func NewOpContainsOperationWithIgnoreCase(path []string, substring string, ignor
 }
 
 // Apply applies the contains test operation to the document.
-func (op *OpContainsOperation) Apply(doc any) (internal.OpResult, error) {
+func (op *OpContainsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, actualValue, testValue, testString, err := op.getAndPrepareStrings(doc)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	if !strings.Contains(testValue, testString) {
-		return internal.OpResult{}, fmt.Errorf("%w: string %q does not contain %q", ErrStringMismatch, actualValue, op.Value)
+		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not contain %q", ErrStringMismatch, actualValue, op.Value)
 	}
-	return internal.OpResult{Doc: doc, Old: value}, nil
+	return internal.OpResult[any]{Doc: doc, Old: value}, nil
 }
 
 // Test performs the contains test operation.

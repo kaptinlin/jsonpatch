@@ -12,7 +12,7 @@ import (
 func applyOperationTestString(t *testing.T, doc interface{}, op internal.Operation) interface{} {
 	t.Helper()
 	patch := []internal.Operation{op}
-	result, err := jsonpatch.ApplyPatch(doc, patch, internal.ApplyPatchOptions{Mutate: true})
+	result, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
 	require.NoError(t, err)
 	return result.Doc
 }
@@ -21,7 +21,7 @@ func applyOperationTestString(t *testing.T, doc interface{}, op internal.Operati
 func applyOperationWithErrorTestString(t *testing.T, doc interface{}, op internal.Operation) {
 	t.Helper()
 	patch := []internal.Operation{op}
-	_, err := jsonpatch.ApplyPatch(doc, patch, internal.ApplyPatchOptions{Mutate: true})
+	_, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
 	require.Error(t, err)
 }
 

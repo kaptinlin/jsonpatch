@@ -117,7 +117,7 @@ func TestOpTestType_Apply(t *testing.T) {
 					assert.True(t, errors.Is(err, tt.expectedError), "Expected error %v, got %v", tt.expectedError, err)
 				}
 				// Check that result is empty when error occurs
-				assert.Equal(t, internal.OpResult{}, result)
+				assert.Equal(t, internal.OpResult[any]{}, result)
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, result)

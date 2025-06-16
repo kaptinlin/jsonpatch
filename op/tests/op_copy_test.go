@@ -1,8 +1,9 @@
 package jsonpatch_test
 
 import (
-	"encoding/json"
 	"testing"
+
+	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/stretchr/testify/assert"
@@ -46,7 +47,7 @@ func TestOpCopy_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expected := map[string]interface{}{
@@ -75,7 +76,7 @@ func TestOpCopy_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expected := map[string]interface{}{
@@ -101,7 +102,7 @@ func TestOpCopy_Apply(t *testing.T) {
 			},
 		}
 
-		_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err)
 	})
 
@@ -122,7 +123,7 @@ func TestOpCopy_Apply(t *testing.T) {
 
 		// Note: TypeScript allows recursive copying with proper deep cloning
 		// Go implementation may provide protection or handle it properly
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 
 		if err != nil {
 			// Go provides safety protection
@@ -160,18 +161,19 @@ func TestOpCopy_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		// Verify the copy was made
-		assert.Equal(t, doc["source"], result.Doc.(map[string]interface{})["target"])
+		resultDoc := result.Doc
+		assert.Equal(t, doc["source"], resultDoc["target"])
 
 		// Verify it's a deep copy by modifying the original and checking target is unchanged
 		originalSource := doc["source"].(map[string]interface{})
 		originalSource["nested"].(map[string]interface{})["value"] = 999
 
 		// Target should still have the original value (proving deep copy)
-		targetSource := result.Doc.(map[string]interface{})["target"].(map[string]interface{})
+		targetSource := resultDoc["target"].(map[string]interface{})
 		assert.Equal(t, 123, targetSource["nested"].(map[string]interface{})["value"],
 			"Target should maintain original value, proving deep copy")
 	})
@@ -188,7 +190,7 @@ func TestOpCopy_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expected := map[string]interface{}{
@@ -215,7 +217,7 @@ func TestOpCopy_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expected := map[string]interface{}{
@@ -244,7 +246,7 @@ func TestOpCopy_RFC6902_Section4_5(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		// ApplyPatch preserves Go native types
@@ -270,7 +272,7 @@ func TestOpCopy_RFC6902_Section4_5(t *testing.T) {
 			},
 		}
 
-		_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "path not found", "Error should indicate source path not found")
 	})
@@ -286,7 +288,7 @@ func TestOpCopy_RFC6902_Section4_5(t *testing.T) {
 		}
 
 		// This should fail because we can't create nested path on a string root
-		_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err, "Should fail when trying to create nested path on non-object root")
 	})
 
@@ -310,11 +312,11 @@ func TestOpCopy_RFC6902_Section4_5(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expectedBackup := map[string]interface{}{"id": 1, "data": "test1"}
-		actualDoc := result.Doc.(map[string]interface{})
+		actualDoc := result.Doc
 		assert.Equal(t, expectedBackup, actualDoc["backup"])
 
 		// Verify it's a deep copy

@@ -35,13 +35,13 @@ func (op *OpExtendOperation) Code() int {
 }
 
 // Apply applies the object extend operation.
-func (o *OpExtendOperation) Apply(doc any) (internal.OpResult, error) {
+func (o *OpExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level extend specially
 	if len(o.Path()) == 0 {
 		// Target is the root document
 		targetObj, ok := doc.(map[string]interface{})
 		if !ok {
-			return internal.OpResult{}, ErrNotObject
+			return internal.OpResult[any]{}, ErrNotObject
 		}
 
 		// Create a copy and extend it
@@ -53,19 +53,19 @@ func (o *OpExtendOperation) Apply(doc any) (internal.OpResult, error) {
 		// Use objExtend to properly handle the extension with deleteNull
 		extendedObj := objExtend(targetObj, o.Properties, o.DeleteNull)
 
-		return internal.OpResult{Doc: extendedObj, Old: original}, nil
+		return internal.OpResult[any]{Doc: extendedObj, Old: original}, nil
 	}
 
 	// Get the target object
 	target, err := getValue(doc, o.Path())
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	// Check if target is an object
 	targetObj, ok := target.(map[string]interface{})
 	if !ok {
-		return internal.OpResult{}, ErrNotObject
+		return internal.OpResult[any]{}, ErrNotObject
 	}
 
 	// Use objExtend to properly handle the extension with deleteNull
@@ -74,10 +74,10 @@ func (o *OpExtendOperation) Apply(doc any) (internal.OpResult, error) {
 	// Set the extended object back
 	err = setValueAtPath(doc, o.Path(), extendedObj)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
-	return internal.OpResult{Doc: doc, Old: target}, nil
+	return internal.OpResult[any]{Doc: doc, Old: target}, nil
 }
 
 // ToJSON serializes the operation to JSON format.

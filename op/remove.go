@@ -45,41 +45,41 @@ func (o *OpRemoveOperation) Path() []string {
 }
 
 // Apply applies the remove operation to the document.
-func (o *OpRemoveOperation) Apply(doc any) (internal.OpResult, error) {
+func (o *OpRemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if len(o.path) == 0 {
-		return internal.OpResult{}, ErrPathEmpty
+		return internal.OpResult[any]{}, ErrPathEmpty
 	}
 	if len(o.path) == 1 {
 		switch v := doc.(type) {
 		case map[string]interface{}:
 			oldValue, exists := v[o.path[0]]
 			if !exists {
-				return internal.OpResult{}, ErrPathDoesNotExist
+				return internal.OpResult[any]{}, ErrPathDoesNotExist
 			}
 			delete(v, o.path[0])
-			return internal.OpResult{Doc: doc, Old: oldValue}, nil
+			return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 		case []interface{}:
 			index, err := parseArrayIndex(o.path[0])
 			if err != nil {
-				return internal.OpResult{}, err
+				return internal.OpResult[any]{}, err
 			}
 			if index < 0 || index >= len(v) {
-				return internal.OpResult{}, ErrArrayIndexOutOfBounds
+				return internal.OpResult[any]{}, ErrArrayIndexOutOfBounds
 			}
 			oldValue := v[index]
 			// Create new array without the removed element
 			newArray := make([]interface{}, 0, len(v)-1)
 			newArray = append(newArray, v[:index]...)
 			newArray = append(newArray, v[index+1:]...)
-			return internal.OpResult{Doc: newArray, Old: oldValue}, nil
+			return internal.OpResult[any]{Doc: newArray, Old: oldValue}, nil
 		default:
-			return internal.OpResult{}, ErrCannotRemoveFromValue
+			return internal.OpResult[any]{}, ErrCannotRemoveFromValue
 		}
 	}
 	// Not root path, recursively delete
 	parent, key, err := navigateToParent(doc, o.path)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 	oldValue := getValueFromParent(parent, key)
 
@@ -89,13 +89,13 @@ func (o *OpRemoveOperation) Apply(doc any) (internal.OpResult, error) {
 		case map[string]interface{}:
 			if k, ok := key.(string); ok {
 				if _, exists := p[k]; !exists {
-					return internal.OpResult{}, ErrPathDoesNotExist
+					return internal.OpResult[any]{}, ErrPathDoesNotExist
 				}
 			}
 		case []interface{}:
 			if k, ok := key.(int); ok {
 				if k < 0 || k >= len(p) {
-					return internal.OpResult{}, ErrPathDoesNotExist
+					return internal.OpResult[any]{}, ErrPathDoesNotExist
 				}
 			}
 		}
@@ -105,27 +105,27 @@ func (o *OpRemoveOperation) Apply(doc any) (internal.OpResult, error) {
 		if k, ok := key.(string); ok {
 			delete(p, k)
 		} else {
-			return internal.OpResult{}, ErrInvalidKeyTypeMap
+			return internal.OpResult[any]{}, ErrInvalidKeyTypeMap
 		}
 	case []interface{}:
 		if k, ok := key.(int); ok {
 			if k < 0 || k >= len(p) {
-				return internal.OpResult{}, ErrIndexOutOfRange
+				return internal.OpResult[any]{}, ErrIndexOutOfRange
 			}
 			// Create new slice without the removed element
 			newSlice := make([]interface{}, 0, len(p)-1)
 			newSlice = append(newSlice, p[:k]...)
 			newSlice = append(newSlice, p[k+1:]...)
 			if err := setValueAtPath(doc, o.path[:len(o.path)-1], newSlice); err != nil {
-				return internal.OpResult{}, err
+				return internal.OpResult[any]{}, err
 			}
 		} else {
-			return internal.OpResult{}, ErrInvalidKeyTypeSlice
+			return internal.OpResult[any]{}, ErrInvalidKeyTypeSlice
 		}
 	default:
-		return internal.OpResult{}, ErrUnsupportedParentType
+		return internal.OpResult[any]{}, ErrUnsupportedParentType
 	}
-	return internal.OpResult{Doc: doc, Old: oldValue}, nil
+	return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 }
 
 // ToJSON serializes the operation to JSON format.

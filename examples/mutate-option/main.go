@@ -1,9 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"reflect"
+
+	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
 )
@@ -28,9 +29,7 @@ func main() {
 	fmt.Println("\n📋 Mutate: false (Safe Mode)")
 	doc1 := copyDocument(document)
 
-	result1, err := jsonpatch.ApplyPatch(doc1, patch, jsonpatch.ApplyPatchOptions{
-		Mutate: false, // Default behavior
-	})
+	result1, err := jsonpatch.ApplyPatch(doc1, patch, jsonpatch.WithMutate(false))
 	if err != nil {
 		panic(err)
 	}
@@ -43,9 +42,7 @@ func main() {
 	fmt.Println("\n⚡ Mutate: true (Performance Mode)")
 	doc2 := copyDocument(document)
 
-	result2, err := jsonpatch.ApplyPatch(doc2, patch, jsonpatch.ApplyPatchOptions{
-		Mutate: true, // High performance
-	})
+	result2, err := jsonpatch.ApplyPatch(doc2, patch, jsonpatch.WithMutate(true))
 	if err != nil {
 		panic(err)
 	}
@@ -54,31 +51,12 @@ func main() {
 	fmt.Printf("Result:   %s\n", toJSON(result2.Doc))
 	fmt.Printf("Same object: %v\n", isSameObject(doc2, result2.Doc))
 
-	// Performance benefits
-	fmt.Println("\n📊 Performance Benefits (Mutate: true)")
-	fmt.Println("   • 12-27% faster execution")
-	fmt.Println("   • 27% less memory usage")
-	fmt.Println("   • Fewer memory allocations")
-
-	// Use cases
-	fmt.Println("\n🎯 When to Use Each Mode")
-	fmt.Println("Mutate: false (Safe)")
-	fmt.Println("   • Need to preserve original document")
-	fmt.Println("   • Working with shared data")
-	fmt.Println("   • Safety over performance")
-
-	fmt.Println("\nMutate: true (Fast)")
-	fmt.Println("   • Large documents")
-	fmt.Println("   • High-frequency operations")
-	fmt.Println("   • Memory-constrained environments")
-	fmt.Println("   • Don't need original document")
-
 	// Go language limitation example
 	fmt.Println("\n⚠️  Go Language Limitation")
 	primitiveDoc := "hello"
 	primitiveResult, _ := jsonpatch.ApplyPatch(primitiveDoc, []jsonpatch.Operation{
 		{"op": "replace", "path": "", "value": "world"},
-	}, jsonpatch.ApplyPatchOptions{Mutate: true})
+	}, jsonpatch.WithMutate(true))
 
 	fmt.Printf("Primitive original: %q (unchanged)\n", primitiveDoc)
 	fmt.Printf("Primitive result:   %q\n", primitiveResult.Doc)

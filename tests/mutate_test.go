@@ -28,7 +28,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			{"op": "remove", "path": "/city"},
 		}
 
-		options := jsonpatch.ApplyPatchOptions{Mutate: false}
+		options := jsonpatch.WithMutate(false)
 		result, err := jsonpatch.ApplyPatch(original, patch, options)
 		require.NoError(t, err)
 
@@ -36,7 +36,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 		assert.Equal(t, originalSnapshot, original, "Original document should be preserved")
 
 		// Result should contain the changes
-		resultDoc := result.Doc.(map[string]interface{})
+		resultDoc := result.Doc
 		assert.Equal(t, "Jane", resultDoc["name"], "Result should have updated name")
 		assert.Equal(t, "jane@example.com", resultDoc["email"], "Result should have new email")
 		assert.NotContains(t, resultDoc, "city", "Result should not have city field")
@@ -59,7 +59,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			{"op": "remove", "path": "/city"},
 		}
 
-		options := jsonpatch.ApplyPatchOptions{Mutate: true}
+		options := jsonpatch.WithMutate(true)
 		result, err := jsonpatch.ApplyPatch(original, patch, options)
 		require.NoError(t, err)
 
@@ -69,7 +69,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 		assert.NotContains(t, original, "city", "Original should not have city field")
 
 		// Result should point to the same object
-		resultDoc := result.Doc.(map[string]interface{})
+		resultDoc := result.Doc
 		assert.True(t, isSameMapObject(original, resultDoc), "Should be the same object")
 
 		// Values should match
@@ -87,7 +87,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 				{"op": "add", "path": "/-", "value": "date"},
 			}
 
-			options := jsonpatch.ApplyPatchOptions{Mutate: false}
+			options := jsonpatch.WithMutate(false)
 			result, err := jsonpatch.ApplyPatch(original, patch, options)
 			require.NoError(t, err)
 
@@ -95,7 +95,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			assert.Equal(t, originalSnapshot, original, "Original array should be preserved")
 
 			// Result should have changes
-			resultArray := result.Doc.([]interface{})
+			resultArray := result.Doc
 			assert.Equal(t, "blueberry", resultArray[1], "Result should have updated element")
 			assert.Equal(t, "date", resultArray[3], "Result should have new element")
 		})
@@ -108,7 +108,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 				{"op": "replace", "path": "/1", "value": "blueberry"},
 			}
 
-			options := jsonpatch.ApplyPatchOptions{Mutate: true}
+			options := jsonpatch.WithMutate(true)
 			result, err := jsonpatch.ApplyPatch(original, patch, options)
 			require.NoError(t, err)
 
@@ -116,7 +116,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			assert.Equal(t, "blueberry", original[1], "Original should have updated element")
 
 			// Should be same slice for replacement operations
-			resultArray := result.Doc.([]interface{})
+			resultArray := result.Doc
 			assert.True(t, isSameSliceObject(original, resultArray), "Should be the same slice")
 		})
 
@@ -128,7 +128,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 				{"op": "add", "path": "/-", "value": "date"},
 			}
 
-			options := jsonpatch.ApplyPatchOptions{Mutate: true}
+			options := jsonpatch.WithMutate(true)
 			result, err := jsonpatch.ApplyPatch(original, patch, options)
 			require.NoError(t, err)
 
@@ -136,7 +136,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			assert.Len(t, original, 3, "Original slice length unchanged (Go limitation)")
 
 			// Result should have the new element
-			resultArray := result.Doc.([]interface{})
+			resultArray := result.Doc
 			assert.Len(t, resultArray, 4, "Result should have new element")
 			assert.Equal(t, "date", resultArray[3], "Result should have new element")
 
@@ -180,7 +180,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 				// Test with both mutate options - behavior should be identical for primitives
 				for _, mutate := range []bool{false, true} {
 					t.Run(fmt.Sprintf("Mutate_%v", mutate), func(t *testing.T) {
-						options := jsonpatch.ApplyPatchOptions{Mutate: mutate}
+						options := jsonpatch.WithMutate(mutate)
 						result, err := jsonpatch.ApplyPatch(original, tc.patch, options)
 						require.NoError(t, err)
 
@@ -219,7 +219,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 		t.Run("Mutate True - Deep Modification", func(t *testing.T) {
 			testDoc := deepCopyMap(original)
 
-			options := jsonpatch.ApplyPatchOptions{Mutate: true}
+			options := jsonpatch.WithMutate(true)
 			result, err := jsonpatch.ApplyPatch(testDoc, patch, options)
 			require.NoError(t, err)
 
@@ -229,7 +229,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			assert.Equal(t, "updated_item1", testDoc["items"].([]interface{})[0].(map[string]interface{})["name"])
 
 			// Should be same root object
-			assert.True(t, isSameMapObject(testDoc, result.Doc.(map[string]interface{})))
+			assert.True(t, isSameMapObject(testDoc, result.Doc))
 		})
 	})
 }
@@ -249,11 +249,11 @@ func TestMutatePerformanceCharacteristics(t *testing.T) {
 
 	t.Run("Performance Validation", func(t *testing.T) {
 		// Test both modes work correctly
-		optionsFalse := jsonpatch.ApplyPatchOptions{Mutate: false}
+		optionsFalse := jsonpatch.WithMutate(false)
 		resultFalse, err := jsonpatch.ApplyPatch(deepCopyMap(largeDoc), patch, optionsFalse)
 		require.NoError(t, err)
 
-		optionsTrue := jsonpatch.ApplyPatchOptions{Mutate: true}
+		optionsTrue := jsonpatch.WithMutate(true)
 		resultTrue, err := jsonpatch.ApplyPatch(deepCopyMap(largeDoc), patch, optionsTrue)
 		require.NoError(t, err)
 
@@ -326,7 +326,7 @@ func BenchmarkMutateVsClone(b *testing.B) {
 	}
 
 	b.Run("Mutate=false", func(b *testing.B) {
-		options := jsonpatch.ApplyPatchOptions{Mutate: false}
+		options := jsonpatch.WithMutate(false)
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			doc := createLargeDocument(1000)
@@ -338,7 +338,7 @@ func BenchmarkMutateVsClone(b *testing.B) {
 	})
 
 	b.Run("Mutate=true", func(b *testing.B) {
-		options := jsonpatch.ApplyPatchOptions{Mutate: true}
+		options := jsonpatch.WithMutate(true)
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			doc := createLargeDocument(1000)

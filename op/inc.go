@@ -34,38 +34,38 @@ func (op *OpIncOperation) Path() []string {
 }
 
 // Apply applies the increment operation to the document.
-func (op *OpIncOperation) Apply(doc any) (internal.OpResult, error) {
+func (op *OpIncOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if len(op.path) == 0 {
 		// Root level increment
 		oldValue, ok := toFloat64(doc)
 		if !ok {
-			return internal.OpResult{}, ErrNotNumber
+			return internal.OpResult[any]{}, ErrNotNumber
 		}
 		result := oldValue + op.Inc
-		return internal.OpResult{Doc: result, Old: oldValue}, nil
+		return internal.OpResult[any]{Doc: result, Old: oldValue}, nil
 	}
 
 	if !pathExists(doc, op.path) {
-		return internal.OpResult{}, ErrPathNotFound
+		return internal.OpResult[any]{}, ErrPathNotFound
 	}
 
 	parent, key, err := navigateToParent(doc, op.path)
 	if err != nil {
-		return internal.OpResult{}, ErrPathNotFound
+		return internal.OpResult[any]{}, ErrPathNotFound
 	}
 
 	currentValue := getValueFromParent(parent, key)
 	oldValue, ok := toFloat64(currentValue)
 	if !ok {
-		return internal.OpResult{}, ErrNotNumber
+		return internal.OpResult[any]{}, ErrNotNumber
 	}
 	result := oldValue + op.Inc
 
 	if err := op.updateParent(parent, key, result); err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
-	return internal.OpResult{Doc: doc, Old: oldValue}, nil
+	return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 }
 
 // updateParent updates the parent container with the new value

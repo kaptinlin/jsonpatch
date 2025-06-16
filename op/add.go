@@ -35,21 +35,21 @@ func (o *OpAddOperation) Path() []string {
 }
 
 // Apply applies the add operation.
-func (o *OpAddOperation) Apply(doc any) (internal.OpResult, error) {
+func (o *OpAddOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Clone the new value to prevent external mutations
 	newValue := deepclone.Clone(o.Value)
 
 	// Handle empty path (root replacement) - only for truly empty path, not empty string key
 	if len(o.path) == 0 {
 		// Replace entire document
-		return internal.OpResult{Doc: newValue, Old: doc}, nil
+		return internal.OpResult[any]{Doc: newValue, Old: doc}, nil
 	}
 
 	newDoc, oldValue, err := addAtPath(doc, o.path, newValue)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
-	return internal.OpResult{Doc: newDoc, Old: oldValue}, nil
+	return internal.OpResult[any]{Doc: newDoc, Old: oldValue}, nil
 }
 
 // addAtPath recursively inserts value at the given path, returns new doc and old value if replaced.

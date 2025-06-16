@@ -45,17 +45,17 @@ func (o *OpMoreOperation) Test(doc interface{}) (bool, error) {
 }
 
 // Apply applies the more operation.
-func (o *OpMoreOperation) Apply(doc any) (internal.OpResult, error) {
+func (o *OpMoreOperation) Apply(doc any) (internal.OpResult[any], error) {
 	val, num, err := o.getAndValidateValue(doc)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	if num <= o.Value {
-		return internal.OpResult{}, fmt.Errorf("%w: value %f is not greater than %f", ErrComparisonFailed, num, o.Value)
+		return internal.OpResult[any]{}, fmt.Errorf("%w: value %f is not greater than %f", ErrComparisonFailed, num, o.Value)
 	}
 
-	return internal.OpResult{Doc: doc, Old: val}, nil
+	return internal.OpResult[any]{Doc: doc, Old: val}, nil
 }
 
 // getAndValidateValue retrieves and validates the numeric value at the path

@@ -60,14 +60,14 @@ func (o *OpTestOperation) Path() []string {
 }
 
 // Apply applies the test operation.
-func (o *OpTestOperation) Apply(doc any) (internal.OpResult, error) {
+func (o *OpTestOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, err := getValue(doc, o.path)
 	if err != nil {
 		// If path not found and we're negating, that's success
 		if o.NotFlag {
-			return internal.OpResult{Doc: doc, Old: nil}, nil
+			return internal.OpResult[any]{Doc: doc, Old: nil}, nil
 		}
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	isEqual := deepEqual(value, o.Value)
@@ -78,21 +78,21 @@ func (o *OpTestOperation) Apply(doc any) (internal.OpResult, error) {
 	if !shouldPass {
 		// Test failed
 		if o.NotFlag {
-			return internal.OpResult{}, fmt.Errorf("%w: expected not %v, but got %v", ErrTestOperationFailed, o.Value, value)
+			return internal.OpResult[any]{}, fmt.Errorf("%w: expected not %v, but got %v", ErrTestOperationFailed, o.Value, value)
 		} else {
 			// Check if it's a string vs number comparison for specific error message
 			if _, ok := o.Value.(string); ok {
 				if _, ok := value.(float64); ok {
-					return internal.OpResult{}, ErrTestOperationNumberStringMismatch
+					return internal.OpResult[any]{}, ErrTestOperationNumberStringMismatch
 				}
-				return internal.OpResult{}, ErrTestOperationStringNotEquivalent
+				return internal.OpResult[any]{}, ErrTestOperationStringNotEquivalent
 			}
-			return internal.OpResult{}, fmt.Errorf("%w: expected %v, got %v", ErrTestOperationFailed, o.Value, value)
+			return internal.OpResult[any]{}, fmt.Errorf("%w: expected %v, got %v", ErrTestOperationFailed, o.Value, value)
 		}
 	}
 
 	// Test operations don't modify the document and return nil for old value
-	return internal.OpResult{Doc: doc, Old: nil}, nil
+	return internal.OpResult[any]{Doc: doc, Old: nil}, nil
 }
 
 // ToJSON serializes the operation to JSON format.

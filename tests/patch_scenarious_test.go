@@ -19,8 +19,9 @@ func TestCannotAddKeyToEmptyDocument(t *testing.T) {
 		},
 	}
 
-	options := jsonpatch.ApplyPatchOptions{Mutate: true}
-	_, err := jsonpatch.ApplyPatch(nil, patch, options)
+	options := jsonpatch.WithMutate(true)
+	var doc interface{} = nil
+	_, err := jsonpatch.ApplyPatch(doc, patch, options)
 	if err == nil {
 		t.Error("Expected error when adding key to empty document")
 	}
@@ -36,18 +37,14 @@ func TestCanOverwriteEmptyDocument(t *testing.T) {
 		},
 	}
 
-	options := jsonpatch.ApplyPatchOptions{Mutate: true}
+	options := jsonpatch.WithMutate(true)
 	result, err := jsonpatch.ApplyPatch(map[string]interface{}{}, patch, options)
 	if err != nil {
 		t.Fatalf("ApplyPatch failed: %v", err)
 	}
 
 	expected := map[string]interface{}{"foo": 123}
-	resultMap, ok := result.Doc.(map[string]interface{})
-	if !ok {
-		t.Fatalf("Result is not a map: %T", result.Doc)
-	}
-
+	resultMap := result.Doc
 	if resultMap["foo"] != expected["foo"] {
 		t.Errorf("Expected %+v, got %+v", expected, resultMap)
 	}
@@ -64,7 +61,7 @@ func TestCannotAddValueToNonexistingPath(t *testing.T) {
 		},
 	}
 
-	options := jsonpatch.ApplyPatchOptions{Mutate: true}
+	options := jsonpatch.WithMutate(true)
 	_, err := jsonpatch.ApplyPatch(doc, patch, options)
 	if err == nil {
 		t.Error("Expected error when adding value to nonexisting path")

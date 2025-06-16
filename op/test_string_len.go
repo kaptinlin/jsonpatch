@@ -47,17 +47,17 @@ func (op *OpTestStringLenOperation) Path() []string {
 }
 
 // Apply applies the test string length operation to the document.
-func (op *OpTestStringLenOperation) Apply(doc any) (internal.OpResult, error) {
+func (op *OpTestStringLenOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get the value at the path
 	value, err := getValue(doc, op.Path())
 	if err != nil {
-		return internal.OpResult{}, ErrPathNotFound
+		return internal.OpResult[any]{}, ErrPathNotFound
 	}
 
 	// Convert value to string
 	actualValue, err := toString(value)
 	if err != nil {
-		return internal.OpResult{}, ErrNotString
+		return internal.OpResult[any]{}, ErrNotString
 	}
 
 	// Check if the string length matches (>= comparison like TypeScript version)
@@ -68,14 +68,14 @@ func (op *OpTestStringLenOperation) Apply(doc any) (internal.OpResult, error) {
 
 	if !lengthMatches {
 		if op.Not {
-			return internal.OpResult{}, fmt.Errorf("%w: expected length NOT >= %d, but got %d", ErrStringLengthMismatch, op.Length, len(actualValue))
+			return internal.OpResult[any]{}, fmt.Errorf("%w: expected length NOT >= %d, but got %d", ErrStringLengthMismatch, op.Length, len(actualValue))
 		} else {
-			return internal.OpResult{}, fmt.Errorf("%w: expected length >= %d, got %d", ErrStringLengthMismatch, op.Length, len(actualValue))
+			return internal.OpResult[any]{}, fmt.Errorf("%w: expected length >= %d, got %d", ErrStringLengthMismatch, op.Length, len(actualValue))
 		}
 	}
 
 	// Test operations don't modify the document
-	return internal.OpResult{
+	return internal.OpResult[any]{
 		Doc: doc,
 		Old: value,
 	}, nil

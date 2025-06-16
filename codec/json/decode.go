@@ -3,9 +3,10 @@
 package json
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/op"

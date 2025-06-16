@@ -6,7 +6,7 @@ import "github.com/kaptinlin/jsonpatch/internal"
 type Op = internal.Op
 
 // OpResult represents the result of applying an operation.
-type OpResult = internal.OpResult
+type OpResult[T internal.Document] = internal.OpResult[T]
 
 // PredicateOp represents predicate operations used for testing conditions.
 type PredicateOp = internal.PredicateOp

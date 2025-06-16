@@ -1,8 +1,8 @@
 # JSON Patch Go
 
-A comprehensive Go implementation of JSON Patch (RFC 6902), JSON Predicate, and extended operations for JSON document manipulation.
+A comprehensive Go implementation of JSON Patch (RFC 6902), JSON Predicate, and extended operations for JSON document manipulation with **full type safety** and **generic support**.
 
-> **Note**: This is a Golang port of the powerful [json-joy/json-patch](https://github.com/streamich/json-joy/tree/master/src/json-patch), bringing JSON Patch extended operations to the Go ecosystem.
+> **Note**: This is a Golang port of the powerful [json-joy/json-patch](https://github.com/streamich/json-joy/tree/master/src/json-patch), bringing JSON Patch extended operations to the Go ecosystem with modern Go generics.
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/kaptinlin/jsonpatch.svg)](https://pkg.go.dev/github.com/kaptinlin/jsonpatch)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kaptinlin/jsonpatch)](https://goreportcard.com/report/github.com/kaptinlin/jsonpatch)
@@ -50,14 +50,18 @@ func main() {
         },
     }
 
-    // Apply patch
-    options := jsonpatch.ApplyPatchOptions{Mutate: false}
-    result, err := jsonpatch.ApplyPatch(doc, patch, options)
+    // Apply patch with type-safe generic API
+    result, err := jsonpatch.ApplyPatch(doc, patch)
     if err != nil {
         log.Fatalf("Failed to apply patch: %v", err)
     }
 
-    // Output result
+    // result.Doc is automatically typed as map[string]interface{}
+    // No type assertions needed!
+    fmt.Printf("Name: %s\n", result.Doc["name"])
+    fmt.Printf("Email: %s\n", result.Doc["email"])
+
+    // Output result as JSON
     output, _ := json.MarshalIndent(result.Doc, "", "  ")
     fmt.Println(string(output))
     // Output:
@@ -69,28 +73,46 @@ func main() {
 }
 ```
 
-## 📖 Examples
+### Type-Safe Generic Usage
 
-Explore comprehensive examples in the [`examples/`](examples/) directory:
+```go
+// Define your own types for complete type safety
+type User struct {
+    Name  string `json:"name"`
+    Email string `json:"email,omitempty"`
+    Age   int    `json:"age"`
+}
 
-- **[Basic Operations](examples/basic-operations/)** - Fundamental operations: `add`, `replace`, `remove`, `test`
-- **[Array Operations](examples/array-operations/)** - Working with arrays and collections
-- **[Conditional Operations](examples/conditional-operations/)** - Safe updates using test conditions
-- **[Batch Updates](examples/batch-update/)** - Efficient batch operations
-- **[Copy & Move Operations](examples/copy-move-operations/)** - Data restructuring and migration
-- **[String Operations](examples/string-operations/)** - Text editing with string insertion
-- **[Error Handling](examples/error-handling/)** - Robust error handling patterns
+func main() {
+    user := User{Name: "John", Age: 30}
+    
+    patch := []jsonpatch.Operation{
+        {"op": "replace", "path": "/name", "value": "Jane"},
+        {"op": "add", "path": "/email", "value": "jane@example.com"},
+    }
 
-### Running Examples
+    // Type-safe: result.Doc is automatically typed as User
+    result, err := jsonpatch.ApplyPatch(user, patch)
+    if err != nil {
+        log.Fatal(err)
+    }
 
-```bash
-# Run a specific example
-cd examples/basic-operations && go run main.go
+    // No type assertions needed - compile-time type safety!
+    fmt.Printf("Updated user: %+v\n", result.Doc)
+    // Output: Updated user: {Name:Jane Email:jane@example.com Age:30}
+}
 ```
 
 ## 🎯 Features
 
-### ✅ RFC 6902 Standard Operations
+### ✨ **Type-Safe Generic API**
+
+- **Full Generic Support** - No more `interface{}` or type assertions
+- **Compile-Time Type Safety** - Catch type errors at compile time
+- **Automatic Type Inference** - Result types are automatically inferred
+- **Zero-Value Usability** - Works without configuration
+
+### ✅ RFC 6902 Standard Operations ([docs](docs/json-patch.md))
 
 - **`add`** - Add new values to the document
 - **`remove`** - Remove existing values
@@ -99,9 +121,7 @@ cd examples/basic-operations && go run main.go
 - **`copy`** - Copy values to new locations
 - **`test`** - Test values for conditional operations
 
-### 🔍 JSON Predicate Operations
-
-Advanced querying and validation capabilities:
+### 🔍 JSON Predicate Operations ([docs](docs/json-predicate.md))
 
 - **`contains`** - Check if strings contain substrings
 - **`defined`** - Test if paths exist
@@ -112,9 +132,7 @@ Advanced querying and validation capabilities:
 - **`type`** - Type validation
 - **`less`/`more`** - Numeric comparisons
 
-### 🔧 Extended Operations
-
-Beyond RFC 6902 for enhanced functionality:
+### 🔧 Extended Operations ([docs](docs/json-patch-extended.md))
 
 - **`str_ins`** - String insertion for text editing
 - **`str_del`** - String deletion
@@ -123,37 +141,105 @@ Beyond RFC 6902 for enhanced functionality:
 - **`split`** - Object splitting
 - **`merge`** - Object merging
 
-## 📚 API Reference
+## 📖 Examples
 
-### Core Functions
+Explore comprehensive examples in the [`examples/`](examples/) directory:
 
-```go
-// Apply a single operation
-func ApplyOp(doc interface{}, operation Op, mutate bool) (*OpResult, error)
+### Core Operations
+- **[Basic Operations](examples/basic-operations/)** - `add`, `replace`, `remove`, `test`
+- **[Array Operations](examples/array-operations/)** - Array manipulation
+- **[Conditional Operations](examples/conditional-operations/)** - Safe updates with tests
+- **[Copy & Move](examples/copy-move-operations/)** - Data restructuring
+- **[String Operations](examples/string-operations/)** - Text editing
 
-// Apply multiple operations
-func ApplyOps(doc interface{}, operations []Op, mutate bool) (*PatchResult, error)
+### Document Types
+- **[Struct Patch](examples/struct-patch/)** - Type-safe Go structs
+- **[Map Patch](examples/map-patch/)** - Dynamic `map[string]any`
+- **[JSON Bytes](examples/json-bytes-patch/)** - Raw JSON byte data
+- **[JSON String](examples/json-string-patch/)** - JSON string data
 
-// Apply JSON Patch
-func ApplyPatch(doc interface{}, patch []Operation, options ApplyPatchOptions) (*PatchResult, error)
+### Advanced
+- **[Batch Updates](examples/batch-update/)** - Bulk operations
+- **[Error Handling](examples/error-handling/)** - Error patterns
+- **[Mutate Option](examples/mutate-option/)** - Performance optimization
+
+```bash
+# Run any example
+cd examples/<example-name> && go run main.go
 ```
 
-### Configuration Options
+## 📚 API Reference
+
+### Core Generic Functions
 
 ```go
-type ApplyPatchOptions struct {
-    Mutate           bool                // Modify the original document
-    JsonPatchOptions JsonPatchOptions   // Additional options
+// Apply a single operation with type safety
+func ApplyOp[T Document](doc T, operation Op, opts ...Option) (*OpResult[T], error)
+
+// Apply multiple operations with type safety
+func ApplyOps[T Document](doc T, operations []Op, opts ...Option) (*PatchResult[T], error)
+
+// Apply JSON Patch with type safety
+func ApplyPatch[T Document](doc T, patch []Operation, opts ...Option) (*PatchResult[T], error)
+```
+
+### Functional Options
+
+```go
+// Configure mutation behavior
+func WithMutate(mutate bool) Option
+
+// Configure custom regex matcher
+func WithMatcher(createMatcher func(string, bool) RegexMatcher) Option
+```
+
+### Result Types
+
+```go
+// Generic result for single operation
+type OpResult[T Document] struct {
+    Doc T    // Result document with preserved type
+    Old any  // Previous value at the path
 }
 
-type JsonPatchOptions struct {
-    CreateMatcher CreateRegexMatcher     // Custom regex matcher
+// Generic result for multiple operations
+type PatchResult[T Document] struct {
+    Doc T                // Result document with preserved type
+    Res []OpResult[any]  // Results for each operation
 }
 ```
 
 ## 🔨 Common Patterns
 
-### 1. Safe Updates with Test Operations
+### 1. Type-Safe Operations
+
+```go
+type Config struct {
+    Version int    `json:"version"`
+    Status  string `json:"status"`
+    Enabled bool   `json:"enabled"`
+}
+
+config := Config{Version: 1, Status: "active", Enabled: true}
+
+patch := []jsonpatch.Operation{
+    {"op": "inc", "path": "/version", "inc": 1},
+    {"op": "replace", "path": "/status", "value": "updated"},
+    {"op": "flip", "path": "/enabled"},
+}
+
+// result.Doc is automatically typed as Config
+result, err := jsonpatch.ApplyPatch(config, patch)
+if err != nil {
+    log.Fatal(err)
+}
+
+// No type assertions needed!
+fmt.Printf("Version: %d, Status: %s, Enabled: %t\n", 
+    result.Doc.Version, result.Doc.Status, result.Doc.Enabled)
+```
+
+### 2. Safe Updates with Test Operations
 
 ```go
 patch := []jsonpatch.Operation{
@@ -176,9 +262,21 @@ patch := []jsonpatch.Operation{
         "inc":  1,
     },
 }
+
+result, err := jsonpatch.ApplyPatch(doc, patch)
 ```
 
-### 2. Batch Operations
+### 3. Mutation Control
+
+```go
+// Preserve original document (default)
+result, err := jsonpatch.ApplyPatch(doc, patch)
+
+// Mutate original document for performance
+result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
+```
+
+### 4. Batch Operations
 
 ```go
 var patch []jsonpatch.Operation
@@ -192,10 +290,10 @@ for i := 0; i < itemCount; i++ {
     })
 }
 
-result, err := jsonpatch.ApplyPatch(doc, patch, options)
+result, err := jsonpatch.ApplyPatch(doc, patch)
 ```
 
-### 3. Array Manipulation
+### 5. Array Manipulation
 
 ```go
 patch := []jsonpatch.Operation{
@@ -217,9 +315,11 @@ patch := []jsonpatch.Operation{
         "path": "/items/2",
     },
 }
+
+result, err := jsonpatch.ApplyPatch(doc, patch)
 ```
 
-### 4. String Operations
+### 6. String Operations
 
 ```go
 patch := []jsonpatch.Operation{
@@ -238,12 +338,14 @@ patch := []jsonpatch.Operation{
         "str":  " (Updated)",
     },
 }
+
+result, err := jsonpatch.ApplyPatch(doc, patch)
 ```
 
-### 5. Error Handling
+### 7. Error Handling
 
 ```go
-result, err := jsonpatch.ApplyPatch(doc, patch, options)
+result, err := jsonpatch.ApplyPatch(doc, patch)
 if err != nil {
     switch {
     case strings.Contains(err.Error(), "path not found"):
@@ -255,49 +357,44 @@ if err != nil {
     }
     return err
 }
-```
 
-## 🚀 Advanced Features
-
-### Custom Regex Matchers
-
-```go
-customMatcher := func(pattern string, ignoreCase bool) jsonpatch.RegexMatcher {
-    flags := ""
-    if ignoreCase {
-        flags = "(?i)"
-    }
-    
-    re, _ := regexp.Compile(flags + pattern)
-    return func(value string) bool {
-        return re.MatchString(value)
-    }
-}
-
-options := jsonpatch.ApplyPatchOptions{
-    JsonPatchOptions: jsonpatch.JsonPatchOptions{
-        CreateMatcher: customMatcher,
-    },
-}
-```
-
-### Performance Optimization
-
-```go
-// For large patches, use mutate mode to avoid deep copying
-if len(patch) > 100 {
-    options := jsonpatch.ApplyPatchOptions{Mutate: true}
-    result, err := jsonpatch.ApplyPatch(doc, patch, options)
-}
-
-// For concurrent access, use immutable mode
-options := jsonpatch.ApplyPatchOptions{Mutate: false}
-result, err := jsonpatch.ApplyPatch(doc, patch, options)
+// Type-safe access to result
+processedDoc := result.Doc
 ```
 
 ## 📈 Best Practices
 
-### 1. Always Use Test Operations for Critical Updates
+### 1. Leverage Type Safety
+
+```go
+// Define specific types for your data
+type UserProfile struct {
+    ID       string   `json:"id"`
+    Name     string   `json:"name"`
+    Email    string   `json:"email"`
+    Tags     []string `json:"tags"`
+    Settings map[string]interface{} `json:"settings"`
+}
+
+// Get compile-time type safety
+result, err := jsonpatch.ApplyPatch(userProfile, patch)
+// result.Doc is automatically typed as UserProfile
+```
+
+### 2. Use Functional Options
+
+```go
+// Default behavior (no mutation)
+result, err := jsonpatch.ApplyPatch(doc, patch)
+
+// Custom configuration
+result, err := jsonpatch.ApplyPatch(doc, patch, 
+    jsonpatch.WithMutate(true),
+    jsonpatch.WithMatcher(customRegexMatcher),
+)
+```
+
+### 3. Always Use Test Operations for Critical Updates
 
 ```go
 // Good: Test before critical changes
@@ -307,27 +404,27 @@ patch := []jsonpatch.Operation{
 }
 ```
 
-### 2. Choose Mutate Mode Carefully
+### 4. Choose Mutate Mode Carefully
 
 ```go
-// Use mutate: false for concurrent access
+// Use mutate: false for concurrent access (default)
 // Use mutate: true for large patches when performance matters
-options := jsonpatch.ApplyPatchOptions{
-    Mutate: len(patch) > 100, // Performance optimization
-}
+result, err := jsonpatch.ApplyPatch(doc, patch, 
+    jsonpatch.WithMutate(len(patch) > 100), // Performance optimization
+)
 ```
 
-### 3. Handle Errors Gracefully
+### 5. Handle Errors Gracefully
 
 ```go
-if result, err := jsonpatch.ApplyPatch(doc, patch, options); err != nil {
+if result, err := jsonpatch.ApplyPatch(doc, patch); err != nil {
     // Log error with context
     log.Printf("Patch failed for document %s: %v", docID, err)
     return originalDoc, err
 }
 ```
 
-### 4. Use Batch Operations for Multiple Changes
+### 6. Use Batch Operations for Multiple Changes
 
 ```go
 // Efficient: Single patch with multiple operations
@@ -337,14 +434,6 @@ patch := []jsonpatch.Operation{
     {"op": "add", "path": "/lastModified", "value": time.Now()},
 }
 ```
-
-## 📖 Documentation
-
-For detailed documentation on specific operation types:
-
-- **[JSON Patch Operations](docs/json-patch.md)** - Complete guide to standard RFC 6902 operations
-- **[JSON Predicate Operations](docs/json-predicate.md)** - Advanced querying and conditional operations
-- **[JSON Patch Extended Operations](docs/json-patch-extended.md)** - Extended operations for specialized use cases
 
 ## 🔗 Related Specifications
 

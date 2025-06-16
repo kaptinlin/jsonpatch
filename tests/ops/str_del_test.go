@@ -13,7 +13,7 @@ import (
 func applyOperationStrDel(t *testing.T, doc interface{}, op internal.Operation) interface{} {
 	t.Helper()
 	patch := []internal.Operation{op}
-	result, err := jsonpatch.ApplyPatch(doc, patch, internal.ApplyPatchOptions{Mutate: true})
+	result, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
 	require.NoError(t, err)
 	return result.Doc
 }
@@ -68,9 +68,9 @@ func TestStrDelOp(t *testing.T) {
 			},
 		}
 		doc := "Hello beautiful world"
-		result1, err := jsonpatch.ApplyPatch(doc, []internal.Operation{operations[0]}, internal.ApplyPatchOptions{Mutate: true})
+		result1, err := jsonpatch.ApplyPatch(doc, []internal.Operation{operations[0]}, internal.WithMutate(true))
 		require.NoError(t, err)
-		result2, err := jsonpatch.ApplyPatch(result1.Doc, []internal.Operation{operations[1]}, internal.ApplyPatchOptions{Mutate: true})
+		result2, err := jsonpatch.ApplyPatch(result1.Doc, []internal.Operation{operations[1]}, internal.WithMutate(true))
 		require.NoError(t, err)
 		assert.Equal(t, "Helloworld", result2.Doc)
 	})

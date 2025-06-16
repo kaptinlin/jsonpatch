@@ -1,9 +1,10 @@
 package jsonpatch_test
 
 import (
-	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/stretchr/testify/assert"
@@ -85,7 +86,7 @@ func TestOpTest_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 		assert.Equal(t, doc, result.Doc)
 	})
@@ -102,7 +103,7 @@ func TestOpTest_Apply(t *testing.T) {
 			},
 		}
 
-		_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "test operation failed")
 	})
@@ -120,7 +121,7 @@ func TestOpTest_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 		assert.Equal(t, doc, result.Doc)
 	})
@@ -138,7 +139,7 @@ func TestOpTest_Apply(t *testing.T) {
 			},
 		}
 
-		_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "test operation failed")
 	})
@@ -156,7 +157,7 @@ func TestOpTest_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 		assert.Equal(t, doc, result.Doc)
 	})
@@ -173,7 +174,7 @@ func TestOpTest_Apply(t *testing.T) {
 			},
 		}
 
-		_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err)
 		// Check that error indicates path not found or test failure
 		assert.True(t, err.Error() == "operation 0 failed: path not found" ||
@@ -192,9 +193,10 @@ func TestOpTest_RFC6902_Section4_6(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
-		assert.NoError(t, err)
-		assert.Equal(t, "123", result.Doc)
+		result, err := jsonpatch.ApplyPatch(doc, patch)
+		if assert.NoError(t, err) {
+			assert.Equal(t, "123", result.Doc)
+		}
 
 		// Test failure case
 		patch[0] = map[string]interface{}{
@@ -202,7 +204,7 @@ func TestOpTest_RFC6902_Section4_6(t *testing.T) {
 			"path":  "",
 			"value": "1234",
 		}
-		_, err = jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err = jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "test operation failed")
 	})
@@ -217,9 +219,11 @@ func TestOpTest_RFC6902_Section4_6(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
-		assert.NoError(t, err)
-		assert.Equal(t, 123, result.Doc)
+		result, err := jsonpatch.ApplyPatch(doc, patch)
+		if assert.NoError(t, err) {
+			// Note: Primitive types are preserved
+			assert.Equal(t, 123, result.Doc)
+		}
 
 		// Test failure case
 		patch[0] = map[string]interface{}{
@@ -227,7 +231,7 @@ func TestOpTest_RFC6902_Section4_6(t *testing.T) {
 			"path":  "",
 			"value": 0,
 		}
-		_, err = jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err = jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "test operation failed")
 	})
@@ -242,9 +246,11 @@ func TestOpTest_RFC6902_Section4_6(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
-		assert.NoError(t, err)
-		assert.Equal(t, doc, result.Doc)
+		result, err := jsonpatch.ApplyPatch(doc, patch)
+		if assert.NoError(t, err) {
+			// Note: Primitive types in arrays are preserved
+			assert.Equal(t, doc, result.Doc)
+		}
 
 		// Test failure case
 		patch[0] = map[string]interface{}{
@@ -252,7 +258,7 @@ func TestOpTest_RFC6902_Section4_6(t *testing.T) {
 			"path":  "",
 			"value": []interface{}{1, 2, map[string]interface{}{"foo": "bar!"}},
 		}
-		_, err = jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err = jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "test operation failed")
 	})
@@ -275,7 +281,7 @@ func TestOpTest_RFC6902_Section4_6(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 		assert.Equal(t, doc, result.Doc)
 
@@ -289,7 +295,7 @@ func TestOpTest_RFC6902_Section4_6(t *testing.T) {
 				},
 			},
 		}
-		_, err = jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err = jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "test operation failed")
 	})
@@ -304,9 +310,10 @@ func TestOpTest_RFC6902_Section4_6(t *testing.T) {
 				"value": true,
 			},
 		}
-		result, err := jsonpatch.ApplyPatch(trueDoc, patch, jsonpatch.ApplyPatchOptions{})
-		assert.NoError(t, err)
-		assert.Equal(t, true, result.Doc)
+		result, err := jsonpatch.ApplyPatch(trueDoc, patch)
+		if assert.NoError(t, err) {
+			assert.Equal(t, true, result.Doc)
+		}
 
 		// Test false
 		var falseDoc interface{} = false
@@ -315,9 +322,10 @@ func TestOpTest_RFC6902_Section4_6(t *testing.T) {
 			"path":  "",
 			"value": false,
 		}
-		result, err = jsonpatch.ApplyPatch(falseDoc, patch, jsonpatch.ApplyPatchOptions{})
-		assert.NoError(t, err)
-		assert.Equal(t, false, result.Doc)
+		result, err = jsonpatch.ApplyPatch(falseDoc, patch)
+		if assert.NoError(t, err) {
+			assert.Equal(t, false, result.Doc)
+		}
 
 		// Test null
 		var nullDoc interface{} = nil
@@ -326,9 +334,10 @@ func TestOpTest_RFC6902_Section4_6(t *testing.T) {
 			"path":  "",
 			"value": nil,
 		}
-		result, err = jsonpatch.ApplyPatch(nullDoc, patch, jsonpatch.ApplyPatchOptions{})
-		assert.NoError(t, err)
-		assert.Nil(t, result.Doc)
+		result, err = jsonpatch.ApplyPatch(nullDoc, patch)
+		if assert.NoError(t, err) {
+			assert.Nil(t, result.Doc)
+		}
 
 		// Test failure cases
 		patch[0] = map[string]interface{}{
@@ -336,7 +345,7 @@ func TestOpTest_RFC6902_Section4_6(t *testing.T) {
 			"path":  "",
 			"value": false,
 		}
-		_, err = jsonpatch.ApplyPatch(nullDoc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err = jsonpatch.ApplyPatch(nullDoc, patch)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "test operation failed")
 
@@ -345,7 +354,7 @@ func TestOpTest_RFC6902_Section4_6(t *testing.T) {
 			"path":  "",
 			"value": false,
 		}
-		_, err = jsonpatch.ApplyPatch(trueDoc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err = jsonpatch.ApplyPatch(trueDoc, patch)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "test operation failed")
 	})
@@ -368,7 +377,7 @@ func TestOpTest_AdvancedScenarios(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 		assert.Equal(t, doc, result.Doc)
 	})
@@ -385,7 +394,7 @@ func TestOpTest_AdvancedScenarios(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 		assert.Equal(t, doc, result.Doc)
 
@@ -395,7 +404,7 @@ func TestOpTest_AdvancedScenarios(t *testing.T) {
 			"path":  "/arr/10",
 			"value": "nonexistent",
 		}
-		_, err = jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err = jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err)
 		// Check that error indicates path not found or test failure
 		assert.True(t, err.Error() == "operation 0 failed: path not found" ||
@@ -433,7 +442,7 @@ func TestOpTest_AdvancedScenarios(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 		assert.Equal(t, doc, result.Doc)
 	})
@@ -457,12 +466,12 @@ func TestOpTest_AdvancedScenarios(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 		assert.Equal(t, doc, result.Doc)
 
 		// Verify all fields still have correct types
-		actualDoc := result.Doc.(map[string]interface{})
+		actualDoc := result.Doc
 		assert.Equal(t, 123, actualDoc["number"])
 		assert.Equal(t, "text", actualDoc["string"])
 		assert.Equal(t, true, actualDoc["boolean"])
@@ -489,7 +498,7 @@ func TestOpTest_AdvancedScenarios(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 		assert.Equal(t, doc, result.Doc)
 
@@ -501,7 +510,7 @@ func TestOpTest_AdvancedScenarios(t *testing.T) {
 			"not":   true,
 		}
 
-		result, err = jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err = jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 		assert.Equal(t, doc, result.Doc)
 	})

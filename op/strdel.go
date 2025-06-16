@@ -58,28 +58,28 @@ func (o *OpStrDelOperation) getTargetString(target any) (string, error) {
 }
 
 // Apply applies the string delete operation.
-func (o *OpStrDelOperation) Apply(doc any) (internal.OpResult, error) {
+func (o *OpStrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level specially
 	if len(o.Path()) == 0 {
 		targetStr, err := o.getTargetString(doc)
 		if err != nil {
-			return internal.OpResult{}, err
+			return internal.OpResult[any]{}, err
 		}
 
 		// Apply string deletion with optimized implementation
 		result := o.applyStrDel(targetStr)
-		return internal.OpResult{Doc: result, Old: doc}, nil
+		return internal.OpResult[any]{Doc: result, Old: doc}, nil
 	}
 
 	// Get the target value for non-root paths
 	target, err := getValue(doc, o.Path())
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	targetStr, err := o.getTargetString(target)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	// Apply string deletion with optimized implementation
@@ -88,10 +88,10 @@ func (o *OpStrDelOperation) Apply(doc any) (internal.OpResult, error) {
 	// Set the result back
 	err = setValueAtPath(doc, o.Path(), result)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
-	return internal.OpResult{Doc: doc, Old: target}, nil
+	return internal.OpResult[any]{Doc: doc, Old: target}, nil
 }
 
 // applyStrDel applies string deletion with optimized string building

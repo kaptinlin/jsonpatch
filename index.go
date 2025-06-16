@@ -6,12 +6,32 @@ import "github.com/kaptinlin/jsonpatch/internal"
 
 // Core types
 type (
-	Operation   = internal.Operation
-	OpResult    = internal.OpResult
-	PatchResult = internal.PatchResult
-	OpType      = internal.OpType
-	Op          = internal.Op
+	Operation = internal.Operation
+	OpType    = internal.OpType
+	Op        = internal.Op
 )
+
+// Generic types for type-safe JSON Patch operations
+type (
+	Document = internal.Document
+	Option   = internal.Option
+	Options  = internal.Options
+)
+
+var WithMutate = internal.WithMutate
+var WithMatcher = internal.WithMatcher
+
+// DefaultOptions returns the default configuration for patch operations.
+func DefaultOptions() *internal.Options {
+	return &internal.Options{
+		Mutate:        false, // Immutable by default for safety
+		CreateMatcher: nil,   // Use default regex implementation
+	}
+}
+
+// Generic result types (requires Go 1.18+)
+type OpResult[T Document] = internal.OpResult[T]
+type PatchResult[T Document] = internal.PatchResult[T]
 
 // Operation type constants (string constants)
 const (
@@ -97,11 +117,9 @@ const (
 
 // JSON Patch types
 type (
-	JsonPatchTypes     = internal.JsonPatchTypes
-	CreateRegexMatcher = internal.CreateRegexMatcher
-	RegexMatcher       = internal.RegexMatcher
-	JsonPatchOptions   = internal.JsonPatchOptions
-	ApplyPatchOptions  = internal.ApplyPatchOptions
+	JsonPatchTypes   = internal.JsonPatchTypes
+	RegexMatcher     = internal.RegexMatcher
+	JsonPatchOptions = internal.JsonPatchOptions
 )
 
 const (

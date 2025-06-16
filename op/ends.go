@@ -64,10 +64,10 @@ func (op *OpEndsOperation) Test(doc any) (bool, error) {
 }
 
 // Apply applies the ends test operation to the document.
-func (op *OpEndsOperation) Apply(doc any) (internal.OpResult, error) {
+func (op *OpEndsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, str, err := op.getAndValidateString(doc)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	var hasSuffix bool
@@ -78,10 +78,10 @@ func (op *OpEndsOperation) Apply(doc any) (internal.OpResult, error) {
 	}
 
 	if !hasSuffix {
-		return internal.OpResult{}, fmt.Errorf("%w: string %q does not end with %q", ErrStringMismatch, str, op.Value)
+		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not end with %q", ErrStringMismatch, str, op.Value)
 	}
 
-	return internal.OpResult{Doc: doc, Old: value}, nil
+	return internal.OpResult[any]{Doc: doc, Old: value}, nil
 }
 
 // getAndValidateString retrieves and validates the string value at the path

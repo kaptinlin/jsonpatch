@@ -1,9 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
+
+	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
 )
@@ -11,7 +12,6 @@ import (
 func main() {
 	fmt.Println("=== Copy and Move Operations ===")
 
-	// Simple document for demonstration
 	doc := map[string]interface{}{
 		"user": map[string]interface{}{
 			"name":  "John Doe",
@@ -24,7 +24,7 @@ func main() {
 	}
 
 	fmt.Println("\nOriginal:")
-	original, _ := json.MarshalIndent(doc, "", "  ")
+	original, _ := json.Marshal(doc)
 	fmt.Println(string(original))
 
 	patch := []jsonpatch.Operation{
@@ -49,13 +49,12 @@ func main() {
 		},
 	}
 
-	options := jsonpatch.ApplyPatchOptions{Mutate: false}
-	result, err := jsonpatch.ApplyPatch(doc, patch, options)
+	result, err := jsonpatch.ApplyPatch(doc, patch)
 	if err != nil {
 		log.Fatalf("Failed: %v", err)
 	}
 
 	fmt.Println("\nAfter copy/move:")
-	updated, _ := json.MarshalIndent(result.Doc, "", "  ")
+	updated, _ := json.Marshal(result.Doc)
 	fmt.Println(string(updated))
 }

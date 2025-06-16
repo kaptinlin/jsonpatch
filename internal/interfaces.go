@@ -10,7 +10,7 @@ type Op interface {
 	// Path returns the JSON Pointer path for the operation (slice form)
 	Path() []string
 	// Apply applies the operation to the document, returning the new document and old value
-	Apply(doc any) (OpResult, error)
+	Apply(doc any) (OpResult[any], error)
 	// ToJSON returns the standard JSON Patch format
 	ToJSON() (Operation, error)
 	// ToCompact returns the compact array format

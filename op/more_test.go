@@ -87,7 +87,7 @@ func TestOpMore_Basic(t *testing.T) {
 				if tt.expectedError != nil {
 					assert.True(t, errors.Is(err, tt.expectedError))
 				}
-				assert.Equal(t, internal.OpResult{}, result)
+				assert.Equal(t, internal.OpResult[any]{}, result)
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, result)

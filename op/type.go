@@ -58,11 +58,11 @@ func (op *OpTypeOperation) Not() bool {
 }
 
 // Apply applies the type operation to the document.
-func (op *OpTypeOperation) Apply(doc any) (internal.OpResult, error) {
+func (op *OpTypeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get target value
 	val, err := getValue(doc, op.Path())
 	if err != nil {
-		return internal.OpResult{}, ErrPathNotFound
+		return internal.OpResult[any]{}, ErrPathNotFound
 	}
 
 	// Get the actual type of the value
@@ -77,10 +77,10 @@ func (op *OpTypeOperation) Apply(doc any) (internal.OpResult, error) {
 	}
 
 	if !typeMatches {
-		return internal.OpResult{}, fmt.Errorf("%w: expected type %s, got %s", ErrTypeMismatch, op.TypeValue, actualType)
+		return internal.OpResult[any]{}, fmt.Errorf("%w: expected type %s, got %s", ErrTypeMismatch, op.TypeValue, actualType)
 	}
 
-	return internal.OpResult{Doc: doc}, nil
+	return internal.OpResult[any]{Doc: doc}, nil
 }
 
 // ToJSON serializes the operation to JSON format.

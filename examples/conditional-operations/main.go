@@ -1,9 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
+
+	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
 )
@@ -19,7 +20,7 @@ func main() {
 	}
 
 	fmt.Println("\nOriginal account:")
-	original, _ := json.MarshalIndent(account, "", "  ")
+	original, _ := json.Marshal(account)
 	fmt.Println(string(original))
 
 	// Safe withdrawal: only if conditions are met
@@ -51,15 +52,14 @@ func main() {
 	}
 
 	fmt.Println("\nAttempting safe withdrawal...")
-	options := jsonpatch.ApplyPatchOptions{Mutate: false}
-	result, err := jsonpatch.ApplyPatch(account, patch, options)
+	result, err := jsonpatch.ApplyPatch(account, patch)
 	if err != nil {
 		log.Printf("Transaction failed: %v", err)
 		return
 	}
 
 	fmt.Println("\nAfter successful transaction:")
-	updated, _ := json.MarshalIndent(result.Doc, "", "  ")
+	updated, _ := json.Marshal(result.Doc)
 	fmt.Println(string(updated))
 
 	// Demonstrate failed condition
@@ -79,7 +79,7 @@ func main() {
 		},
 	}
 
-	_, err = jsonpatch.ApplyPatch(account, failPatch, options)
+	_, err = jsonpatch.ApplyPatch(account, failPatch)
 	if err != nil {
 		fmt.Printf("Expected failure: %v\n", err)
 	}

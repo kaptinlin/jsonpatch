@@ -1,10 +1,11 @@
 package jsonpatch_test
 
 import (
-	"encoding/json"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/tests/data"
@@ -41,7 +42,7 @@ func TestAutomated(t *testing.T) {
 					}
 				}
 
-				options := jsonpatch.ApplyPatchOptions{Mutate: false}
+				options := jsonpatch.WithMutate(false)
 
 				switch {
 				case test.Expected != nil:

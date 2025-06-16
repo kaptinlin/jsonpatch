@@ -44,12 +44,12 @@ func (o *OpDefinedOperation) Not() bool {
 }
 
 // Apply applies the defined operation.
-func (o *OpDefinedOperation) Apply(doc any) (internal.OpResult, error) {
+func (o *OpDefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Use the same logic as Test but avoid double call
 	if !o.checkPathExists(doc) {
-		return internal.OpResult{}, ErrDefinedTestFailed
+		return internal.OpResult[any]{}, ErrDefinedTestFailed
 	}
-	return internal.OpResult{Doc: doc}, nil
+	return internal.OpResult[any]{Doc: doc}, nil
 }
 
 // ToJSON serializes the operation to JSON format.

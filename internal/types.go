@@ -8,16 +8,50 @@ type Operation = map[string]interface{}
 // actually []interface{}, but with clearer semantics
 type CompactOperation = []interface{}
 
-// OpResult represents the result of a single operation
-type OpResult struct {
-	Doc interface{} `json:"doc"`
+// OpResult represents the result of a single operation with generic type support
+type OpResult[T Document] struct {
+	Doc T           `json:"doc"`
 	Old interface{} `json:"old,omitempty"`
 }
 
-// PatchResult represents the result of a patch operation
-type PatchResult struct {
-	Doc interface{} `json:"doc"`
-	Res []OpResult  `json:"res"`
+// PatchResult represents the result of applying a JSON Patch with generic type support.
+// It contains the patched document and the results of individual operations.
+type PatchResult[T Document] struct {
+	Doc T             // The patched document of the original type
+	Res []OpResult[T] // Results of individual patch operations
+}
+
+// Document defines the supported document types for JSON Patch operations.
+// Supports: structs, map[string]any, []byte (JSON), and string (JSON).
+type Document interface {
+	~[]byte | ~string | map[string]any | any
+}
+
+// Options holds configuration parameters for patch operations.
+// This is the unified configuration struct following Go best practices.
+type Options struct {
+	Mutate        bool                                               // Whether to modify the original document
+	CreateMatcher func(pattern string, ignoreCase bool) RegexMatcher // Optional regex matcher creator
+}
+
+// Option represents functional options for configuring patch operations.
+// This follows the standard Go functional options pattern.
+type Option func(*Options)
+
+// WithMutate configures whether the patch operation should modify the original document.
+// When false (default), returns a new copy. When true, modifies the original.
+func WithMutate(mutate bool) Option {
+	return func(opts *Options) {
+		opts.Mutate = mutate
+	}
+}
+
+// WithMatcher configures a custom regex matcher for pattern operations.
+// The createMatcher function should create a RegexMatcher from a pattern and ignoreCase flag.
+func WithMatcher(createMatcher func(pattern string, ignoreCase bool) RegexMatcher) Option {
+	return func(opts *Options) {
+		opts.CreateMatcher = createMatcher
+	}
 }
 
 // JsonPatchTypes represents the valid JSON types for type operations.
@@ -33,21 +67,13 @@ const (
 	JsonPatchTypeNull    JsonPatchTypes = "null"
 )
 
-// CreateRegexMatcher is a function type that creates a regular expression matcher.
-type CreateRegexMatcher func(pattern string, ignoreCase bool) RegexMatcher
-
 // RegexMatcher is a function type that tests if a value matches a pattern.
 type RegexMatcher func(value string) bool
 
 // JsonPatchOptions contains options for JSON Patch operations.
+// This is kept for decoder compatibility.
 type JsonPatchOptions struct {
-	CreateMatcher CreateRegexMatcher
-}
-
-// ApplyPatchOptions contains options for applying patches.
-type ApplyPatchOptions struct {
-	Mutate           bool
-	JsonPatchOptions JsonPatchOptions
+	CreateMatcher func(pattern string, ignoreCase bool) RegexMatcher
 }
 
 // IsValidJsonPatchType checks if a type string is a valid JSON Patch type

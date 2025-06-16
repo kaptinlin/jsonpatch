@@ -17,7 +17,7 @@ func TestStartsOp(t *testing.T) {
 				"value": "Hello",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch("Hello world", patch, internal.ApplyPatchOptions{Mutate: true})
+			_, err := jsonpatch.ApplyPatch("Hello world", patch, internal.WithMutate(true))
 			require.NoError(t, err)
 		})
 
@@ -28,7 +28,7 @@ func TestStartsOp(t *testing.T) {
 				"value": "World",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch("Hello world", patch, internal.ApplyPatchOptions{Mutate: true})
+			_, err := jsonpatch.ApplyPatch("Hello world", patch, internal.WithMutate(true))
 			require.Error(t, err)
 		})
 
@@ -40,7 +40,7 @@ func TestStartsOp(t *testing.T) {
 				"ignore_case": true,
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch("Hello world", patch, internal.ApplyPatchOptions{Mutate: true})
+			_, err := jsonpatch.ApplyPatch("Hello world", patch, internal.WithMutate(true))
 			require.NoError(t, err)
 		})
 	})
@@ -53,7 +53,7 @@ func TestStartsOp(t *testing.T) {
 				"value": "Hello",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(map[string]interface{}{"msg": "Hello world"}, patch, internal.ApplyPatchOptions{Mutate: true})
+			_, err := jsonpatch.ApplyPatch(map[string]interface{}{"msg": "Hello world"}, patch, internal.WithMutate(true))
 			require.NoError(t, err)
 		})
 
@@ -64,7 +64,7 @@ func TestStartsOp(t *testing.T) {
 				"value": "World",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(map[string]interface{}{"msg": "Hello world"}, patch, internal.ApplyPatchOptions{Mutate: true})
+			_, err := jsonpatch.ApplyPatch(map[string]interface{}{"msg": "Hello world"}, patch, internal.WithMutate(true))
 			require.Error(t, err)
 		})
 	})
@@ -77,7 +77,7 @@ func TestStartsOp(t *testing.T) {
 				"value": "Hello",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch([]interface{}{"Hello world"}, patch, internal.ApplyPatchOptions{Mutate: true})
+			_, err := jsonpatch.ApplyPatch([]interface{}{"Hello world"}, patch, internal.WithMutate(true))
 			require.NoError(t, err)
 		})
 
@@ -88,7 +88,7 @@ func TestStartsOp(t *testing.T) {
 				"value": "World",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch([]interface{}{"Hello world"}, patch, internal.ApplyPatchOptions{Mutate: true})
+			_, err := jsonpatch.ApplyPatch([]interface{}{"Hello world"}, patch, internal.WithMutate(true))
 			require.Error(t, err)
 		})
 	})

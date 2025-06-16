@@ -74,15 +74,15 @@ func (o *OpNotOperation) Not() bool {
 }
 
 // Apply applies the NOT operation.
-func (o *OpNotOperation) Apply(doc any) (internal.OpResult, error) {
+func (o *OpNotOperation) Apply(doc any) (internal.OpResult[any], error) {
 	ok, err := o.Test(doc)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 	if !ok {
-		return internal.OpResult{}, ErrNotTestFailed
+		return internal.OpResult[any]{}, ErrNotTestFailed
 	}
-	return internal.OpResult{Doc: doc}, nil
+	return internal.OpResult[any]{Doc: doc}, nil
 }
 
 // ToJSON serializes the operation to JSON format.

@@ -22,7 +22,7 @@ func TestMergeOp(t *testing.T) {
 				"pos":  1,
 			},
 		}
-		result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 		require.NoError(t, err)
 		expected := []interface{}{
 			map[string]interface{}{"text": "foobar"},
@@ -42,7 +42,7 @@ func TestMergeOp(t *testing.T) {
 				"pos":  0,
 			},
 		}
-		_, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+		_, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 		require.Error(t, err)
 	})
 
@@ -61,7 +61,7 @@ func TestMergeOp(t *testing.T) {
 				"pos":  2,
 			},
 		}
-		result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 		require.NoError(t, err)
 		expected := map[string]interface{}{
 			"foo": []interface{}{
@@ -80,7 +80,7 @@ func TestMergeOp(t *testing.T) {
 				"pos":  1,
 			},
 		}
-		_, err := jsonpatch.ApplyPatch(123, operations, internal.ApplyPatchOptions{Mutate: true})
+		_, err := jsonpatch.ApplyPatch(123, operations, internal.WithMutate(true))
 		require.Error(t, err)
 	})
 
@@ -93,7 +93,7 @@ func TestMergeOp(t *testing.T) {
 				"pos":  1,
 			},
 		}
-		result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 		require.NoError(t, err)
 		expected := []interface{}{"hello world"}
 		assert.Equal(t, expected, result.Doc)
@@ -108,7 +108,7 @@ func TestMergeOp(t *testing.T) {
 				"pos":  1,
 			},
 		}
-		result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 		require.NoError(t, err)
 		expected := []interface{}{float64(8)}
 		assert.Equal(t, expected, result.Doc)
@@ -123,7 +123,7 @@ func TestMergeOp(t *testing.T) {
 				"pos":  1,
 			},
 		}
-		result, err := jsonpatch.ApplyPatch(state, operations, internal.ApplyPatchOptions{Mutate: true})
+		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 		require.NoError(t, err)
 		expected := []interface{}{[]interface{}{true, false}}
 		assert.Equal(t, expected, result.Doc)

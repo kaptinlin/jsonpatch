@@ -77,11 +77,11 @@ func (op *OpStartsOperation) Test(doc any) (bool, error) {
 }
 
 // Apply applies the starts test operation to the document.
-func (op *OpStartsOperation) Apply(doc any) (internal.OpResult, error) {
+func (op *OpStartsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get target value
 	val, err := getValue(doc, op.Path())
 	if err != nil {
-		return internal.OpResult{}, ErrPathNotFound
+		return internal.OpResult[any]{}, ErrPathNotFound
 	}
 
 	// Check if value is a string or convert byte slice to string
@@ -92,7 +92,7 @@ func (op *OpStartsOperation) Apply(doc any) (internal.OpResult, error) {
 	case []byte:
 		str = string(v)
 	default:
-		return internal.OpResult{}, ErrNotString
+		return internal.OpResult[any]{}, ErrNotString
 	}
 
 	// Check if string starts with the prefix
@@ -104,10 +104,10 @@ func (op *OpStartsOperation) Apply(doc any) (internal.OpResult, error) {
 	}
 
 	if !hasPrefix {
-		return internal.OpResult{}, fmt.Errorf("%w: string %q does not start with %q", ErrStringMismatch, str, op.Value)
+		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not start with %q", ErrStringMismatch, str, op.Value)
 	}
 
-	return internal.OpResult{Doc: doc}, nil
+	return internal.OpResult[any]{Doc: doc}, nil
 }
 
 // ToJSON serializes the operation to JSON format.

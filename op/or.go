@@ -67,18 +67,18 @@ func (o *OpOrOperation) Test(doc interface{}) (bool, error) {
 }
 
 // Apply applies the OR operation to the document.
-func (o *OpOrOperation) Apply(doc any) (internal.OpResult, error) {
+func (o *OpOrOperation) Apply(doc any) (internal.OpResult[any], error) {
 	for _, predicateInterface := range o.Operations {
 		predicate, ok := predicateInterface.(internal.PredicateOp)
 		if !ok {
-			return internal.OpResult{}, ErrInvalidPredicateInOr
+			return internal.OpResult[any]{}, ErrInvalidPredicateInOr
 		}
 		result, err := predicate.Apply(doc)
 		if err == nil {
 			return result, nil
 		}
 	}
-	return internal.OpResult{}, ErrOrTestFailed
+	return internal.OpResult[any]{}, ErrOrTestFailed
 }
 
 // ToJSON serializes the operation to JSON format.

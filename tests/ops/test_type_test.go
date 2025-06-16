@@ -11,7 +11,7 @@ import (
 // execTestType applies a single operation to a document
 func execTestType(t *testing.T, doc interface{}, op internal.Operation) interface{} {
 	t.Helper()
-	result, err := jsonpatch.ApplyPatch(doc, []internal.Operation{op}, internal.ApplyPatchOptions{Mutate: true})
+	result, err := jsonpatch.ApplyPatch(doc, []internal.Operation{op}, internal.WithMutate(true))
 	require.NoError(t, err)
 	return result.Doc
 }
@@ -19,7 +19,7 @@ func execTestType(t *testing.T, doc interface{}, op internal.Operation) interfac
 // execTestTypeWithError applies an operation expecting it to fail
 func execTestTypeWithError(t *testing.T, doc interface{}, op internal.Operation) {
 	t.Helper()
-	_, err := jsonpatch.ApplyPatch(doc, []internal.Operation{op}, internal.ApplyPatchOptions{Mutate: true})
+	_, err := jsonpatch.ApplyPatch(doc, []internal.Operation{op}, internal.WithMutate(true))
 	require.Error(t, err)
 }
 

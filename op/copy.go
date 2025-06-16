@@ -34,10 +34,10 @@ func (o *OpCopyOperation) From() []string {
 }
 
 // Apply applies the copy operation.
-func (o *OpCopyOperation) Apply(doc any) (internal.OpResult, error) {
+func (o *OpCopyOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, err := getValue(doc, o.FromPath)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	// Optimize: avoid unnecessary deep copy for simple types
@@ -49,7 +49,7 @@ func (o *OpCopyOperation) Apply(doc any) (internal.OpResult, error) {
 		// Deep copy for complex types
 		clonedValue, err = DeepClone(v)
 		if err != nil {
-			return internal.OpResult{}, err
+			return internal.OpResult[any]{}, err
 		}
 	}
 
@@ -66,10 +66,10 @@ func (o *OpCopyOperation) Apply(doc any) (internal.OpResult, error) {
 	// Set value to target path
 	err = insertValueAtPath(doc, o.Path(), clonedValue)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
-	return internal.OpResult{Doc: doc, Old: oldValue}, nil
+	return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 }
 
 // ToJSON serializes the operation to JSON format.

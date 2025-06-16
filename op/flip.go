@@ -30,18 +30,18 @@ func (op *OpFlipOperation) Code() int {
 }
 
 // Apply applies the flip operation to the document
-func (op *OpFlipOperation) Apply(doc any) (internal.OpResult, error) {
+func (op *OpFlipOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level flip specially
 	if len(op.Path()) == 0 {
 		// Target is the root document
 		flippedValue := op.flipValue(doc)
-		return internal.OpResult{Doc: flippedValue, Old: doc}, nil
+		return internal.OpResult[any]{Doc: flippedValue, Old: doc}, nil
 	}
 
 	// Get the value to flip
 	value, err := getValue(doc, op.Path())
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	// Flip the value
@@ -50,10 +50,10 @@ func (op *OpFlipOperation) Apply(doc any) (internal.OpResult, error) {
 	// Set the flipped value back
 	err = setValueAtPath(doc, op.Path(), flippedValue)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
-	return internal.OpResult{Doc: doc, Old: value}, nil
+	return internal.OpResult[any]{Doc: doc, Old: value}, nil
 }
 
 // flipValue flips boolean values or converts other types to boolean and flip

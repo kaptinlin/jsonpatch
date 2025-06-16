@@ -54,28 +54,28 @@ func (op *OpStrInsOperation) getTargetString(target any) (string, error) {
 }
 
 // Apply applies the string insert operation.
-func (op *OpStrInsOperation) Apply(doc any) (internal.OpResult, error) {
+func (op *OpStrInsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level specially
 	if len(op.Path()) == 0 {
 		targetStr, err := op.getTargetString(doc)
 		if err != nil {
-			return internal.OpResult{}, err
+			return internal.OpResult[any]{}, err
 		}
 
 		// Apply string insertion with optimized implementation
 		result := op.applyStrIns(targetStr)
-		return internal.OpResult{Doc: result, Old: doc}, nil
+		return internal.OpResult[any]{Doc: result, Old: doc}, nil
 	}
 
 	// Get the target value for non-root paths
 	target, err := getValue(doc, op.Path())
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	targetStr, err := op.getTargetString(target)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	// Apply string insertion with optimized implementation
@@ -84,10 +84,10 @@ func (op *OpStrInsOperation) Apply(doc any) (internal.OpResult, error) {
 	// Set the result back
 	err = setValueAtPath(doc, op.Path(), result)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
-	return internal.OpResult{Doc: doc, Old: target}, nil
+	return internal.OpResult[any]{Doc: doc, Old: target}, nil
 }
 
 // applyStrIns applies string insertion with optimized string building

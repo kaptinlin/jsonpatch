@@ -1,8 +1,9 @@
 package jsonpatch_test
 
 import (
-	"encoding/json"
 	"testing"
+
+	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/stretchr/testify/assert"
@@ -44,7 +45,7 @@ func TestOpRemove_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expected := map[string]interface{}{}
@@ -65,7 +66,7 @@ func TestOpRemove_Apply(t *testing.T) {
 			},
 		}
 
-		_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err)
 	})
 
@@ -82,7 +83,7 @@ func TestOpRemove_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		// Note: This might fail if the library doesn't support empty path for remove
 		if err != nil {
 			t.Skip("Library doesn't support empty path for remove operation")
@@ -109,7 +110,7 @@ func TestOpRemove_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expected := []interface{}{1, 2}
@@ -131,7 +132,7 @@ func TestOpRemove_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expected := []interface{}{2, 3}
@@ -154,7 +155,7 @@ func TestOpRemove_Apply(t *testing.T) {
 				"path": "/4",
 			},
 		}
-		_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err)
 
 		// Test removing at index 5 (beyond bounds)
@@ -162,7 +163,7 @@ func TestOpRemove_Apply(t *testing.T) {
 			"op":   "remove",
 			"path": "/5",
 		}
-		_, err = jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err = jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err)
 	})
 }
@@ -177,7 +178,7 @@ func TestOpRemove_RFC6902_Section4_2(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expected := []interface{}{1, 3}

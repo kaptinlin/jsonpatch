@@ -12,7 +12,7 @@ import (
 // applyOperationsInc applies multiple operations to a document
 func applyOperationsInc(t *testing.T, doc interface{}, ops []internal.Operation) interface{} {
 	t.Helper()
-	result, err := jsonpatch.ApplyPatch(doc, ops, internal.ApplyPatchOptions{Mutate: true})
+	result, err := jsonpatch.ApplyPatch(doc, ops, internal.WithMutate(true))
 	require.NoError(t, err)
 	return result.Doc
 }

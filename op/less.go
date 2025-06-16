@@ -21,16 +21,16 @@ func NewOpLessOperation(path []string, value float64) *OpLessOperation {
 }
 
 // Apply applies the less test operation to the document.
-func (op *OpLessOperation) Apply(doc any) (internal.OpResult, error) {
+func (op *OpLessOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, actualValue, err := op.getAndValidateValue(doc)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	if actualValue >= op.Value {
-		return internal.OpResult{}, fmt.Errorf("%w: value %f is not less than %f", ErrComparisonFailed, actualValue, op.Value)
+		return internal.OpResult[any]{}, fmt.Errorf("%w: value %f is not less than %f", ErrComparisonFailed, actualValue, op.Value)
 	}
-	return internal.OpResult{Doc: doc, Old: value}, nil
+	return internal.OpResult[any]{Doc: doc, Old: value}, nil
 }
 
 // getAndValidateValue retrieves and validates the numeric value at the path

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
+
+	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
 )
@@ -22,7 +23,7 @@ func main() {
 	}
 
 	fmt.Println("\nOriginal:")
-	original, _ := json.MarshalIndent(system, "", "  ")
+	original, _ := json.Marshal(system)
 	fmt.Println(string(original))
 
 	// Build batch update patch
@@ -56,13 +57,12 @@ func main() {
 
 	fmt.Printf("\nApplying %d operations in batch...\n", len(patch))
 
-	options := jsonpatch.ApplyPatchOptions{Mutate: false}
-	result, err := jsonpatch.ApplyPatch(system, patch, options)
+	result, err := jsonpatch.ApplyPatch(system, patch)
 	if err != nil {
 		log.Fatalf("Failed: %v", err)
 	}
 
 	fmt.Println("\nAfter batch update:")
-	updated, _ := json.MarshalIndent(result.Doc, "", "  ")
+	updated, _ := json.Marshal(result.Doc)
 	fmt.Println(string(updated))
 }

@@ -41,59 +41,59 @@ func (op *OpMergeOperation) Path() []string {
 }
 
 // Apply applies the array merge operation.
-func (op *OpMergeOperation) Apply(doc any) (internal.OpResult, error) {
+func (op *OpMergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level merge specially
 	if len(op.Path()) == 0 {
 		// Target is the root document
 		targetArr, ok := doc.([]interface{})
 		if !ok {
-			return internal.OpResult{}, ErrNotAnArray
+			return internal.OpResult[any]{}, ErrNotAnArray
 		}
 
 		// Check if we have at least 2 elements and pos is valid
 		if len(targetArr) < 2 {
-			return internal.OpResult{}, ErrArrayTooSmall
+			return internal.OpResult[any]{}, ErrArrayTooSmall
 		}
 		if op.Pos <= 0 || op.Pos >= len(targetArr) {
-			return internal.OpResult{}, ErrPositionOutOfBounds
+			return internal.OpResult[any]{}, ErrPositionOutOfBounds
 		}
 
 		// Clone the target array
 		clonedTarget, err := DeepClone(targetArr)
 		if err != nil {
-			return internal.OpResult{}, err
+			return internal.OpResult[any]{}, err
 		}
 
 		// Merge array elements
 		mergedArr, oldElements := op.mergeArrayElements(clonedTarget.([]interface{}), op.Pos)
 
-		return internal.OpResult{Doc: mergedArr, Old: oldElements}, nil
+		return internal.OpResult[any]{Doc: mergedArr, Old: oldElements}, nil
 	}
 
 	// Get the target value for non-root paths
 	target, err := getValue(doc, op.Path())
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	// Check if target is an array
 	targetArr, ok := target.([]interface{})
 	if !ok {
-		return internal.OpResult{}, ErrNotAnArray
+		return internal.OpResult[any]{}, ErrNotAnArray
 	}
 
 	// Check if we have at least 2 elements and pos is valid
 	if len(targetArr) < 2 {
-		return internal.OpResult{}, ErrArrayTooSmall
+		return internal.OpResult[any]{}, ErrArrayTooSmall
 	}
 	if op.Pos <= 0 || op.Pos >= len(targetArr) {
-		return internal.OpResult{}, ErrPositionOutOfBounds
+		return internal.OpResult[any]{}, ErrPositionOutOfBounds
 	}
 
 	// Clone the target array
 	clonedTarget, err := DeepClone(targetArr)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	// Merge array elements
@@ -102,10 +102,10 @@ func (op *OpMergeOperation) Apply(doc any) (internal.OpResult, error) {
 	// Set the merged array back
 	err = setValueAtPath(doc, op.Path(), mergedArr)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
-	return internal.OpResult{Doc: doc, Old: oldElements}, nil
+	return internal.OpResult[any]{Doc: doc, Old: oldElements}, nil
 }
 
 // mergeArrayElements merges array elements at position pos-1 and pos (like TypeScript version).

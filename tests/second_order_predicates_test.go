@@ -28,7 +28,7 @@ func TestSucceedsWhenTwoAndPredicatesSucceed(t *testing.T) {
 		},
 	}
 
-	options := jsonpatch.ApplyPatchOptions{Mutate: true}
+	options := jsonpatch.WithMutate(true)
 	_, err := jsonpatch.ApplyPatch(doc, patch, options)
 	if err != nil {
 		t.Fatalf("AND operation should succeed: %v", err)
@@ -53,7 +53,7 @@ func TestThrowsWhenOneOfTwoAndPredicatesFails(t *testing.T) {
 		},
 	}
 
-	options := jsonpatch.ApplyPatchOptions{Mutate: true}
+	options := jsonpatch.WithMutate(true)
 	_, err := jsonpatch.ApplyPatch(doc, patch, options)
 	if err == nil {
 		t.Error("AND operation should fail when one predicate fails")
@@ -79,7 +79,7 @@ func TestSucceedsWhenOneOfOrOperationsSucceeds(t *testing.T) {
 		},
 	}
 
-	options := jsonpatch.ApplyPatchOptions{Mutate: true}
+	options := jsonpatch.WithMutate(true)
 	_, err := jsonpatch.ApplyPatch(doc, patch, options)
 	if err != nil {
 		t.Fatalf("OR operation should succeed when one predicate succeeds: %v", err)
@@ -105,7 +105,7 @@ func TestThrowsWhenOneOfNotOperationsSucceeds(t *testing.T) {
 		},
 	}
 
-	options := jsonpatch.ApplyPatchOptions{Mutate: true}
+	options := jsonpatch.WithMutate(true)
 	_, err := jsonpatch.ApplyPatch(doc, patch, options)
 	if err == nil {
 		t.Error("NOT operation should fail when one of the operations succeeds")
@@ -130,7 +130,7 @@ func TestSucceedsWhenBothNotOperationsFail(t *testing.T) {
 		},
 	}
 
-	options := jsonpatch.ApplyPatchOptions{Mutate: true}
+	options := jsonpatch.WithMutate(true)
 	_, err := jsonpatch.ApplyPatch(doc, patch, options)
 	if err != nil {
 		t.Fatalf("NOT operation should succeed when both operations fail: %v", err)

@@ -16,7 +16,7 @@ func TestUndefinedOp(t *testing.T) {
 				"path": "",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch("hello", patch, internal.ApplyPatchOptions{Mutate: true})
+			_, err := jsonpatch.ApplyPatch("hello", patch, internal.WithMutate(true))
 			require.Error(t, err)
 		})
 
@@ -26,7 +26,7 @@ func TestUndefinedOp(t *testing.T) {
 				"path": "/missing",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(map[string]interface{}{}, patch, internal.ApplyPatchOptions{Mutate: true})
+			_, err := jsonpatch.ApplyPatch(map[string]interface{}{}, patch, internal.WithMutate(true))
 			require.NoError(t, err)
 		})
 	})
@@ -38,7 +38,7 @@ func TestUndefinedOp(t *testing.T) {
 				"path": "/foo",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(map[string]interface{}{"foo": "bar"}, patch, internal.ApplyPatchOptions{Mutate: true})
+			_, err := jsonpatch.ApplyPatch(map[string]interface{}{"foo": "bar"}, patch, internal.WithMutate(true))
 			require.Error(t, err)
 		})
 
@@ -48,7 +48,7 @@ func TestUndefinedOp(t *testing.T) {
 				"path": "/missing",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(map[string]interface{}{"foo": "bar"}, patch, internal.ApplyPatchOptions{Mutate: true})
+			_, err := jsonpatch.ApplyPatch(map[string]interface{}{"foo": "bar"}, patch, internal.WithMutate(true))
 			require.NoError(t, err)
 		})
 	})
@@ -60,7 +60,7 @@ func TestUndefinedOp(t *testing.T) {
 				"path": "/0",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch([]interface{}{"hello"}, patch, internal.ApplyPatchOptions{Mutate: true})
+			_, err := jsonpatch.ApplyPatch([]interface{}{"hello"}, patch, internal.WithMutate(true))
 			require.Error(t, err)
 		})
 
@@ -70,7 +70,7 @@ func TestUndefinedOp(t *testing.T) {
 				"path": "/5",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch([]interface{}{"hello"}, patch, internal.ApplyPatchOptions{Mutate: true})
+			_, err := jsonpatch.ApplyPatch([]interface{}{"hello"}, patch, internal.WithMutate(true))
 			require.NoError(t, err)
 		})
 	})

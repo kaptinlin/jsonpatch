@@ -17,7 +17,7 @@ func TestLessOp(t *testing.T) {
 				"value": 124,
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(123, patch, internal.ApplyPatchOptions{Mutate: true})
+			_, err := jsonpatch.ApplyPatch(123, patch, internal.WithMutate(true))
 			require.NoError(t, err)
 		})
 
@@ -28,7 +28,7 @@ func TestLessOp(t *testing.T) {
 				"value": 123,
 			}
 			patch1 := []internal.Operation{op1}
-			_, err1 := jsonpatch.ApplyPatch(123, patch1, internal.ApplyPatchOptions{Mutate: true})
+			_, err1 := jsonpatch.ApplyPatch(123, patch1, internal.WithMutate(true))
 			require.Error(t, err1)
 
 			op2 := internal.Operation{
@@ -37,7 +37,7 @@ func TestLessOp(t *testing.T) {
 				"value": 1,
 			}
 			patch2 := []internal.Operation{op2}
-			_, err2 := jsonpatch.ApplyPatch(123, patch2, internal.ApplyPatchOptions{Mutate: true})
+			_, err2 := jsonpatch.ApplyPatch(123, patch2, internal.WithMutate(true))
 			require.Error(t, err2)
 		})
 	})

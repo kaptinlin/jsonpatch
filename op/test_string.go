@@ -71,11 +71,11 @@ func (op *OpTestStringOperation) Test(doc any) (bool, error) {
 }
 
 // Apply applies the test string operation to the document.
-func (op *OpTestStringOperation) Apply(doc any) (internal.OpResult, error) {
+func (op *OpTestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get target value
 	val, err := getValue(doc, op.Path())
 	if err != nil {
-		return internal.OpResult{}, ErrPathNotFound
+		return internal.OpResult[any]{}, ErrPathNotFound
 	}
 
 	// Check if value is a string or convert byte slice to string
@@ -86,25 +86,25 @@ func (op *OpTestStringOperation) Apply(doc any) (internal.OpResult, error) {
 	case []byte:
 		str = string(v)
 	default:
-		return internal.OpResult{}, ErrNotString
+		return internal.OpResult[any]{}, ErrNotString
 	}
 
 	// Check if substring matches at the specified position
 	if op.Pos < 0 || op.Pos > len(str) {
-		return internal.OpResult{}, ErrPositionOutOfStringRange
+		return internal.OpResult[any]{}, ErrPositionOutOfStringRange
 	}
 
 	endPos := op.Pos + len(op.Str)
 	if endPos > len(str) {
-		return internal.OpResult{}, ErrSubstringTooLong
+		return internal.OpResult[any]{}, ErrSubstringTooLong
 	}
 
 	substring := str[op.Pos:endPos]
 	if substring != op.Str {
-		return internal.OpResult{}, fmt.Errorf("%w at position %d", ErrSubstringMismatch, op.Pos)
+		return internal.OpResult[any]{}, fmt.Errorf("%w at position %d", ErrSubstringMismatch, op.Pos)
 	}
 
-	return internal.OpResult{Doc: doc}, nil
+	return internal.OpResult[any]{Doc: doc}, nil
 }
 
 // ToJSON serializes the operation to JSON format.

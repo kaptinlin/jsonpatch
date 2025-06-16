@@ -17,7 +17,7 @@ func TestMatchesOp(t *testing.T) {
 				"value": "\\d+",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch("123", patch, internal.ApplyPatchOptions{Mutate: true})
+			_, err := jsonpatch.ApplyPatch("123", patch, internal.WithMutate(true))
 			require.NoError(t, err)
 		})
 
@@ -28,7 +28,7 @@ func TestMatchesOp(t *testing.T) {
 				"value": "\\d+",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch("asdf", patch, internal.ApplyPatchOptions{Mutate: true})
+			_, err := jsonpatch.ApplyPatch("asdf", patch, internal.WithMutate(true))
 			require.Error(t, err)
 		})
 	})

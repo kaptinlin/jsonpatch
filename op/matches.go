@@ -72,24 +72,24 @@ func (o *OpMatchesOperation) Test(doc interface{}) (bool, error) {
 }
 
 // Apply applies the matches operation.
-func (o *OpMatchesOperation) Apply(doc any) (internal.OpResult, error) {
+func (o *OpMatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get target value
 	val, err := getValue(doc, o.Path())
 	if err != nil {
-		return internal.OpResult{}, ErrPathNotFound
+		return internal.OpResult[any]{}, ErrPathNotFound
 	}
 
 	// Convert to string
 	str, err := toString(val)
 	if err != nil {
-		return internal.OpResult{}, ErrNotString
+		return internal.OpResult[any]{}, ErrNotString
 	}
 
 	if !o.matcher.MatchString(str) {
-		return internal.OpResult{}, fmt.Errorf("%w: string '%s' does not match pattern", ErrStringMismatch, str)
+		return internal.OpResult[any]{}, fmt.Errorf("%w: string '%s' does not match pattern", ErrStringMismatch, str)
 	}
 
-	return internal.OpResult{Doc: doc, Old: val}, nil
+	return internal.OpResult[any]{Doc: doc, Old: val}, nil
 }
 
 // ToJSON converts the operation to JSON representation.

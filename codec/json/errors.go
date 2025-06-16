@@ -2,7 +2,6 @@ package json
 
 import "errors"
 
-// Core error definitions - simple and clear
 var (
 	// Core field validation errors
 	ErrOpMissingOpField   = errors.New("operation missing 'op' field")

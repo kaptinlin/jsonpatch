@@ -96,18 +96,18 @@ func (op *OpTestTypeOperation) Not() bool {
 }
 
 // Apply applies the test type operation to the document.
-func (op *OpTestTypeOperation) Apply(doc any) (internal.OpResult, error) {
+func (op *OpTestTypeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	_, actualType, typeMatches, err := op.getValueAndCheckType(doc)
 	if err != nil {
-		return internal.OpResult{}, ErrPathNotFound
+		return internal.OpResult[any]{}, ErrPathNotFound
 	}
 
 	if !typeMatches {
 		expectedTypesStr := strings.Join(op.Types, ", ")
-		return internal.OpResult{}, fmt.Errorf("%w: expected type %s, got %s", ErrTypeMismatch, expectedTypesStr, actualType)
+		return internal.OpResult[any]{}, fmt.Errorf("%w: expected type %s, got %s", ErrTypeMismatch, expectedTypesStr, actualType)
 	}
 
-	return internal.OpResult{Doc: doc}, nil
+	return internal.OpResult[any]{Doc: doc}, nil
 }
 
 // getTypeName returns the JSON type name of a value.

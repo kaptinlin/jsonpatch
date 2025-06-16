@@ -43,18 +43,18 @@ func (op *OpSplitOperation) Path() []string {
 }
 
 // Apply applies the string split operation.
-func (op *OpSplitOperation) Apply(doc any) (internal.OpResult, error) {
+func (op *OpSplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level split specially
 	if len(op.Path()) == 0 {
 		// Target is the root document
 		parts := op.splitValue(doc)
-		return internal.OpResult{Doc: parts, Old: doc}, nil
+		return internal.OpResult[any]{Doc: parts, Old: doc}, nil
 	}
 
 	// Get the target value for non-root paths
 	target, err := getValue(doc, op.Path())
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	// Split the value
@@ -74,16 +74,16 @@ func (op *OpSplitOperation) Apply(doc any) (internal.OpResult, error) {
 					elementKey := op.Path()[len(op.Path())-1]
 					index, parseErr := parseArrayIndex(elementKey)
 					if parseErr != nil {
-						return internal.OpResult{}, parseErr
+						return internal.OpResult[any]{}, parseErr
 					}
 
 					rootArray, ok := doc.([]interface{})
 					if !ok {
-						return internal.OpResult{}, ErrNotAnArray
+						return internal.OpResult[any]{}, ErrNotAnArray
 					}
 
 					if index < 0 || index >= len(rootArray) {
-						return internal.OpResult{}, ErrArrayIndexOutOfBounds
+						return internal.OpResult[any]{}, ErrArrayIndexOutOfBounds
 					}
 
 					// Create new array with the split result
@@ -93,20 +93,20 @@ func (op *OpSplitOperation) Apply(doc any) (internal.OpResult, error) {
 					newArray[index+1] = parts.([]interface{})[1]
 					copy(newArray[index+2:], rootArray[index+1:])
 
-					return internal.OpResult{Doc: newArray, Old: target}, nil
+					return internal.OpResult[any]{Doc: newArray, Old: target}, nil
 				}
 			}
-			return internal.OpResult{}, err
+			return internal.OpResult[any]{}, err
 		}
 	} else {
 		// For objects and other cases, replace the entire value
 		err = setValueAtPath(doc, op.Path(), parts)
 		if err != nil {
-			return internal.OpResult{}, err
+			return internal.OpResult[any]{}, err
 		}
 	}
 
-	return internal.OpResult{Doc: doc, Old: target}, nil
+	return internal.OpResult[any]{Doc: doc, Old: target}, nil
 }
 
 // isArrayElementPath checks if the path points to an array element

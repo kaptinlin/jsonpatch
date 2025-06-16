@@ -1,8 +1,9 @@
 package jsonpatch_test
 
 import (
-	"encoding/json"
 	"testing"
+
+	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/stretchr/testify/assert"
@@ -49,7 +50,7 @@ func TestOpReplace_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(false))
 		assert.NoError(t, err)
 
 		expected := map[string]interface{}{
@@ -74,7 +75,7 @@ func TestOpReplace_RFC6902_Section4_3(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(false))
 		// Note: This might fail if the library doesn't support empty path
 		if err != nil {
 			t.Skip("Library doesn't support empty path for replace operation")
@@ -97,7 +98,7 @@ func TestOpReplace_RFC6902_Section4_3(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(false))
 		assert.NoError(t, err)
 
 		expected := []interface{}{0, 2, 3}
@@ -117,7 +118,7 @@ func TestOpReplace_RFC6902_Section4_3(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(false))
 		assert.NoError(t, err)
 
 		expected := []interface{}{1, 0, 3}
@@ -137,7 +138,7 @@ func TestOpReplace_RFC6902_Section4_3(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(false))
 		assert.NoError(t, err)
 
 		expected := []interface{}{1, 2, 0}
@@ -157,7 +158,7 @@ func TestOpReplace_RFC6902_Section4_3(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(false))
 		assert.NoError(t, err)
 
 		expected := map[string]interface{}{"foo": 0}
@@ -177,7 +178,7 @@ func TestOpReplace_RFC6902_Section4_3(t *testing.T) {
 			},
 		}
 
-		_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(false))
 		assert.Error(t, err)
 	})
 
@@ -191,7 +192,7 @@ func TestOpReplace_RFC6902_Section4_3(t *testing.T) {
 			},
 		}
 
-		_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err)
 	})
 }

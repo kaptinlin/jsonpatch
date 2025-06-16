@@ -46,14 +46,14 @@ func (o *OpReplaceOperation) Path() []string {
 }
 
 // Apply applies the replace operation to the document.
-func (o *OpReplaceOperation) Apply(doc any) (internal.OpResult, error) {
+func (o *OpReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Clone the new value to prevent external mutations
 	newValue := deepclone.Clone(o.Value)
 
 	if len(o.path) == 0 {
 		// Replace entire document
 		oldValue := doc
-		return internal.OpResult{Doc: newValue, Old: oldValue}, nil
+		return internal.OpResult[any]{Doc: newValue, Old: oldValue}, nil
 	}
 	if len(o.path) == 1 && o.path[0] == "" {
 		// Special case: path "/" refers to the key "" in the root object
@@ -61,16 +61,16 @@ func (o *OpReplaceOperation) Apply(doc any) (internal.OpResult, error) {
 		case map[string]interface{}:
 			oldValue := v[""]
 			v[""] = newValue
-			return internal.OpResult{Doc: doc, Old: oldValue}, nil
+			return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 		default:
-			return internal.OpResult{}, ErrCannotReplace
+			return internal.OpResult[any]{}, ErrCannotReplace
 		}
 	}
 
 	// Optimize: directly check type and get value in type switch
 	parent, key, err := navigateToParent(doc, o.path)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	// Optimize: directly check type and get value in type switch
@@ -78,30 +78,30 @@ func (o *OpReplaceOperation) Apply(doc any) (internal.OpResult, error) {
 	case map[string]interface{}:
 		k, ok := key.(string)
 		if !ok {
-			return internal.OpResult{}, ErrInvalidKeyTypeMap
+			return internal.OpResult[any]{}, ErrInvalidKeyTypeMap
 		}
 		// Optimize: merge existence check and value retrieval
 		if oldValue, exists := p[k]; exists {
 			p[k] = newValue
-			return internal.OpResult{Doc: doc, Old: oldValue}, nil
+			return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 		}
-		return internal.OpResult{}, ErrPathDoesNotExist
+		return internal.OpResult[any]{}, ErrPathDoesNotExist
 
 	case []interface{}:
 		k, ok := key.(int)
 		if !ok {
-			return internal.OpResult{}, ErrInvalidKeyTypeSlice
+			return internal.OpResult[any]{}, ErrInvalidKeyTypeSlice
 		}
 		// Optimize: merge boundary check and value retrieval
 		if k >= 0 && k < len(p) {
 			oldValue := p[k]
 			p[k] = newValue
-			return internal.OpResult{Doc: doc, Old: oldValue}, nil
+			return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 		}
-		return internal.OpResult{}, ErrPathDoesNotExist
+		return internal.OpResult[any]{}, ErrPathDoesNotExist
 
 	default:
-		return internal.OpResult{}, ErrUnsupportedParentType
+		return internal.OpResult[any]{}, ErrUnsupportedParentType
 	}
 }
 

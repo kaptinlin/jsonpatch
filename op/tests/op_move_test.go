@@ -1,8 +1,9 @@
 package jsonpatch_test
 
 import (
-	"encoding/json"
 	"testing"
+
+	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/stretchr/testify/assert"
@@ -45,7 +46,7 @@ func TestOpMove_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expected := map[string]interface{}{
@@ -71,7 +72,7 @@ func TestOpMove_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expected := map[string]interface{}{
@@ -95,7 +96,7 @@ func TestOpMove_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		// Move c from index 2 to index 0
@@ -123,7 +124,7 @@ func TestOpMove_Apply(t *testing.T) {
 			},
 		}
 
-		_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "path not found", "Error should indicate source path not found")
 	})
@@ -151,11 +152,11 @@ func TestOpMove_Apply(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expectedMovedItem := map[string]interface{}{"id": 1, "data": "test1"}
-		actualDoc := result.Doc.(map[string]interface{})
+		actualDoc := result.Doc
 		destination := actualDoc["destination"].(map[string]interface{})
 		assert.Equal(t, expectedMovedItem, destination["moved_item"])
 
@@ -183,7 +184,7 @@ func TestOpMove_RFC6902_Section4_4(t *testing.T) {
 			},
 		}
 
-		_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err, "Cannot move location into one of its children")
 		assert.Contains(t, err.Error(), "cannot move into own children", "Error should mention descendant restriction")
 	})
@@ -205,7 +206,7 @@ func TestOpMove_RFC6902_Section4_4(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expected := map[string]interface{}{
@@ -236,7 +237,7 @@ func TestOpMove_RFC6902_Section4_4(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expected := map[string]interface{}{
@@ -263,7 +264,7 @@ func TestOpMove_RFC6902_Section4_4(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		// TypeScript behavior: Move from foo[0] (1) to bar[0] -> bar becomes [1, 0]
@@ -294,7 +295,7 @@ func TestOpMove_RFC6902_Section4_4(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expected := map[string]interface{}{
@@ -326,7 +327,7 @@ func TestOpMove_RFC6902_Section4_4(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		// Moving to root replaces entire document with the moved value
@@ -357,7 +358,7 @@ func TestOpMove_AdvancedScenarios(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		if err != nil {
 			// If the library doesn't support "-" syntax, skip this test
 			t.Skip("Library doesn't support array append syntax")
@@ -390,7 +391,7 @@ func TestOpMove_AdvancedScenarios(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expected := map[string]interface{}{
@@ -425,7 +426,7 @@ func TestOpMove_AdvancedScenarios(t *testing.T) {
 			},
 		}
 
-		_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		_, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err, "Should prevent moving parent into its own child")
 		assert.Contains(t, err.Error(), "cannot move into own children", "Error should mention descendant restriction")
 	})
@@ -450,7 +451,7 @@ func TestOpMove_AdvancedScenarios(t *testing.T) {
 			},
 		}
 
-		result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.ApplyPatchOptions{})
+		result, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.NoError(t, err)
 
 		expectedContent := map[string]interface{}{
@@ -462,7 +463,7 @@ func TestOpMove_AdvancedScenarios(t *testing.T) {
 			"object":  map[string]interface{}{"nested": "data"},
 		}
 
-		actualDoc := result.Doc.(map[string]interface{})
+		actualDoc := result.Doc
 		assert.Equal(t, expectedContent, actualDoc["moved_complex_object"])
 	})
 }

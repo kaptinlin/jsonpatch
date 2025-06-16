@@ -49,17 +49,17 @@ func (op *OpInOperation) Test(doc any) (bool, error) {
 }
 
 // Apply applies the in test operation to the document.
-func (op *OpInOperation) Apply(doc any) (internal.OpResult, error) {
+func (op *OpInOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, found, err := op.getValueAndCheckInArray(doc)
 	if err != nil {
-		return internal.OpResult{}, err
+		return internal.OpResult[any]{}, err
 	}
 
 	if !found {
-		return internal.OpResult{}, fmt.Errorf("%w: value %v is not in array %v", ErrOperationFailed, value, op.Values)
+		return internal.OpResult[any]{}, fmt.Errorf("%w: value %v is not in array %v", ErrOperationFailed, value, op.Values)
 	}
 
-	return internal.OpResult{Doc: doc, Old: value}, nil
+	return internal.OpResult[any]{Doc: doc, Old: value}, nil
 }
 
 // getValueAndCheckInArray retrieves the value and checks if it's in the array

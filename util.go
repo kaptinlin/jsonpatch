@@ -48,7 +48,7 @@ func GetOpPath(operation internal.Op) []string {
 }
 
 // ApplyOpDirect applies an operation directly using the Op interface.
-func ApplyOpDirect(operation internal.Op, doc interface{}) (internal.OpResult, error) {
+func ApplyOpDirect(operation internal.Op, doc interface{}) (internal.OpResult[any], error) {
 	return operation.Apply(doc)
 }
 
