@@ -48,6 +48,17 @@ Demonstrates patching Go structs with type safety and JSON tag support.
 cd struct-patch && go run main.go
 ```
 
+## Codec Examples
+
+### 11. Compact Codec (`compact-codec/`)
+Demonstrates the compact array-based codec that provides significant space savings over standard JSON format.
+
+```bash
+cd compact-codec && go run main.go
+```
+
+Shows encoding with both numeric and string opcodes, space savings analysis, and round-trip compatibility testing.
+
 ### 7. Map Patch (`map-patch/`)
 Shows efficient patching of `map[string]any` documents for dynamic data.
 
