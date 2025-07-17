@@ -206,6 +206,7 @@ Explore comprehensive examples in the [`examples/`](examples/) directory:
 
 ### Codecs
 - **[Compact Codec](examples/compact-codec/)** - Space-efficient array format
+- **[Binary Codec](examples/binary-codec/)** - MessagePack format for maximum speed & compactness
 
 ### Advanced
 - **[Batch Updates](examples/batch-update/)** - Bulk operations
