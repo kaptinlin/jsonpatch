@@ -3,10 +3,10 @@ module github.com/kaptinlin/jsonpatch
 go 1.24.3
 
 require (
-	github.com/go-json-experiment/json v0.0.0-20250517221953-25912455fbc8
+	github.com/go-json-experiment/json v0.0.0-20250813233538-9b1f9ea2e11b
 	github.com/kaptinlin/deepclone v0.1.0
 	github.com/kaptinlin/jsonpointer v0.4.3
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/wapc/tinygo-msgpack v0.2.1
 )
 
