@@ -15,10 +15,11 @@ func (c *Codec) decode(data []byte) ([]internal.Op, error) {
 }
 
 func decodeOps(decoder *msgpack.Decoder) ([]internal.Op, error) {
-	size, err := decoder.ReadArraySize()
+	size64, err := decoder.ReadFloat64()
 	if err != nil {
 		return nil, err
 	}
+	size := uint32(size64)
 	ops := make([]internal.Op, size)
 	for i := uint32(0); i < size; i++ {
 		op, err := decodeOp(decoder)
@@ -152,13 +153,13 @@ func decodeOp(decoder *msgpack.Decoder) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
-		pos, err := decoder.ReadInt64()
+		pos, err := decoder.ReadFloat64()
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpTestStringOperationWithPos(path, str, int(pos)), nil
+		return op.NewOpTestStringOperationWithPos(path, str, pos), nil
 	case internal.OpTestStringLenCode:
-		length, err := decoder.ReadInt64()
+		length, err := decoder.ReadFloat64()
 		if err != nil {
 			return nil, err
 		}
@@ -166,7 +167,7 @@ func decodeOp(decoder *msgpack.Decoder) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpTestStringLenOperationWithNot(path, int(length), not), nil
+		return op.NewOpTestStringLenOperationWithNot(path, length, not), nil
 	case internal.OpTypeCode:
 		expectedType, err := decoder.ReadString()
 		if err != nil {
@@ -182,7 +183,7 @@ func decodeOp(decoder *msgpack.Decoder) (internal.Op, error) {
 		}
 		return op.NewOpIncOperation(path, inc), nil
 	case internal.OpStrInsCode:
-		pos, err := decoder.ReadInt64()
+		pos, err := decoder.ReadFloat64()
 		if err != nil {
 			return nil, err
 		}
@@ -190,19 +191,19 @@ func decodeOp(decoder *msgpack.Decoder) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpStrInsOperation(path, int(pos), str), nil
+		return op.NewOpStrInsOperation(path, pos, str), nil
 	case internal.OpStrDelCode:
-		pos, err := decoder.ReadInt64()
+		pos, err := decoder.ReadFloat64()
 		if err != nil {
 			return nil, err
 		}
-		length, err := decoder.ReadInt64()
+		length, err := decoder.ReadFloat64()
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpStrDelOperation(path, int(pos), int(length)), nil
+		return op.NewOpStrDelOperation(path, pos, length), nil
 	case internal.OpSplitCode:
-		pos, err := decoder.ReadInt64()
+		pos, err := decoder.ReadFloat64()
 		if err != nil {
 			return nil, err
 		}
@@ -210,7 +211,7 @@ func decodeOp(decoder *msgpack.Decoder) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpSplitOperation(path, int(pos), props), nil
+		return op.NewOpSplitOperation(path, pos, props), nil
 	case internal.OpExtendCode:
 		properties, err := decodeValue(decoder)
 		if err != nil {
@@ -222,7 +223,7 @@ func decodeOp(decoder *msgpack.Decoder) (internal.Op, error) {
 		}
 		return op.NewOpExtendOperation(path, properties.(map[string]interface{}), deleteNull), nil
 	case internal.OpMergeCode:
-		pos, err := decoder.ReadInt64()
+		pos, err := decoder.ReadFloat64()
 		if err != nil {
 			return nil, err
 		}
@@ -230,17 +231,18 @@ func decodeOp(decoder *msgpack.Decoder) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpMergeOperation(path, int(pos), props.(map[string]interface{})), nil
+		return op.NewOpMergeOperation(path, pos, props.(map[string]interface{})), nil
 	default:
 		return nil, fmt.Errorf("%w: %d", ErrUnsupportedOp, code)
 	}
 }
 
 func decodePath(decoder *msgpack.Decoder) ([]string, error) {
-	size, err := decoder.ReadArraySize()
+	size64, err := decoder.ReadFloat64()
 	if err != nil {
 		return nil, err
 	}
+	size := uint32(size64)
 	path := make([]string, size)
 	for i := uint32(0); i < size; i++ {
 		segment, err := decoder.ReadString()

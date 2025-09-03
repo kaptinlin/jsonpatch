@@ -97,59 +97,41 @@ func OperationToOp(operation map[string]interface{}, options internal.JsonPatchO
 	case "flip":
 		return op.NewOpFlipOperation(path), nil
 	case "inc":
-		incVal, ok := operation["inc"].(float64)
+		incVal, ok := toFloat64(operation["inc"])
 		if !ok {
-			if incValInt, ok := operation["inc"].(int); ok {
-				return op.NewOpIncOperation(path, float64(incValInt)), nil
-			}
 			return nil, ErrIncOpMissingInc
 		}
 		return op.NewOpIncOperation(path, incVal), nil
 	case "str_ins":
-		pos, ok := operation["pos"].(float64)
+		pos, ok := toFloat64(operation["pos"])
 		if !ok {
-			if posInt, ok := operation["pos"].(int); ok {
-				pos = float64(posInt)
-			} else {
-				return nil, ErrStrInsOpMissingPos
-			}
+			return nil, ErrStrInsOpMissingPos
 		}
 		str, ok := operation["str"].(string)
 		if !ok {
 			return nil, ErrStrInsOpMissingStr
 		}
-		return op.NewOpStrInsOperation(path, int(pos), str), nil
+		return op.NewOpStrInsOperation(path, pos, str), nil
 	case "str_del":
-		pos, ok := operation["pos"].(float64)
+		pos, ok := toFloat64(operation["pos"])
 		if !ok {
-			if posInt, ok := operation["pos"].(int); ok {
-				pos = float64(posInt)
-			} else {
-				return nil, ErrStrDelOpMissingPos
-			}
+			return nil, ErrStrDelOpMissingPos
 		}
 		// str_del can have either str or len parameter
 		if str, ok := operation["str"].(string); ok {
-			return op.NewOpStrDelOperationWithStr(path, int(pos), str), nil
+			return op.NewOpStrDelOperationWithStr(path, pos, str), nil
 		}
-		if lenVal, ok := operation["len"].(float64); ok {
-			return op.NewOpStrDelOperation(path, int(pos), int(lenVal)), nil
-		}
-		if lenValInt, ok := operation["len"].(int); ok {
-			return op.NewOpStrDelOperation(path, int(pos), lenValInt), nil
+		if lenVal, ok := toFloat64(operation["len"]); ok {
+			return op.NewOpStrDelOperation(path, pos, lenVal), nil
 		}
 		return nil, ErrStrDelOpMissingFields
 	case "split":
-		pos, ok := operation["pos"].(float64)
+		pos, ok := toFloat64(operation["pos"])
 		if !ok {
-			if posInt, ok := operation["pos"].(int); ok {
-				pos = float64(posInt)
-			} else {
-				return nil, ErrSplitOpMissingPos
-			}
+			return nil, ErrSplitOpMissingPos
 		}
 		props := operation["props"]
-		return op.NewOpSplitOperation(path, int(pos), props), nil
+		return op.NewOpSplitOperation(path, pos, props), nil
 	case "merge":
 		var props map[string]interface{}
 		if p, ok := operation["props"].(map[string]interface{}); ok {
@@ -157,10 +139,8 @@ func OperationToOp(operation map[string]interface{}, options internal.JsonPatchO
 		} else {
 			props = make(map[string]interface{}) // Default to empty map
 		}
-		pos := 0 // Default position
-		if posVal, ok := operation["pos"].(float64); ok {
-			pos = int(posVal)
-		} else if posVal, ok := operation["pos"].(int); ok {
+		pos := float64(0) // Default position
+		if posVal, ok := toFloat64(operation["pos"]); ok {
 			pos = posVal
 		}
 		return op.NewOpMergeOperation(path, pos, props), nil
@@ -343,10 +323,8 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		if !hasStr {
 			return nil, ErrTestStringOpMissingStr
 		}
-		pos := 0
-		if posVal, ok := operation["pos"].(float64); ok {
-			pos = int(posVal)
-		} else if posVal, ok := operation["pos"].(int); ok {
+		pos := float64(0)
+		if posVal, ok := toFloat64(operation["pos"]); ok {
 			pos = posVal
 		}
 		if pos != 0 {
@@ -354,20 +332,8 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		}
 		return op.NewOpTestStringOperation(path, str), nil
 	case "test_string_len":
-		lenVal, ok := operation["len"].(float64)
+		lenVal, ok := toFloat64(operation["len"])
 		if !ok {
-			if lenValInt, ok := operation["len"].(int); ok {
-				// Check for not flag
-				not := false
-				if n, ok := operation["not"].(bool); ok {
-					not = n
-				}
-
-				if not {
-					return op.NewOpTestStringLenOperationWithNot(path, lenValInt, not), nil
-				}
-				return op.NewOpTestStringLenOperation(path, lenValInt), nil
-			}
 			return nil, ErrTestStringLenOpMissingLen
 		}
 
@@ -378,9 +344,9 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		}
 
 		if not {
-			return op.NewOpTestStringLenOperationWithNot(path, int(lenVal), not), nil
+			return op.NewOpTestStringLenOperationWithNot(path, lenVal, not), nil
 		}
-		return op.NewOpTestStringLenOperation(path, int(lenVal)), nil
+		return op.NewOpTestStringLenOperation(path, lenVal), nil
 	case "contains":
 		value, ok := operation["value"].(string)
 		if !ok {
@@ -450,20 +416,14 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		}
 		return op.NewOpInOperation(path, []interface{}{value}), nil
 	case "less":
-		value, ok := operation["value"].(float64)
+		value, ok := toFloat64(operation["value"])
 		if !ok {
-			if valueInt, ok := operation["value"].(int); ok {
-				return op.NewOpLessOperation(path, float64(valueInt)), nil
-			}
 			return nil, ErrLessOpMissingValue
 		}
 		return op.NewOpLessOperation(path, value), nil
 	case "more":
-		value, ok := operation["value"].(float64)
+		value, ok := toFloat64(operation["value"])
 		if !ok {
-			if valueInt, ok := operation["value"].(int); ok {
-				return op.NewOpMoreOperation(path, float64(valueInt)), nil
-			}
 			return nil, ErrMoreOpMissingValue
 		}
 		return op.NewOpMoreOperation(path, value), nil
@@ -604,4 +564,36 @@ func validateSingleTestType(typeStr string) error {
 		return ErrInvalidType
 	}
 	return nil
+}
+
+// toFloat64 converts various numeric types to float64
+func toFloat64(val interface{}) (float64, bool) {
+	switch v := val.(type) {
+	case float64:
+		return v, true
+	case float32:
+		return float64(v), true
+	case int:
+		return float64(v), true
+	case int8:
+		return float64(v), true
+	case int16:
+		return float64(v), true
+	case int32:
+		return float64(v), true
+	case int64:
+		return float64(v), true
+	case uint:
+		return float64(v), true
+	case uint8:
+		return float64(v), true
+	case uint16:
+		return float64(v), true
+	case uint32:
+		return float64(v), true
+	case uint64:
+		return float64(v), true
+	default:
+		return 0, false
+	}
 }

@@ -12,12 +12,12 @@ import (
 // Only supports array type fields.
 type OpMergeOperation struct {
 	BaseOp
-	Pos   int                    `json:"pos"`   // Merge position
+	Pos   float64                `json:"pos"`   // Merge position
 	Props map[string]interface{} `json:"props"` // Properties to apply after merge
 }
 
 // NewOpMergeOperation creates a new array merge operation.
-func NewOpMergeOperation(path []string, pos int, props map[string]interface{}) *OpMergeOperation {
+func NewOpMergeOperation(path []string, pos float64, props map[string]interface{}) *OpMergeOperation {
 	return &OpMergeOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
@@ -54,7 +54,9 @@ func (op *OpMergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 		if len(targetArr) < 2 {
 			return internal.OpResult[any]{}, ErrArrayTooSmall
 		}
-		if op.Pos <= 0 || op.Pos >= len(targetArr) {
+		// High-performance type conversion (single, boundary conversion)
+		pos := int(op.Pos) // Already validated as safe integer
+		if pos <= 0 || pos >= len(targetArr) {
 			return internal.OpResult[any]{}, ErrPositionOutOfBounds
 		}
 
@@ -65,7 +67,7 @@ func (op *OpMergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 		}
 
 		// Merge array elements
-		mergedArr, oldElements := op.mergeArrayElements(clonedTarget.([]interface{}), op.Pos)
+		mergedArr, oldElements := op.mergeArrayElements(clonedTarget.([]interface{}), pos)
 
 		return internal.OpResult[any]{Doc: mergedArr, Old: oldElements}, nil
 	}
@@ -86,7 +88,9 @@ func (op *OpMergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if len(targetArr) < 2 {
 		return internal.OpResult[any]{}, ErrArrayTooSmall
 	}
-	if op.Pos <= 0 || op.Pos >= len(targetArr) {
+	// High-performance type conversion (single, boundary conversion)
+	pos := int(op.Pos) // Already validated as safe integer
+	if pos <= 0 || pos >= len(targetArr) {
 		return internal.OpResult[any]{}, ErrPositionOutOfBounds
 	}
 
@@ -97,7 +101,7 @@ func (op *OpMergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	// Merge array elements
-	mergedArr, oldElements := op.mergeArrayElements(clonedTarget.([]interface{}), op.Pos)
+	mergedArr, oldElements := op.mergeArrayElements(clonedTarget.([]interface{}), pos)
 
 	// Set the merged array back
 	err = setValueAtPath(doc, op.Path(), mergedArr)

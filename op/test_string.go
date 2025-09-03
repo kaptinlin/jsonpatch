@@ -9,8 +9,8 @@ import (
 // OpTestStringOperation represents a test operation that checks if a value is a string and matches a pattern.
 type OpTestStringOperation struct {
 	BaseOp
-	Str string `json:"str"` // Expected string value
-	Pos int    `json:"pos"` // Position within string (optional)
+	Str string  `json:"str"` // Expected string value
+	Pos float64 `json:"pos"` // Position within string (optional)
 }
 
 // NewOpTestStringOperation creates a new OpTestStringOperation operation.
@@ -23,7 +23,7 @@ func NewOpTestStringOperation(path []string, expectedValue string) *OpTestString
 }
 
 // NewOpTestStringOperationWithPos creates a new OpTestStringOperation operation with position.
-func NewOpTestStringOperationWithPos(path []string, expectedValue string, pos int) *OpTestStringOperation {
+func NewOpTestStringOperationWithPos(path []string, expectedValue string, pos float64) *OpTestStringOperation {
 	return &OpTestStringOperation{
 		BaseOp: NewBaseOp(path),
 		Str:    expectedValue,
@@ -89,19 +89,21 @@ func (op *OpTestStringOperation) Apply(doc any) (internal.OpResult[any], error) 
 		return internal.OpResult[any]{}, ErrNotString
 	}
 
+	// High-performance type conversion (single, boundary conversion)
+	pos := int(op.Pos) // Already validated as safe integer
 	// Check if substring matches at the specified position
-	if op.Pos < 0 || op.Pos > len(str) {
+	if pos < 0 || pos > len(str) {
 		return internal.OpResult[any]{}, ErrPositionOutOfStringRange
 	}
 
-	endPos := op.Pos + len(op.Str)
+	endPos := pos + len(op.Str)
 	if endPos > len(str) {
 		return internal.OpResult[any]{}, ErrSubstringTooLong
 	}
 
-	substring := str[op.Pos:endPos]
+	substring := str[pos:endPos]
 	if substring != op.Str {
-		return internal.OpResult[any]{}, fmt.Errorf("%w at position %d", ErrSubstringMismatch, op.Pos)
+		return internal.OpResult[any]{}, fmt.Errorf("%w at position %d", ErrSubstringMismatch, pos)
 	}
 
 	return internal.OpResult[any]{Doc: doc}, nil

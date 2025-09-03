@@ -9,12 +9,12 @@ import (
 // OpTestStringLenOperation represents a test operation that checks if a string value has a specific length.
 type OpTestStringLenOperation struct {
 	BaseOp
-	Length int  `json:"length"` // Expected string length
-	Not    bool `json:"not"`    // Whether to negate the result
+	Length float64 `json:"len"` // Expected string length
+	Not    bool    `json:"not"` // Whether to negate the result
 }
 
 // NewOpTestStringLenOperation creates a new OpTestStringLenOperation operation.
-func NewOpTestStringLenOperation(path []string, expectedLength int) *OpTestStringLenOperation {
+func NewOpTestStringLenOperation(path []string, expectedLength float64) *OpTestStringLenOperation {
 	return &OpTestStringLenOperation{
 		BaseOp: NewBaseOp(path),
 		Length: expectedLength,
@@ -23,7 +23,7 @@ func NewOpTestStringLenOperation(path []string, expectedLength int) *OpTestStrin
 }
 
 // NewOpTestStringLenOperationWithNot creates a new OpTestStringLenOperation operation with not flag.
-func NewOpTestStringLenOperationWithNot(path []string, expectedLength int, not bool) *OpTestStringLenOperation {
+func NewOpTestStringLenOperationWithNot(path []string, expectedLength float64, not bool) *OpTestStringLenOperation {
 	return &OpTestStringLenOperation{
 		BaseOp: NewBaseOp(path),
 		Length: expectedLength,
@@ -60,17 +60,19 @@ func (op *OpTestStringLenOperation) Apply(doc any) (internal.OpResult[any], erro
 		return internal.OpResult[any]{}, ErrNotString
 	}
 
+	// High-performance type conversion (single, boundary conversion)
+	length := int(op.Length) // Already validated as safe integer
 	// Check if the string length matches (>= comparison like TypeScript version)
-	lengthMatches := len(actualValue) >= op.Length
+	lengthMatches := len(actualValue) >= length
 	if op.Not {
 		lengthMatches = !lengthMatches
 	}
 
 	if !lengthMatches {
 		if op.Not {
-			return internal.OpResult[any]{}, fmt.Errorf("%w: expected length NOT >= %d, but got %d", ErrStringLengthMismatch, op.Length, len(actualValue))
+			return internal.OpResult[any]{}, fmt.Errorf("%w: expected length NOT >= %d, but got %d", ErrStringLengthMismatch, length, len(actualValue))
 		} else {
-			return internal.OpResult[any]{}, fmt.Errorf("%w: expected length >= %d, got %d", ErrStringLengthMismatch, op.Length, len(actualValue))
+			return internal.OpResult[any]{}, fmt.Errorf("%w: expected length >= %d, got %d", ErrStringLengthMismatch, length, len(actualValue))
 		}
 	}
 

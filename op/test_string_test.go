@@ -13,7 +13,7 @@ func TestOpTestString_Apply(t *testing.T) {
 		name          string
 		doc           interface{}
 		path          []string
-		pos           int
+		pos           float64
 		expectedValue string
 		expectError   bool
 		expectedError error
@@ -22,7 +22,7 @@ func TestOpTestString_Apply(t *testing.T) {
 			name:          "test string match success",
 			doc:           map[string]interface{}{"name": "John"},
 			path:          []string{"name"},
-			pos:           0,
+			pos:           0.0,
 			expectedValue: "John",
 			expectError:   false,
 		},
@@ -30,7 +30,7 @@ func TestOpTestString_Apply(t *testing.T) {
 			name:          "test empty string success",
 			doc:           map[string]interface{}{"description": ""},
 			path:          []string{"description"},
-			pos:           0,
+			pos:           0.0,
 			expectedValue: "",
 			expectError:   false,
 		},
@@ -38,7 +38,7 @@ func TestOpTestString_Apply(t *testing.T) {
 			name:          "test string with special characters",
 			doc:           map[string]interface{}{"text": "Hello, World! 123"},
 			path:          []string{"text"},
-			pos:           7,
+			pos:           7.0,
 			expectedValue: "World",
 			expectError:   false,
 		},
@@ -46,7 +46,7 @@ func TestOpTestString_Apply(t *testing.T) {
 			name:          "test string mismatch",
 			doc:           map[string]interface{}{"name": "John"},
 			path:          []string{"name"},
-			pos:           0,
+			pos:           0.0,
 			expectedValue: "Jane",
 			expectError:   true,
 			expectedError: ErrSubstringMismatch,
@@ -55,7 +55,7 @@ func TestOpTestString_Apply(t *testing.T) {
 			name:          "test non-string value",
 			doc:           map[string]interface{}{"age": 25},
 			path:          []string{"age"},
-			pos:           0,
+			pos:           0.0,
 			expectedValue: "25",
 			expectError:   true,
 			expectedError: ErrNotString,
@@ -64,7 +64,7 @@ func TestOpTestString_Apply(t *testing.T) {
 			name:          "test null value",
 			doc:           map[string]interface{}{"value": nil},
 			path:          []string{"value"},
-			pos:           0,
+			pos:           0.0,
 			expectedValue: "",
 			expectError:   true,
 			expectedError: ErrNotString,
@@ -73,7 +73,7 @@ func TestOpTestString_Apply(t *testing.T) {
 			name:          "test path not found",
 			doc:           map[string]interface{}{"name": "John"},
 			path:          []string{"nonexistent"},
-			pos:           0,
+			pos:           0.0,
 			expectedValue: "John",
 			expectError:   true,
 			expectedError: ErrPathNotFound,
@@ -88,7 +88,7 @@ func TestOpTestString_Apply(t *testing.T) {
 				},
 			},
 			path:          []string{"user", "profile", "email"},
-			pos:           5,
+			pos:           5.0,
 			expectedValue: "example",
 			expectError:   false,
 		},
@@ -98,7 +98,7 @@ func TestOpTestString_Apply(t *testing.T) {
 				"items": []interface{}{"item1", "item2", "item3"},
 			},
 			path:          []string{"items", "1"},
-			pos:           0,
+			pos:           0.0,
 			expectedValue: "item2",
 			expectError:   false,
 		},
@@ -106,7 +106,7 @@ func TestOpTestString_Apply(t *testing.T) {
 			name:          "test byte slice as string",
 			doc:           map[string]interface{}{"data": []byte("hello")},
 			path:          []string{"data"},
-			pos:           1,
+			pos:           1.0,
 			expectedValue: "ell",
 			expectError:   false,
 		},

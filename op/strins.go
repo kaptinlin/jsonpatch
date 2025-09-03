@@ -13,12 +13,12 @@ import (
 // Only supports string type fields.
 type OpStrInsOperation struct {
 	BaseOp
-	Pos int    `json:"pos"` // Insert position
-	Str string `json:"str"` // String to insert
+	Pos float64 `json:"pos"` // Insert position
+	Str string  `json:"str"` // String to insert
 }
 
 // NewOpStrInsOperation creates a new string insert operation.
-func NewOpStrInsOperation(path []string, pos int, str string) *OpStrInsOperation {
+func NewOpStrInsOperation(path []string, pos float64, str string) *OpStrInsOperation {
 	return &OpStrInsOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
@@ -96,8 +96,8 @@ func (op *OpStrInsOperation) applyStrIns(str string) string {
 	runes := []rune(str)
 	runeLen := len(runes)
 
-	// Clamp position to valid bounds
-	pos := op.Pos
+	// High-performance type conversion (single, boundary conversion)
+	pos := int(op.Pos) // Already validated as safe integer
 	if pos > runeLen {
 		pos = runeLen
 	} else if pos < 0 {

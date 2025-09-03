@@ -182,25 +182,25 @@ var SampleOperations = map[string]map[string]interface{}{
 	"test_string1": {
 		"op":   "test_string",
 		"path": "/a/b/c",
-		"pos":  0,
+		"pos":  0.0,
 		"str":  "asdf",
 	},
 	"test_string2": {
 		"op":   "test_string",
 		"path": "/a/1",
-		"pos":  4,
+		"pos":  4.0,
 		"str":  "",
 	},
 
 	"test_string_len1": {
 		"op":   "test_string_len",
 		"path": "/",
-		"len":  123,
+		"len":  123.0,
 	},
 	"test_string_len2": {
 		"op":   "test_string_len",
 		"path": "/a/bb/ccc",
-		"len":  5,
+		"len":  5.0,
 		"not":  true,
 	},
 
@@ -408,32 +408,32 @@ var SampleOperations = map[string]map[string]interface{}{
 	"str_ins1": {
 		"op":   "str_ins",
 		"path": "/ads",
-		"pos":  0,
+		"pos":  0.0,
 		"str":  "",
 	},
 	"str_ins2": {
 		"op":   "str_ins",
 		"path": "/a/b/lkasjdfoiasjdfoiasjdflaksjdflkasjfljasdflkjasdlfjkasdf",
-		"pos":  823848493,
+		"pos":  823848493.0,
 		"str":  "Component model",
 	},
 
 	"str_del1": {
 		"op":   "str_del",
 		"path": "",
-		"pos":  0,
-		"len":  0,
+		"pos":  0.0,
+		"len":  0.0,
 	},
 	"str_del2": {
 		"op":   "str_del",
 		"path": "/asdfasdfasdfasdfasdfasdfasdfpalsdf902039joij2130j9e2093k2309k203f0sjdf0s9djf0skdfs0dfk092j0239j0mospdkf",
-		"pos":  92303948,
-		"len":  84487,
+		"pos":  92303948.0,
+		"len":  84487.0,
 	},
 	"str_del3": {
 		"op":   "str_del",
 		"path": "/asdf/reg/asdf/asdf/wer/sdaf234/asf/23/asdf2/asdf2",
-		"pos":  92303948,
+		"pos":  92303948.0,
 		"str":  "asdfasdfasdfasdflkasdjflakjsdf",
 	},
 
@@ -449,28 +449,28 @@ var SampleOperations = map[string]map[string]interface{}{
 	"inc1": {
 		"op":   "inc",
 		"path": "/",
-		"inc":  1,
+		"inc":  1.0,
 	},
 	"inc2": {
 		"op":   "inc",
 		"path": "/asdf/sd/d/f",
-		"inc":  -123,
+		"inc":  -123.0,
 	},
 
 	"split1": {
 		"op":   "split",
 		"path": "/i",
-		"pos":  0,
+		"pos":  0.0,
 	},
 	"split2": {
 		"op":   "split",
 		"path": "/i/asdf/sdf/d",
-		"pos":  123,
+		"pos":  123.0,
 	},
 	"split3": {
 		"op":   "split",
 		"path": "/i/asdf/sdf/d",
-		"pos":  123,
+		"pos":  123.0,
 		"props": map[string]interface{}{
 			"foo": "bar",
 			"a":   123,
@@ -480,12 +480,12 @@ var SampleOperations = map[string]map[string]interface{}{
 	"merge1": {
 		"op":   "merge",
 		"path": "",
-		"pos":  0,
+		"pos":  0.0,
 	},
 	"merge2": {
 		"op":   "merge",
 		"path": "/a/b/c",
-		"pos":  123412341234,
+		"pos":  123412341234.0,
 		"props": map[string]interface{}{
 			"foo": nil,
 			"bar": 23,

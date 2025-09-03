@@ -14,13 +14,13 @@ import (
 // Only supports string type fields.
 type OpStrDelOperation struct {
 	BaseOp
-	Pos int    `json:"pos"` // Delete position
-	Len int    `json:"len"` // Number of characters to delete
-	Str string `json:"str"` // Specific string to delete (optional)
+	Pos float64 `json:"pos"` // Delete position
+	Len float64 `json:"len"` // Number of characters to delete
+	Str string  `json:"str"` // Specific string to delete (optional)
 }
 
 // NewOpStrDelOperation creates a new string delete operation with length.
-func NewOpStrDelOperation(path []string, pos, length int) *OpStrDelOperation {
+func NewOpStrDelOperation(path []string, pos, length float64) *OpStrDelOperation {
 	return &OpStrDelOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
@@ -30,11 +30,11 @@ func NewOpStrDelOperation(path []string, pos, length int) *OpStrDelOperation {
 }
 
 // NewOpStrDelOperationWithStr creates a new string delete operation with specific string.
-func NewOpStrDelOperationWithStr(path []string, pos int, str string) *OpStrDelOperation {
+func NewOpStrDelOperationWithStr(path []string, pos float64, str string) *OpStrDelOperation {
 	return &OpStrDelOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
-		Len:    len([]rune(str)), // Set length to match string length
+		Len:    float64(len([]rune(str))), // Set length to match string length
 		Str:    str,
 	}
 }
@@ -96,8 +96,10 @@ func (o *OpStrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // applyStrDel applies string deletion with optimized string building
 func (o *OpStrDelOperation) applyStrDel(val string) string {
+	// High-performance type conversion (single, boundary conversion)
+	pos := int(o.Pos) // Already validated as safe integer
 	// Handle negative position by returning original string (no deletion)
-	if o.Pos < 0 {
+	if pos < 0 {
 		return val
 	}
 
@@ -106,7 +108,6 @@ func (o *OpStrDelOperation) applyStrDel(val string) string {
 	length := len(runes)
 
 	// Clamp position to valid bounds
-	pos := o.Pos
 	if pos > length {
 		pos = length
 	}
@@ -116,7 +117,7 @@ func (o *OpStrDelOperation) applyStrDel(val string) string {
 	if o.Str != "" {
 		deletionLength = len([]rune(o.Str))
 	} else {
-		deletionLength = o.Len
+		deletionLength = int(o.Len) // Already validated as safe integer
 	}
 
 	// Handle negative length by treating it as 0 (no deletion)

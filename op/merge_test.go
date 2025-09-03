@@ -13,7 +13,7 @@ func TestOpMerge_Apply(t *testing.T) {
 		name     string
 		path     []string
 		doc      interface{}
-		pos      int
+		pos      float64
 		props    interface{}
 		expected interface{}
 		oldValue interface{}
@@ -23,7 +23,7 @@ func TestOpMerge_Apply(t *testing.T) {
 			name:     "merge strings",
 			path:     []string{"lines"},
 			doc:      map[string]interface{}{"lines": []interface{}{"hello", " world", "!"}},
-			pos:      1,
+			pos:      1.0,
 			props:    nil,
 			expected: map[string]interface{}{"lines": []interface{}{"hello world", "!"}},
 			oldValue: []interface{}{"hello", " world"},
@@ -32,7 +32,7 @@ func TestOpMerge_Apply(t *testing.T) {
 			name:     "merge at end",
 			path:     []string{"lines"},
 			doc:      map[string]interface{}{"lines": []interface{}{"hello", " world"}},
-			pos:      1,
+			pos:      1.0,
 			props:    nil,
 			expected: map[string]interface{}{"lines": []interface{}{"hello world"}},
 			oldValue: []interface{}{"hello", " world"},
@@ -41,7 +41,7 @@ func TestOpMerge_Apply(t *testing.T) {
 			name:     "merge non-strings",
 			path:     []string{"items"},
 			doc:      map[string]interface{}{"items": []interface{}{1, 2, 3}},
-			pos:      1,
+			pos:      1.0,
 			props:    nil,
 			expected: map[string]interface{}{"items": []interface{}{float64(3), 3}},
 			oldValue: []interface{}{1, 2},
@@ -50,7 +50,7 @@ func TestOpMerge_Apply(t *testing.T) {
 			name:     "merge mixed types",
 			path:     []string{"items"},
 			doc:      map[string]interface{}{"items": []interface{}{"hello", 123, "world"}},
-			pos:      1,
+			pos:      1.0,
 			props:    nil,
 			expected: map[string]interface{}{"items": []interface{}{[]interface{}{"hello", 123}, "world"}},
 			oldValue: []interface{}{"hello", 123},
@@ -59,7 +59,7 @@ func TestOpMerge_Apply(t *testing.T) {
 			name:     "merge in nested",
 			path:     []string{"user", "tags"},
 			doc:      map[string]interface{}{"user": map[string]interface{}{"tags": []interface{}{"go", "lang", "dev"}}},
-			pos:      1,
+			pos:      1.0,
 			props:    nil,
 			expected: map[string]interface{}{"user": map[string]interface{}{"tags": []interface{}{"golang", "dev"}}},
 			oldValue: []interface{}{"go", "lang"},
@@ -68,7 +68,7 @@ func TestOpMerge_Apply(t *testing.T) {
 			name:     "merge at root",
 			path:     []string{},
 			doc:      []interface{}{"a", "b", "c"},
-			pos:      1,
+			pos:      1.0,
 			props:    nil,
 			expected: []interface{}{"ab", "c"},
 			oldValue: []interface{}{"a", "b"},
@@ -77,7 +77,7 @@ func TestOpMerge_Apply(t *testing.T) {
 			name:     "merge with props",
 			path:     []string{"lines"},
 			doc:      map[string]interface{}{"lines": []interface{}{"hello", " world"}},
-			pos:      1,
+			pos:      1.0,
 			props:    map[string]interface{}{"type": "merge"},
 			expected: map[string]interface{}{"lines": []interface{}{"hello world"}},
 			oldValue: []interface{}{"hello", " world"},
@@ -86,7 +86,7 @@ func TestOpMerge_Apply(t *testing.T) {
 			name:    "path not found",
 			path:    []string{"notfound"},
 			doc:     map[string]interface{}{"lines": []interface{}{"a", "b"}},
-			pos:     1,
+			pos:     1.0,
 			props:   nil,
 			wantErr: true,
 		},
@@ -94,7 +94,7 @@ func TestOpMerge_Apply(t *testing.T) {
 			name:    "not an array",
 			path:    []string{"text"},
 			doc:     map[string]interface{}{"text": "abc"},
-			pos:     1,
+			pos:     1.0,
 			props:   nil,
 			wantErr: true,
 		},
@@ -102,7 +102,7 @@ func TestOpMerge_Apply(t *testing.T) {
 			name:    "root not an array",
 			path:    []string{},
 			doc:     "abc",
-			pos:     1,
+			pos:     1.0,
 			props:   nil,
 			wantErr: true,
 		},
@@ -110,7 +110,7 @@ func TestOpMerge_Apply(t *testing.T) {
 			name:    "merge position out of range",
 			path:    []string{"lines"},
 			doc:     map[string]interface{}{"lines": []interface{}{"a", "b"}},
-			pos:     2,
+			pos:     2.0,
 			props:   nil,
 			wantErr: true,
 		},
@@ -118,7 +118,7 @@ func TestOpMerge_Apply(t *testing.T) {
 			name:    "merge negative position",
 			path:    []string{"lines"},
 			doc:     map[string]interface{}{"lines": []interface{}{"a", "b"}},
-			pos:     -1,
+			pos:     -1.0,
 			props:   nil,
 			wantErr: true,
 		},
@@ -126,7 +126,7 @@ func TestOpMerge_Apply(t *testing.T) {
 			name:    "merge position zero (invalid)",
 			path:    []string{"lines"},
 			doc:     map[string]interface{}{"lines": []interface{}{"a", "b"}},
-			pos:     0,
+			pos:     0.0,
 			props:   nil,
 			wantErr: true,
 		},
@@ -134,7 +134,7 @@ func TestOpMerge_Apply(t *testing.T) {
 			name:    "single element array",
 			path:    []string{"lines"},
 			doc:     map[string]interface{}{"lines": []interface{}{"a"}},
-			pos:     1,
+			pos:     1.0,
 			props:   nil,
 			wantErr: true,
 		},
@@ -176,7 +176,7 @@ func TestOpMerge_Code(t *testing.T) {
 
 func TestOpMerge_NewOpMerge(t *testing.T) {
 	path := []string{"user", "tags"}
-	pos := 1
+	pos := 1.0
 	props := map[string]interface{}{"type": "merge"}
 	op := NewOpMergeOperation(path, pos, props)
 	assert.Equal(t, path, op.Path())

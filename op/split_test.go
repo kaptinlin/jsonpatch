@@ -13,7 +13,7 @@ func TestOpSplit_Apply(t *testing.T) {
 		name     string
 		path     []string
 		doc      interface{}
-		pos      int
+		pos      float64
 		props    interface{}
 		expected interface{}
 		oldValue interface{}
@@ -23,7 +23,7 @@ func TestOpSplit_Apply(t *testing.T) {
 			name:     "split in middle",
 			path:     []string{"text"},
 			doc:      map[string]interface{}{"text": "hello world"},
-			pos:      5,
+			pos:      5.0,
 			props:    nil,
 			expected: map[string]interface{}{"text": []interface{}{"hello", " world"}},
 			oldValue: "hello world",
@@ -32,7 +32,7 @@ func TestOpSplit_Apply(t *testing.T) {
 			name:     "split at start",
 			path:     []string{"text"},
 			doc:      map[string]interface{}{"text": "world"},
-			pos:      0,
+			pos:      0.0,
 			props:    nil,
 			expected: map[string]interface{}{"text": []interface{}{"", "world"}},
 			oldValue: "world",
@@ -41,7 +41,7 @@ func TestOpSplit_Apply(t *testing.T) {
 			name:     "split at end",
 			path:     []string{"text"},
 			doc:      map[string]interface{}{"text": "hello"},
-			pos:      5,
+			pos:      5.0,
 			props:    nil,
 			expected: map[string]interface{}{"text": []interface{}{"hello", ""}},
 			oldValue: "hello",
@@ -50,7 +50,7 @@ func TestOpSplit_Apply(t *testing.T) {
 			name:     "split unicode",
 			path:     []string{"text"},
 			doc:      map[string]interface{}{"text": "你好世界"},
-			pos:      2,
+			pos:      2.0,
 			props:    nil,
 			expected: map[string]interface{}{"text": []interface{}{"你好", "世界"}},
 			oldValue: "你好世界",
@@ -59,7 +59,7 @@ func TestOpSplit_Apply(t *testing.T) {
 			name:     "split in nested",
 			path:     []string{"user", "bio"},
 			doc:      map[string]interface{}{"user": map[string]interface{}{"bio": "Go developer"}},
-			pos:      2,
+			pos:      2.0,
 			props:    nil,
 			expected: map[string]interface{}{"user": map[string]interface{}{"bio": []interface{}{"Go", " developer"}}},
 			oldValue: "Go developer",
@@ -68,7 +68,7 @@ func TestOpSplit_Apply(t *testing.T) {
 			name:     "split in array element",
 			path:     []string{"lines", "1"},
 			doc:      map[string]interface{}{"lines": []interface{}{"foo", "hello world", "baz"}},
-			pos:      5,
+			pos:      5.0,
 			props:    nil,
 			expected: map[string]interface{}{"lines": []interface{}{"foo", "hello", " world", "baz"}},
 			oldValue: "hello world",
@@ -77,7 +77,7 @@ func TestOpSplit_Apply(t *testing.T) {
 			name:     "split at root",
 			path:     []string{},
 			doc:      "abc",
-			pos:      1,
+			pos:      1.0,
 			props:    nil,
 			expected: []interface{}{"a", "bc"},
 			oldValue: "abc",
@@ -86,7 +86,7 @@ func TestOpSplit_Apply(t *testing.T) {
 			name:     "split with props",
 			path:     []string{"text"},
 			doc:      map[string]interface{}{"text": "hello world"},
-			pos:      5,
+			pos:      5.0,
 			props:    map[string]interface{}{"type": "split"},
 			expected: map[string]interface{}{"text": []interface{}{map[string]interface{}{"text": "hello", "type": "split"}, map[string]interface{}{"text": " world", "type": "split"}}},
 			oldValue: "hello world",
@@ -95,7 +95,7 @@ func TestOpSplit_Apply(t *testing.T) {
 			name:    "path not found",
 			path:    []string{"notfound"},
 			doc:     map[string]interface{}{"text": "abc"},
-			pos:     1,
+			pos:     1.0,
 			props:   nil,
 			wantErr: true,
 		},
@@ -103,7 +103,7 @@ func TestOpSplit_Apply(t *testing.T) {
 			name:     "not a string",
 			path:     []string{"num"},
 			doc:      map[string]interface{}{"num": 123},
-			pos:      1,
+			pos:      1.0,
 			props:    nil,
 			expected: map[string]interface{}{"num": []interface{}{float64(1), float64(122)}},
 			oldValue: 123,
@@ -112,7 +112,7 @@ func TestOpSplit_Apply(t *testing.T) {
 			name:     "root not a string",
 			path:     []string{},
 			doc:      123,
-			pos:      1,
+			pos:      1.0,
 			props:    nil,
 			expected: []interface{}{float64(1), float64(122)},
 			oldValue: 123,
@@ -121,7 +121,7 @@ func TestOpSplit_Apply(t *testing.T) {
 			name:     "split position out of range",
 			path:     []string{"text"},
 			doc:      map[string]interface{}{"text": "abc"},
-			pos:      10,
+			pos:      10.0,
 			props:    nil,
 			expected: map[string]interface{}{"text": []interface{}{"abc", ""}},
 			oldValue: "abc",
@@ -130,7 +130,7 @@ func TestOpSplit_Apply(t *testing.T) {
 			name:     "split negative position",
 			path:     []string{"text"},
 			doc:      map[string]interface{}{"text": "abc"},
-			pos:      -1,
+			pos:      -1.0,
 			props:    nil,
 			expected: map[string]interface{}{"text": []interface{}{"ab", "c"}},
 			oldValue: "abc",
@@ -169,7 +169,7 @@ func TestOpSplit_Code(t *testing.T) {
 
 func TestOpSplit_NewOpSplit(t *testing.T) {
 	path := []string{"user", "bio"}
-	pos := 2
+	pos := 2.0
 	props := map[string]interface{}{"type": "split"}
 	op := NewOpSplitOperation(path, pos, props)
 	assert.Equal(t, path, op.Path())

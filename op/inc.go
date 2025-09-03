@@ -75,16 +75,11 @@ func (op *OpIncOperation) updateParent(parent interface{}, key interface{}, valu
 
 // ToJSON serializes the operation to JSON format.
 func (op *OpIncOperation) ToJSON() (internal.Operation, error) {
-	// Convert float64 to int if it's a whole number
-	var inc interface{} = op.Inc
-	if op.Inc == float64(int(op.Inc)) {
-		inc = int(op.Inc)
-	}
-
+	// 遵循 float64 统一化原则：始终输出 float64
 	return internal.Operation{
 		"op":   string(internal.OpIncType),
 		"path": formatPath(op.path),
-		"inc":  inc,
+		"inc":  op.Inc, // 统一的 float64 输出
 	}, nil
 }
 

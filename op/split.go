@@ -14,12 +14,12 @@ import (
 // Only supports string type fields.
 type OpSplitOperation struct {
 	BaseOp
-	Pos   int         `json:"pos"`   // Split position
+	Pos   float64     `json:"pos"`   // Split position
 	Props interface{} `json:"props"` // Properties to apply after split
 }
 
 // NewOpSplitOperation creates a new string split operation.
-func NewOpSplitOperation(path []string, pos int, props interface{}) *OpSplitOperation {
+func NewOpSplitOperation(path []string, pos float64, props interface{}) *OpSplitOperation {
 	return &OpSplitOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
@@ -208,7 +208,7 @@ func (op *OpSplitOperation) splitValue(value interface{}) interface{} {
 		// Check if it's a Slate-like text node
 		if slate.IsTextNode(v) {
 			propsMap, _ := op.Props.(map[string]interface{})
-			results := slate.SplitTextNodeFromMap(v, op.Pos, propsMap)
+			results := slate.SplitTextNodeFromMap(v, int(op.Pos), propsMap)
 			if results != nil {
 				return []interface{}{results[0], results[1]}
 			}
@@ -216,7 +216,7 @@ func (op *OpSplitOperation) splitValue(value interface{}) interface{} {
 		// Check if it's a Slate-like element node with children
 		if slate.IsElementNode(v) {
 			propsMap, _ := op.Props.(map[string]interface{})
-			results := slate.SplitElementNodeFromMap(v, op.Pos, propsMap)
+			results := slate.SplitElementNodeFromMap(v, int(op.Pos), propsMap)
 			if results != nil {
 				return []interface{}{results[0], results[1]}
 			}
@@ -232,7 +232,8 @@ func (op *OpSplitOperation) splitValue(value interface{}) interface{} {
 // splitString splits a string at the specified position
 func (op *OpSplitOperation) splitString(s string) []interface{} {
 	runes := []rune(s)
-	pos := op.Pos
+	// High-performance type conversion (single, boundary conversion)
+	pos := int(op.Pos) // Already validated as safe integer
 
 	// Handle negative positions (count from end)
 	if pos < 0 {
@@ -271,7 +272,7 @@ func (op *OpSplitOperation) splitString(s string) []interface{} {
 
 // splitNumber splits a number at the specified position
 func (op *OpSplitOperation) splitNumber(n float64) []interface{} {
-	pos := float64(op.Pos)
+	pos := op.Pos // Already validated as safe number
 	if pos > n {
 		pos = n
 	}

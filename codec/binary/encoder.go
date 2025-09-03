@@ -24,7 +24,7 @@ func (c *Codec) encode(ops []internal.Op) ([]byte, error) {
 }
 
 func encodeOps(encoder msgpack.Writer, ops []internal.Op) error {
-	encoder.WriteArraySize(uint32(len(ops)))
+	encoder.WriteFloat64(float64(len(ops)))
 	for _, op := range ops {
 		if err := encodeOp(encoder, op); err != nil {
 			return err
@@ -122,13 +122,13 @@ func encodeOp(encoder msgpack.Writer, i internal.Op) error {
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		encoder.WriteString(o.Str)
-		encoder.WriteInt64(int64(o.Pos))
+		encoder.WriteFloat64(o.Pos)
 		return encoder.Err()
 	case *op.OpTestStringLenOperation:
 		encoder.WriteArraySize(4)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
-		encoder.WriteInt64(int64(o.Length))
+		encoder.WriteFloat64(o.Length)
 		encoder.WriteBool(o.Not)
 		return encoder.Err()
 	// Type predicate operation
@@ -153,21 +153,21 @@ func encodeOp(encoder msgpack.Writer, i internal.Op) error {
 		encoder.WriteArraySize(4)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
-		encoder.WriteInt64(int64(o.Pos))
+		encoder.WriteFloat64(o.Pos)
 		encoder.WriteString(o.Str)
 		return encoder.Err()
 	case *op.OpStrDelOperation:
 		encoder.WriteArraySize(4)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
-		encoder.WriteInt64(int64(o.Pos))
-		encoder.WriteInt64(int64(o.Len))
+		encoder.WriteFloat64(o.Pos)
+		encoder.WriteFloat64(o.Len)
 		return encoder.Err()
 	case *op.OpSplitOperation:
 		encoder.WriteArraySize(4)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
-		encoder.WriteInt64(int64(o.Pos))
+		encoder.WriteFloat64(o.Pos)
 		return encodeValue(encoder, o.Props)
 	case *op.OpExtendOperation:
 		encoder.WriteArraySize(4)
@@ -182,14 +182,14 @@ func encodeOp(encoder msgpack.Writer, i internal.Op) error {
 		encoder.WriteArraySize(4)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
-		encoder.WriteInt64(int64(o.Pos))
+		encoder.WriteFloat64(o.Pos)
 		return encodeValue(encoder, o.Props)
 	}
 	return nil
 }
 
 func encodePath(encoder msgpack.Writer, path []string) {
-	encoder.WriteArraySize(uint32(len(path)))
+	encoder.WriteFloat64(float64(len(path)))
 	for _, segment := range path {
 		encoder.WriteString(segment)
 	}
