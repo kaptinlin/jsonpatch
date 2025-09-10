@@ -27,29 +27,46 @@ const (
 	// OpUndefinedType represents the "undefined" operation type for JSON Predicate operations
 	OpUndefinedType OpType = "undefined"
 	// OpTypeType represents the "type" operation type for JSON Predicate operations
-	OpTypeType          OpType = "type"
-	OpTestTypeType      OpType = "test_type"
-	OpTestStringType    OpType = "test_string"
+	OpTypeType OpType = "type"
+	// OpTestTypeType represents the "test_type" operation type for JSON Predicate operations
+	OpTestTypeType OpType = "test_type"
+	// OpTestStringType represents the "test_string" operation type for JSON Predicate operations
+	OpTestStringType OpType = "test_string"
+	// OpTestStringLenType represents the "test_string_len" operation type for JSON Predicate operations
 	OpTestStringLenType OpType = "test_string_len"
-	OpEndsType          OpType = "ends"
-	OpStartsType        OpType = "starts"
-	OpInType            OpType = "in"
-	OpLessType          OpType = "less"
-	OpMoreType          OpType = "more"
-	OpMatchesType       OpType = "matches"
+	// OpEndsType represents the "ends" operation type for JSON Predicate operations
+	OpEndsType OpType = "ends"
+	// OpStartsType represents the "starts" operation type for JSON Predicate operations
+	OpStartsType OpType = "starts"
+	// OpInType represents the "in" operation type for JSON Predicate operations
+	OpInType OpType = "in"
+	// OpLessType represents the "less" operation type for JSON Predicate operations
+	OpLessType OpType = "less"
+	// OpMoreType represents the "more" operation type for JSON Predicate operations
+	OpMoreType OpType = "more"
+	// OpMatchesType represents the "matches" operation type for JSON Predicate operations
+	OpMatchesType OpType = "matches"
 
 	// OpAndType represents the "and" operation type for composite operations
 	OpAndType OpType = "and"
-	OpOrType  OpType = "or"
+	// OpOrType represents the "or" operation type for composite operations
+	OpOrType OpType = "or"
+	// OpNotType represents the "not" operation type for composite operations
 	OpNotType OpType = "not"
 
 	// OpFlipType represents the "flip" operation type for extended operations
-	OpFlipType   OpType = "flip"
-	OpIncType    OpType = "inc"
+	OpFlipType OpType = "flip"
+	// OpIncType represents the "inc" operation type for extended operations
+	OpIncType OpType = "inc"
+	// OpStrInsType represents the "str_ins" operation type for extended operations
 	OpStrInsType OpType = "str_ins"
+	// OpStrDelType represents the "str_del" operation type for extended operations
 	OpStrDelType OpType = "str_del"
-	OpSplitType  OpType = "split"
-	OpMergeType  OpType = "merge"
+	// OpSplitType represents the "split" operation type for extended operations
+	OpSplitType OpType = "split"
+	// OpMergeType represents the "merge" operation type for extended operations
+	OpMergeType OpType = "merge"
+	// OpExtendType represents the "extend" operation type for extended operations
 	OpExtendType OpType = "extend"
 )
 
