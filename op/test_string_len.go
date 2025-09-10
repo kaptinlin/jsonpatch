@@ -6,16 +6,16 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpTestStringLenOperation represents a test operation that checks if a string value has a specific length.
-type OpTestStringLenOperation struct {
+// TestStringLenOperation represents a test operation that checks if a string value has a specific length.
+type TestStringLenOperation struct {
 	BaseOp
 	Length float64 `json:"len"` // Expected string length
 	Not    bool    `json:"not"` // Whether to negate the result
 }
 
 // NewOpTestStringLenOperation creates a new OpTestStringLenOperation operation.
-func NewOpTestStringLenOperation(path []string, expectedLength float64) *OpTestStringLenOperation {
-	return &OpTestStringLenOperation{
+func NewOpTestStringLenOperation(path []string, expectedLength float64) *TestStringLenOperation {
+	return &TestStringLenOperation{
 		BaseOp: NewBaseOp(path),
 		Length: expectedLength,
 		Not:    false,
@@ -23,8 +23,8 @@ func NewOpTestStringLenOperation(path []string, expectedLength float64) *OpTestS
 }
 
 // NewOpTestStringLenOperationWithNot creates a new OpTestStringLenOperation operation with not flag.
-func NewOpTestStringLenOperationWithNot(path []string, expectedLength float64, not bool) *OpTestStringLenOperation {
-	return &OpTestStringLenOperation{
+func NewOpTestStringLenOperationWithNot(path []string, expectedLength float64, not bool) *TestStringLenOperation {
+	return &TestStringLenOperation{
 		BaseOp: NewBaseOp(path),
 		Length: expectedLength,
 		Not:    not,
@@ -32,22 +32,22 @@ func NewOpTestStringLenOperationWithNot(path []string, expectedLength float64, n
 }
 
 // Op returns the operation type.
-func (op *OpTestStringLenOperation) Op() internal.OpType {
+func (op *TestStringLenOperation) Op() internal.OpType {
 	return internal.OpTestStringLenType
 }
 
 // Code returns the operation code.
-func (op *OpTestStringLenOperation) Code() int {
+func (op *TestStringLenOperation) Code() int {
 	return internal.OpTestStringLenCode
 }
 
 // Path returns the operation path.
-func (op *OpTestStringLenOperation) Path() []string {
+func (op *TestStringLenOperation) Path() []string {
 	return op.path
 }
 
 // Apply applies the test string length operation to the document.
-func (op *OpTestStringLenOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get the value at the path
 	value, err := getValue(doc, op.Path())
 	if err != nil {
@@ -83,7 +83,7 @@ func (op *OpTestStringLenOperation) Apply(doc any) (internal.OpResult[any], erro
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *OpTestStringLenOperation) ToJSON() (internal.Operation, error) {
+func (op *TestStringLenOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		"op":   string(internal.OpTestStringLenType),
 		"path": formatPath(op.Path()),
@@ -96,12 +96,12 @@ func (op *OpTestStringLenOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *OpTestStringLenOperation) ToCompact() (internal.CompactOperation, error) {
+func (op *TestStringLenOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpTestStringLenCode, op.Path(), op.Length}, nil
 }
 
 // Validate validates the test string length operation.
-func (op *OpTestStringLenOperation) Validate() error {
+func (op *TestStringLenOperation) Validate() error {
 	if len(op.Path()) == 0 {
 		return ErrPathEmpty
 	}

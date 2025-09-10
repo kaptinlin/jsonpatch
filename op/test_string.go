@@ -6,16 +6,16 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpTestStringOperation represents a test operation that checks if a value is a string and matches a pattern.
-type OpTestStringOperation struct {
+// TestStringOperation represents a test operation that checks if a value is a string and matches a pattern.
+type TestStringOperation struct {
 	BaseOp
 	Str string  `json:"str"` // Expected string value
 	Pos float64 `json:"pos"` // Position within string (optional)
 }
 
 // NewOpTestStringOperation creates a new OpTestStringOperation operation.
-func NewOpTestStringOperation(path []string, expectedValue string) *OpTestStringOperation {
-	return &OpTestStringOperation{
+func NewOpTestStringOperation(path []string, expectedValue string) *TestStringOperation {
+	return &TestStringOperation{
 		BaseOp: NewBaseOp(path),
 		Str:    expectedValue,
 		Pos:    0, // Default position
@@ -23,8 +23,8 @@ func NewOpTestStringOperation(path []string, expectedValue string) *OpTestString
 }
 
 // NewOpTestStringOperationWithPos creates a new OpTestStringOperation operation with position.
-func NewOpTestStringOperationWithPos(path []string, expectedValue string, pos float64) *OpTestStringOperation {
-	return &OpTestStringOperation{
+func NewOpTestStringOperationWithPos(path []string, expectedValue string, pos float64) *TestStringOperation {
+	return &TestStringOperation{
 		BaseOp: NewBaseOp(path),
 		Str:    expectedValue,
 		Pos:    pos,
@@ -32,22 +32,22 @@ func NewOpTestStringOperationWithPos(path []string, expectedValue string, pos fl
 }
 
 // Op returns the operation type.
-func (op *OpTestStringOperation) Op() internal.OpType {
+func (op *TestStringOperation) Op() internal.OpType {
 	return internal.OpTestStringType
 }
 
 // Code returns the operation code.
-func (op *OpTestStringOperation) Code() int {
+func (op *TestStringOperation) Code() int {
 	return internal.OpTestStringCode
 }
 
 // Path returns the operation path.
-func (op *OpTestStringOperation) Path() []string {
+func (op *TestStringOperation) Path() []string {
 	return op.path
 }
 
 // Test evaluates the test string predicate condition.
-func (op *OpTestStringOperation) Test(doc any) (bool, error) {
+func (op *TestStringOperation) Test(doc any) (bool, error) {
 	val, err := getValue(doc, op.Path())
 	if err != nil {
 		// For JSON Patch test operations, path not found means test fails (returns false)
@@ -71,7 +71,7 @@ func (op *OpTestStringOperation) Test(doc any) (bool, error) {
 }
 
 // Apply applies the test string operation to the document.
-func (op *OpTestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *TestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get target value
 	val, err := getValue(doc, op.Path())
 	if err != nil {
@@ -110,7 +110,7 @@ func (op *OpTestStringOperation) Apply(doc any) (internal.OpResult[any], error) 
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *OpTestStringOperation) ToJSON() (internal.Operation, error) {
+func (op *TestStringOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		"op":   string(internal.OpTestStringType),
 		"path": formatPath(op.Path()),
@@ -121,12 +121,12 @@ func (op *OpTestStringOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *OpTestStringOperation) ToCompact() (internal.CompactOperation, error) {
+func (op *TestStringOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpTestStringCode, op.Path(), op.Str}, nil
 }
 
 // Validate validates the test string operation.
-func (op *OpTestStringOperation) Validate() error {
+func (op *TestStringOperation) Validate() error {
 	if len(op.Path()) == 0 {
 		return ErrPathEmpty
 	}

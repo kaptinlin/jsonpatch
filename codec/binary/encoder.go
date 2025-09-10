@@ -40,91 +40,91 @@ func encodeOp(encoder msgpack.Writer, i internal.Op) error {
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		return encodeValue(encoder, o.Value)
-	case *op.OpRemoveOperation:
+	case *op.RemoveOperation:
 		encoder.WriteArraySize(2)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
-	case *op.OpReplaceOperation:
+	case *op.ReplaceOperation:
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		return encodeValue(encoder, o.Value)
-	case *op.OpMoveOperation:
+	case *op.MoveOperation:
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.From())
 		encodePath(encoder, o.Path())
-	case *op.OpCopyOperation:
+	case *op.CopyOperation:
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.From())
 		encodePath(encoder, o.Path())
-	case *op.OpTestOperation:
+	case *op.TestOperation:
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		return encodeValue(encoder, o.Value)
 	// Predicate operations
-	case *op.OpTestTypeOperation:
+	case *op.TestTypeOperation:
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		return encodeValue(encoder, o.Types)
-	case *op.OpDefinedOperation:
+	case *op.DefinedOperation:
 		encoder.WriteArraySize(2)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
-	case *op.OpUndefinedOperation:
+	case *op.UndefinedOperation:
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		encoder.WriteBool(o.Not())
 		return encoder.Err()
-	case *op.OpLessOperation:
+	case *op.LessOperation:
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		return encodeValue(encoder, o.Value)
-	case *op.OpMoreOperation:
+	case *op.MoreOperation:
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		return encodeValue(encoder, o.Value)
-	case *op.OpContainsOperation:
+	case *op.ContainsOperation:
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		return encodeValue(encoder, o.Value)
-	case *op.OpInOperation:
+	case *op.InOperation:
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		return encodeValue(encoder, o.Values)
-	case *op.OpStartsOperation:
+	case *op.StartsOperation:
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		return encodeValue(encoder, o.Value)
-	case *op.OpEndsOperation:
+	case *op.EndsOperation:
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		return encodeValue(encoder, o.Value)
-	case *op.OpMatchesOperation:
+	case *op.MatchesOperation:
 		encoder.WriteArraySize(4)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		encoder.WriteString(o.Pattern)
 		encoder.WriteBool(o.IgnoreCase)
 		return encoder.Err()
-	case *op.OpTestStringOperation:
+	case *op.TestStringOperation:
 		encoder.WriteArraySize(4)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		encoder.WriteString(o.Str)
 		encoder.WriteFloat64(o.Pos)
 		return encoder.Err()
-	case *op.OpTestStringLenOperation:
+	case *op.TestStringLenOperation:
 		encoder.WriteArraySize(4)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
@@ -132,44 +132,44 @@ func encodeOp(encoder msgpack.Writer, i internal.Op) error {
 		encoder.WriteBool(o.Not)
 		return encoder.Err()
 	// Type predicate operation
-	case *op.OpTypeOperation:
+	case *op.TypeOperation:
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		encoder.WriteString(o.TypeValue)
 		return encoder.Err()
 	// JSON Patch Extended
-	case *op.OpFlipOperation:
+	case *op.FlipOperation:
 		encoder.WriteArraySize(2)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
-	case *op.OpIncOperation:
+	case *op.IncOperation:
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		encoder.WriteFloat64(o.Inc)
 		return encoder.Err()
-	case *op.OpStrInsOperation:
+	case *op.StrInsOperation:
 		encoder.WriteArraySize(4)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		encoder.WriteFloat64(o.Pos)
 		encoder.WriteString(o.Str)
 		return encoder.Err()
-	case *op.OpStrDelOperation:
+	case *op.StrDelOperation:
 		encoder.WriteArraySize(4)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		encoder.WriteFloat64(o.Pos)
 		encoder.WriteFloat64(o.Len)
 		return encoder.Err()
-	case *op.OpSplitOperation:
+	case *op.SplitOperation:
 		encoder.WriteArraySize(4)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
 		encoder.WriteFloat64(o.Pos)
 		return encodeValue(encoder, o.Props)
-	case *op.OpExtendOperation:
+	case *op.ExtendOperation:
 		encoder.WriteArraySize(4)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
@@ -178,7 +178,7 @@ func encodeOp(encoder msgpack.Writer, i internal.Op) error {
 		}
 		encoder.WriteBool(o.DeleteNull)
 		return encoder.Err()
-	case *op.OpMergeOperation:
+	case *op.MergeOperation:
 		encoder.WriteArraySize(4)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())

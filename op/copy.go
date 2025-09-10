@@ -4,40 +4,40 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpCopyOperation represents a copy operation that copies a value from one path to another.
-type OpCopyOperation struct {
+// CopyOperation represents a copy operation that copies a value from one path to another.
+type CopyOperation struct {
 	BaseOp
 	FromPath []string `json:"from"` // Source path
 }
 
-// CopyOperation is a non-stuttering alias for OpCopyOperation.
-type CopyOperation = OpCopyOperation
+// OpCopyOperation is a backward-compatible alias for CopyOperation.
+type OpCopyOperation = CopyOperation
 
 // NewOpCopyOperation creates a new OpCopyOperation operation.
-func NewOpCopyOperation(path, from []string) *OpCopyOperation {
-	return &OpCopyOperation{
+func NewOpCopyOperation(path, from []string) *CopyOperation {
+	return &CopyOperation{
 		BaseOp:   NewBaseOpWithFrom(path, from),
 		FromPath: from,
 	}
 }
 
 // Op returns the operation type.
-func (o *OpCopyOperation) Op() internal.OpType {
+func (o *CopyOperation) Op() internal.OpType {
 	return internal.OpCopyType
 }
 
 // Code returns the operation code.
-func (o *OpCopyOperation) Code() int {
+func (o *CopyOperation) Code() int {
 	return internal.OpCopyCode
 }
 
 // From returns the source path.
-func (o *OpCopyOperation) From() []string {
+func (o *CopyOperation) From() []string {
 	return o.FromPath
 }
 
 // Apply applies the copy operation.
-func (o *OpCopyOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *CopyOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, err := getValue(doc, o.FromPath)
 	if err != nil {
 		return internal.OpResult[any]{}, err
@@ -76,7 +76,7 @@ func (o *OpCopyOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *OpCopyOperation) ToJSON() (internal.Operation, error) {
+func (o *CopyOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		"op":   string(internal.OpCopyType),
 		"path": formatPath(o.Path()),
@@ -85,12 +85,12 @@ func (o *OpCopyOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *OpCopyOperation) ToCompact() (internal.CompactOperation, error) {
+func (o *CopyOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpCopyCode, o.Path(), o.FromPath}, nil
 }
 
 // Validate validates the copy operation.
-func (o *OpCopyOperation) Validate() error {
+func (o *CopyOperation) Validate() error {
 	if len(o.Path()) == 0 {
 		return ErrPathEmpty
 	}

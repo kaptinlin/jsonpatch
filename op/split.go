@@ -7,20 +7,20 @@ import (
 	"github.com/kaptinlin/jsonpatch/pkg/slate"
 )
 
-// OpSplitOperation represents a string split operation.
+// SplitOperation represents a string split operation.
 // path: target path
 // pos: split position (rune index)
 // props: properties to apply after split (can be nil)
 // Only supports string type fields.
-type OpSplitOperation struct {
+type SplitOperation struct {
 	BaseOp
 	Pos   float64     `json:"pos"`   // Split position
 	Props interface{} `json:"props"` // Properties to apply after split
 }
 
 // NewOpSplitOperation creates a new string split operation.
-func NewOpSplitOperation(path []string, pos float64, props interface{}) *OpSplitOperation {
-	return &OpSplitOperation{
+func NewOpSplitOperation(path []string, pos float64, props interface{}) *SplitOperation {
+	return &SplitOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
 		Props:  props,
@@ -28,22 +28,22 @@ func NewOpSplitOperation(path []string, pos float64, props interface{}) *OpSplit
 }
 
 // Op returns the operation type.
-func (op *OpSplitOperation) Op() internal.OpType {
+func (op *SplitOperation) Op() internal.OpType {
 	return internal.OpSplitType
 }
 
 // Code returns the operation code.
-func (op *OpSplitOperation) Code() int {
+func (op *SplitOperation) Code() int {
 	return internal.OpSplitCode
 }
 
 // Path returns the operation path.
-func (op *OpSplitOperation) Path() []string {
+func (op *SplitOperation) Path() []string {
 	return op.path
 }
 
 // Apply applies the string split operation.
-func (op *OpSplitOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level split specially
 	if len(op.Path()) == 0 {
 		// Target is the root document
@@ -110,7 +110,7 @@ func (op *OpSplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // isArrayElementPath checks if the path points to an array element
-func (op *OpSplitOperation) isArrayElementPath(doc interface{}, path []string) bool {
+func (op *SplitOperation) isArrayElementPath(doc interface{}, path []string) bool {
 	if len(path) == 0 {
 		return false
 	}
@@ -135,7 +135,7 @@ func (op *OpSplitOperation) isArrayElementPath(doc interface{}, path []string) b
 }
 
 // handleArraySplit handles splitting when the target is an array element
-func (op *OpSplitOperation) handleArraySplit(doc interface{}, parts []interface{}) error {
+func (op *SplitOperation) handleArraySplit(doc interface{}, parts []interface{}) error {
 	if len(parts) != 2 {
 		return ErrArrayTooSmall
 	}
@@ -192,7 +192,7 @@ func (op *OpSplitOperation) handleArraySplit(doc interface{}, parts []interface{
 }
 
 // splitValue splits a value based on its type
-func (op *OpSplitOperation) splitValue(value interface{}) interface{} {
+func (op *SplitOperation) splitValue(value interface{}) interface{} {
 	switch v := value.(type) {
 	case string:
 		return op.splitString(v)
@@ -229,7 +229,7 @@ func (op *OpSplitOperation) splitValue(value interface{}) interface{} {
 }
 
 // splitString splits a string at the specified position
-func (op *OpSplitOperation) splitString(s string) []interface{} {
+func (op *SplitOperation) splitString(s string) []interface{} {
 	runes := []rune(s)
 	// High-performance type conversion (single, boundary conversion)
 	pos := int(op.Pos) // Already validated as safe integer
@@ -270,7 +270,7 @@ func (op *OpSplitOperation) splitString(s string) []interface{} {
 }
 
 // splitNumber splits a number at the specified position
-func (op *OpSplitOperation) splitNumber(n float64) []interface{} {
+func (op *SplitOperation) splitNumber(n float64) []interface{} {
 	pos := op.Pos // Already validated as safe number
 	if pos > n {
 		pos = n
@@ -284,7 +284,7 @@ func (op *OpSplitOperation) splitNumber(n float64) []interface{} {
 // Old Slate-specific split methods removed - now using pkg/slate functions
 
 // ToJSON serializes the operation to JSON format.
-func (op *OpSplitOperation) ToJSON() (internal.Operation, error) {
+func (op *SplitOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		"op":   string(internal.OpSplitType),
 		"path": formatPath(op.Path()),
@@ -297,12 +297,12 @@ func (op *OpSplitOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *OpSplitOperation) ToCompact() (internal.CompactOperation, error) {
+func (op *SplitOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpSplitCode, op.Path(), op.Pos, op.Props}, nil
 }
 
 // Validate validates the split operation.
-func (op *OpSplitOperation) Validate() error {
+func (op *SplitOperation) Validate() error {
 	// Empty path is valid for split operation (root level)
 	// Position bounds are checked in Apply method
 	return nil

@@ -7,18 +7,18 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpContainsOperation represents a test operation that checks if a string value contains a substring.
-type OpContainsOperation struct {
+// ContainsOperation represents a contains operation that tests if a string contains a substring.
+type ContainsOperation struct {
 	BaseOp
 	Value      string `json:"value"`       // Substring to search for
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case when comparing
 }
 
-// ContainsOperation is a non-stuttering alias for OpContainsOperation.
-type ContainsOperation = OpContainsOperation
+// OpContainsOperation is a backward-compatible alias for ContainsOperation.
+type OpContainsOperation = ContainsOperation
 
 // NewOpContainsOperation creates a new OpContainsOperation operation.
-func NewOpContainsOperation(path []string, substring string) *OpContainsOperation {
+func NewOpContainsOperation(path []string, substring string) *ContainsOperation {
 	return &OpContainsOperation{
 		BaseOp: NewBaseOp(path),
 		Value:  substring,
@@ -26,7 +26,7 @@ func NewOpContainsOperation(path []string, substring string) *OpContainsOperatio
 }
 
 // NewOpContainsOperationWithIgnoreCase creates a new OpContainsOperation operation with ignore case option.
-func NewOpContainsOperationWithIgnoreCase(path []string, substring string, ignoreCase bool) *OpContainsOperation {
+func NewOpContainsOperationWithIgnoreCase(path []string, substring string, ignoreCase bool) *ContainsOperation {
 	return &OpContainsOperation{
 		BaseOp:     NewBaseOp(path),
 		Value:      substring,
@@ -35,7 +35,7 @@ func NewOpContainsOperationWithIgnoreCase(path []string, substring string, ignor
 }
 
 // Apply applies the contains test operation to the document.
-func (op *OpContainsOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *ContainsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, actualValue, testValue, testString, err := op.getAndPrepareStrings(doc)
 	if err != nil {
 		return internal.OpResult[any]{}, err
@@ -48,7 +48,7 @@ func (op *OpContainsOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // Test performs the contains test operation.
-func (op *OpContainsOperation) Test(doc any) (bool, error) {
+func (op *ContainsOperation) Test(doc any) (bool, error) {
 	_, _, testValue, testString, err := op.getAndPrepareStrings(doc)
 	if err != nil {
 		// For JSON Patch test operations, path not found or wrong type means test fails (returns false)
@@ -61,7 +61,7 @@ func (op *OpContainsOperation) Test(doc any) (bool, error) {
 }
 
 // getAndPrepareStrings retrieves the value, converts to string, and prepares test strings
-func (op *OpContainsOperation) getAndPrepareStrings(doc any) (interface{}, string, string, string, error) {
+func (op *ContainsOperation) getAndPrepareStrings(doc any) (interface{}, string, string, string, error) {
 	value, err := getValue(doc, op.Path())
 	if err != nil {
 		return nil, "", "", "", ErrPathNotFound
@@ -83,22 +83,22 @@ func (op *OpContainsOperation) getAndPrepareStrings(doc any) (interface{}, strin
 }
 
 // Not returns false (contains operation doesn't support not modifier).
-func (op *OpContainsOperation) Not() bool {
+func (op *ContainsOperation) Not() bool {
 	return false
 }
 
 // Op returns the operation type.
-func (op *OpContainsOperation) Op() internal.OpType {
+func (op *ContainsOperation) Op() internal.OpType {
 	return internal.OpContainsType
 }
 
 // Code returns the operation code.
-func (op *OpContainsOperation) Code() int {
+func (op *ContainsOperation) Code() int {
 	return internal.OpContainsCode
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *OpContainsOperation) ToJSON() (internal.Operation, error) {
+func (op *ContainsOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		"op":    string(internal.OpContainsType),
 		"path":  formatPath(op.Path()),
@@ -111,12 +111,12 @@ func (op *OpContainsOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *OpContainsOperation) ToCompact() (internal.CompactOperation, error) {
+func (op *ContainsOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpContainsCode, op.Path(), op.Value}, nil
 }
 
 // Validate validates the contains operation.
-func (op *OpContainsOperation) Validate() error {
+func (op *ContainsOperation) Validate() error {
 	if len(op.Path()) == 0 {
 		return ErrPathEmpty
 	}
@@ -124,7 +124,7 @@ func (op *OpContainsOperation) Validate() error {
 }
 
 // Path returns the path for the contains operation.
-func (op *OpContainsOperation) Path() []string {
+func (op *ContainsOperation) Path() []string {
 	return op.path
 }
 

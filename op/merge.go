@@ -5,20 +5,20 @@ import (
 	"github.com/kaptinlin/jsonpatch/pkg/slate"
 )
 
-// OpMergeOperation represents an array merge operation.
+// MergeOperation represents an array merge operation.
 // path: target path
 // pos: merge position (array index)
 // props: properties to apply after merge (can be nil)
 // Only supports array type fields.
-type OpMergeOperation struct {
+type MergeOperation struct {
 	BaseOp
 	Pos   float64                `json:"pos"`   // Merge position
 	Props map[string]interface{} `json:"props"` // Properties to apply after merge
 }
 
 // NewOpMergeOperation creates a new array merge operation.
-func NewOpMergeOperation(path []string, pos float64, props map[string]interface{}) *OpMergeOperation {
-	return &OpMergeOperation{
+func NewOpMergeOperation(path []string, pos float64, props map[string]interface{}) *MergeOperation {
+	return &MergeOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
 		Props:  props,
@@ -26,22 +26,22 @@ func NewOpMergeOperation(path []string, pos float64, props map[string]interface{
 }
 
 // Op returns the operation type.
-func (op *OpMergeOperation) Op() internal.OpType {
+func (op *MergeOperation) Op() internal.OpType {
 	return internal.OpMergeType
 }
 
 // Code returns the operation code.
-func (op *OpMergeOperation) Code() int {
+func (op *MergeOperation) Code() int {
 	return internal.OpMergeCode
 }
 
 // Path returns the operation path.
-func (op *OpMergeOperation) Path() []string {
+func (op *MergeOperation) Path() []string {
 	return op.path
 }
 
 // Apply applies the array merge operation.
-func (op *OpMergeOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level merge specially
 	if len(op.Path()) == 0 {
 		// Target is the root document
@@ -114,7 +114,7 @@ func (op *OpMergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // mergeArrayElements merges array elements at position pos-1 and pos (like TypeScript version).
 // Returns the new array and the old elements that were merged.
-func (op *OpMergeOperation) mergeArrayElements(arr []interface{}, pos int) ([]interface{}, []interface{}) {
+func (op *MergeOperation) mergeArrayElements(arr []interface{}, pos int) ([]interface{}, []interface{}) {
 	if pos <= 0 || pos >= len(arr) {
 		return arr, nil
 	}
@@ -137,7 +137,7 @@ func (op *OpMergeOperation) mergeArrayElements(arr []interface{}, pos int) ([]in
 }
 
 // mergeElements merges two elements based on their internal.
-func (op *OpMergeOperation) mergeElements(one, two interface{}) interface{} {
+func (op *MergeOperation) mergeElements(one, two interface{}) interface{} {
 	// String concatenation
 	if strOne, ok := one.(string); ok {
 		if strTwo, ok := two.(string); ok {
@@ -199,7 +199,7 @@ func (op *OpMergeOperation) mergeElements(one, two interface{}) interface{} {
 // Old methods removed - now using pkg/slate functions
 
 // ToJSON serializes the operation to JSON format.
-func (op *OpMergeOperation) ToJSON() (internal.Operation, error) {
+func (op *MergeOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		"op":   string(internal.OpMergeType),
 		"path": formatPath(op.Path()),
@@ -212,12 +212,12 @@ func (op *OpMergeOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *OpMergeOperation) ToCompact() (internal.CompactOperation, error) {
+func (op *MergeOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpMergeCode, op.Path(), op.Props}, nil
 }
 
 // Validate validates the merge operation.
-func (op *OpMergeOperation) Validate() error {
+func (op *MergeOperation) Validate() error {
 	if op.Pos < 0 {
 		return ErrPositionNegative
 	}

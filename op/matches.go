@@ -7,8 +7,8 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpMatchesOperation represents a "matches" predicate operation that checks if a string matches a regex pattern.
-type OpMatchesOperation struct {
+// MatchesOperation represents a "matches" predicate operation that checks if a string matches a regex pattern.
+type MatchesOperation struct {
 	BaseOp
 	Pattern    string         // The regex pattern string
 	IgnoreCase bool           // Case insensitive flag
@@ -16,7 +16,7 @@ type OpMatchesOperation struct {
 }
 
 // NewOpMatchesOperation creates a new matches operation.
-func NewOpMatchesOperation(path []string, pattern string, ignoreCase bool) (*OpMatchesOperation, error) {
+func NewOpMatchesOperation(path []string, pattern string, ignoreCase bool) (*MatchesOperation, error) {
 	// Compile the regex pattern
 	var regexPattern string
 	if ignoreCase {
@@ -30,7 +30,7 @@ func NewOpMatchesOperation(path []string, pattern string, ignoreCase bool) (*OpM
 		return nil, fmt.Errorf("%w: %w", ErrRegexPattern, err)
 	}
 
-	return &OpMatchesOperation{
+	return &MatchesOperation{
 		BaseOp:     NewBaseOp(path),
 		Pattern:    pattern,
 		IgnoreCase: ignoreCase,
@@ -39,17 +39,17 @@ func NewOpMatchesOperation(path []string, pattern string, ignoreCase bool) (*OpM
 }
 
 // Op returns the operation type.
-func (o *OpMatchesOperation) Op() internal.OpType {
+func (o *MatchesOperation) Op() internal.OpType {
 	return internal.OpMatchesType
 }
 
 // Code returns the operation code.
-func (o *OpMatchesOperation) Code() int {
+func (o *MatchesOperation) Code() int {
 	return internal.OpMatchesCode
 }
 
 // Test evaluates the matches predicate condition.
-func (o *OpMatchesOperation) Test(doc interface{}) (bool, error) {
+func (o *MatchesOperation) Test(doc interface{}) (bool, error) {
 	// Get target value
 	val, err := getValue(doc, o.Path())
 	if err != nil {
@@ -72,7 +72,7 @@ func (o *OpMatchesOperation) Test(doc interface{}) (bool, error) {
 }
 
 // Apply applies the matches operation.
-func (o *OpMatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get target value
 	val, err := getValue(doc, o.Path())
 	if err != nil {
@@ -93,7 +93,7 @@ func (o *OpMatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON converts the operation to JSON representation.
-func (o *OpMatchesOperation) ToJSON() (internal.Operation, error) {
+func (o *MatchesOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		"op":    string(internal.OpMatchesType),
 		"path":  formatPath(o.Path()),
@@ -108,12 +108,12 @@ func (o *OpMatchesOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact converts the operation to compact array representation.
-func (o *OpMatchesOperation) ToCompact() (internal.CompactOperation, error) {
+func (o *MatchesOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpMatchesCode, o.Path(), o.Pattern, o.IgnoreCase}, nil
 }
 
 // Validate validates the matches operation.
-func (o *OpMatchesOperation) Validate() error {
+func (o *MatchesOperation) Validate() error {
 	if len(o.Path()) == 0 {
 		return ErrPathEmpty
 	}
@@ -124,7 +124,7 @@ func (o *OpMatchesOperation) Validate() error {
 }
 
 // Path returns the path for the matches operation.
-func (o *OpMatchesOperation) Path() []string {
+func (o *MatchesOperation) Path() []string {
 	return o.path
 }
 

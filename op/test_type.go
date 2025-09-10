@@ -8,45 +8,45 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpTestTypeOperation represents a test operation that checks if a value is of a specific type.
-type OpTestTypeOperation struct {
+// TestTypeOperation represents a test operation that checks if a value is of a specific type.
+type TestTypeOperation struct {
 	BaseOp
 	Types []string `json:"type"` // Expected type names
 }
 
 // NewOpTestTypeOperation creates a new OpTestTypeOperation operation.
-func NewOpTestTypeOperation(path []string, expectedType string) *OpTestTypeOperation {
-	return &OpTestTypeOperation{
+func NewOpTestTypeOperation(path []string, expectedType string) *TestTypeOperation {
+	return &TestTypeOperation{
 		BaseOp: NewBaseOp(path),
 		Types:  []string{expectedType},
 	}
 }
 
 // NewOpTestTypeOperationMultiple creates a new OpTestTypeOperation operation with multiple internal.
-func NewOpTestTypeOperationMultiple(path []string, expectedTypes []string) *OpTestTypeOperation {
-	return &OpTestTypeOperation{
+func NewOpTestTypeOperationMultiple(path []string, expectedTypes []string) *TestTypeOperation {
+	return &TestTypeOperation{
 		BaseOp: NewBaseOp(path),
 		Types:  expectedTypes,
 	}
 }
 
 // Op returns the operation type.
-func (op *OpTestTypeOperation) Op() internal.OpType {
+func (op *TestTypeOperation) Op() internal.OpType {
 	return internal.OpTestTypeType
 }
 
 // Code returns the operation code.
-func (op *OpTestTypeOperation) Code() int {
+func (op *TestTypeOperation) Code() int {
 	return internal.OpTestTypeCode
 }
 
 // Path returns the operation path.
-func (op *OpTestTypeOperation) Path() []string {
+func (op *TestTypeOperation) Path() []string {
 	return op.path
 }
 
 // getValueAndCheckType retrieves the value and checks if it matches any expected type
-func (op *OpTestTypeOperation) getValueAndCheckType(doc any) (interface{}, string, bool, error) {
+func (op *TestTypeOperation) getValueAndCheckType(doc any) (interface{}, string, bool, error) {
 	// Get target value
 	val, err := getValue(doc, op.Path())
 	if err != nil {
@@ -64,7 +64,7 @@ func (op *OpTestTypeOperation) getValueAndCheckType(doc any) (interface{}, strin
 }
 
 // checkTypeMatch checks if actualType matches any expected type
-func (op *OpTestTypeOperation) checkTypeMatch(actualType string) bool {
+func (op *TestTypeOperation) checkTypeMatch(actualType string) bool {
 	for _, expectedType := range op.Types {
 		if actualType == expectedType {
 			return true
@@ -78,7 +78,7 @@ func (op *OpTestTypeOperation) checkTypeMatch(actualType string) bool {
 }
 
 // Test evaluates the test type predicate condition.
-func (op *OpTestTypeOperation) Test(doc any) (bool, error) {
+func (op *TestTypeOperation) Test(doc any) (bool, error) {
 	_, _, typeMatches, err := op.getValueAndCheckType(doc)
 	if err != nil {
 		// Path access error means the path doesn't exist
@@ -91,12 +91,12 @@ func (op *OpTestTypeOperation) Test(doc any) (bool, error) {
 }
 
 // Not returns false (test_type operation doesn't support not modifier).
-func (op *OpTestTypeOperation) Not() bool {
+func (op *TestTypeOperation) Not() bool {
 	return false
 }
 
 // Apply applies the test type operation to the document.
-func (op *OpTestTypeOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *TestTypeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	_, actualType, typeMatches, err := op.getValueAndCheckType(doc)
 	if err != nil {
 		return internal.OpResult[any]{}, ErrPathNotFound
@@ -227,7 +227,7 @@ func getTypeNameWithIntegerSupport(value interface{}) string {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *OpTestTypeOperation) ToJSON() (internal.Operation, error) {
+func (op *TestTypeOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		"op":   string(internal.OpTestTypeType),
 		"path": formatPath(op.Path()),
@@ -236,12 +236,12 @@ func (op *OpTestTypeOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *OpTestTypeOperation) ToCompact() (internal.CompactOperation, error) {
+func (op *TestTypeOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpTestTypeCode, op.Path(), op.Types}, nil
 }
 
 // Validate validates the test type operation.
-func (op *OpTestTypeOperation) Validate() error {
+func (op *TestTypeOperation) Validate() error {
 	if len(op.Path()) == 0 {
 		return ErrPathEmpty
 	}

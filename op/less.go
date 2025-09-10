@@ -6,22 +6,22 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpLessOperation represents a test operation that checks if a numeric value is less than a specified value.
-type OpLessOperation struct {
+// LessOperation represents a test operation that checks if a numeric value is less than a specified value.
+type LessOperation struct {
 	BaseOp
 	Value float64 `json:"value"` // Value to compare against
 }
 
 // NewOpLessOperation creates a new OpLessOperation operation.
-func NewOpLessOperation(path []string, value float64) *OpLessOperation {
-	return &OpLessOperation{
+func NewOpLessOperation(path []string, value float64) *LessOperation {
+	return &LessOperation{
 		BaseOp: NewBaseOp(path),
 		Value:  value,
 	}
 }
 
 // Apply applies the less test operation to the document.
-func (op *OpLessOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *LessOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, actualValue, err := op.getAndValidateValue(doc)
 	if err != nil {
 		return internal.OpResult[any]{}, err
@@ -34,7 +34,7 @@ func (op *OpLessOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // getAndValidateValue retrieves and validates the numeric value at the path
-func (op *OpLessOperation) getAndValidateValue(doc any) (interface{}, float64, error) {
+func (op *LessOperation) getAndValidateValue(doc any) (interface{}, float64, error) {
 	value, err := getValue(doc, op.Path())
 	if err != nil {
 		return nil, 0, ErrPathNotFound
@@ -47,17 +47,17 @@ func (op *OpLessOperation) getAndValidateValue(doc any) (interface{}, float64, e
 }
 
 // Op returns the operation type.
-func (op *OpLessOperation) Op() internal.OpType {
+func (op *LessOperation) Op() internal.OpType {
 	return internal.OpLessType
 }
 
 // Code returns the operation code.
-func (op *OpLessOperation) Code() int {
+func (op *LessOperation) Code() int {
 	return internal.OpLessCode
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *OpLessOperation) ToJSON() (internal.Operation, error) {
+func (op *LessOperation) ToJSON() (internal.Operation, error) {
 	// Convert float64 to int if it's a whole number
 	var value interface{} = op.Value
 	if op.Value == float64(int(op.Value)) {
@@ -72,12 +72,12 @@ func (op *OpLessOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *OpLessOperation) ToCompact() (internal.CompactOperation, error) {
+func (op *LessOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpLessCode, op.Path(), op.Value}, nil
 }
 
 // Validate validates the less operation.
-func (op *OpLessOperation) Validate() error {
+func (op *LessOperation) Validate() error {
 	if len(op.Path()) == 0 {
 		return ErrPathEmpty
 	}
@@ -85,12 +85,12 @@ func (op *OpLessOperation) Validate() error {
 }
 
 // Path returns the path for the less operation.
-func (op *OpLessOperation) Path() []string {
+func (op *LessOperation) Path() []string {
 	return op.path
 }
 
 // Test evaluates the less predicate condition.
-func (op *OpLessOperation) Test(doc any) (bool, error) {
+func (op *LessOperation) Test(doc any) (bool, error) {
 	_, actualValue, err := op.getAndValidateValue(doc)
 	if err != nil {
 		// For JSON Patch test operations, path not found or wrong type means test fails (returns false)
@@ -102,6 +102,6 @@ func (op *OpLessOperation) Test(doc any) (bool, error) {
 }
 
 // Not returns false since this is not a NOT operation.
-func (op *OpLessOperation) Not() bool {
+func (op *LessOperation) Not() bool {
 	return false
 }

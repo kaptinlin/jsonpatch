@@ -4,16 +4,16 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpRemoveOperation represents a remove operation that removes a value at a specified path.
-type OpRemoveOperation struct {
+// RemoveOperation represents a remove operation that removes a value at a specified path.
+type RemoveOperation struct {
 	BaseOp
 	OldValue    interface{} `json:"oldValue,omitempty"` // The value that was removed (optional)
 	HasOldValue bool        // Whether oldValue is explicitly set
 }
 
 // NewOpRemoveOperation creates a new OpRemoveOperation operation.
-func NewOpRemoveOperation(path []string) *OpRemoveOperation {
-	return &OpRemoveOperation{
+func NewOpRemoveOperation(path []string) *RemoveOperation {
+	return &RemoveOperation{
 		BaseOp:      NewBaseOp(path),
 		OldValue:    nil,
 		HasOldValue: false,
@@ -21,8 +21,8 @@ func NewOpRemoveOperation(path []string) *OpRemoveOperation {
 }
 
 // NewOpRemoveOperationWithOldValue creates a new OpRemoveOperation operation with oldValue.
-func NewOpRemoveOperationWithOldValue(path []string, oldValue interface{}) *OpRemoveOperation {
-	return &OpRemoveOperation{
+func NewOpRemoveOperationWithOldValue(path []string, oldValue interface{}) *RemoveOperation {
+	return &RemoveOperation{
 		BaseOp:      NewBaseOp(path),
 		OldValue:    oldValue,
 		HasOldValue: true,
@@ -30,22 +30,22 @@ func NewOpRemoveOperationWithOldValue(path []string, oldValue interface{}) *OpRe
 }
 
 // Op returns the operation type.
-func (o *OpRemoveOperation) Op() internal.OpType {
+func (o *RemoveOperation) Op() internal.OpType {
 	return internal.OpRemoveType
 }
 
 // Code returns the operation code.
-func (o *OpRemoveOperation) Code() int {
+func (o *RemoveOperation) Code() int {
 	return internal.OpRemoveCode
 }
 
 // Path returns the operation path.
-func (o *OpRemoveOperation) Path() []string {
+func (o *RemoveOperation) Path() []string {
 	return o.path
 }
 
 // Apply applies the remove operation to the document.
-func (o *OpRemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if len(o.path) == 0 {
 		return internal.OpResult[any]{}, ErrPathEmpty
 	}
@@ -129,7 +129,7 @@ func (o *OpRemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *OpRemoveOperation) ToJSON() (internal.Operation, error) {
+func (o *RemoveOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		"op":   string(internal.OpRemoveType),
 		"path": formatPath(o.path),
@@ -143,12 +143,12 @@ func (o *OpRemoveOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *OpRemoveOperation) ToCompact() (internal.CompactOperation, error) {
+func (o *RemoveOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpRemoveCode, o.path}, nil
 }
 
 // Validate validates the remove operation.
-func (o *OpRemoveOperation) Validate() error {
+func (o *RemoveOperation) Validate() error {
 	if len(o.path) == 0 {
 		return ErrPathEmpty
 	}

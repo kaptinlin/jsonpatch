@@ -6,15 +6,15 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpMoreOperation represents a "more" predicate operation that checks if a value is greater than a specified number.
-type OpMoreOperation struct {
+// MoreOperation represents a "more" predicate operation that checks if a value is greater than a specified number.
+type MoreOperation struct {
 	PredicateOpBase
 	Value float64 // The number to compare against
 }
 
 // NewOpMoreOperation creates a new more operation.
-func NewOpMoreOperation(path []string, value float64) *OpMoreOperation {
-	return &OpMoreOperation{
+func NewOpMoreOperation(path []string, value float64) *MoreOperation {
+	return &MoreOperation{
 		PredicateOpBase: PredicateOpBase{
 			BaseOp: BaseOp{path: path},
 		},
@@ -23,17 +23,17 @@ func NewOpMoreOperation(path []string, value float64) *OpMoreOperation {
 }
 
 // Op returns the operation type.
-func (o *OpMoreOperation) Op() internal.OpType {
+func (o *MoreOperation) Op() internal.OpType {
 	return internal.OpMoreType
 }
 
 // Code returns the operation code.
-func (o *OpMoreOperation) Code() int {
+func (o *MoreOperation) Code() int {
 	return internal.OpMoreCode
 }
 
 // Test evaluates the more predicate condition.
-func (o *OpMoreOperation) Test(doc interface{}) (bool, error) {
+func (o *MoreOperation) Test(doc interface{}) (bool, error) {
 	_, num, err := o.getAndValidateValue(doc)
 	if err != nil {
 		// For JSON Patch test operations, path not found or wrong type means test fails (returns false)
@@ -45,7 +45,7 @@ func (o *OpMoreOperation) Test(doc interface{}) (bool, error) {
 }
 
 // Apply applies the more operation.
-func (o *OpMoreOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *MoreOperation) Apply(doc any) (internal.OpResult[any], error) {
 	val, num, err := o.getAndValidateValue(doc)
 	if err != nil {
 		return internal.OpResult[any]{}, err
@@ -59,7 +59,7 @@ func (o *OpMoreOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // getAndValidateValue retrieves and validates the numeric value at the path
-func (o *OpMoreOperation) getAndValidateValue(doc interface{}) (interface{}, float64, error) {
+func (o *MoreOperation) getAndValidateValue(doc interface{}) (interface{}, float64, error) {
 	// Get target value
 	val, err := getValue(doc, o.Path())
 	if err != nil {
@@ -87,7 +87,7 @@ func (o *OpMoreOperation) getAndValidateValue(doc interface{}) (interface{}, flo
 }
 
 // ToJSON converts the operation to JSON representation.
-func (o *OpMoreOperation) ToJSON() (internal.Operation, error) {
+func (o *MoreOperation) ToJSON() (internal.Operation, error) {
 	// Convert float64 to int if it's a whole number
 	var value interface{} = o.Value
 	if o.Value == float64(int(o.Value)) {
@@ -102,12 +102,12 @@ func (o *OpMoreOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact converts the operation to compact array representation.
-func (o *OpMoreOperation) ToCompact() (internal.CompactOperation, error) {
+func (o *MoreOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpMoreCode, o.Path(), o.Value}, nil
 }
 
 // Validate validates the more operation.
-func (o *OpMoreOperation) Validate() error {
+func (o *MoreOperation) Validate() error {
 	if len(o.Path()) == 0 {
 		return ErrPathEmpty
 	}
@@ -115,7 +115,7 @@ func (o *OpMoreOperation) Validate() error {
 }
 
 // Path returns the path for the more operation.
-func (o *OpMoreOperation) Path() []string {
+func (o *MoreOperation) Path() []string {
 	return o.path
 }
 

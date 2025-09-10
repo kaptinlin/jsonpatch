@@ -4,32 +4,32 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpOrOperation represents an OR operation that combines multiple predicate operations.
-type OpOrOperation struct {
+// OrOperation represents an OR operation that combines multiple predicate operations.
+type OrOperation struct {
 	BaseOp
 	Operations []interface{} `json:"ops"` // Array of operations
 }
 
 // NewOpOrOperation creates a new OpOrOperation operation.
-func NewOpOrOperation(path []string, ops []interface{}) *OpOrOperation {
-	return &OpOrOperation{
+func NewOpOrOperation(path []string, ops []interface{}) *OrOperation {
+	return &OrOperation{
 		BaseOp:     NewBaseOp(path),
 		Operations: ops,
 	}
 }
 
 // Op returns the operation type.
-func (o *OpOrOperation) Op() internal.OpType {
+func (o *OrOperation) Op() internal.OpType {
 	return internal.OpOrType
 }
 
 // Code returns the operation code.
-func (o *OpOrOperation) Code() int {
+func (o *OrOperation) Code() int {
 	return internal.OpOrCode
 }
 
 // Ops returns the predicate operations.
-func (o *OpOrOperation) Ops() []internal.PredicateOp {
+func (o *OrOperation) Ops() []internal.PredicateOp {
 	ops := make([]internal.PredicateOp, 0, len(o.Operations))
 	for _, op := range o.Operations {
 		if predicateOp, ok := op.(internal.PredicateOp); ok {
@@ -40,7 +40,7 @@ func (o *OpOrOperation) Ops() []internal.PredicateOp {
 }
 
 // Test performs the OR operation.
-func (o *OpOrOperation) Test(doc interface{}) (bool, error) {
+func (o *OrOperation) Test(doc interface{}) (bool, error) {
 	// If no operations, return false (empty OR is false)
 	if len(o.Operations) == 0 {
 		return false, nil
@@ -67,7 +67,7 @@ func (o *OpOrOperation) Test(doc interface{}) (bool, error) {
 }
 
 // Apply applies the OR operation to the document.
-func (o *OpOrOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *OrOperation) Apply(doc any) (internal.OpResult[any], error) {
 	for _, predicateInterface := range o.Operations {
 		predicate, ok := predicateInterface.(internal.PredicateOp)
 		if !ok {
@@ -82,7 +82,7 @@ func (o *OpOrOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *OpOrOperation) ToJSON() (internal.Operation, error) {
+func (o *OrOperation) ToJSON() (internal.Operation, error) {
 	opsJSON := make([]interface{}, 0, len(o.Operations))
 	for _, op := range o.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
@@ -103,7 +103,7 @@ func (o *OpOrOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *OpOrOperation) ToCompact() (internal.CompactOperation, error) {
+func (o *OrOperation) ToCompact() (internal.CompactOperation, error) {
 	opsCompact := make([]interface{}, 0, len(o.Operations))
 	for _, op := range o.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
@@ -120,7 +120,7 @@ func (o *OpOrOperation) ToCompact() (internal.CompactOperation, error) {
 }
 
 // Validate validates the OR operation.
-func (o *OpOrOperation) Validate() error {
+func (o *OrOperation) Validate() error {
 	if len(o.Operations) == 0 {
 		return ErrOrNoOperands
 	}
@@ -137,12 +137,12 @@ func (o *OpOrOperation) Validate() error {
 }
 
 // Path returns the path for the OR operation.
-func (o *OpOrOperation) Path() []string {
+func (o *OrOperation) Path() []string {
 	return o.path
 }
 
 // Not returns false since this is not a NOT operation.
-func (o *OpOrOperation) Not() bool {
+func (o *OrOperation) Not() bool {
 	return false
 }
 

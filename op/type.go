@@ -6,37 +6,37 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpTypeOperation represents a type operation that checks if a value is of a specific type.
-type OpTypeOperation struct {
+// TypeOperation represents a type operation that checks if a value is of a specific type.
+type TypeOperation struct {
 	BaseOp
 	TypeValue string `json:"value"` // Expected type name
 }
 
 // NewOpTypeOperation creates a new OpTypeOperation operation.
-func NewOpTypeOperation(path []string, expectedType string) *OpTypeOperation {
-	return &OpTypeOperation{
+func NewOpTypeOperation(path []string, expectedType string) *TypeOperation {
+	return &TypeOperation{
 		BaseOp:    NewBaseOp(path),
 		TypeValue: expectedType,
 	}
 }
 
 // Op returns the operation type.
-func (op *OpTypeOperation) Op() internal.OpType {
+func (op *TypeOperation) Op() internal.OpType {
 	return internal.OpTypeType
 }
 
 // Code returns the operation code.
-func (op *OpTypeOperation) Code() int {
+func (op *TypeOperation) Code() int {
 	return internal.OpTypeCode
 }
 
 // Path returns the operation path.
-func (op *OpTypeOperation) Path() []string {
+func (op *TypeOperation) Path() []string {
 	return op.path
 }
 
 // Test evaluates the type predicate condition.
-func (op *OpTypeOperation) Test(doc any) (bool, error) {
+func (op *TypeOperation) Test(doc any) (bool, error) {
 	val, err := getValue(doc, op.Path())
 	if err != nil {
 		// For JSON Patch test operations, path not found means test fails (returns false)
@@ -53,12 +53,12 @@ func (op *OpTypeOperation) Test(doc any) (bool, error) {
 }
 
 // Not returns false (type operation doesn't support not modifier).
-func (op *OpTypeOperation) Not() bool {
+func (op *TypeOperation) Not() bool {
 	return false
 }
 
 // Apply applies the type operation to the document.
-func (op *OpTypeOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *TypeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get target value
 	val, err := getValue(doc, op.Path())
 	if err != nil {
@@ -84,7 +84,7 @@ func (op *OpTypeOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *OpTypeOperation) ToJSON() (internal.Operation, error) {
+func (op *TypeOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		"op":    string(internal.OpTypeType),
 		"path":  formatPath(op.Path()),
@@ -93,12 +93,12 @@ func (op *OpTypeOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *OpTypeOperation) ToCompact() (internal.CompactOperation, error) {
+func (op *TypeOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpTypeCode, op.Path(), op.TypeValue}, nil
 }
 
 // Validate validates the type operation.
-func (op *OpTypeOperation) Validate() error {
+func (op *TypeOperation) Validate() error {
 	if len(op.Path()) == 0 {
 		return ErrPathEmpty
 	}

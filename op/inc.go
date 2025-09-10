@@ -4,37 +4,37 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpIncOperation represents an increment operation that increments a numeric value.
-type OpIncOperation struct {
+// IncOperation represents an increment operation that increments a numeric value.
+type IncOperation struct {
 	BaseOp
 	Inc float64 `json:"inc"` // Increment value
 }
 
 // NewOpIncOperation creates a new OpIncOperation operation.
-func NewOpIncOperation(path []string, inc float64) *OpIncOperation {
-	return &OpIncOperation{
+func NewOpIncOperation(path []string, inc float64) *IncOperation {
+	return &IncOperation{
 		BaseOp: NewBaseOp(path),
 		Inc:    inc,
 	}
 }
 
 // Op returns the operation type.
-func (op *OpIncOperation) Op() internal.OpType {
+func (op *IncOperation) Op() internal.OpType {
 	return internal.OpIncType
 }
 
 // Code returns the operation code.
-func (op *OpIncOperation) Code() int {
+func (op *IncOperation) Code() int {
 	return internal.OpIncCode
 }
 
 // Path returns the operation path.
-func (op *OpIncOperation) Path() []string {
+func (op *IncOperation) Path() []string {
 	return op.path
 }
 
 // Apply applies the increment operation to the document.
-func (op *OpIncOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if len(op.path) == 0 {
 		// Root level increment
 		oldValue, ok := toFloat64(doc)
@@ -69,12 +69,12 @@ func (op *OpIncOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // updateParent updates the parent container with the new value
-func (op *OpIncOperation) updateParent(parent interface{}, key interface{}, value interface{}) error {
+func (op *IncOperation) updateParent(parent interface{}, key interface{}, value interface{}) error {
 	return updateParent(parent, key, value)
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *OpIncOperation) ToJSON() (internal.Operation, error) {
+func (op *IncOperation) ToJSON() (internal.Operation, error) {
 	// 遵循 float64 统一化原则：始终输出 float64
 	return internal.Operation{
 		"op":   string(internal.OpIncType),
@@ -84,12 +84,12 @@ func (op *OpIncOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *OpIncOperation) ToCompact() (internal.CompactOperation, error) {
+func (op *IncOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpIncCode, op.path, op.Inc}, nil
 }
 
 // Validate validates the increment operation.
-func (op *OpIncOperation) Validate() error {
+func (op *IncOperation) Validate() error {
 	// Empty path (root level) is allowed for inc operations
 	return nil
 }

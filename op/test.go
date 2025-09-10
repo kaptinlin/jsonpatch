@@ -6,16 +6,16 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpTestOperation represents a test operation that checks if a value equals a specified value.
-type OpTestOperation struct {
+// TestOperation represents a test operation that checks if a value equals a specified value.
+type TestOperation struct {
 	BaseOp
 	Value   interface{} `json:"value"`         // Expected value
 	NotFlag bool        `json:"not,omitempty"` // Whether to negate the test
 }
 
 // NewOpTestOperation creates a new OpTestOperation operation.
-func NewOpTestOperation(path []string, value interface{}) *OpTestOperation {
-	return &OpTestOperation{
+func NewOpTestOperation(path []string, value interface{}) *TestOperation {
+	return &TestOperation{
 		BaseOp:  NewBaseOp(path),
 		Value:   value,
 		NotFlag: false,
@@ -23,17 +23,17 @@ func NewOpTestOperation(path []string, value interface{}) *OpTestOperation {
 }
 
 // Op returns the operation type.
-func (o *OpTestOperation) Op() internal.OpType {
+func (o *TestOperation) Op() internal.OpType {
 	return internal.OpTestType
 }
 
 // Code returns the operation code.
-func (o *OpTestOperation) Code() int {
+func (o *TestOperation) Code() int {
 	return internal.OpTestCode
 }
 
 // Test performs the test operation.
-func (o *OpTestOperation) Test(doc interface{}) (bool, error) {
+func (o *TestOperation) Test(doc interface{}) (bool, error) {
 	// Get target value
 	target, err := getValue(doc, o.Path())
 	if err != nil {
@@ -50,17 +50,17 @@ func (o *OpTestOperation) Test(doc interface{}) (bool, error) {
 }
 
 // Not returns whether this operation is negated.
-func (o *OpTestOperation) Not() bool {
+func (o *TestOperation) Not() bool {
 	return o.NotFlag
 }
 
 // Path returns the operation path.
-func (o *OpTestOperation) Path() []string {
+func (o *TestOperation) Path() []string {
 	return o.path
 }
 
 // Apply applies the test operation.
-func (o *OpTestOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *TestOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, err := getValue(doc, o.path)
 	if err != nil {
 		// If path not found and we're negating, that's success
@@ -95,7 +95,7 @@ func (o *OpTestOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *OpTestOperation) ToJSON() (internal.Operation, error) {
+func (o *TestOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		"op":    string(internal.OpTestType),
 		"path":  formatPath(o.path),
@@ -104,12 +104,12 @@ func (o *OpTestOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *OpTestOperation) ToCompact() (internal.CompactOperation, error) {
+func (o *TestOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpTestCode, o.path, o.Value}, nil
 }
 
 // Validate validates the test operation.
-func (o *OpTestOperation) Validate() error {
+func (o *TestOperation) Validate() error {
 	if len(o.Path()) == 0 {
 		return ErrPathEmpty
 	}

@@ -4,49 +4,49 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpNotOperation represents a logical NOT operation that negates predicates.
-type OpNotOperation struct {
+// NotOperation represents a logical NOT operation that negates predicates.
+type NotOperation struct {
 	BaseOp
 	Operations []interface{} `json:"ops"` // Array of operations to negate
 }
 
 // NewOpNotOperation creates a new NOT operation.
-func NewOpNotOperation(operand internal.PredicateOp) *OpNotOperation {
+func NewOpNotOperation(operand internal.PredicateOp) *NotOperation {
 	var path []string
 	if operand != nil {
 		path = operand.Path()
 	}
-	return &OpNotOperation{
+	return &NotOperation{
 		BaseOp:     NewBaseOp(path),
 		Operations: []interface{}{operand},
 	}
 }
 
 // NewOpNotOperationMultiple creates a new NOT operation with multiple operands.
-func NewOpNotOperationMultiple(path []string, ops []interface{}) *OpNotOperation {
-	return &OpNotOperation{
+func NewOpNotOperationMultiple(path []string, ops []interface{}) *NotOperation {
+	return &NotOperation{
 		BaseOp:     NewBaseOp(path),
 		Operations: ops,
 	}
 }
 
 // Op returns the operation type.
-func (o *OpNotOperation) Op() internal.OpType {
+func (o *NotOperation) Op() internal.OpType {
 	return internal.OpNotType
 }
 
 // Code returns the operation code.
-func (o *OpNotOperation) Code() int {
+func (o *NotOperation) Code() int {
 	return internal.OpNotCode
 }
 
 // Path returns the operation path.
-func (o *OpNotOperation) Path() []string {
+func (o *NotOperation) Path() []string {
 	return o.path
 }
 
 // Test evaluates the NOT predicate condition.
-func (o *OpNotOperation) Test(doc any) (bool, error) {
+func (o *NotOperation) Test(doc any) (bool, error) {
 	// NOT operation: returns true if ALL operands are false
 	for _, op := range o.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
@@ -69,12 +69,12 @@ func (o *OpNotOperation) Test(doc any) (bool, error) {
 }
 
 // Not returns true since this is a NOT operation.
-func (o *OpNotOperation) Not() bool {
+func (o *NotOperation) Not() bool {
 	return true
 }
 
 // Apply applies the NOT operation.
-func (o *OpNotOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *NotOperation) Apply(doc any) (internal.OpResult[any], error) {
 	ok, err := o.Test(doc)
 	if err != nil {
 		return internal.OpResult[any]{}, err
@@ -86,7 +86,7 @@ func (o *OpNotOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *OpNotOperation) ToJSON() (internal.Operation, error) {
+func (o *NotOperation) ToJSON() (internal.Operation, error) {
 	opsJSON := make([]interface{}, 0, len(o.Operations))
 	for _, op := range o.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
@@ -108,7 +108,7 @@ func (o *OpNotOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *OpNotOperation) ToCompact() (internal.CompactOperation, error) {
+func (o *NotOperation) ToCompact() (internal.CompactOperation, error) {
 	opsCompact := make([]interface{}, 0, len(o.Operations))
 	for _, op := range o.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
@@ -126,7 +126,7 @@ func (o *OpNotOperation) ToCompact() (internal.CompactOperation, error) {
 }
 
 // Ops returns the operand operations.
-func (o *OpNotOperation) Ops() []internal.PredicateOp {
+func (o *NotOperation) Ops() []internal.PredicateOp {
 	ops := make([]internal.PredicateOp, 0, len(o.Operations))
 	for _, op := range o.Operations {
 		if predicateOp, ok := op.(internal.PredicateOp); ok {
@@ -137,7 +137,7 @@ func (o *OpNotOperation) Ops() []internal.PredicateOp {
 }
 
 // Validate validates the NOT operation.
-func (o *OpNotOperation) Validate() error {
+func (o *NotOperation) Validate() error {
 	if len(o.Operations) == 0 {
 		return ErrNotNoOperands
 	}

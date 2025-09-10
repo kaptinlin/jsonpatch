@@ -4,50 +4,50 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpDefinedOperation represents a test operation that checks if a path is defined.
-type OpDefinedOperation struct {
+// DefinedOperation represents a test operation that checks if a path is defined.
+type DefinedOperation struct {
 	BaseOp
 }
 
-// DefinedOperation is a non-stuttering alias for OpDefinedOperation.
-type DefinedOperation = OpDefinedOperation
+// OpDefinedOperation is a backward-compatible alias for DefinedOperation.
+type OpDefinedOperation = DefinedOperation
 
 // NewOpDefinedOperation creates a new OpDefinedOperation operation.
-func NewOpDefinedOperation(path []string) *OpDefinedOperation {
-	return &OpDefinedOperation{
+func NewOpDefinedOperation(path []string) *DefinedOperation {
+	return &DefinedOperation{
 		BaseOp: NewBaseOp(path),
 	}
 }
 
 // Op returns the operation type.
-func (o *OpDefinedOperation) Op() internal.OpType {
+func (o *DefinedOperation) Op() internal.OpType {
 	return internal.OpDefinedType
 }
 
 // Code returns the operation code.
-func (o *OpDefinedOperation) Code() int {
+func (o *DefinedOperation) Code() int {
 	return internal.OpDefinedCode
 }
 
 // checkPathExists is a helper function that checks if a path exists
-func (o *OpDefinedOperation) checkPathExists(doc interface{}) bool {
+func (o *DefinedOperation) checkPathExists(doc interface{}) bool {
 	_, err := getValue(doc, o.path)
 	return err == nil
 }
 
 // Test performs the defined operation.
-func (o *OpDefinedOperation) Test(doc interface{}) (bool, error) {
+func (o *DefinedOperation) Test(doc interface{}) (bool, error) {
 	// Direct return without intermediate variables
 	return o.checkPathExists(doc), nil
 }
 
 // Not returns false (defined operation doesn't support not modifier).
-func (o *OpDefinedOperation) Not() bool {
+func (o *DefinedOperation) Not() bool {
 	return false
 }
 
 // Apply applies the defined operation.
-func (o *OpDefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *DefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Use the same logic as Test but avoid double call
 	if !o.checkPathExists(doc) {
 		return internal.OpResult[any]{}, ErrDefinedTestFailed
@@ -56,7 +56,7 @@ func (o *OpDefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *OpDefinedOperation) ToJSON() (internal.Operation, error) {
+func (o *DefinedOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		"op":   string(internal.OpDefinedType),
 		"path": formatPath(o.Path()),
@@ -64,18 +64,18 @@ func (o *OpDefinedOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *OpDefinedOperation) ToCompact() (internal.CompactOperation, error) {
+func (o *DefinedOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpDefinedCode, o.Path()}, nil
 }
 
 // Validate validates the defined operation.
-func (o *OpDefinedOperation) Validate() error {
+func (o *DefinedOperation) Validate() error {
 	// Empty path (root) is valid for defined operation
 	return nil
 }
 
 // Path returns the path for the defined operation.
-func (o *OpDefinedOperation) Path() []string {
+func (o *DefinedOperation) Path() []string {
 	return o.path
 }
 

@@ -130,7 +130,7 @@ func TestOpNot_Validate(t *testing.T) {
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
 	// Test invalid operation (empty operations)
-	notOp = &OpNotOperation{BaseOp: NewBaseOp([]string{"test"}), Operations: []interface{}{}}
+	notOp = &NotOperation{BaseOp: NewBaseOp([]string{"test"}), Operations: []interface{}{}}
 	err = notOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.Contains(t, err.Error(), "must have at least one operand", "Error message should mention missing operand")

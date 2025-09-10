@@ -6,37 +6,37 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpMoveOperation represents a move operation that moves a value from one path to another.
-type OpMoveOperation struct {
+// MoveOperation represents a move operation that moves a value from one path to another.
+type MoveOperation struct {
 	BaseOp
 	FromPath []string `json:"from"` // Source path
 }
 
 // NewOpMoveOperation creates a new OpMoveOperation operation.
-func NewOpMoveOperation(path, from []string) *OpMoveOperation {
-	return &OpMoveOperation{
+func NewOpMoveOperation(path, from []string) *MoveOperation {
+	return &MoveOperation{
 		BaseOp:   NewBaseOpWithFrom(path, from),
 		FromPath: from,
 	}
 }
 
 // Op returns the operation type.
-func (o *OpMoveOperation) Op() internal.OpType {
+func (o *MoveOperation) Op() internal.OpType {
 	return internal.OpMoveType
 }
 
 // Code returns the operation code.
-func (o *OpMoveOperation) Code() int {
+func (o *MoveOperation) Code() int {
 	return internal.OpMoveCode
 }
 
 // From returns the source path.
-func (o *OpMoveOperation) From() []string {
+func (o *MoveOperation) From() []string {
 	return o.FromPath
 }
 
 // Apply applies the move operation.
-func (o *OpMoveOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *MoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Validate that from path exists
 	if !pathExists(doc, o.FromPath) {
 		return internal.OpResult[any]{}, ErrPathNotFound
@@ -166,7 +166,7 @@ func (o *OpMoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // applySameArrayMove handles movement within the same array
-func (o *OpMoveOperation) applySameArrayMove(doc any) (internal.OpResult[any], error) {
+func (o *MoveOperation) applySameArrayMove(doc any) (internal.OpResult[any], error) {
 	// Parse indices
 	fromIndex, err := parseArrayIndex(o.FromPath[len(o.FromPath)-1])
 	if err != nil {
@@ -259,7 +259,7 @@ func isPrefix(prefix, path []string) bool {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *OpMoveOperation) ToJSON() (internal.Operation, error) {
+func (o *MoveOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		"op":   string(internal.OpMoveType),
 		"path": formatPath(o.Path()),
@@ -268,12 +268,12 @@ func (o *OpMoveOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *OpMoveOperation) ToCompact() (internal.CompactOperation, error) {
+func (o *MoveOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpMoveCode, o.Path(), o.FromPath}, nil
 }
 
 // Validate validates the move operation.
-func (o *OpMoveOperation) Validate() error {
+func (o *MoveOperation) Validate() error {
 	if len(o.Path()) == 0 {
 		return ErrPathEmpty
 	}

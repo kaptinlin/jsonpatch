@@ -6,31 +6,31 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpFlipOperation represents a flip operation that inverts boolean values
+// FlipOperation represents a flip operation that inverts boolean values
 // or converts other types to boolean and then inverts them
-type OpFlipOperation struct {
+type FlipOperation struct {
 	BaseOp
 }
 
 // NewOpFlipOperation creates a new flip operation
-func NewOpFlipOperation(path []string) *OpFlipOperation {
-	return &OpFlipOperation{
+func NewOpFlipOperation(path []string) *FlipOperation {
+	return &FlipOperation{
 		BaseOp: NewBaseOp(path),
 	}
 }
 
 // Op returns the operation type
-func (op *OpFlipOperation) Op() internal.OpType {
+func (op *FlipOperation) Op() internal.OpType {
 	return internal.OpFlipType
 }
 
 // Code returns the operation code
-func (op *OpFlipOperation) Code() int {
+func (op *FlipOperation) Code() int {
 	return internal.OpFlipCode
 }
 
 // Apply applies the flip operation to the document
-func (op *OpFlipOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *FlipOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level flip specially
 	if len(op.Path()) == 0 {
 		// Target is the root document
@@ -57,7 +57,7 @@ func (op *OpFlipOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // flipValue flips boolean values or converts other types to boolean and flip
-func (op *OpFlipOperation) flipValue(value interface{}) interface{} {
+func (op *FlipOperation) flipValue(value interface{}) interface{} {
 	switch v := value.(type) {
 	case bool:
 		return !v
@@ -68,7 +68,7 @@ func (op *OpFlipOperation) flipValue(value interface{}) interface{} {
 }
 
 // toBool converts values to boolean for flip operation
-func (op *OpFlipOperation) toBool(value interface{}) bool {
+func (op *FlipOperation) toBool(value interface{}) bool {
 	switch v := value.(type) {
 	case nil:
 		return false
@@ -136,7 +136,7 @@ func (op *OpFlipOperation) toBool(value interface{}) bool {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *OpFlipOperation) ToJSON() (internal.Operation, error) {
+func (op *FlipOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		"op":   string(internal.OpFlipType),
 		"path": formatPath(op.Path()),
@@ -144,12 +144,12 @@ func (op *OpFlipOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *OpFlipOperation) ToCompact() (internal.CompactOperation, error) {
+func (op *FlipOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpFlipCode, op.Path()}, nil
 }
 
 // Validate validates the flip operation.
-func (op *OpFlipOperation) Validate() error {
+func (op *FlipOperation) Validate() error {
 	// Empty path is valid for flip operation (root level)
 	return nil
 }

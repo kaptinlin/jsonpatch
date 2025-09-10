@@ -4,23 +4,23 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpExtendOperation represents an object extend operation.
+// ExtendOperation represents an object extend operation.
 // path: target path
 // props: properties to add/update
 // deleteNull: whether to delete properties with null values
 // Only supports object type fields.
-type OpExtendOperation struct {
+type ExtendOperation struct {
 	BaseOp
 	Properties map[string]interface{} `json:"props"`      // Properties to add
 	DeleteNull bool                   `json:"deleteNull"` // Whether to delete null properties
 }
 
-// ExtendOperation is a non-stuttering alias for OpExtendOperation.
-type ExtendOperation = OpExtendOperation
+// OpExtendOperation is a backward-compatible alias for ExtendOperation.
+type OpExtendOperation = ExtendOperation
 
 // NewOpExtendOperation creates a new object extend operation.
-func NewOpExtendOperation(path []string, properties map[string]interface{}, deleteNull bool) *OpExtendOperation {
-	return &OpExtendOperation{
+func NewOpExtendOperation(path []string, properties map[string]interface{}, deleteNull bool) *ExtendOperation {
+	return &ExtendOperation{
 		BaseOp:     NewBaseOp(path),
 		Properties: properties,
 		DeleteNull: deleteNull,
@@ -28,17 +28,17 @@ func NewOpExtendOperation(path []string, properties map[string]interface{}, dele
 }
 
 // Op returns the operation type.
-func (op *OpExtendOperation) Op() internal.OpType {
+func (op *ExtendOperation) Op() internal.OpType {
 	return internal.OpExtendType
 }
 
 // Code returns the operation code.
-func (op *OpExtendOperation) Code() int {
+func (op *ExtendOperation) Code() int {
 	return internal.OpExtendCode
 }
 
 // Apply applies the object extend operation.
-func (op *OpExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level extend specially
 	if len(op.Path()) == 0 {
 		// Target is the root document
@@ -84,7 +84,7 @@ func (op *OpExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *OpExtendOperation) ToJSON() (internal.Operation, error) {
+func (op *ExtendOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		"op":    string(internal.OpExtendType),
 		"path":  formatPath(op.Path()),
@@ -97,12 +97,12 @@ func (op *OpExtendOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *OpExtendOperation) ToCompact() (internal.CompactOperation, error) {
+func (op *ExtendOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpExtendCode, op.Path(), op.Properties}, nil
 }
 
 // Validate validates the extend operation.
-func (op *OpExtendOperation) Validate() error {
+func (op *ExtendOperation) Validate() error {
 	// Empty path is valid for extend operation (root level)
 	if op.Properties == nil {
 		return ErrPropertiesNil

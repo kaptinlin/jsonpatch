@@ -6,20 +6,20 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpStrInsOperation represents a string insert operation.
+// StrInsOperation represents a string insert operation.
 // path: target path
 // pos: insert position (rune index)
 // str: string to insert
 // Only supports string type fields.
-type OpStrInsOperation struct {
+type StrInsOperation struct {
 	BaseOp
 	Pos float64 `json:"pos"` // Insert position
 	Str string  `json:"str"` // String to insert
 }
 
 // NewOpStrInsOperation creates a new string insert operation.
-func NewOpStrInsOperation(path []string, pos float64, str string) *OpStrInsOperation {
-	return &OpStrInsOperation{
+func NewOpStrInsOperation(path []string, pos float64, str string) *StrInsOperation {
+	return &StrInsOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
 		Str:    str,
@@ -27,17 +27,17 @@ func NewOpStrInsOperation(path []string, pos float64, str string) *OpStrInsOpera
 }
 
 // Op returns the operation type.
-func (op *OpStrInsOperation) Op() internal.OpType {
+func (op *StrInsOperation) Op() internal.OpType {
 	return internal.OpStrInsType
 }
 
 // Code returns the operation code.
-func (op *OpStrInsOperation) Code() int {
+func (op *StrInsOperation) Code() int {
 	return internal.OpStrInsCode
 }
 
 // getTargetString extracts and validates the target string from a value
-func (op *OpStrInsOperation) getTargetString(target any) (string, error) {
+func (op *StrInsOperation) getTargetString(target any) (string, error) {
 	if target == nil {
 		// Handle undefined/nil case
 		if op.Pos != 0 {
@@ -54,7 +54,7 @@ func (op *OpStrInsOperation) getTargetString(target any) (string, error) {
 }
 
 // Apply applies the string insert operation.
-func (op *OpStrInsOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *StrInsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level specially
 	if len(op.Path()) == 0 {
 		targetStr, err := op.getTargetString(doc)
@@ -91,7 +91,7 @@ func (op *OpStrInsOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // applyStrIns applies string insertion with optimized string building
-func (op *OpStrInsOperation) applyStrIns(str string) string {
+func (op *StrInsOperation) applyStrIns(str string) string {
 	// Convert to runes once for proper Unicode handling
 	runes := []rune(str)
 	runeLen := len(runes)
@@ -122,7 +122,7 @@ func (op *OpStrInsOperation) applyStrIns(str string) string {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *OpStrInsOperation) ToJSON() (internal.Operation, error) {
+func (op *StrInsOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		"op":   string(internal.OpStrInsType),
 		"path": formatPath(op.Path()),
@@ -132,12 +132,12 @@ func (op *OpStrInsOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *OpStrInsOperation) ToCompact() (internal.CompactOperation, error) {
+func (op *StrInsOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpStrInsCode, op.Path(), op.Pos, op.Str}, nil
 }
 
 // Validate validates the string insert operation.
-func (op *OpStrInsOperation) Validate() error {
+func (op *StrInsOperation) Validate() error {
 	// Empty path is valid for str_ins operation (root level)
 	// Position bounds are checked in Apply method
 	return nil

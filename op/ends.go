@@ -7,19 +7,19 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpEndsOperation represents a test operation that checks if a string value ends with a specific suffix.
-type OpEndsOperation struct {
+// EndsOperation represents a test operation that checks if a string value ends with a specific suffix.
+type EndsOperation struct {
 	BaseOp
 	Value      string `json:"value"`       // Expected suffix
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case
 }
 
-// EndsOperation is a non-stuttering alias for OpEndsOperation.
-type EndsOperation = OpEndsOperation
+// OpEndsOperation is a backward-compatible alias for EndsOperation.
+type OpEndsOperation = EndsOperation
 
 // NewOpEndsOperation creates a new OpEndsOperation operation.
-func NewOpEndsOperation(path []string, suffix string) *OpEndsOperation {
-	return &OpEndsOperation{
+func NewOpEndsOperation(path []string, suffix string) *EndsOperation {
+	return &EndsOperation{
 		BaseOp:     NewBaseOp(path),
 		Value:      suffix,
 		IgnoreCase: false,
@@ -27,8 +27,8 @@ func NewOpEndsOperation(path []string, suffix string) *OpEndsOperation {
 }
 
 // NewOpEndsOperationWithIgnoreCase creates a new OpEndsOperation operation with ignore case option.
-func NewOpEndsOperationWithIgnoreCase(path []string, suffix string, ignoreCase bool) *OpEndsOperation {
-	return &OpEndsOperation{
+func NewOpEndsOperationWithIgnoreCase(path []string, suffix string, ignoreCase bool) *EndsOperation {
+	return &EndsOperation{
 		BaseOp:     NewBaseOp(path),
 		Value:      suffix,
 		IgnoreCase: ignoreCase,
@@ -36,22 +36,22 @@ func NewOpEndsOperationWithIgnoreCase(path []string, suffix string, ignoreCase b
 }
 
 // Op returns the operation type.
-func (op *OpEndsOperation) Op() internal.OpType {
+func (op *EndsOperation) Op() internal.OpType {
 	return internal.OpEndsType
 }
 
 // Code returns the operation code.
-func (op *OpEndsOperation) Code() int {
+func (op *EndsOperation) Code() int {
 	return internal.OpEndsCode
 }
 
 // Path returns the operation path.
-func (op *OpEndsOperation) Path() []string {
+func (op *EndsOperation) Path() []string {
 	return op.path
 }
 
 // Test evaluates the ends predicate condition.
-func (op *OpEndsOperation) Test(doc any) (bool, error) {
+func (op *EndsOperation) Test(doc any) (bool, error) {
 	_, str, err := op.getAndValidateString(doc)
 	if err != nil {
 		// For JSON Patch test operations, path not found or wrong type means test fails (returns false)
@@ -67,7 +67,7 @@ func (op *OpEndsOperation) Test(doc any) (bool, error) {
 }
 
 // Apply applies the ends test operation to the document.
-func (op *OpEndsOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *EndsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, str, err := op.getAndValidateString(doc)
 	if err != nil {
 		return internal.OpResult[any]{}, err
@@ -88,7 +88,7 @@ func (op *OpEndsOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // getAndValidateString retrieves and validates the string value at the path
-func (op *OpEndsOperation) getAndValidateString(doc any) (interface{}, string, error) {
+func (op *EndsOperation) getAndValidateString(doc any) (interface{}, string, error) {
 	// Get target value
 	val, err := getValue(doc, op.Path())
 	if err != nil {
@@ -105,7 +105,7 @@ func (op *OpEndsOperation) getAndValidateString(doc any) (interface{}, string, e
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *OpEndsOperation) ToJSON() (internal.Operation, error) {
+func (op *EndsOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		"op":    string(internal.OpEndsType),
 		"path":  formatPath(op.Path()),
@@ -118,12 +118,12 @@ func (op *OpEndsOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *OpEndsOperation) ToCompact() (internal.CompactOperation, error) {
+func (op *EndsOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpEndsCode, op.Path(), op.Value}, nil
 }
 
 // Validate validates the ends operation.
-func (op *OpEndsOperation) Validate() error {
+func (op *EndsOperation) Validate() error {
 	if len(op.Path()) == 0 {
 		return ErrPathEmpty
 	}

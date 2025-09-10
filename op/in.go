@@ -7,37 +7,37 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpInOperation represents a test operation that checks if a value is present in a specified array.
-type OpInOperation struct {
+// InOperation represents a test operation that checks if a value is present in a specified array.
+type InOperation struct {
 	BaseOp
 	Values []interface{} `json:"values"` // Array of values to check against
 }
 
 // NewOpInOperation creates a new OpInOperation operation.
-func NewOpInOperation(path []string, values []interface{}) *OpInOperation {
-	return &OpInOperation{
+func NewOpInOperation(path []string, values []interface{}) *InOperation {
+	return &InOperation{
 		BaseOp: NewBaseOp(path),
 		Values: values,
 	}
 }
 
 // Op returns the operation type.
-func (op *OpInOperation) Op() internal.OpType {
+func (op *InOperation) Op() internal.OpType {
 	return internal.OpInType
 }
 
 // Code returns the operation code.
-func (op *OpInOperation) Code() int {
+func (op *InOperation) Code() int {
 	return internal.OpInCode
 }
 
 // Path returns the operation path.
-func (op *OpInOperation) Path() []string {
+func (op *InOperation) Path() []string {
 	return op.path
 }
 
 // Test evaluates the in predicate condition.
-func (op *OpInOperation) Test(doc any) (bool, error) {
+func (op *InOperation) Test(doc any) (bool, error) {
 	_, found, err := op.getValueAndCheckInArray(doc)
 	if err != nil {
 		// For JSON Patch test operations, path not found means test fails (returns false)
@@ -49,7 +49,7 @@ func (op *OpInOperation) Test(doc any) (bool, error) {
 }
 
 // Apply applies the in test operation to the document.
-func (op *OpInOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *InOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, found, err := op.getValueAndCheckInArray(doc)
 	if err != nil {
 		return internal.OpResult[any]{}, err
@@ -63,7 +63,7 @@ func (op *OpInOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // getValueAndCheckInArray retrieves the value and checks if it's in the array
-func (op *OpInOperation) getValueAndCheckInArray(doc any) (interface{}, bool, error) {
+func (op *InOperation) getValueAndCheckInArray(doc any) (interface{}, bool, error) {
 	// Get target value
 	val, err := getValue(doc, op.Path())
 	if err != nil {
@@ -81,7 +81,7 @@ func (op *OpInOperation) getValueAndCheckInArray(doc any) (interface{}, bool, er
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *OpInOperation) ToJSON() (internal.Operation, error) {
+func (op *InOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		"op":    string(internal.OpInType),
 		"path":  formatPath(op.Path()),
@@ -90,12 +90,12 @@ func (op *OpInOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *OpInOperation) ToCompact() (internal.CompactOperation, error) {
+func (op *InOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpInCode, op.Path(), op.Values}, nil
 }
 
 // Validate validates the in operation.
-func (op *OpInOperation) Validate() error {
+func (op *InOperation) Validate() error {
 	if len(op.Path()) == 0 {
 		return ErrPathEmpty
 	}
@@ -106,7 +106,7 @@ func (op *OpInOperation) Validate() error {
 }
 
 // Not returns false since this is not a NOT operation.
-func (op *OpInOperation) Not() bool {
+func (op *InOperation) Not() bool {
 	return false
 }
 

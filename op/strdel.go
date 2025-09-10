@@ -6,13 +6,13 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpStrDelOperation represents a string delete operation.
+// StrDelOperation represents a string delete operation.
 // path: target path
 // pos: start position (rune index)
 // len: number of runes to delete (when Str is empty)
 // str: specific string to delete (when not empty, takes precedence)
 // Only supports string type fields.
-type OpStrDelOperation struct {
+type StrDelOperation struct {
 	BaseOp
 	Pos float64 `json:"pos"` // Delete position
 	Len float64 `json:"len"` // Number of characters to delete
@@ -20,8 +20,8 @@ type OpStrDelOperation struct {
 }
 
 // NewOpStrDelOperation creates a new string delete operation with length.
-func NewOpStrDelOperation(path []string, pos, length float64) *OpStrDelOperation {
-	return &OpStrDelOperation{
+func NewOpStrDelOperation(path []string, pos, length float64) *StrDelOperation {
+	return &StrDelOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
 		Len:    length,
@@ -30,8 +30,8 @@ func NewOpStrDelOperation(path []string, pos, length float64) *OpStrDelOperation
 }
 
 // NewOpStrDelOperationWithStr creates a new string delete operation with specific string.
-func NewOpStrDelOperationWithStr(path []string, pos float64, str string) *OpStrDelOperation {
-	return &OpStrDelOperation{
+func NewOpStrDelOperationWithStr(path []string, pos float64, str string) *StrDelOperation {
+	return &StrDelOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
 		Len:    float64(len([]rune(str))), // Set length to match string length
@@ -40,17 +40,17 @@ func NewOpStrDelOperationWithStr(path []string, pos float64, str string) *OpStrD
 }
 
 // Op returns the operation type.
-func (op *OpStrDelOperation) Op() internal.OpType {
+func (op *StrDelOperation) Op() internal.OpType {
 	return internal.OpStrDelType
 }
 
 // Code returns the operation code.
-func (op *OpStrDelOperation) Code() int {
+func (op *StrDelOperation) Code() int {
 	return internal.OpStrDelCode
 }
 
 // getTargetString extracts and validates the target string from a value
-func (op *OpStrDelOperation) getTargetString(target any) (string, error) {
+func (op *StrDelOperation) getTargetString(target any) (string, error) {
 	if str, ok := target.(string); ok {
 		return str, nil
 	}
@@ -58,7 +58,7 @@ func (op *OpStrDelOperation) getTargetString(target any) (string, error) {
 }
 
 // Apply applies the string delete operation.
-func (op *OpStrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *StrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level specially
 	if len(op.Path()) == 0 {
 		targetStr, err := op.getTargetString(doc)
@@ -95,7 +95,7 @@ func (op *OpStrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // applyStrDel applies string deletion with optimized string building
-func (op *OpStrDelOperation) applyStrDel(val string) string {
+func (op *StrDelOperation) applyStrDel(val string) string {
 	// High-performance type conversion (single, boundary conversion)
 	pos := int(op.Pos) // Already validated as safe integer
 	// Handle negative position by returning original string (no deletion)
@@ -153,7 +153,7 @@ func (op *OpStrDelOperation) applyStrDel(val string) string {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *OpStrDelOperation) ToJSON() (internal.Operation, error) {
+func (op *StrDelOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		"op":   string(internal.OpStrDelType),
 		"path": formatPath(op.Path()),
@@ -172,12 +172,12 @@ func (op *OpStrDelOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *OpStrDelOperation) ToCompact() (internal.CompactOperation, error) {
+func (op *StrDelOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpStrDelCode, op.Path(), op.Pos, op.Len}, nil
 }
 
 // Validate validates the string delete operation.
-func (op *OpStrDelOperation) Validate() error {
+func (op *StrDelOperation) Validate() error {
 	// Empty path is valid for str_del operation (root level)
 	// Position and length bounds are checked in Apply method
 	return nil

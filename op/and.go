@@ -4,35 +4,35 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpAndOperation represents an AND operation that combines multiple predicate operations.
-type OpAndOperation struct {
+// AndOperation represents an and operation that combines multiple predicate operations.
+type AndOperation struct {
 	BaseOp
 	Operations []interface{} `json:"ops"` // Array of operations
 }
 
-// AndOperation is a non-stuttering alias for OpAndOperation.
-type AndOperation = OpAndOperation
+// OpAndOperation is a backward-compatible alias for AndOperation.
+type OpAndOperation = AndOperation
 
-// NewOpAndOperation creates a new OpAndOperation operation.
-func NewOpAndOperation(path []string, ops []interface{}) *OpAndOperation {
-	return &OpAndOperation{
+// NewOpAndOperation creates a new AndOperation operation.
+func NewOpAndOperation(path []string, ops []interface{}) *AndOperation {
+	return &AndOperation{
 		BaseOp:     NewBaseOp(path),
 		Operations: ops,
 	}
 }
 
 // Op returns the operation type.
-func (o *OpAndOperation) Op() internal.OpType {
+func (o *AndOperation) Op() internal.OpType {
 	return internal.OpAndType
 }
 
 // Code returns the operation code.
-func (o *OpAndOperation) Code() int {
+func (o *AndOperation) Code() int {
 	return internal.OpAndCode
 }
 
 // Ops returns the predicate operations.
-func (o *OpAndOperation) Ops() []internal.PredicateOp {
+func (o *AndOperation) Ops() []internal.PredicateOp {
 	ops := make([]internal.PredicateOp, 0, len(o.Operations))
 	for _, op := range o.Operations {
 		if predicateOp, ok := op.(internal.PredicateOp); ok {
@@ -43,7 +43,7 @@ func (o *OpAndOperation) Ops() []internal.PredicateOp {
 }
 
 // Test performs the AND operation.
-func (o *OpAndOperation) Test(doc interface{}) (bool, error) {
+func (o *AndOperation) Test(doc interface{}) (bool, error) {
 	// If no operations, return false (empty AND is false)
 	if len(o.Operations) == 0 {
 		result := false
@@ -71,7 +71,7 @@ func (o *OpAndOperation) Test(doc interface{}) (bool, error) {
 }
 
 // Apply applies the AND operation.
-func (o *OpAndOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *AndOperation) Apply(doc any) (internal.OpResult[any], error) {
 	ok, err := o.Test(doc)
 	if err != nil {
 		return internal.OpResult[any]{}, err
@@ -83,7 +83,7 @@ func (o *OpAndOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *OpAndOperation) ToJSON() (internal.Operation, error) {
+func (o *AndOperation) ToJSON() (internal.Operation, error) {
 	opsJSON := make([]interface{}, 0, len(o.Operations))
 	for _, op := range o.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
@@ -104,7 +104,7 @@ func (o *OpAndOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *OpAndOperation) ToCompact() (internal.CompactOperation, error) {
+func (o *AndOperation) ToCompact() (internal.CompactOperation, error) {
 	opsCompact := make([]interface{}, 0, len(o.Operations))
 	for _, op := range o.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
@@ -121,7 +121,7 @@ func (o *OpAndOperation) ToCompact() (internal.CompactOperation, error) {
 }
 
 // Validate validates the AND operation.
-func (o *OpAndOperation) Validate() error {
+func (o *AndOperation) Validate() error {
 	if len(o.Operations) == 0 {
 		return ErrAndNoOperands
 	}
@@ -138,12 +138,12 @@ func (o *OpAndOperation) Validate() error {
 }
 
 // Path returns the path for the AND operation.
-func (o *OpAndOperation) Path() []string {
+func (o *AndOperation) Path() []string {
 	return o.path
 }
 
 // Not returns false since this is not a NOT operation.
-func (o *OpAndOperation) Not() bool {
+func (o *AndOperation) Not() bool {
 	return false
 }
 

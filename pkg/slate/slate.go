@@ -1,35 +1,44 @@
 // Package slate provides types for working with Slate.js editor nodes.
 package slate
 
-// SlateNode represents a Slate.js node that can be either a text node or an element node.
+// Node represents a Slate.js node that can be either a text node or an element node.
 // It uses a union-type approach similar to TypeScript's SlateNode.
-type SlateNode struct {
+type Node struct {
 	// Text field is present only for text nodes
 	Text *string `json:"text,omitempty"`
 	// Children field is present only for element nodes
-	Children []SlateNode `json:"children,omitempty"`
+	Children []Node `json:"children,omitempty"`
 	// Properties contains additional properties (equivalent to [key: string]: unknown)
 	Properties map[string]interface{} `json:",inline"`
 }
 
-// SlateTextNode is a type alias for better API clarity
-type SlateTextNode = SlateNode
+// TextNode is a type alias for better API clarity
+type TextNode = Node
 
-// SlateElementNode is a type alias for better API clarity
-type SlateElementNode = SlateNode
+// ElementNode is a type alias for better API clarity
+type ElementNode = Node
+
+// SlateNode is a backward-compatible alias for Node
+type SlateNode = Node
+
+// SlateTextNode is a backward-compatible alias for TextNode
+type SlateTextNode = TextNode
+
+// SlateElementNode is a backward-compatible alias for ElementNode
+type SlateElementNode = ElementNode
 
 // IsText returns true if this is a text node
-func (n *SlateNode) IsText() bool {
+func (n *Node) IsText() bool {
 	return n.Text != nil
 }
 
 // IsElement returns true if this is an element node
-func (n *SlateNode) IsElement() bool {
+func (n *Node) IsElement() bool {
 	return n.Children != nil
 }
 
 // GetText returns the text content (empty string if not a text node)
-func (n *SlateNode) GetText() string {
+func (n *Node) GetText() string {
 	if n.Text != nil {
 		return *n.Text
 	}
@@ -37,27 +46,27 @@ func (n *SlateNode) GetText() string {
 }
 
 // SetText sets the text content and converts to text node
-func (n *SlateNode) SetText(text string) {
+func (n *Node) SetText(text string) {
 	n.Text = &text
 	n.Children = nil // Clear children when setting text
 }
 
 // GetChildren returns the children (empty slice if not an element node)
-func (n *SlateNode) GetChildren() []SlateNode {
+func (n *Node) GetChildren() []Node {
 	if n.Children != nil {
 		return n.Children
 	}
-	return []SlateNode{}
+	return []Node{}
 }
 
 // SetChildren sets the children and converts to element node
-func (n *SlateNode) SetChildren(children []SlateNode) {
+func (n *Node) SetChildren(children []Node) {
 	n.Children = children
 	n.Text = nil // Clear text when setting children
 }
 
 // GetProperty returns a property value
-func (n *SlateNode) GetProperty(key string) interface{} {
+func (n *Node) GetProperty(key string) interface{} {
 	if n.Properties == nil {
 		return nil
 	}
@@ -65,7 +74,7 @@ func (n *SlateNode) GetProperty(key string) interface{} {
 }
 
 // SetProperty sets a property value
-func (n *SlateNode) SetProperty(key string, value interface{}) {
+func (n *Node) SetProperty(key string, value interface{}) {
 	if n.Properties == nil {
 		n.Properties = make(map[string]interface{})
 	}
@@ -73,7 +82,7 @@ func (n *SlateNode) SetProperty(key string, value interface{}) {
 }
 
 // ToMap converts the node to map[string]interface{} for backward compatibility
-func (n *SlateNode) ToMap() map[string]interface{} {
+func (n *Node) ToMap() map[string]interface{} {
 	result := make(map[string]interface{})
 
 	// Copy properties first
@@ -95,9 +104,9 @@ func (n *SlateNode) ToMap() map[string]interface{} {
 	return result
 }
 
-// FromMap creates a SlateNode from map[string]interface{} for backward compatibility
-func FromMap(data map[string]interface{}) *SlateNode {
-	node := &SlateNode{
+// FromMap creates a Node from map[string]interface{} for backward compatibility
+func FromMap(data map[string]interface{}) *Node {
+	node := &Node{
 		Properties: make(map[string]interface{}),
 	}
 
@@ -109,7 +118,7 @@ func FromMap(data map[string]interface{}) *SlateNode {
 			}
 		case "children":
 			if childrenData, ok := v.([]interface{}); ok {
-				children := make([]SlateNode, len(childrenData))
+				children := make([]Node, len(childrenData))
 				for i, childData := range childrenData {
 					if childMap, ok := childData.(map[string]interface{}); ok {
 						children[i] = *FromMap(childMap)
@@ -127,7 +136,7 @@ func FromMap(data map[string]interface{}) *SlateNode {
 
 // IsTextNode checks if a value is a Slate.js text node
 func IsTextNode(value interface{}) bool {
-	if node, ok := value.(*SlateNode); ok {
+	if node, ok := value.(*Node); ok {
 		return node.IsText()
 	}
 	if nodeMap, ok := value.(map[string]interface{}); ok {
@@ -139,7 +148,7 @@ func IsTextNode(value interface{}) bool {
 
 // IsElementNode checks if a value is a Slate.js element node
 func IsElementNode(value interface{}) bool {
-	if node, ok := value.(*SlateNode); ok {
+	if node, ok := value.(*Node); ok {
 		return node.IsElement()
 	}
 	if nodeMap, ok := value.(map[string]interface{}); ok {
@@ -152,8 +161,8 @@ func IsElementNode(value interface{}) bool {
 }
 
 // NewTextNode creates a new Slate text node
-func NewTextNode(text string, properties map[string]interface{}) *SlateNode {
-	node := &SlateNode{
+func NewTextNode(text string, properties map[string]interface{}) *Node {
+	node := &Node{
 		Properties: make(map[string]interface{}),
 	}
 	node.SetText(text)
@@ -168,13 +177,13 @@ func NewTextNode(text string, properties map[string]interface{}) *SlateNode {
 }
 
 // NewElementNode creates a new Slate element node
-func NewElementNode(children []SlateNode, properties map[string]interface{}) *SlateNode {
-	node := &SlateNode{
+func NewElementNode(children []Node, properties map[string]interface{}) *Node {
+	node := &Node{
 		Properties: make(map[string]interface{}),
 	}
 
 	if children == nil {
-		children = []SlateNode{}
+		children = []Node{}
 	}
 	node.SetChildren(children)
 
@@ -188,7 +197,7 @@ func NewElementNode(children []SlateNode, properties map[string]interface{}) *Sl
 }
 
 // MergeTextNodes merges two Slate text nodes by concatenating their text and merging properties
-func MergeTextNodes(one, two *SlateNode) *SlateNode {
+func MergeTextNodes(one, two *Node) *Node {
 	if !one.IsText() || !two.IsText() {
 		return nil // Can't merge non-text nodes
 	}
@@ -207,12 +216,12 @@ func MergeTextNodes(one, two *SlateNode) *SlateNode {
 }
 
 // MergeElementNodes merges two Slate element nodes by concatenating their children and merging properties
-func MergeElementNodes(one, two *SlateNode) *SlateNode {
+func MergeElementNodes(one, two *Node) *Node {
 	if !one.IsElement() || !two.IsElement() {
 		return nil // Can't merge non-element nodes
 	}
 
-	mergedChildren := make([]SlateNode, 0, len(one.Children)+len(two.Children))
+	mergedChildren := make([]Node, 0, len(one.Children)+len(two.Children))
 	mergedChildren = append(mergedChildren, one.Children...)
 	mergedChildren = append(mergedChildren, two.Children...)
 
@@ -230,7 +239,7 @@ func MergeElementNodes(one, two *SlateNode) *SlateNode {
 }
 
 // SplitTextNode splits a Slate text node at the specified position
-func SplitTextNode(node *SlateNode, pos int, props map[string]interface{}) []*SlateNode {
+func SplitTextNode(node *Node, pos int, props map[string]interface{}) []*Node {
 	if !node.IsText() {
 		return nil // Can't split non-text node
 	}
@@ -259,11 +268,11 @@ func SplitTextNode(node *SlateNode, pos int, props map[string]interface{}) []*Sl
 		afterNode.SetProperty(k, v)
 	}
 
-	return []*SlateNode{beforeNode, afterNode}
+	return []*Node{beforeNode, afterNode}
 }
 
 // SplitElementNode splits a Slate element node at the specified position in its children
-func SplitElementNode(node *SlateNode, pos int, props map[string]interface{}) []*SlateNode {
+func SplitElementNode(node *Node, pos int, props map[string]interface{}) []*Node {
 	if !node.IsElement() {
 		return nil // Can't split non-element node
 	}
@@ -291,7 +300,7 @@ func SplitElementNode(node *SlateNode, pos int, props map[string]interface{}) []
 		afterNode.SetProperty(k, v)
 	}
 
-	return []*SlateNode{beforeNode, afterNode}
+	return []*Node{beforeNode, afterNode}
 }
 
 // Legacy functions for backward compatibility with map[string]interface{}

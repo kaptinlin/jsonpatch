@@ -122,7 +122,7 @@ var (
 	}
 )
 
-func mustNewOpMatchesOperation(op *op.OpMatchesOperation, err error) *op.OpMatchesOperation {
+func mustNewOpMatchesOperation(op *op.MatchesOperation, err error) *op.MatchesOperation {
 	if err != nil {
 		panic(err)
 	}
@@ -168,8 +168,8 @@ func isOpEqual(a, b internal.Op) bool {
 		return false
 	}
 	// Special case for 'matches' operation due to embedded regexp object.
-	if ma, ok := a.(*op.OpMatchesOperation); ok {
-		mb, ok := b.(*op.OpMatchesOperation)
+	if ma, ok := a.(*op.MatchesOperation); ok {
+		mb, ok := b.(*op.MatchesOperation)
 		if !ok {
 			return false // Should not happen if types are the same.
 		}

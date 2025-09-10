@@ -5,16 +5,16 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpReplaceOperation represents a replace operation that replaces a value at a specified path.
-type OpReplaceOperation struct {
+// ReplaceOperation represents a replace operation that replaces a value at a specified path.
+type ReplaceOperation struct {
 	BaseOp
 	Value    interface{} `json:"value"`              // New value
 	OldValue interface{} `json:"oldValue,omitempty"` // The value that was replaced (optional)
 }
 
 // NewOpReplaceOperation creates a new OpReplaceOperation operation.
-func NewOpReplaceOperation(path []string, value interface{}) *OpReplaceOperation {
-	return &OpReplaceOperation{
+func NewOpReplaceOperation(path []string, value interface{}) *ReplaceOperation {
+	return &ReplaceOperation{
 		BaseOp:   NewBaseOp(path),
 		Value:    value,
 		OldValue: nil,
@@ -22,8 +22,8 @@ func NewOpReplaceOperation(path []string, value interface{}) *OpReplaceOperation
 }
 
 // NewOpReplaceOperationWithOldValue creates a new OpReplaceOperation operation with oldValue.
-func NewOpReplaceOperationWithOldValue(path []string, value interface{}, oldValue interface{}) *OpReplaceOperation {
-	return &OpReplaceOperation{
+func NewOpReplaceOperationWithOldValue(path []string, value interface{}, oldValue interface{}) *ReplaceOperation {
+	return &ReplaceOperation{
 		BaseOp:   NewBaseOp(path),
 		Value:    value,
 		OldValue: oldValue,
@@ -31,22 +31,22 @@ func NewOpReplaceOperationWithOldValue(path []string, value interface{}, oldValu
 }
 
 // Op returns the operation type.
-func (o *OpReplaceOperation) Op() internal.OpType {
+func (o *ReplaceOperation) Op() internal.OpType {
 	return internal.OpReplaceType
 }
 
 // Code returns the operation code.
-func (o *OpReplaceOperation) Code() int {
+func (o *ReplaceOperation) Code() int {
 	return internal.OpReplaceCode
 }
 
 // Path returns the operation path.
-func (o *OpReplaceOperation) Path() []string {
+func (o *ReplaceOperation) Path() []string {
 	return o.path
 }
 
 // Apply applies the replace operation to the document.
-func (o *OpReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Clone the new value to prevent external mutations
 	newValue := deepclone.Clone(o.Value)
 
@@ -106,7 +106,7 @@ func (o *OpReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *OpReplaceOperation) ToJSON() (internal.Operation, error) {
+func (o *ReplaceOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		"op":    string(internal.OpReplaceType),
 		"path":  formatPath(o.path),
@@ -121,12 +121,12 @@ func (o *OpReplaceOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *OpReplaceOperation) ToCompact() (internal.CompactOperation, error) {
+func (o *ReplaceOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpReplaceCode, o.path, o.Value}, nil
 }
 
 // Validate validates the replace operation.
-func (o *OpReplaceOperation) Validate() error {
+func (o *ReplaceOperation) Validate() error {
 	if len(o.path) == 0 {
 		return ErrPathEmpty
 	}

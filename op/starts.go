@@ -7,16 +7,16 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpStartsOperation represents a test operation that checks if a string value starts with a specific prefix.
-type OpStartsOperation struct {
+// StartsOperation represents a test operation that checks if a string value starts with a specific prefix.
+type StartsOperation struct {
 	BaseOp
 	Value      string `json:"value"`       // Expected prefix
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case
 }
 
 // NewOpStartsOperation creates a new OpStartsOperation operation.
-func NewOpStartsOperation(path []string, prefix string) *OpStartsOperation {
-	return &OpStartsOperation{
+func NewOpStartsOperation(path []string, prefix string) *StartsOperation {
+	return &StartsOperation{
 		BaseOp:     NewBaseOp(path),
 		Value:      prefix,
 		IgnoreCase: false,
@@ -24,8 +24,8 @@ func NewOpStartsOperation(path []string, prefix string) *OpStartsOperation {
 }
 
 // NewOpStartsOperationWithIgnoreCase creates a new OpStartsOperation operation with ignore case option.
-func NewOpStartsOperationWithIgnoreCase(path []string, prefix string, ignoreCase bool) *OpStartsOperation {
-	return &OpStartsOperation{
+func NewOpStartsOperationWithIgnoreCase(path []string, prefix string, ignoreCase bool) *StartsOperation {
+	return &StartsOperation{
 		BaseOp:     NewBaseOp(path),
 		Value:      prefix,
 		IgnoreCase: ignoreCase,
@@ -33,22 +33,22 @@ func NewOpStartsOperationWithIgnoreCase(path []string, prefix string, ignoreCase
 }
 
 // Op returns the operation type.
-func (op *OpStartsOperation) Op() internal.OpType {
+func (op *StartsOperation) Op() internal.OpType {
 	return internal.OpStartsType
 }
 
 // Code returns the operation code.
-func (op *OpStartsOperation) Code() int {
+func (op *StartsOperation) Code() int {
 	return internal.OpStartsCode
 }
 
 // Path returns the operation path.
-func (op *OpStartsOperation) Path() []string {
+func (op *StartsOperation) Path() []string {
 	return op.path
 }
 
 // Test evaluates the starts predicate condition.
-func (op *OpStartsOperation) Test(doc any) (bool, error) {
+func (op *StartsOperation) Test(doc any) (bool, error) {
 	// Get target value
 	val, err := getValue(doc, op.Path())
 	if err != nil {
@@ -77,7 +77,7 @@ func (op *OpStartsOperation) Test(doc any) (bool, error) {
 }
 
 // Apply applies the starts test operation to the document.
-func (op *OpStartsOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *StartsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get target value
 	val, err := getValue(doc, op.Path())
 	if err != nil {
@@ -111,7 +111,7 @@ func (op *OpStartsOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *OpStartsOperation) ToJSON() (internal.Operation, error) {
+func (op *StartsOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		"op":    string(internal.OpStartsType),
 		"path":  formatPath(op.Path()),
@@ -124,12 +124,12 @@ func (op *OpStartsOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *OpStartsOperation) ToCompact() (internal.CompactOperation, error) {
+func (op *StartsOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpStartsCode, op.Path(), op.Value}, nil
 }
 
 // Validate validates the starts operation.
-func (op *OpStartsOperation) Validate() error {
+func (op *StartsOperation) Validate() error {
 	if len(op.Path()) == 0 {
 		return ErrPathEmpty
 	}
