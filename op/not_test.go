@@ -15,10 +15,10 @@ func TestOpNot_Basic(t *testing.T) {
 	}
 
 	// Create a test operation that should pass
-	testOp := NewOpTestOperation([]string{"foo"}, "bar") // should pass
+	testOp := NewTest([]string{"foo"}, "bar") // should pass
 
 	// Create NOT operation
-	notOp := NewOpNotOperation(testOp)
+	notOp := NewNot(testOp)
 
 	ok, err := notOp.Test(doc)
 	require.NoError(t, err, "NOT test should not fail")
@@ -32,10 +32,10 @@ func TestOpNot_Negation(t *testing.T) {
 	}
 
 	// Create a test operation that should fail
-	testOp := NewOpTestOperation([]string{"foo"}, "qux") // should fail
+	testOp := NewTest([]string{"foo"}, "qux") // should fail
 
 	// Create NOT operation
-	notOp := NewOpNotOperation(testOp)
+	notOp := NewNot(testOp)
 
 	ok, err := notOp.Test(doc)
 	require.NoError(t, err, "NOT test should not fail")
@@ -49,10 +49,10 @@ func TestOpNot_Apply(t *testing.T) {
 	}
 
 	// Create a test operation that should fail
-	testOp := NewOpTestOperation([]string{"foo"}, "qux") // should fail
+	testOp := NewTest([]string{"foo"}, "qux") // should fail
 
 	// Create NOT operation
-	notOp := NewOpNotOperation(testOp)
+	notOp := NewNot(testOp)
 
 	result, err := notOp.Apply(doc)
 	require.NoError(t, err, "NOT apply should succeed when wrapped operation fails")
@@ -66,10 +66,10 @@ func TestOpNot_Apply_Fails(t *testing.T) {
 	}
 
 	// Create a test operation that should pass
-	testOp := NewOpTestOperation([]string{"foo"}, "bar") // should pass
+	testOp := NewTest([]string{"foo"}, "bar") // should pass
 
 	// Create NOT operation
-	notOp := NewOpNotOperation(testOp)
+	notOp := NewNot(testOp)
 
 	_, err := notOp.Apply(doc)
 	assert.Error(t, err, "NOT apply should fail when wrapped operation passes")
@@ -77,9 +77,9 @@ func TestOpNot_Apply_Fails(t *testing.T) {
 }
 
 func TestOpNot_InterfaceMethods(t *testing.T) {
-	testOp := NewOpTestOperation([]string{"foo"}, "bar")
+	testOp := NewTest([]string{"foo"}, "bar")
 
-	notOp := NewOpNotOperation(testOp)
+	notOp := NewNot(testOp)
 
 	// Test Op() method
 	assert.Equal(t, internal.OpNotType, notOp.Op(), "Op() should return correct operation type")
@@ -97,8 +97,8 @@ func TestOpNot_InterfaceMethods(t *testing.T) {
 }
 
 func TestOpNot_ToJSON(t *testing.T) {
-	test1 := NewOpTestOperation([]string{"foo"}, "bar")
-	notOp := NewOpNotOperation(test1)
+	test1 := NewTest([]string{"foo"}, "bar")
+	notOp := NewNot(test1)
 
 	json, err := notOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
@@ -109,8 +109,8 @@ func TestOpNot_ToJSON(t *testing.T) {
 }
 
 func TestOpNot_ToCompact(t *testing.T) {
-	test1 := NewOpTestOperation([]string{"foo"}, "bar")
-	notOp := NewOpNotOperation(test1)
+	test1 := NewTest([]string{"foo"}, "bar")
+	notOp := NewNot(test1)
 
 	compact, err := notOp.ToCompact()
 	require.NoError(t, err, "ToCompact should not fail for valid operation")
@@ -123,9 +123,9 @@ func TestOpNot_ToCompact(t *testing.T) {
 
 func TestOpNot_Validate(t *testing.T) {
 	// Test valid operation
-	testOp := NewOpTestOperation([]string{"foo"}, "bar")
+	testOp := NewTest([]string{"foo"}, "bar")
 
-	notOp := NewOpNotOperation(testOp)
+	notOp := NewNot(testOp)
 	err := notOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 

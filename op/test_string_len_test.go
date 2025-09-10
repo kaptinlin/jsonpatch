@@ -110,7 +110,7 @@ func TestOpTestStringLen_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewOpTestStringLenOperation(tt.path, tt.expectedLength)
+			op := NewTestStringLen(tt.path, tt.expectedLength)
 			result, err := op.Apply(tt.doc)
 
 			if tt.expectError {

@@ -152,3 +152,11 @@ func (o *OpNotOperation) Validate() error {
 	}
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewNot creates a new not operation
+	NewNot = NewOpNotOperation
+	// NewNotMultiple creates a new not operation with multiple operands
+	NewNotMultiple = NewOpNotOperationMultiple
+)

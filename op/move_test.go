@@ -19,7 +19,7 @@ func TestOpMove_Basic(t *testing.T) {
 	}
 
 	// Test moving a simple field
-	moveOp := NewOpMoveOperation([]string{"qux", "moved"}, []string{"foo"})
+	moveOp := NewMove([]string{"qux", "moved"}, []string{"foo"})
 	result, err := moveOp.Apply(doc)
 	require.NoError(t, err, "Move should succeed for existing field")
 
@@ -43,7 +43,7 @@ func TestOpMove_Array(t *testing.T) {
 	}
 
 	// Test moving an array element
-	moveOp := NewOpMoveOperation([]string{"target", "moved"}, []string{"items", "1"})
+	moveOp := NewMove([]string{"target", "moved"}, []string{"items", "1"})
 	result, err := moveOp.Apply(doc)
 	require.NoError(t, err, "Move should succeed for existing array element")
 
@@ -66,7 +66,7 @@ func TestOpMove_FromNonExistent(t *testing.T) {
 	}
 
 	// Test moving from non-existent path
-	moveOp := NewOpMoveOperation([]string{"target"}, []string{"qux"})
+	moveOp := NewMove([]string{"target"}, []string{"qux"})
 	_, err := moveOp.Apply(doc)
 	assert.Error(t, err, "Move should fail for non-existent from path")
 	assert.Contains(t, err.Error(), "path not found", "Error message should be descriptive")
@@ -74,7 +74,7 @@ func TestOpMove_FromNonExistent(t *testing.T) {
 
 func TestOpMove_SamePath(t *testing.T) {
 	// Test moving to the same path
-	moveOp := NewOpMoveOperation([]string{"foo"}, []string{"foo"})
+	moveOp := NewMove([]string{"foo"}, []string{"foo"})
 	err := moveOp.Validate()
 	assert.Error(t, err, "Move should fail validation for same path and from")
 	assert.Contains(t, err.Error(), "path and from cannot be the same", "Error message should mention same paths")
@@ -82,7 +82,7 @@ func TestOpMove_SamePath(t *testing.T) {
 
 func TestOpMove_EmptyPath(t *testing.T) {
 	// Test moving with empty path
-	moveOp := NewOpMoveOperation([]string{}, []string{"foo"})
+	moveOp := NewMove([]string{}, []string{"foo"})
 	err := moveOp.Validate()
 	assert.Error(t, err, "Move should fail validation for empty path")
 	assert.Contains(t, err.Error(), "path cannot be empty", "Error message should mention empty path")
@@ -90,14 +90,14 @@ func TestOpMove_EmptyPath(t *testing.T) {
 
 func TestOpMove_EmptyFrom(t *testing.T) {
 	// Test moving with empty from path
-	moveOp := NewOpMoveOperation([]string{"target"}, []string{})
+	moveOp := NewMove([]string{"target"}, []string{})
 	err := moveOp.Validate()
 	assert.Error(t, err, "Move should fail validation for empty from path")
 	assert.Contains(t, err.Error(), "from path cannot be empty", "Error message should mention empty from path")
 }
 
 func TestOpMove_InterfaceMethods(t *testing.T) {
-	moveOp := NewOpMoveOperation([]string{"target"}, []string{"source"})
+	moveOp := NewMove([]string{"target"}, []string{"source"})
 
 	// Test Op() method
 	assert.Equal(t, internal.OpMoveType, moveOp.Op(), "Op() should return correct operation type")
@@ -116,7 +116,7 @@ func TestOpMove_InterfaceMethods(t *testing.T) {
 }
 
 func TestOpMove_ToJSON(t *testing.T) {
-	moveOp := NewOpMoveOperation([]string{"target"}, []string{"source"})
+	moveOp := NewMove([]string{"target"}, []string{"source"})
 
 	json, err := moveOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
@@ -127,7 +127,7 @@ func TestOpMove_ToJSON(t *testing.T) {
 }
 
 func TestOpMove_ToCompact(t *testing.T) {
-	moveOp := NewOpMoveOperation([]string{"target"}, []string{"source"})
+	moveOp := NewMove([]string{"target"}, []string{"source"})
 
 	// Test verbose format
 	compact, err := moveOp.ToCompact()
@@ -145,24 +145,24 @@ func TestOpMove_ToCompact(t *testing.T) {
 
 func TestOpMove_Validate(t *testing.T) {
 	// Test valid operation
-	moveOp := NewOpMoveOperation([]string{"target"}, []string{"source"})
+	moveOp := NewMove([]string{"target"}, []string{"source"})
 	err := moveOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
 	// Test invalid operation (empty path)
-	moveOp = NewOpMoveOperation([]string{}, []string{"source"})
+	moveOp = NewMove([]string{}, []string{"source"})
 	err = moveOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.Contains(t, err.Error(), "path cannot be empty", "Error message should mention empty path")
 
 	// Test invalid operation (empty from)
-	moveOp = NewOpMoveOperation([]string{"target"}, []string{})
+	moveOp = NewMove([]string{"target"}, []string{})
 	err = moveOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.Contains(t, err.Error(), "from path cannot be empty", "Error message should mention empty from path")
 
 	// Test invalid operation (same path and from)
-	moveOp = NewOpMoveOperation([]string{"same"}, []string{"same"})
+	moveOp = NewMove([]string{"same"}, []string{"same"})
 	err = moveOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.Contains(t, err.Error(), "path and from cannot be the same", "Error message should mention same paths")

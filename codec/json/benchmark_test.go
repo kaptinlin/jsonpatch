@@ -24,7 +24,7 @@ var testPatch = `[
 ]`
 
 func BenchmarkDecode(b *testing.B) {
-	options := JSONPatchOptions{}
+	options := PatchOptions{}
 
 	b.ResetTimer()
 	b.ReportAllocs()
@@ -38,7 +38,7 @@ func BenchmarkDecode(b *testing.B) {
 }
 
 func BenchmarkEncode(b *testing.B) {
-	options := JSONPatchOptions{}
+	options := PatchOptions{}
 	ops, err := Decode(testOperations, options)
 	require.NoError(b, err)
 
@@ -55,7 +55,7 @@ func BenchmarkEncode(b *testing.B) {
 
 func BenchmarkDecodeJSON(b *testing.B) {
 	data := []byte(testPatch)
-	options := JSONPatchOptions{}
+	options := PatchOptions{}
 
 	b.ResetTimer()
 	b.ReportAllocs()
@@ -69,7 +69,7 @@ func BenchmarkDecodeJSON(b *testing.B) {
 }
 
 func BenchmarkEncodeJSON(b *testing.B) {
-	options := JSONPatchOptions{}
+	options := PatchOptions{}
 	ops, err := Decode(testOperations, options)
 	require.NoError(b, err)
 
@@ -85,7 +85,7 @@ func BenchmarkEncodeJSON(b *testing.B) {
 }
 
 func BenchmarkRoundTrip(b *testing.B) {
-	options := JSONPatchOptions{}
+	options := PatchOptions{}
 	data := []byte(testPatch)
 
 	b.ResetTimer()
@@ -106,7 +106,7 @@ func BenchmarkRoundTrip(b *testing.B) {
 
 // Test basic functionality
 func TestBasicDecodeEncode(t *testing.T) {
-	options := JSONPatchOptions{}
+	options := PatchOptions{}
 
 	// Test decode
 	ops, err := Decode(testOperations, options)
@@ -125,7 +125,7 @@ func TestBasicDecodeEncode(t *testing.T) {
 }
 
 func TestJSONDecodeEncode(t *testing.T) {
-	options := JSONPatchOptions{}
+	options := PatchOptions{}
 
 	// Test JSON decode
 	ops, err := DecodeJSON([]byte(testPatch), options)
@@ -145,7 +145,7 @@ func TestJSONDecodeEncode(t *testing.T) {
 
 // Test all operation types work with API
 func TestAllOperationTypes(t *testing.T) {
-	options := JSONPatchOptions{}
+	options := PatchOptions{}
 
 	allOps := []map[string]interface{}{
 		{"op": "add", "path": "/add", "value": "test"},

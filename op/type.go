@@ -120,3 +120,9 @@ func (op *OpTypeOperation) Validate() error {
 	}
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewType creates a new type operation
+	NewType = NewOpTypeOperation
+)

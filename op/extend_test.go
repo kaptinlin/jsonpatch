@@ -110,7 +110,7 @@ func TestOpExtend_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewOpExtendOperation(tt.path, tt.props.(map[string]interface{}), tt.deleteNull)
+			op := NewExtend(tt.path, tt.props.(map[string]interface{}), tt.deleteNull)
 			docCopy, err := DeepClone(tt.doc)
 			require.NoError(t, err)
 
@@ -129,12 +129,12 @@ func TestOpExtend_Apply(t *testing.T) {
 }
 
 func TestOpExtend_Op(t *testing.T) {
-	op := NewOpExtendOperation([]string{"user"}, map[string]interface{}{"age": 30}, false)
+	op := NewExtend([]string{"user"}, map[string]interface{}{"age": 30}, false)
 	assert.Equal(t, internal.OpExtendType, op.Op())
 }
 
 func TestOpExtend_Code(t *testing.T) {
-	op := NewOpExtendOperation([]string{"user"}, map[string]interface{}{"age": 30}, false)
+	op := NewExtend([]string{"user"}, map[string]interface{}{"age": 30}, false)
 	assert.Equal(t, internal.OpExtendCode, op.Code())
 }
 
@@ -142,7 +142,7 @@ func TestOpExtend_NewOpExtend(t *testing.T) {
 	path := []string{"user", "profile"}
 	props := map[string]interface{}{"age": 30, "city": "NYC"}
 	deleteNull := true
-	op := NewOpExtendOperation(path, props, deleteNull)
+	op := NewExtend(path, props, deleteNull)
 	assert.Equal(t, path, op.Path())
 	assert.Equal(t, props, op.Properties)
 	assert.Equal(t, deleteNull, op.DeleteNull)

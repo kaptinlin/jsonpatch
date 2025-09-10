@@ -146,7 +146,7 @@ func TestOpStrDel_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewOpStrDelOperation(tt.path, tt.pos, tt.length)
+			op := NewStrDel(tt.path, tt.pos, tt.length)
 			docCopy, err := DeepClone(tt.doc)
 			require.NoError(t, err)
 
@@ -165,12 +165,12 @@ func TestOpStrDel_Apply(t *testing.T) {
 }
 
 func TestOpStrDel_Op(t *testing.T) {
-	op := NewOpStrDelOperation([]string{"text"}, 1.0, 1.0)
+	op := NewStrDel([]string{"text"}, 1.0, 1.0)
 	assert.Equal(t, internal.OpStrDelType, op.Op())
 }
 
 func TestOpStrDel_Code(t *testing.T) {
-	op := NewOpStrDelOperation([]string{"text"}, 1.0, 1.0)
+	op := NewStrDel([]string{"text"}, 1.0, 1.0)
 	assert.Equal(t, internal.OpStrDelCode, op.Code())
 }
 
@@ -178,7 +178,7 @@ func TestOpStrDel_NewOpStrDel(t *testing.T) {
 	path := []string{"user", "bio"}
 	pos := 2.0
 	length := 3.0
-	op := NewOpStrDelOperation(path, pos, length)
+	op := NewStrDel(path, pos, length)
 	assert.Equal(t, path, op.Path())
 	assert.Equal(t, pos, op.Pos)
 	assert.Equal(t, length, op.Len)

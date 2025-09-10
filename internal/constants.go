@@ -23,8 +23,10 @@ const (
 	// OpContainsType represents the "contains" operation type for JSON Predicate operations
 	OpContainsType OpType = "contains"
 	// OpDefinedType represents the "defined" operation type for JSON Predicate operations
-	OpDefinedType       OpType = "defined"
-	OpUndefinedType     OpType = "undefined"
+	OpDefinedType OpType = "defined"
+	// OpUndefinedType represents the "undefined" operation type for JSON Predicate operations
+	OpUndefinedType OpType = "undefined"
+	// OpTypeType represents the "type" operation type for JSON Predicate operations
 	OpTypeType          OpType = "type"
 	OpTestTypeType      OpType = "test_type"
 	OpTestStringType    OpType = "test_string"

@@ -17,27 +17,27 @@ var (
 	}{
 		{
 			name:  "AddOperation",
-			patch: []internal.Op{op.NewOpAddOperation([]string{"a", "b", "c"}, "foo")},
+			patch: []internal.Op{op.NewAdd([]string{"a", "b", "c"}, "foo")},
 		},
 		{
 			name:  "RemoveOperation",
-			patch: []internal.Op{op.NewOpRemoveOperation([]string{"a", "b", "c"})},
+			patch: []internal.Op{op.NewRemove([]string{"a", "b", "c"})},
 		},
 		{
 			name:  "ReplaceOperation",
-			patch: []internal.Op{op.NewOpReplaceOperation([]string{"a", "b", "c"}, "bar")},
+			patch: []internal.Op{op.NewReplace([]string{"a", "b", "c"}, "bar")},
 		},
 		{
 			name:  "MoveOperation",
-			patch: []internal.Op{op.NewOpMoveOperation([]string{"a", "b", "c"}, []string{"a", "b", "d"})},
+			patch: []internal.Op{op.NewMove([]string{"a", "b", "c"}, []string{"a", "b", "d"})},
 		},
 		{
 			name:  "CopyOperation",
-			patch: []internal.Op{op.NewOpCopyOperation([]string{"a", "b", "d"}, []string{"a", "b", "e"})},
+			patch: []internal.Op{op.NewCopy([]string{"a", "b", "d"}, []string{"a", "b", "e"})},
 		},
 		{
 			name:  "TestOperation",
-			patch: []internal.Op{op.NewOpTestOperation([]string{"a", "b", "e"}, "bar")},
+			patch: []internal.Op{op.NewTest([]string{"a", "b", "e"}, "bar")},
 		},
 		{
 			name:  "TestTypeOperationMultiple",

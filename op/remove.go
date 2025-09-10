@@ -154,3 +154,11 @@ func (o *OpRemoveOperation) Validate() error {
 	}
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewRemove creates a new remove operation
+	NewRemove = NewOpRemoveOperation
+	// NewRemoveWithOldValue creates a new remove operation with old value
+	NewRemoveWithOldValue = NewOpRemoveOperationWithOldValue
+)

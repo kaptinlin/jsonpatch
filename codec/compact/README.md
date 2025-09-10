@@ -35,8 +35,8 @@ import (
 func main() {
     // Create operations
     ops := []internal.Op{
-        op.NewOpAddOperation([]string{"foo"}, "bar"),
-        op.NewOpReplaceOperation([]string{"baz"}, 42),
+        op.NewAdd([]string{"foo"}, "bar"),
+        op.NewReplace([]string{"baz"}, 42),
     }
     
     // Encode to compact format

@@ -187,9 +187,8 @@ func (op *OpSplitOperation) handleArraySplit(doc interface{}, parts []interface{
 		// We can't modify the root document directly, but we can return an error
 		// indicating that the caller should handle this case
 		return ErrCannotModifyRootArray
-	} else {
-		return setValueAtPath(doc, parentPath, newArray)
 	}
+	return setValueAtPath(doc, parentPath, newArray)
 }
 
 // splitValue splits a value based on its type
@@ -308,3 +307,9 @@ func (op *OpSplitOperation) Validate() error {
 	// Position bounds are checked in Apply method
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewSplit creates a new split operation
+	NewSplit = NewOpSplitOperation
+)

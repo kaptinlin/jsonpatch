@@ -128,7 +128,7 @@ func TestOpStrIns_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewOpStrInsOperation(tt.path, tt.pos, tt.str)
+			op := NewStrIns(tt.path, tt.pos, tt.str)
 			docCopy, err := DeepClone(tt.doc)
 			require.NoError(t, err)
 
@@ -147,20 +147,20 @@ func TestOpStrIns_Apply(t *testing.T) {
 }
 
 func TestOpStrIns_Op(t *testing.T) {
-	op := NewOpStrInsOperation([]string{"text"}, 1.0, "-")
+	op := NewStrIns([]string{"text"}, 1.0, "-")
 	assert.Equal(t, internal.OpStrInsType, op.Op())
 }
 
 func TestOpStrIns_Code(t *testing.T) {
-	op := NewOpStrInsOperation([]string{"text"}, 1.0, "-")
+	op := NewStrIns([]string{"text"}, 1.0, "-")
 	assert.Equal(t, internal.OpStrInsCode, op.Code())
 }
 
-func TestOpStrIns_NewOpStrInsOperation(t *testing.T) {
+func TestOpStrIns_NewStrIns(t *testing.T) {
 	path := []string{"user", "bio"}
 	pos := 2.0
 	str := "abc"
-	op := NewOpStrInsOperation(path, pos, str)
+	op := NewStrIns(path, pos, str)
 	assert.Equal(t, path, op.Path())
 	assert.Equal(t, pos, op.Pos)
 	assert.Equal(t, str, op.Str)

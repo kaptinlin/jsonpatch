@@ -15,7 +15,7 @@ func TestOpAdd_Basic(t *testing.T) {
 		"foo": "bar",
 	}
 
-	op := NewOpAddOperation([]string{"baz"}, "qux")
+	op := NewAdd([]string{"baz"}, "qux")
 
 	result, err := op.Apply(doc)
 	require.NoError(t, err, "Add operation should succeed")
@@ -40,7 +40,7 @@ func TestOpAdd_ReplaceExisting(t *testing.T) {
 		"foo": "bar",
 	}
 
-	op := NewOpAddOperation([]string{"foo"}, "new_value")
+	op := NewAdd([]string{"foo"}, "new_value")
 
 	result, err := op.Apply(doc)
 	require.NoError(t, err, "Add operation should succeed")
@@ -52,7 +52,7 @@ func TestOpAdd_ReplaceExisting(t *testing.T) {
 }
 
 func TestOpAdd_InterfaceMethods(t *testing.T) {
-	op := NewOpAddOperation([]string{"foo"}, "bar")
+	op := NewAdd([]string{"foo"}, "bar")
 
 	// Test Op() method
 	assert.Equal(t, internal.OpAddType, op.Op(), "Op() should return correct operation type")
@@ -65,7 +65,7 @@ func TestOpAdd_InterfaceMethods(t *testing.T) {
 }
 
 func TestOpAdd_ToJSON(t *testing.T) {
-	op := NewOpAddOperation([]string{"foo", "bar"}, "baz")
+	op := NewAdd([]string{"foo", "bar"}, "baz")
 
 	json, err := op.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
@@ -76,7 +76,7 @@ func TestOpAdd_ToJSON(t *testing.T) {
 }
 
 func TestOpAdd_ToCompact(t *testing.T) {
-	op := NewOpAddOperation([]string{"foo"}, "bar")
+	op := NewAdd([]string{"foo"}, "bar")
 
 	// Test verbose format
 	compact, err := op.ToCompact()
@@ -94,12 +94,12 @@ func TestOpAdd_ToCompact(t *testing.T) {
 
 func TestOpAdd_Validate(t *testing.T) {
 	// Test valid operation
-	op := NewOpAddOperation([]string{"foo"}, "bar")
+	op := NewAdd([]string{"foo"}, "bar")
 	err := op.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
 	// Test invalid operation (empty path)
-	op = NewOpAddOperation([]string{}, "bar")
+	op = NewAdd([]string{}, "bar")
 	err = op.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.Contains(t, err.Error(), "path cannot be empty", "Error message should mention empty path")
@@ -109,7 +109,7 @@ func TestOpAdd_Constructor(t *testing.T) {
 	path := []string{"foo", "bar"}
 	value := "baz"
 
-	op := NewOpAddOperation(path, value)
+	op := NewAdd(path, value)
 
 	assert.Equal(t, path, op.Path(), "Constructor should set correct path")
 	// Note: we can't directly access the value field, but we can test it through ToJSON

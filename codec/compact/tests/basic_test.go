@@ -12,37 +12,37 @@ func TestBasicOperationsNumericCodes(t *testing.T) {
 	tests := []struct {
 		name     string
 		op       internal.Op
-		expected compact.CompactOp
+		expected compact.Op
 	}{
 		{
 			name:     "add operation",
-			op:       op.NewOpAddOperation([]string{"foo"}, "bar"),
-			expected: compact.CompactOp{0, "/foo", "bar"},
+			op:       op.NewAdd([]string{"foo"}, "bar"),
+			expected: compact.Op{0, "/foo", "bar"},
 		},
 		{
 			name:     "remove operation",
-			op:       op.NewOpRemoveOperation([]string{"foo"}),
-			expected: compact.CompactOp{1, "/foo"},
+			op:       op.NewRemove([]string{"foo"}),
+			expected: compact.Op{1, "/foo"},
 		},
 		{
 			name:     "replace operation",
-			op:       op.NewOpReplaceOperation([]string{"foo"}, "new_value"),
-			expected: compact.CompactOp{2, "/foo", "new_value"},
+			op:       op.NewReplace([]string{"foo"}, "new_value"),
+			expected: compact.Op{2, "/foo", "new_value"},
 		},
 		{
 			name:     "move operation",
-			op:       op.NewOpMoveOperation([]string{"foo"}, []string{"bar"}),
-			expected: compact.CompactOp{4, "/foo", "/bar"},
+			op:       op.NewMove([]string{"foo"}, []string{"bar"}),
+			expected: compact.Op{4, "/foo", "/bar"},
 		},
 		{
 			name:     "copy operation",
-			op:       op.NewOpCopyOperation([]string{"foo"}, []string{"bar"}),
-			expected: compact.CompactOp{3, "/foo", "/bar"},
+			op:       op.NewCopy([]string{"foo"}, []string{"bar"}),
+			expected: compact.Op{3, "/foo", "/bar"},
 		},
 		{
 			name:     "test operation",
-			op:       op.NewOpTestOperation([]string{"foo"}, "expected"),
-			expected: compact.CompactOp{5, "/foo", "expected"},
+			op:       op.NewTest([]string{"foo"}, "expected"),
+			expected: compact.Op{5, "/foo", "expected"},
 		},
 	}
 
@@ -99,7 +99,7 @@ func TestBasicOperationsNumericCodes(t *testing.T) {
 }
 
 func TestStringOpcodes(t *testing.T) {
-	op := op.NewOpAddOperation([]string{"foo"}, "bar")
+	op := op.NewAdd([]string{"foo"}, "bar")
 
 	// Test with string opcodes
 	encoder := compact.NewEncoder(compact.WithStringOpcode(true))
@@ -127,9 +127,9 @@ func TestStringOpcodes(t *testing.T) {
 
 func TestSliceOperations(t *testing.T) {
 	ops := []internal.Op{
-		op.NewOpAddOperation([]string{"foo"}, "bar"),
-		op.NewOpRemoveOperation([]string{"baz"}),
-		op.NewOpReplaceOperation([]string{"qux"}, 42),
+		op.NewAdd([]string{"foo"}, "bar"),
+		op.NewRemove([]string{"baz"}),
+		op.NewReplace([]string{"qux"}, 42),
 	}
 
 	// Test encoding slice
@@ -161,8 +161,8 @@ func TestSliceOperations(t *testing.T) {
 
 func TestJSONMarshaling(t *testing.T) {
 	ops := []internal.Op{
-		op.NewOpAddOperation([]string{"foo"}, "bar"),
-		op.NewOpRemoveOperation([]string{"baz"}),
+		op.NewAdd([]string{"foo"}, "bar"),
+		op.NewRemove([]string{"baz"}),
 	}
 
 	// Test encoding to JSON

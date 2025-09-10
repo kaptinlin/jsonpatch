@@ -14,6 +14,9 @@ type OpEndsOperation struct {
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case
 }
 
+// EndsOperation is a non-stuttering alias for OpEndsOperation.
+type EndsOperation = OpEndsOperation
+
 // NewOpEndsOperation creates a new OpEndsOperation operation.
 func NewOpEndsOperation(path []string, suffix string) *OpEndsOperation {
 	return &OpEndsOperation{
@@ -126,3 +129,11 @@ func (op *OpEndsOperation) Validate() error {
 	}
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewEnds creates a new ends operation
+	NewEnds = NewOpEndsOperation
+	// NewEndsWithIgnoreCase creates a new ends operation with ignore case
+	NewEndsWithIgnoreCase = NewOpEndsOperationWithIgnoreCase
+)

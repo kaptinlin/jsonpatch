@@ -123,7 +123,7 @@ func TestOpContains_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewOpContainsOperation(tt.path, tt.substring)
+			op := NewContains(tt.path, tt.substring)
 			result, err := op.Apply(tt.doc)
 
 			if tt.expectError {

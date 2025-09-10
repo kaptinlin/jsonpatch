@@ -109,7 +109,7 @@ func TestOpStarts_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewOpStartsOperation(tt.path, tt.prefix)
+			op := NewStarts(tt.path, tt.prefix)
 			result, err := op.Apply(tt.doc)
 
 			if tt.expectError {

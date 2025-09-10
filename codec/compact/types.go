@@ -54,8 +54,8 @@ const (
 
 // Note: String operation codes are defined in decode.go lookup table for better performance
 
-// CompactOp represents a compact format operation as an array
-type CompactOp []interface{}
+// Op represents a compact format operation as an array
+type Op []interface{}
 
 // EncoderOptions configures the compact encoder behavior
 type EncoderOptions struct {
@@ -89,11 +89,8 @@ var (
 	DefaultDecoderOptions = DecoderOptions{}
 )
 
-// Operation type aliases for compatibility
-type Operation = internal.Operation
-
-// CompactOperation represents a compact format operation.
-type CompactOperation = internal.CompactOperation
+// Operation represents a compact format operation.
+type Operation = internal.CompactOperation
 
 // JSONPatchOptions contains options for JSON Patch operations.
 type JSONPatchOptions = internal.Options

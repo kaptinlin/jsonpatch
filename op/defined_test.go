@@ -18,19 +18,19 @@ func TestOpDefined_Basic(t *testing.T) {
 	}
 
 	// Test existing path
-	definedOp := NewOpDefinedOperation([]string{"foo"})
+	definedOp := NewDefined([]string{"foo"})
 	ok, err := definedOp.Test(doc)
 	require.NoError(t, err, "Defined test should not fail")
 	assert.True(t, ok, "Defined should return true for existing path")
 
 	// Test non-existing path
-	definedOp = NewOpDefinedOperation([]string{"qux"})
+	definedOp = NewDefined([]string{"qux"})
 	ok, err = definedOp.Test(doc)
 	require.NoError(t, err, "Defined test should not fail")
 	assert.False(t, ok, "Defined should return false for non-existing path")
 
 	// Test nested path
-	definedOp = NewOpDefinedOperation([]string{"baz", "qux"})
+	definedOp = NewDefined([]string{"baz", "qux"})
 	ok, err = definedOp.Test(doc)
 	require.NoError(t, err, "Defined test should not fail")
 	assert.True(t, ok, "Defined should return true for existing nested path")
@@ -43,20 +43,20 @@ func TestOpDefined_Apply(t *testing.T) {
 	}
 
 	// Test existing path
-	definedOp := NewOpDefinedOperation([]string{"foo"})
+	definedOp := NewDefined([]string{"foo"})
 	result, err := definedOp.Apply(doc)
 	require.NoError(t, err, "Defined apply should succeed for existing path")
 	assert.True(t, deepEqual(result.Doc, doc), "Apply should return the original document")
 
 	// Test non-existing path
-	definedOp = NewOpDefinedOperation([]string{"qux"})
+	definedOp = NewDefined([]string{"qux"})
 	_, err = definedOp.Apply(doc)
 	assert.Error(t, err, "Defined apply should fail for non-existing path")
 	assert.Contains(t, err.Error(), "defined test failed", "Error message should be descriptive")
 }
 
 func TestOpDefined_InterfaceMethods(t *testing.T) {
-	definedOp := NewOpDefinedOperation([]string{"test"})
+	definedOp := NewDefined([]string{"test"})
 
 	// Test Op() method
 	assert.Equal(t, internal.OpDefinedType, definedOp.Op(), "Op() should return correct operation type")
@@ -69,7 +69,7 @@ func TestOpDefined_InterfaceMethods(t *testing.T) {
 }
 
 func TestOpDefined_ToJSON(t *testing.T) {
-	definedOp := NewOpDefinedOperation([]string{"test"})
+	definedOp := NewDefined([]string{"test"})
 
 	json, err := definedOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
@@ -79,7 +79,7 @@ func TestOpDefined_ToJSON(t *testing.T) {
 }
 
 func TestOpDefined_ToCompact(t *testing.T) {
-	definedOp := NewOpDefinedOperation([]string{"test"})
+	definedOp := NewDefined([]string{"test"})
 
 	// Test verbose format
 	compact, err := definedOp.ToCompact()
@@ -96,12 +96,12 @@ func TestOpDefined_ToCompact(t *testing.T) {
 
 func TestOpDefined_Validate(t *testing.T) {
 	// Test valid operation
-	definedOp := NewOpDefinedOperation([]string{"test"})
+	definedOp := NewDefined([]string{"test"})
 	err := definedOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
 	// Test valid operation with empty path (root path is valid for defined)
-	definedOp = NewOpDefinedOperation([]string{})
+	definedOp = NewDefined([]string{})
 	err = definedOp.Validate()
 	assert.NoError(t, err, "Empty path (root) should be valid for defined operation")
 }

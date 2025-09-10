@@ -16,11 +16,11 @@ func TestOpOr_Basic(t *testing.T) {
 	}
 
 	// Create two test operations, one should pass, one should fail
-	test1 := NewOpTestOperation([]string{"foo"}, "bar") // should pass
-	test2 := NewOpTestOperation([]string{"baz"}, 456)   // should fail
+	test1 := NewTest([]string{"foo"}, "bar") // should pass
+	test2 := NewTest([]string{"baz"}, 456)   // should fail
 
 	// Create OR operation
-	orOp := NewOpOrOperation([]string{}, []interface{}{test1, test2})
+	orOp := NewOr([]string{}, []interface{}{test1, test2})
 
 	ok, err := orOp.Test(doc)
 	require.NoError(t, err, "OR test should not fail")
@@ -35,11 +35,11 @@ func TestOpOr_AllFail(t *testing.T) {
 	}
 
 	// Create two test operations that should both fail
-	test1 := NewOpTestOperation([]string{"foo"}, "qux") // should fail
-	test2 := NewOpTestOperation([]string{"baz"}, 456)   // should fail
+	test1 := NewTest([]string{"foo"}, "qux") // should fail
+	test2 := NewTest([]string{"baz"}, 456)   // should fail
 
 	// Create OR operation
-	orOp := NewOpOrOperation([]string{}, []interface{}{test1, test2})
+	orOp := NewOr([]string{}, []interface{}{test1, test2})
 
 	ok, err := orOp.Test(doc)
 	require.NoError(t, err, "OR test should not fail")
@@ -48,7 +48,7 @@ func TestOpOr_AllFail(t *testing.T) {
 
 func TestOpOr_Empty(t *testing.T) {
 	// Create OR operation with no sub-operations
-	orOp := NewOpOrOperation([]string{}, []interface{}{})
+	orOp := NewOr([]string{}, []interface{}{})
 
 	doc := map[string]interface{}{"foo": "bar"}
 	ok, err := orOp.Test(doc)
@@ -64,11 +64,11 @@ func TestOpOr_Apply(t *testing.T) {
 	}
 
 	// Create two test operations, one should pass
-	test1 := NewOpTestOperation([]string{"foo"}, "bar") // should pass
-	test2 := NewOpTestOperation([]string{"baz"}, 456)   // should fail
+	test1 := NewTest([]string{"foo"}, "bar") // should pass
+	test2 := NewTest([]string{"baz"}, 456)   // should fail
 
 	// Create OR operation
-	orOp := NewOpOrOperation([]string{}, []interface{}{test1, test2})
+	orOp := NewOr([]string{}, []interface{}{test1, test2})
 
 	result, err := orOp.Apply(doc)
 	require.NoError(t, err, "OR apply should succeed when any operation passes")
@@ -83,11 +83,11 @@ func TestOpOr_Apply_Fails(t *testing.T) {
 	}
 
 	// Create two test operations that should both fail
-	test1 := NewOpTestOperation([]string{"foo"}, "qux") // should fail
-	test2 := NewOpTestOperation([]string{"baz"}, 456)   // should fail
+	test1 := NewTest([]string{"foo"}, "qux") // should fail
+	test2 := NewTest([]string{"baz"}, 456)   // should fail
 
 	// Create OR operation
-	orOp := NewOpOrOperation([]string{}, []interface{}{test1, test2})
+	orOp := NewOr([]string{}, []interface{}{test1, test2})
 
 	_, err := orOp.Apply(doc)
 	assert.Error(t, err, "OR apply should fail when all operations fail")
@@ -95,10 +95,10 @@ func TestOpOr_Apply_Fails(t *testing.T) {
 }
 
 func TestOpOr_InterfaceMethods(t *testing.T) {
-	test1 := NewOpTestOperation([]string{"foo"}, "bar")
-	test2 := NewOpTestOperation([]string{"baz"}, 123)
+	test1 := NewTest([]string{"foo"}, "bar")
+	test2 := NewTest([]string{"baz"}, 123)
 
-	orOp := NewOpOrOperation([]string{"test"}, []interface{}{test1, test2})
+	orOp := NewOr([]string{"test"}, []interface{}{test1, test2})
 
 	// Test Op() method
 	assert.Equal(t, internal.OpOrType, orOp.Op(), "Op() should return correct operation type")
@@ -117,10 +117,10 @@ func TestOpOr_InterfaceMethods(t *testing.T) {
 }
 
 func TestOpOr_ToJSON(t *testing.T) {
-	test1 := NewOpTestOperation([]string{"foo"}, "bar")
-	test2 := NewOpTestOperation([]string{"baz"}, 123)
+	test1 := NewTest([]string{"foo"}, "bar")
+	test2 := NewTest([]string{"baz"}, 123)
 
-	orOp := NewOpOrOperation([]string{"test"}, []interface{}{test1, test2})
+	orOp := NewOr([]string{"test"}, []interface{}{test1, test2})
 
 	json, err := orOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
@@ -136,10 +136,10 @@ func TestOpOr_ToJSON(t *testing.T) {
 }
 
 func TestOpOr_ToCompact(t *testing.T) {
-	test1 := NewOpTestOperation([]string{"foo"}, "bar")
-	test2 := NewOpTestOperation([]string{"baz"}, 123)
+	test1 := NewTest([]string{"foo"}, "bar")
+	test2 := NewTest([]string{"baz"}, 123)
 
-	orOp := NewOpOrOperation([]string{"test"}, []interface{}{test1, test2})
+	orOp := NewOr([]string{"test"}, []interface{}{test1, test2})
 
 	compact, err := orOp.ToCompact()
 	require.NoError(t, err, "ToCompact should not fail for valid operation")
@@ -152,15 +152,15 @@ func TestOpOr_ToCompact(t *testing.T) {
 
 func TestOpOr_Validate(t *testing.T) {
 	// Test valid operation
-	test1 := NewOpTestOperation([]string{"foo"}, "bar")
-	test2 := NewOpTestOperation([]string{"baz"}, 123)
+	test1 := NewTest([]string{"foo"}, "bar")
+	test2 := NewTest([]string{"baz"}, 123)
 
-	orOp := NewOpOrOperation([]string{"test"}, []interface{}{test1, test2})
+	orOp := NewOr([]string{"test"}, []interface{}{test1, test2})
 	err := orOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
 	// Test invalid operation (empty ops)
-	orOp = NewOpOrOperation([]string{"test"}, []interface{}{})
+	orOp = NewOr([]string{"test"}, []interface{}{})
 	err = orOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.Contains(t, err.Error(), "must have at least one operand", "Error message should mention missing operands")

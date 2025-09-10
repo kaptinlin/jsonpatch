@@ -7,7 +7,7 @@ import (
 )
 
 // Encode encodes operations into compact format using default options
-func Encode(ops []internal.Op, opts ...EncoderOption) ([]CompactOp, error) {
+func Encode(ops []internal.Op, opts ...EncoderOption) ([]Op, error) {
 	encoder := NewEncoder(opts...)
 	return encoder.EncodeSlice(ops)
 }
@@ -22,15 +22,15 @@ func EncodeJSON(ops []internal.Op, opts ...EncoderOption) ([]byte, error) {
 }
 
 // opToCompact converts a single operation to compact format
-func opToCompact(op internal.Op, options EncoderOptions) (CompactOp, error) {
+func opToCompact(op internal.Op, options EncoderOptions) (Op, error) {
 	// Get the standard compact format from the operation
 	compactOp, err := op.ToCompact()
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert to our CompactOp type and adjust opcode if needed
-	result := make(CompactOp, len(compactOp))
+	// Convert to our Op type and adjust opcode if needed
+	result := make(Op, len(compactOp))
 	copy(result, compactOp)
 
 	// Convert opcode to string if requested

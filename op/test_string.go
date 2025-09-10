@@ -132,3 +132,11 @@ func (op *OpTestStringOperation) Validate() error {
 	}
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewTestString creates a new test string operation
+	NewTestString = NewOpTestStringOperation
+	// NewTestStringWithPos creates a new test string operation with position
+	NewTestStringWithPos = NewOpTestStringOperationWithPos
+)

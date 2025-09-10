@@ -109,3 +109,9 @@ func (op *OpInOperation) Validate() error {
 func (op *OpInOperation) Not() bool {
 	return false
 }
+
+// Short aliases for common use
+var (
+	// NewIn creates a new in operation
+	NewIn = NewOpInOperation
+)

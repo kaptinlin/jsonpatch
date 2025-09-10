@@ -265,3 +265,11 @@ func (op *OpTestTypeOperation) Validate() error {
 	}
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewTestType creates a new test type operation
+	NewTestType = NewOpTestTypeOperation
+	// NewTestTypeMultiple creates a new test type operation with multiple types
+	NewTestTypeMultiple = NewOpTestTypeOperationMultiple
+)

@@ -118,3 +118,9 @@ func (o *OpMoreOperation) Validate() error {
 func (o *OpMoreOperation) Path() []string {
 	return o.path
 }
+
+// Short aliases for common use
+var (
+	// NewMore creates a new more operation
+	NewMore = NewOpMoreOperation
+)

@@ -115,3 +115,9 @@ func (o *OpTestOperation) Validate() error {
 	}
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewTest creates a new test operation
+	NewTest = NewOpTestOperation
+)

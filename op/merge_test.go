@@ -146,7 +146,7 @@ func TestOpMerge_Apply(t *testing.T) {
 			if tt.props != nil {
 				props = tt.props.(map[string]interface{})
 			}
-			op := NewOpMergeOperation(tt.path, tt.pos, props)
+			op := NewMerge(tt.path, tt.pos, props)
 			docCopy, err := DeepClone(tt.doc)
 			require.NoError(t, err)
 
@@ -165,12 +165,12 @@ func TestOpMerge_Apply(t *testing.T) {
 }
 
 func TestOpMerge_Op(t *testing.T) {
-	op := NewOpMergeOperation([]string{"lines"}, 0, nil)
+	op := NewMerge([]string{"lines"}, 0, nil)
 	assert.Equal(t, internal.OpMergeType, op.Op())
 }
 
 func TestOpMerge_Code(t *testing.T) {
-	op := NewOpMergeOperation([]string{"lines"}, 0, nil)
+	op := NewMerge([]string{"lines"}, 0, nil)
 	assert.Equal(t, internal.OpMergeCode, op.Code())
 }
 
@@ -178,7 +178,7 @@ func TestOpMerge_NewOpMerge(t *testing.T) {
 	path := []string{"user", "tags"}
 	pos := 1.0
 	props := map[string]interface{}{"type": "merge"}
-	op := NewOpMergeOperation(path, pos, props)
+	op := NewMerge(path, pos, props)
 	assert.Equal(t, path, op.Path())
 	assert.Equal(t, pos, op.Pos)
 	assert.Equal(t, props, op.Props)

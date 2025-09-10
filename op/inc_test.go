@@ -99,7 +99,7 @@ func TestOpInc_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewOpIncOperation(tt.path, tt.inc)
+			op := NewInc(tt.path, tt.inc)
 			docCopy, err := DeepClone(tt.doc)
 			require.NoError(t, err)
 
@@ -118,19 +118,19 @@ func TestOpInc_Apply(t *testing.T) {
 }
 
 func TestOpInc_Op(t *testing.T) {
-	op := NewOpIncOperation([]string{"count"}, 1)
+	op := NewInc([]string{"count"}, 1)
 	assert.Equal(t, internal.OpIncType, op.Op())
 }
 
 func TestOpInc_Code(t *testing.T) {
-	op := NewOpIncOperation([]string{"count"}, 1)
+	op := NewInc([]string{"count"}, 1)
 	assert.Equal(t, internal.OpIncCode, op.Code())
 }
 
 func TestOpInc_NewOpInc(t *testing.T) {
 	path := []string{"user", "score"}
 	inc := 3.5
-	op := NewOpIncOperation(path, inc)
+	op := NewInc(path, inc)
 	assert.Equal(t, path, op.path)
 	assert.Equal(t, inc, op.Inc)
 	assert.Equal(t, internal.OpIncType, op.Op())

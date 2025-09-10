@@ -84,7 +84,7 @@ func TestOpIn_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewOpInOperation(tt.path, tt.values)
+			op := NewIn(tt.path, tt.values)
 			result, err := op.Apply(tt.doc)
 
 			if tt.expectError {

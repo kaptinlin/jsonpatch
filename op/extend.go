@@ -15,6 +15,9 @@ type OpExtendOperation struct {
 	DeleteNull bool                   `json:"deleteNull"` // Whether to delete null properties
 }
 
+// ExtendOperation is a non-stuttering alias for OpExtendOperation.
+type ExtendOperation = OpExtendOperation
+
 // NewOpExtendOperation creates a new object extend operation.
 func NewOpExtendOperation(path []string, properties map[string]interface{}, deleteNull bool) *OpExtendOperation {
 	return &OpExtendOperation{
@@ -132,3 +135,9 @@ func objExtend(obj map[string]interface{}, props map[string]interface{}, deleteN
 
 	return result
 }
+
+// Short aliases for common use
+var (
+	// NewExtend creates a new extend operation
+	NewExtend = NewOpExtendOperation
+)

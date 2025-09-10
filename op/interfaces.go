@@ -5,8 +5,8 @@ import "github.com/kaptinlin/jsonpatch/internal"
 // Op interface defines the core operation behavior.
 type Op = internal.Op
 
-// OpResult represents the result of applying an operation.
-type OpResult[T internal.Document] = internal.OpResult[T]
+// Result represents the result of applying an operation.
+type Result[T internal.Document] = internal.OpResult[T]
 
 // PredicateOp represents predicate operations used for testing conditions.
 type PredicateOp = internal.PredicateOp

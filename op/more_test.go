@@ -79,7 +79,7 @@ func TestOpMore_Basic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewOpMoreOperation(tt.path, tt.value)
+			op := NewMore(tt.path, tt.value)
 			result, err := op.Apply(tt.doc)
 
 			if tt.expectError {
@@ -101,7 +101,7 @@ func TestOpMore_Constructor(t *testing.T) {
 	path := []string{"age"}
 	value := 18.0
 
-	op := NewOpMoreOperation(path, value)
+	op := NewMore(path, value)
 	assert.Equal(t, path, op.Path())
 	assert.Equal(t, value, op.Value)
 	assert.Equal(t, internal.OpMoreType, op.Op())
@@ -109,7 +109,7 @@ func TestOpMore_Constructor(t *testing.T) {
 }
 
 func TestOpMore_ToJSON(t *testing.T) {
-	op := NewOpMoreOperation([]string{"age"}, 18.0)
+	op := NewMore([]string{"age"}, 18.0)
 	json, err := op.ToJSON()
 
 	require.NoError(t, err)
@@ -119,7 +119,7 @@ func TestOpMore_ToJSON(t *testing.T) {
 }
 
 func TestOpMore_ToCompact(t *testing.T) {
-	op := NewOpMoreOperation([]string{"age"}, 18.0)
+	op := NewMore([]string{"age"}, 18.0)
 	compact, err := op.ToCompact()
 	assert.NoError(t, err)
 	assert.Equal(t, []interface{}{internal.OpMoreCode, []string{"age"}, 18.0}, compact)

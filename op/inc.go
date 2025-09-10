@@ -93,3 +93,9 @@ func (op *OpIncOperation) Validate() error {
 	// Empty path (root level) is allowed for inc operations
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewInc creates a new inc operation
+	NewInc = NewOpIncOperation
+)

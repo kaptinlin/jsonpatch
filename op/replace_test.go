@@ -19,7 +19,7 @@ func TestOpReplace_Basic(t *testing.T) {
 	}
 
 	// Test replacing a simple field
-	replaceOp := NewOpReplaceOperation([]string{"foo"}, "new_value")
+	replaceOp := NewReplace([]string{"foo"}, "new_value")
 	result, err := replaceOp.Apply(doc)
 	require.NoError(t, err, "Replace should succeed for existing field")
 
@@ -40,7 +40,7 @@ func TestOpReplace_Nested(t *testing.T) {
 	}
 
 	// Test replacing a nested field
-	replaceOp := NewOpReplaceOperation([]string{"foo", "bar"}, "new_nested_value")
+	replaceOp := NewReplace([]string{"foo", "bar"}, "new_nested_value")
 	result, err := replaceOp.Apply(doc)
 	require.NoError(t, err, "Replace should succeed for existing nested field")
 
@@ -61,7 +61,7 @@ func TestOpReplace_Array(t *testing.T) {
 	}
 
 	// Test replacing an array element
-	replaceOp := NewOpReplaceOperation([]string{"1"}, "new_second")
+	replaceOp := NewReplace([]string{"1"}, "new_second")
 	result, err := replaceOp.Apply(doc)
 	require.NoError(t, err, "Replace should succeed for existing array element")
 
@@ -80,7 +80,7 @@ func TestOpReplace_NonExistent(t *testing.T) {
 	}
 
 	// Test replacing a non-existent field
-	replaceOp := NewOpReplaceOperation([]string{"qux"}, "new_value")
+	replaceOp := NewReplace([]string{"qux"}, "new_value")
 	_, err := replaceOp.Apply(doc)
 	assert.Error(t, err, "Replace should fail for non-existent field")
 	assert.Contains(t, err.Error(), "path does not exist", "Error message should be descriptive")
@@ -93,7 +93,7 @@ func TestOpReplace_EmptyPath(t *testing.T) {
 	}
 
 	// Test replacing with empty path
-	replaceOp := NewOpReplaceOperation([]string{}, "new_value")
+	replaceOp := NewReplace([]string{}, "new_value")
 	result, err := replaceOp.Apply(doc)
 	require.NoError(t, err, "Replace should succeed for empty path (root replacement)")
 	assert.Equal(t, "new_value", result.Doc, "Document should be replaced entirely")
@@ -101,7 +101,7 @@ func TestOpReplace_EmptyPath(t *testing.T) {
 }
 
 func TestOpReplace_InterfaceMethods(t *testing.T) {
-	replaceOp := NewOpReplaceOperation([]string{"test"}, "value")
+	replaceOp := NewReplace([]string{"test"}, "value")
 
 	// Test Op() method
 	assert.Equal(t, internal.OpReplaceType, replaceOp.Op(), "Op() should return correct operation type")
@@ -117,7 +117,7 @@ func TestOpReplace_InterfaceMethods(t *testing.T) {
 }
 
 func TestOpReplace_ToJSON(t *testing.T) {
-	replaceOp := NewOpReplaceOperation([]string{"test"}, "value")
+	replaceOp := NewReplace([]string{"test"}, "value")
 
 	json, err := replaceOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
@@ -128,7 +128,7 @@ func TestOpReplace_ToJSON(t *testing.T) {
 }
 
 func TestOpReplace_ToCompact(t *testing.T) {
-	replaceOp := NewOpReplaceOperation([]string{"test"}, "value")
+	replaceOp := NewReplace([]string{"test"}, "value")
 
 	// Test verbose format
 	compact, err := replaceOp.ToCompact()
@@ -146,12 +146,12 @@ func TestOpReplace_ToCompact(t *testing.T) {
 
 func TestOpReplace_Validate(t *testing.T) {
 	// Test valid operation
-	replaceOp := NewOpReplaceOperation([]string{"test"}, "value")
+	replaceOp := NewReplace([]string{"test"}, "value")
 	err := replaceOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
 	// Test invalid operation (empty path)
-	replaceOp = NewOpReplaceOperation([]string{}, "value")
+	replaceOp = NewReplace([]string{}, "value")
 	err = replaceOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.Contains(t, err.Error(), "path cannot be empty", "Error message should mention empty path")

@@ -53,33 +53,33 @@ func decodeOp(decoder *msgpack.Decoder) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpAddOperation(path, value), nil
+		return op.NewAdd(path, value), nil
 	case internal.OpRemoveCode:
-		return op.NewOpRemoveOperation(path), nil
+		return op.NewRemove(path), nil
 	case internal.OpReplaceCode:
 		value, err := decodeValue(decoder)
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpReplaceOperation(path, value), nil
+		return op.NewReplace(path, value), nil
 	case internal.OpMoveCode:
 		from, err := decodePath(decoder)
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpMoveOperation(from, path), nil
+		return op.NewMove(from, path), nil
 	case internal.OpCopyCode:
 		from, err := decodePath(decoder)
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpCopyOperation(from, path), nil
+		return op.NewCopy(from, path), nil
 	case internal.OpTestCode:
 		value, err := decodeValue(decoder)
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpTestOperation(path, value), nil
+		return op.NewTest(path, value), nil
 	case internal.OpTestTypeCode:
 		typesVal, err := decodeValue(decoder)
 		if err != nil {

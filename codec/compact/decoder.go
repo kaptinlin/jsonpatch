@@ -21,12 +21,12 @@ func NewDecoder(opts ...DecoderOption) *Decoder {
 }
 
 // Decode decodes a single compact operation into an operation instance
-func (d *Decoder) Decode(compactOp CompactOp) (internal.Op, error) {
+func (d *Decoder) Decode(compactOp Op) (internal.Op, error) {
 	return compactToOp(compactOp, d.options)
 }
 
 // DecodeSlice decodes multiple compact operations into operation instances
-func (d *Decoder) DecodeSlice(compactOps []CompactOp) ([]internal.Op, error) {
+func (d *Decoder) DecodeSlice(compactOps []Op) ([]internal.Op, error) {
 	result := make([]internal.Op, 0, len(compactOps))
 	for _, compactOp := range compactOps {
 		op, err := d.Decode(compactOp)

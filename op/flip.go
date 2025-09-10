@@ -153,3 +153,9 @@ func (op *OpFlipOperation) Validate() error {
 	// Empty path is valid for flip operation (root level)
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewFlip creates a new flip operation
+	NewFlip = NewOpFlipOperation
+)

@@ -64,13 +64,13 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 		if !hasValue {
 			return nil, ErrAddOpMissingValue
 		}
-		return op.NewOpAddOperation(path, operation["value"]), nil
+		return op.NewAdd(path, operation["value"]), nil
 	case "remove":
 		// Check for oldValue field
 		if oldValue, hasOldValue := operation["oldValue"]; hasOldValue {
-			return op.NewOpRemoveOperationWithOldValue(path, oldValue), nil
+			return op.NewRemoveWithOldValue(path, oldValue), nil
 		}
-		return op.NewOpRemoveOperation(path), nil
+		return op.NewRemove(path), nil
 	case "replace":
 		_, hasValue := operation["value"]
 		if !hasValue {
@@ -79,21 +79,21 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 
 		// Check for oldValue field
 		if oldValue, hasOldValue := operation["oldValue"]; hasOldValue {
-			return op.NewOpReplaceOperationWithOldValue(path, operation["value"], oldValue), nil
+			return op.NewReplaceWithOldValue(path, operation["value"], oldValue), nil
 		}
-		return op.NewOpReplaceOperation(path, operation["value"]), nil
+		return op.NewReplace(path, operation["value"]), nil
 	case "move":
 		fromStr, ok := operation["from"].(string)
 		if !ok {
 			return nil, ErrMoveOpMissingFrom
 		}
-		return op.NewOpMoveOperation(path, pathToStringSlice(toPath(fromStr))), nil
+		return op.NewMove(path, pathToStringSlice(toPath(fromStr))), nil
 	case "copy":
 		fromStr, ok := operation["from"].(string)
 		if !ok {
 			return nil, ErrCopyOpMissingFrom
 		}
-		return op.NewOpCopyOperation(path, pathToStringSlice(toPath(fromStr))), nil
+		return op.NewCopy(path, pathToStringSlice(toPath(fromStr))), nil
 	case "flip":
 		return op.NewOpFlipOperation(path), nil
 	case "inc":
@@ -263,7 +263,7 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		if !hasValue {
 			return nil, ErrMissingValueField
 		}
-		testOp := op.NewOpTestOperation(path, value)
+		testOp := op.NewTest(path, value)
 		// Check for "not" field
 		if notVal, ok := operation["not"].(bool); ok && notVal {
 			testOp.NotFlag = true

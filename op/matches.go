@@ -127,3 +127,9 @@ func (o *OpMatchesOperation) Validate() error {
 func (o *OpMatchesOperation) Path() []string {
 	return o.path
 }
+
+// Short aliases for common use
+var (
+	// NewMatches creates a new matches operation
+	NewMatches = NewOpMatchesOperation
+)

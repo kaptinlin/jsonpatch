@@ -9,6 +9,9 @@ type OpDefinedOperation struct {
 	BaseOp
 }
 
+// DefinedOperation is a non-stuttering alias for OpDefinedOperation.
+type DefinedOperation = OpDefinedOperation
+
 // NewOpDefinedOperation creates a new OpDefinedOperation operation.
 func NewOpDefinedOperation(path []string) *OpDefinedOperation {
 	return &OpDefinedOperation{
@@ -75,3 +78,9 @@ func (o *OpDefinedOperation) Validate() error {
 func (o *OpDefinedOperation) Path() []string {
 	return o.path
 }
+
+// Short aliases for common use
+var (
+	// NewDefined creates a new defined operation
+	NewDefined = NewOpDefinedOperation
+)

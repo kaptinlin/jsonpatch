@@ -73,7 +73,7 @@ func TestOpMatches_Basic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op, err := NewOpMatchesOperation(tt.path, tt.pattern, tt.ignoreCase)
+			op, err := NewMatches(tt.path, tt.pattern, tt.ignoreCase)
 			assert.NoError(t, err)
 
 			result, err := op.Apply(tt.doc)
@@ -98,7 +98,7 @@ func TestOpMatches_Constructor(t *testing.T) {
 	pattern := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	ignoreCase := false
 
-	op, err := NewOpMatchesOperation(path, pattern, ignoreCase)
+	op, err := NewMatches(path, pattern, ignoreCase)
 	require.NoError(t, err)
 
 	assert.Equal(t, path, op.Path())
@@ -112,13 +112,13 @@ func TestOpMatches_InvalidPattern(t *testing.T) {
 	path := []string{"email"}
 	invalidPattern := `[invalid-regex`
 
-	_, err := NewOpMatchesOperation(path, invalidPattern, false)
+	_, err := NewMatches(path, invalidPattern, false)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "regex pattern error")
 }
 
 func TestOpMatches_ToJSON(t *testing.T) {
-	op, err := NewOpMatchesOperation([]string{"email"}, `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, true)
+	op, err := NewMatches([]string{"email"}, `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, true)
 	require.NoError(t, err)
 
 	json, err := op.ToJSON()
@@ -131,7 +131,7 @@ func TestOpMatches_ToJSON(t *testing.T) {
 }
 
 func TestOpMatches_ToCompact(t *testing.T) {
-	op, err := NewOpMatchesOperation([]string{"name"}, "john", true)
+	op, err := NewMatches([]string{"name"}, "john", true)
 	require.NoError(t, err)
 	compact, err := op.ToCompact()
 	assert.NoError(t, err)
@@ -139,7 +139,7 @@ func TestOpMatches_ToCompact(t *testing.T) {
 }
 
 func TestOpMatches_ToCompact_WithoutIgnoreCase(t *testing.T) {
-	op, err := NewOpMatchesOperation([]string{"name"}, "john", false)
+	op, err := NewMatches([]string{"name"}, "john", false)
 	require.NoError(t, err)
 	compact, err := op.ToCompact()
 	assert.NoError(t, err)

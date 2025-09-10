@@ -118,27 +118,26 @@ func (o *OpMoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 				if len(o.FromPath) == 1 {
 					// This is modifying the root array, but we can't change doc directly
 					return internal.OpResult[any]{}, ErrCannotModifyRootArray
-				} else {
-					// Get grandparent and update the parent
-					grandParentPath := o.FromPath[:len(o.FromPath)-2]
-					grandParentKey := o.FromPath[len(o.FromPath)-2]
-					if len(grandParentPath) == 0 {
-						// Parent is in root
-						if docMap, ok := doc.(map[string]interface{}); ok {
-							docMap[grandParentKey] = newSlice
-						} else {
-							return internal.OpResult[any]{}, ErrCannotUpdateParent
-						}
+				}
+				// Get grandparent and update the parent
+				grandParentPath := o.FromPath[:len(o.FromPath)-2]
+				grandParentKey := o.FromPath[len(o.FromPath)-2]
+				if len(grandParentPath) == 0 {
+					// Parent is in root
+					if docMap, ok := doc.(map[string]interface{}); ok {
+						docMap[grandParentKey] = newSlice
 					} else {
-						grandParent, err := getValue(doc, grandParentPath)
-						if err != nil {
-							return internal.OpResult[any]{}, err
-						}
-						if grandParentMap, ok := grandParent.(map[string]interface{}); ok {
-							grandParentMap[grandParentKey] = newSlice
-						} else {
-							return internal.OpResult[any]{}, ErrCannotUpdateGrandparent
-						}
+						return internal.OpResult[any]{}, ErrCannotUpdateParent
+					}
+				} else {
+					grandParent, err := getValue(doc, grandParentPath)
+					if err != nil {
+						return internal.OpResult[any]{}, err
+					}
+					if grandParentMap, ok := grandParent.(map[string]interface{}); ok {
+						grandParentMap[grandParentKey] = newSlice
+					} else {
+						return internal.OpResult[any]{}, ErrCannotUpdateGrandparent
 					}
 				}
 			} else {
@@ -157,11 +156,10 @@ func (o *OpMoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if len(o.Path()) == 0 {
 		// Moving to root - replace entire document
 		return internal.OpResult[any]{Doc: value, Old: doc}, nil
-	} else {
-		err = insertValueAtPath(doc, o.Path(), value)
-		if err != nil {
-			return internal.OpResult[any]{}, err
-		}
+	}
+	err = insertValueAtPath(doc, o.Path(), value)
+	if err != nil {
+		return internal.OpResult[any]{}, err
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
@@ -227,22 +225,21 @@ func (o *OpMoveOperation) applySameArrayMove(doc any) (internal.OpResult[any], e
 	if len(arrayPath) == 0 {
 		// This would be modifying the root array, but we can't change doc directly
 		return internal.OpResult[any]{}, ErrCannotModifyRootArray
-	} else {
-		// Get the parent of the array and update it
-		arrayParent, arrayKey, err := navigateToParent(doc, arrayPath)
-		if err != nil {
-			return internal.OpResult[any]{}, err
-		}
+	}
+	// Get the parent of the array and update it
+	arrayParent, arrayKey, err := navigateToParent(doc, arrayPath)
+	if err != nil {
+		return internal.OpResult[any]{}, err
+	}
 
-		if mapParent, ok := arrayParent.(map[string]interface{}); ok {
-			if keyStr, ok := arrayKey.(string); ok {
-				mapParent[keyStr] = newSlice
-			} else {
-				return internal.OpResult[any]{}, ErrInvalidKeyTypeMap
-			}
+	if mapParent, ok := arrayParent.(map[string]interface{}); ok {
+		if keyStr, ok := arrayKey.(string); ok {
+			mapParent[keyStr] = newSlice
 		} else {
-			return internal.OpResult[any]{}, ErrUnsupportedParentType
+			return internal.OpResult[any]{}, ErrInvalidKeyTypeMap
 		}
+	} else {
+		return internal.OpResult[any]{}, ErrUnsupportedParentType
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
@@ -293,3 +290,9 @@ func (o *OpMoveOperation) Validate() error {
 	}
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewMove creates a new move operation
+	NewMove = NewOpMoveOperation
+)

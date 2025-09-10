@@ -223,3 +223,9 @@ func (op *OpMergeOperation) Validate() error {
 	}
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewMerge creates a new merge operation
+	NewMerge = NewOpMergeOperation
+)

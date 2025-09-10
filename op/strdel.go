@@ -182,3 +182,11 @@ func (op *OpStrDelOperation) Validate() error {
 	// Position and length bounds are checked in Apply method
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewStrDel creates a new string delete operation
+	NewStrDel = NewOpStrDelOperation
+	// NewStrDelWithStr creates a new string delete operation with string
+	NewStrDelWithStr = NewOpStrDelOperationWithStr
+)

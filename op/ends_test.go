@@ -102,7 +102,7 @@ func TestOpEnds_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewOpEndsOperation(tt.path, tt.suffix)
+			op := NewEnds(tt.path, tt.suffix)
 			result, err := op.Apply(tt.doc)
 
 			if tt.expectError {

@@ -6,37 +6,37 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpAddOperation represents an add operation that adds a value at a specified path.
-type OpAddOperation struct {
+// AddOperation represents an add operation that adds a value at a specified path.
+type AddOperation struct {
 	BaseOp
 	Value interface{} `json:"value"` // Value to add
 }
 
-// NewOpAddOperation creates a new OpAddOperation operation.
-func NewOpAddOperation(path []string, value interface{}) *OpAddOperation {
-	return &OpAddOperation{
+// NewAdd creates a new AddOperation operation.
+func NewAdd(path []string, value interface{}) *AddOperation {
+	return &AddOperation{
 		BaseOp: NewBaseOp(path),
 		Value:  value,
 	}
 }
 
 // Op returns the operation type.
-func (o *OpAddOperation) Op() internal.OpType {
+func (o *AddOperation) Op() internal.OpType {
 	return internal.OpAddType
 }
 
 // Code returns the operation code.
-func (o *OpAddOperation) Code() int {
+func (o *AddOperation) Code() int {
 	return internal.OpAddCode
 }
 
 // Path returns the operation path.
-func (o *OpAddOperation) Path() []string {
+func (o *AddOperation) Path() []string {
 	return o.path
 }
 
 // Apply applies the add operation.
-func (o *OpAddOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *AddOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Clone the new value to prevent external mutations
 	newValue := deepclone.Clone(o.Value)
 
@@ -123,7 +123,7 @@ func addAtPath(doc interface{}, path []string, value interface{}) (interface{}, 
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *OpAddOperation) ToJSON() (internal.Operation, error) {
+func (o *AddOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		"op":    string(internal.OpAddType),
 		"path":  formatPath(o.path),
@@ -132,12 +132,12 @@ func (o *OpAddOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *OpAddOperation) ToCompact() (internal.CompactOperation, error) {
+func (o *AddOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpAddCode, o.path, o.Value}, nil
 }
 
 // Validate validates the add operation.
-func (o *OpAddOperation) Validate() error {
+func (o *AddOperation) Validate() error {
 	if len(o.path) == 0 {
 		return ErrPathEmpty
 	}

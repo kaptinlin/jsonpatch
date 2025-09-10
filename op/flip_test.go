@@ -138,7 +138,7 @@ func TestOpFlip_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewOpFlipOperation(tt.path)
+			op := NewFlip(tt.path)
 
 			// Deep clone the document to avoid modifying the original
 			docCopy, err := DeepClone(tt.doc)
@@ -159,18 +159,18 @@ func TestOpFlip_Apply(t *testing.T) {
 }
 
 func TestOpFlip_Op(t *testing.T) {
-	op := NewOpFlipOperation([]string{"flag"})
+	op := NewFlip([]string{"flag"})
 	assert.Equal(t, internal.OpFlipType, op.Op())
 }
 
 func TestOpFlip_Code(t *testing.T) {
-	op := NewOpFlipOperation([]string{"flag"})
+	op := NewFlip([]string{"flag"})
 	assert.Equal(t, internal.OpFlipCode, op.Code())
 }
 
 func TestOpFlip_NewOpFlip(t *testing.T) {
 	path := []string{"user", "active"}
-	op := NewOpFlipOperation(path)
+	op := NewFlip(path)
 
 	assert.Equal(t, path, op.path)
 	assert.Equal(t, internal.OpFlipType, op.Op())
@@ -195,7 +195,7 @@ func TestOpFlip_ComplexTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewOpFlipOperation([]string{"value"})
+			op := NewFlip([]string{"value"})
 			doc := map[string]interface{}{"value": tt.value}
 
 			result, err := op.Apply(doc)

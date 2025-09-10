@@ -145,3 +145,9 @@ func (o *OpOrOperation) Path() []string {
 func (o *OpOrOperation) Not() bool {
 	return false
 }
+
+// Short aliases for common use
+var (
+	// NewOr creates a new or operation
+	NewOr = NewOpOrOperation
+)

@@ -142,3 +142,9 @@ func (op *OpStrInsOperation) Validate() error {
 	// Position bounds are checked in Apply method
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewStrIns creates a new string insert operation
+	NewStrIns = NewOpStrInsOperation
+)

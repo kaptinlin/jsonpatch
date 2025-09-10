@@ -14,6 +14,9 @@ type OpContainsOperation struct {
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case when comparing
 }
 
+// ContainsOperation is a non-stuttering alias for OpContainsOperation.
+type ContainsOperation = OpContainsOperation
+
 // NewOpContainsOperation creates a new OpContainsOperation operation.
 func NewOpContainsOperation(path []string, substring string) *OpContainsOperation {
 	return &OpContainsOperation{
@@ -124,3 +127,11 @@ func (op *OpContainsOperation) Validate() error {
 func (op *OpContainsOperation) Path() []string {
 	return op.path
 }
+
+// Short aliases for common use
+var (
+	// NewContains creates a new contains operation
+	NewContains = NewOpContainsOperation
+	// NewContainsWithIgnoreCase creates a new contains operation with ignore case
+	NewContainsWithIgnoreCase = NewOpContainsOperationWithIgnoreCase
+)

@@ -14,7 +14,7 @@ func TestOpCopy_Basic(t *testing.T) {
 		"baz": 123,
 	}
 
-	copyOp := NewOpCopyOperation([]string{"baz_copy"}, []string{"baz"})
+	copyOp := NewCopy([]string{"baz_copy"}, []string{"baz"})
 	result, err := copyOp.Apply(doc)
 	require.NoError(t, err, "Copy should succeed for existing field")
 	modifiedDoc := result.Doc.(map[string]interface{})
@@ -30,7 +30,7 @@ func TestOpCopy_Nested(t *testing.T) {
 		},
 	}
 
-	copyOp := NewOpCopyOperation([]string{"foo", "bar_copy"}, []string{"foo", "bar"})
+	copyOp := NewCopy([]string{"foo", "bar_copy"}, []string{"foo", "bar"})
 	result, err := copyOp.Apply(doc)
 	require.NoError(t, err, "Copy should succeed for existing nested field")
 	foo := result.Doc.(map[string]interface{})["foo"].(map[string]interface{})
@@ -43,7 +43,7 @@ func TestOpCopy_Array(t *testing.T) {
 		"arr": []interface{}{1, 2, 3},
 	}
 
-	copyOp := NewOpCopyOperation([]string{"arr", "3"}, []string{"arr", "1"})
+	copyOp := NewCopy([]string{"arr", "3"}, []string{"arr", "1"})
 	result, err := copyOp.Apply(doc)
 	require.NoError(t, err, "Copy should succeed for array element")
 	arr := result.Doc.(map[string]interface{})["arr"].([]interface{})
@@ -56,7 +56,7 @@ func TestOpCopy_DeepClone(t *testing.T) {
 	doc := map[string]interface{}{
 		"obj": map[string]interface{}{"a": 1},
 	}
-	copyOp := NewOpCopyOperation([]string{"obj_copy"}, []string{"obj"})
+	copyOp := NewCopy([]string{"obj_copy"}, []string{"obj"})
 	result, err := copyOp.Apply(doc)
 	require.NoError(t, err, "Copy should succeed for object value")
 	obj := doc["obj"].(map[string]interface{})
@@ -68,35 +68,35 @@ func TestOpCopy_DeepClone(t *testing.T) {
 
 func TestOpCopy_FromNonExistent(t *testing.T) {
 	doc := map[string]interface{}{"foo": "bar"}
-	copyOp := NewOpCopyOperation([]string{"baz"}, []string{"qux"})
+	copyOp := NewCopy([]string{"baz"}, []string{"qux"})
 	_, err := copyOp.Apply(doc)
 	assert.Error(t, err, "Copy should fail for non-existent from path")
 	assert.Contains(t, err.Error(), "path not found", "Error message should be descriptive")
 }
 
 func TestOpCopy_SamePath(t *testing.T) {
-	copyOp := NewOpCopyOperation([]string{"foo"}, []string{"foo"})
+	copyOp := NewCopy([]string{"foo"}, []string{"foo"})
 	err := copyOp.Validate()
 	assert.Error(t, err, "Copy should fail validation for same path and from")
 	assert.Contains(t, err.Error(), "path and from cannot be the same", "Error message should mention same paths")
 }
 
 func TestOpCopy_EmptyPath(t *testing.T) {
-	copyOp := NewOpCopyOperation([]string{}, []string{"foo"})
+	copyOp := NewCopy([]string{}, []string{"foo"})
 	err := copyOp.Validate()
 	assert.Error(t, err, "Copy should fail validation for empty path")
 	assert.Contains(t, err.Error(), "path cannot be empty", "Error message should mention empty path")
 }
 
 func TestOpCopy_EmptyFrom(t *testing.T) {
-	copyOp := NewOpCopyOperation([]string{"foo"}, []string{})
+	copyOp := NewCopy([]string{"foo"}, []string{})
 	err := copyOp.Validate()
 	assert.Error(t, err, "Copy should fail validation for empty from path")
 	assert.Contains(t, err.Error(), "from path cannot be empty", "Error message should mention empty from path")
 }
 
 func TestOpCopy_InterfaceMethods(t *testing.T) {
-	copyOp := NewOpCopyOperation([]string{"target"}, []string{"source"})
+	copyOp := NewCopy([]string{"target"}, []string{"source"})
 	assert.Equal(t, internal.OpCopyType, copyOp.Op(), "Op() should return correct operation type")
 	assert.Equal(t, internal.OpCopyCode, copyOp.Code(), "Code() should return correct operation code")
 	assert.Equal(t, []string{"target"}, copyOp.Path(), "Path() should return correct path")
@@ -105,7 +105,7 @@ func TestOpCopy_InterfaceMethods(t *testing.T) {
 }
 
 func TestOpCopy_ToJSON(t *testing.T) {
-	copyOp := NewOpCopyOperation([]string{"target"}, []string{"source"})
+	copyOp := NewCopy([]string{"target"}, []string{"source"})
 	json, err := copyOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
 	assert.Equal(t, "copy", json["op"], "JSON should contain correct op type")
@@ -114,7 +114,7 @@ func TestOpCopy_ToJSON(t *testing.T) {
 }
 
 func TestOpCopy_ToCompact(t *testing.T) {
-	copyOp := NewOpCopyOperation([]string{"target"}, []string{"source"})
+	copyOp := NewCopy([]string{"target"}, []string{"source"})
 	compact, err := copyOp.ToCompact()
 	require.NoError(t, err, "ToCompact should not fail for valid operation")
 	require.Len(t, compact, 3, "Compact format should have 3 elements")
@@ -124,18 +124,18 @@ func TestOpCopy_ToCompact(t *testing.T) {
 }
 
 func TestOpCopy_Validate(t *testing.T) {
-	copyOp := NewOpCopyOperation([]string{"target"}, []string{"source"})
+	copyOp := NewCopy([]string{"target"}, []string{"source"})
 	err := copyOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
-	copyOp = NewOpCopyOperation([]string{}, []string{"source"})
+	copyOp = NewCopy([]string{}, []string{"source"})
 	err = copyOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.Contains(t, err.Error(), "path cannot be empty", "Error message should mention empty path")
-	copyOp = NewOpCopyOperation([]string{"target"}, []string{})
+	copyOp = NewCopy([]string{"target"}, []string{})
 	err = copyOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.Contains(t, err.Error(), "from path cannot be empty", "Error message should mention empty from path")
-	copyOp = NewOpCopyOperation([]string{"same"}, []string{"same"})
+	copyOp = NewCopy([]string{"same"}, []string{"same"})
 	err = copyOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.Contains(t, err.Error(), "path and from cannot be the same", "Error message should mention same paths")

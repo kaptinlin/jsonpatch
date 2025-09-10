@@ -17,9 +17,9 @@ func main() {
 
 	// Sample operations
 	ops := []internal.Op{
-		op.NewOpAddOperation([]string{"users", "0", "name"}, "John Doe"),
-		op.NewOpReplaceOperation([]string{"users", "0", "age"}, 30),
-		op.NewOpFlipOperation([]string{"active"}),
+		op.NewAdd([]string{"users", "0", "name"}, "John Doe"),
+		op.NewReplace([]string{"users", "0", "age"}, 30),
+		op.NewFlip([]string{"active"}),
 	}
 
 	fmt.Printf("Operations to encode: %d\n\n", len(ops))

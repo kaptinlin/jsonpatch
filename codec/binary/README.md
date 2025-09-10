@@ -20,7 +20,7 @@ import (
 func main() {
     // Build operations
     ops := []internal.Op{
-        op.NewOpAddOperation([]string{"/", "foo"}, "bar"),
+        op.NewAdd([]string{"/", "foo"}, "bar"),
     }
 
     codec := binary.Codec{}

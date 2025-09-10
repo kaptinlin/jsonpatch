@@ -16,11 +16,11 @@ func TestOpAnd_Basic(t *testing.T) {
 	}
 
 	// Create two test operations that should both pass
-	test1 := NewOpTestOperation([]string{"foo"}, "bar")
-	test2 := NewOpTestOperation([]string{"baz"}, 123)
+	test1 := NewTest([]string{"foo"}, "bar")
+	test2 := NewTest([]string{"baz"}, 123)
 
 	// Create AND operation
-	andOp := NewOpAndOperation([]string{}, []interface{}{test1, test2})
+	andOp := NewAnd([]string{}, []interface{}{test1, test2})
 
 	ok, err := andOp.Test(doc)
 	require.NoError(t, err, "AND test should not fail")
@@ -35,11 +35,11 @@ func TestOpAnd_OneFails(t *testing.T) {
 	}
 
 	// Create two test operations, one should pass, one should fail
-	test1 := NewOpTestOperation([]string{"foo"}, "bar") // should pass
-	test2 := NewOpTestOperation([]string{"baz"}, 456)   // should fail
+	test1 := NewTest([]string{"foo"}, "bar") // should pass
+	test2 := NewTest([]string{"baz"}, 456)   // should fail
 
 	// Create AND operation
-	andOp := NewOpAndOperation([]string{}, []interface{}{test1, test2})
+	andOp := NewAnd([]string{}, []interface{}{test1, test2})
 
 	ok, err := andOp.Test(doc)
 	require.NoError(t, err, "AND test should not fail")
@@ -48,7 +48,7 @@ func TestOpAnd_OneFails(t *testing.T) {
 
 func TestOpAnd_Empty(t *testing.T) {
 	// Create AND operation with no sub-operations
-	andOp := NewOpAndOperation([]string{}, []interface{}{})
+	andOp := NewAnd([]string{}, []interface{}{})
 
 	doc := map[string]interface{}{"foo": "bar"}
 	ok, err := andOp.Test(doc)
@@ -64,11 +64,11 @@ func TestOpAnd_Apply(t *testing.T) {
 	}
 
 	// Create two test operations that should both pass
-	test1 := NewOpTestOperation([]string{"foo"}, "bar")
-	test2 := NewOpTestOperation([]string{"baz"}, 123)
+	test1 := NewTest([]string{"foo"}, "bar")
+	test2 := NewTest([]string{"baz"}, 123)
 
 	// Create AND operation
-	andOp := NewOpAndOperation([]string{}, []interface{}{test1, test2})
+	andOp := NewAnd([]string{}, []interface{}{test1, test2})
 
 	result, err := andOp.Apply(doc)
 	require.NoError(t, err, "AND apply should succeed when all operations pass")
@@ -83,11 +83,11 @@ func TestOpAnd_Apply_Fails(t *testing.T) {
 	}
 
 	// Create two test operations, one should fail
-	test1 := NewOpTestOperation([]string{"foo"}, "bar") // should pass
-	test2 := NewOpTestOperation([]string{"baz"}, 456)   // should fail
+	test1 := NewTest([]string{"foo"}, "bar") // should pass
+	test2 := NewTest([]string{"baz"}, 456)   // should fail
 
 	// Create AND operation
-	andOp := NewOpAndOperation([]string{}, []interface{}{test1, test2})
+	andOp := NewAnd([]string{}, []interface{}{test1, test2})
 
 	_, err := andOp.Apply(doc)
 	assert.Error(t, err, "AND apply should fail when any operation fails")
@@ -95,10 +95,10 @@ func TestOpAnd_Apply_Fails(t *testing.T) {
 }
 
 func TestOpAnd_InterfaceMethods(t *testing.T) {
-	test1 := NewOpTestOperation([]string{"foo"}, "bar")
-	test2 := NewOpTestOperation([]string{"baz"}, 123)
+	test1 := NewTest([]string{"foo"}, "bar")
+	test2 := NewTest([]string{"baz"}, 123)
 
-	andOp := NewOpAndOperation([]string{"test"}, []interface{}{test1, test2})
+	andOp := NewAnd([]string{"test"}, []interface{}{test1, test2})
 
 	// Test Op() method
 	assert.Equal(t, internal.OpAndType, andOp.Op(), "Op() should return correct operation type")
@@ -117,10 +117,10 @@ func TestOpAnd_InterfaceMethods(t *testing.T) {
 }
 
 func TestOpAnd_ToJSON(t *testing.T) {
-	test1 := NewOpTestOperation([]string{"foo"}, "bar")
-	test2 := NewOpTestOperation([]string{"baz"}, 123)
+	test1 := NewTest([]string{"foo"}, "bar")
+	test2 := NewTest([]string{"baz"}, 123)
 
-	andOp := NewOpAndOperation([]string{"test"}, []interface{}{test1, test2})
+	andOp := NewAnd([]string{"test"}, []interface{}{test1, test2})
 
 	json, err := andOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
@@ -135,10 +135,10 @@ func TestOpAnd_ToJSON(t *testing.T) {
 }
 
 func TestOpAnd_ToCompact(t *testing.T) {
-	test1 := NewOpTestOperation([]string{"foo"}, "bar")
-	test2 := NewOpTestOperation([]string{"baz"}, 123)
+	test1 := NewTest([]string{"foo"}, "bar")
+	test2 := NewTest([]string{"baz"}, 123)
 
-	andOp := NewOpAndOperation([]string{"test"}, []interface{}{test1, test2})
+	andOp := NewAnd([]string{"test"}, []interface{}{test1, test2})
 
 	compact, err := andOp.ToCompact()
 	require.NoError(t, err, "ToCompact should not fail for valid operation")
@@ -150,15 +150,15 @@ func TestOpAnd_ToCompact(t *testing.T) {
 
 func TestOpAnd_Validate(t *testing.T) {
 	// Test valid operation
-	test1 := NewOpTestOperation([]string{"foo"}, "bar")
-	test2 := NewOpTestOperation([]string{"baz"}, 123)
+	test1 := NewTest([]string{"foo"}, "bar")
+	test2 := NewTest([]string{"baz"}, 123)
 
-	andOp := NewOpAndOperation([]string{"test"}, []interface{}{test1, test2})
+	andOp := NewAnd([]string{"test"}, []interface{}{test1, test2})
 	err := andOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
 	// Test invalid operation (empty ops)
-	andOp = NewOpAndOperation([]string{"test"}, []interface{}{})
+	andOp = NewAnd([]string{"test"}, []interface{}{})
 	err = andOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.Contains(t, err.Error(), "must have at least one operand", "Error message should mention missing operands")

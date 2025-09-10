@@ -135,3 +135,11 @@ func (op *OpStartsOperation) Validate() error {
 	}
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewStarts creates a new starts operation
+	NewStarts = NewOpStartsOperation
+	// NewStartsWithIgnoreCase creates a new starts operation with ignore case
+	NewStartsWithIgnoreCase = NewOpStartsOperationWithIgnoreCase
+)

@@ -21,13 +21,13 @@ func NewEncoder(opts ...EncoderOption) *Encoder {
 }
 
 // Encode encodes a single operation into compact format
-func (e *Encoder) Encode(op internal.Op) (CompactOp, error) {
+func (e *Encoder) Encode(op internal.Op) (Op, error) {
 	return opToCompact(op, e.options)
 }
 
 // EncodeSlice encodes multiple operations into compact format
-func (e *Encoder) EncodeSlice(ops []internal.Op) ([]CompactOp, error) {
-	result := make([]CompactOp, 0, len(ops))
+func (e *Encoder) EncodeSlice(ops []internal.Op) ([]Op, error) {
+	result := make([]Op, 0, len(ops))
 	for _, op := range ops {
 		compactOp, err := e.Encode(op)
 		if err != nil {

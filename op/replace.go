@@ -132,3 +132,11 @@ func (o *OpReplaceOperation) Validate() error {
 	}
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewReplace creates a new replace operation
+	NewReplace = NewOpReplaceOperation
+	// NewReplaceWithOldValue creates a new replace operation with old value
+	NewReplaceWithOldValue = NewOpReplaceOperationWithOldValue
+)

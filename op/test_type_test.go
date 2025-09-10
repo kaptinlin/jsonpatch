@@ -108,7 +108,7 @@ func TestOpTestType_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewOpTestTypeOperation(tt.path, tt.expectedType)
+			op := NewTestType(tt.path, tt.expectedType)
 			result, err := op.Apply(tt.doc)
 
 			if tt.expectError {

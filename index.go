@@ -124,14 +124,11 @@ const (
 	OpOrCode            = internal.OpOrCode
 )
 
-// JSONPatchTypes represents the valid JSON types for type operations.
-type JSONPatchTypes = internal.JSONPatchTypes
+// Types represents the valid JSON types for type operations.
+type Types = internal.JSONPatchTypes
 
 // RegexMatcher is a function type that tests if a value matches a pattern.
 type RegexMatcher = internal.RegexMatcher
-
-// JSONPatchOptions contains options for JSON Patch operations.
-type JSONPatchOptions = internal.JSONPatchOptions
 
 // JSONPatchTypeString represents the JSON string type.
 const JSONPatchTypeString = internal.JSONPatchTypeString

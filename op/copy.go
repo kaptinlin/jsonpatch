@@ -10,6 +10,9 @@ type OpCopyOperation struct {
 	FromPath []string `json:"from"` // Source path
 }
 
+// CopyOperation is a non-stuttering alias for OpCopyOperation.
+type CopyOperation = OpCopyOperation
+
 // NewOpCopyOperation creates a new OpCopyOperation operation.
 func NewOpCopyOperation(path, from []string) *OpCopyOperation {
 	return &OpCopyOperation{
@@ -100,3 +103,9 @@ func (o *OpCopyOperation) Validate() error {
 	}
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewCopy creates a new copy operation
+	NewCopy = NewOpCopyOperation
+)

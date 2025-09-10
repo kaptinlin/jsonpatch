@@ -77,14 +77,14 @@ var (
 )
 
 // Decode decodes compact format operations using default options
-func Decode(compactOps []CompactOp, opts ...DecoderOption) ([]internal.Op, error) {
+func Decode(compactOps []Op, opts ...DecoderOption) ([]internal.Op, error) {
 	decoder := NewDecoder(opts...)
 	return decoder.DecodeSlice(compactOps)
 }
 
 // DecodeJSON decodes compact format JSON bytes into operations
 func DecodeJSON(data []byte, opts ...DecoderOption) ([]internal.Op, error) {
-	var compactOps []CompactOp
+	var compactOps []Op
 	if err := json.Unmarshal(data, &compactOps); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal compact operations: %w", err)
 	}
@@ -92,7 +92,7 @@ func DecodeJSON(data []byte, opts ...DecoderOption) ([]internal.Op, error) {
 }
 
 // compactToOp converts a compact operation to an operation instance
-func compactToOp(compactOp CompactOp, _ DecoderOptions) (internal.Op, error) {
+func compactToOp(compactOp Op, _ DecoderOptions) (internal.Op, error) {
 	if len(compactOp) < 2 {
 		return nil, ErrCompactOperationMinLength
 	}
@@ -116,14 +116,14 @@ func compactToOp(compactOp CompactOp, _ DecoderOptions) (internal.Op, error) {
 		if len(compactOp) < 3 {
 			return nil, ErrAddOperationRequiresValue
 		}
-		return op.NewOpAddOperation(path, compactOp[2]), nil
+		return op.NewAdd(path, compactOp[2]), nil
 
 	case internal.OpRemoveType:
 		// Optional oldValue parameter
 		if len(compactOp) >= 3 {
-			return op.NewOpRemoveOperationWithOldValue(path, compactOp[2]), nil
+			return op.NewRemoveWithOldValue(path, compactOp[2]), nil
 		}
-		return op.NewOpRemoveOperation(path), nil
+		return op.NewRemove(path), nil
 
 	case internal.OpReplaceType:
 		if len(compactOp) < 3 {
@@ -131,9 +131,9 @@ func compactToOp(compactOp CompactOp, _ DecoderOptions) (internal.Op, error) {
 		}
 		// Optional oldValue parameter
 		if len(compactOp) >= 4 {
-			return op.NewOpReplaceOperationWithOldValue(path, compactOp[2], compactOp[3]), nil
+			return op.NewReplaceWithOldValue(path, compactOp[2], compactOp[3]), nil
 		}
-		return op.NewOpReplaceOperation(path, compactOp[2]), nil
+		return op.NewReplace(path, compactOp[2]), nil
 
 	case internal.OpMoveType:
 		if len(compactOp) < 3 {
@@ -144,7 +144,7 @@ func compactToOp(compactOp CompactOp, _ DecoderOptions) (internal.Op, error) {
 			return nil, ErrMoveOperationFromNotString
 		}
 		from := stringToPath(fromStr)
-		return op.NewOpMoveOperation(path, from), nil
+		return op.NewMove(path, from), nil
 
 	case internal.OpCopyType:
 		if len(compactOp) < 3 {
@@ -155,14 +155,14 @@ func compactToOp(compactOp CompactOp, _ DecoderOptions) (internal.Op, error) {
 			return nil, ErrCopyOperationFromNotString
 		}
 		from := stringToPath(fromStr)
-		return op.NewOpCopyOperation(path, from), nil
+		return op.NewCopy(path, from), nil
 
 	case internal.OpTestType:
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
 		// Currently test operation doesn't have a "not" variant in constructors
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	case internal.OpFlipType:
 		return op.NewOpFlipOperation(path), nil
@@ -245,112 +245,112 @@ func compactToOp(compactOp CompactOp, _ DecoderOptions) (internal.Op, error) {
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	case internal.OpTestTypeType:
 		// Test type operation - currently fallback to test operation
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	case internal.OpTestStringType:
 		// Test string operation - currently fallback to test operation
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	case internal.OpTestStringLenType:
 		// Test string length operation - currently fallback to test operation
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	case internal.OpInType:
 		// In operation - currently fallback to test operation
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	case internal.OpLessType:
 		// Less operation - currently fallback to test operation
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	case internal.OpMoreType:
 		// More operation - currently fallback to test operation
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	case internal.OpMatchesType:
 		// Matches operation - currently fallback to test operation
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	case internal.OpAndType:
 		// And operation - currently fallback to test operation
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	case internal.OpOrType:
 		// Or operation - currently fallback to test operation
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	case internal.OpNotType:
 		// Not operation - currently fallback to test operation
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	case internal.OpStrInsType:
 		// String insert operation - currently fallback to test operation
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	case internal.OpStrDelType:
 		// String delete operation - currently fallback to test operation
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	case internal.OpSplitType:
 		// Split operation - currently fallback to test operation
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	case internal.OpMergeType:
 		// Merge operation - currently fallback to test operation
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	case internal.OpExtendType:
 		// Extend operation - currently fallback to test operation
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		return op.NewOpTestOperation(path, compactOp[2]), nil
+		return op.NewTest(path, compactOp[2]), nil
 
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrUnsupportedOperationType, opType)

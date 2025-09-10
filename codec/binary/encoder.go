@@ -35,7 +35,7 @@ func encodeOps(encoder msgpack.Writer, ops []internal.Op) error {
 
 func encodeOp(encoder msgpack.Writer, i internal.Op) error {
 	switch o := i.(type) {
-	case *op.OpAddOperation:
+	case *op.AddOperation:
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())

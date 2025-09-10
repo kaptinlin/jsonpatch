@@ -12,7 +12,7 @@ import (
 // This test matches the TypeScript automatic.spec.ts
 func TestAutomaticCodec(t *testing.T) {
 	// Configure options for testing
-	options := json.JSONPatchOptions{}
+	options := json.PatchOptions{}
 
 	// Use all sample operations (equivalent to TypeScript's operations)
 	for name, operation := range SampleOperations {
@@ -44,7 +44,7 @@ func TestAutomaticCodec(t *testing.T) {
 
 func TestCodecRoundTrip(t *testing.T) {
 	// Configure options for testing
-	options := json.JSONPatchOptions{}
+	options := json.PatchOptions{}
 
 	// Test that encoding and decoding preserves operation structure
 	originalOps := []map[string]interface{}{

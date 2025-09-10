@@ -19,7 +19,7 @@ func TestOpRemove_Basic(t *testing.T) {
 	}
 
 	// Test removing a simple field
-	removeOp := NewOpRemoveOperation([]string{"foo"})
+	removeOp := NewRemove([]string{"foo"})
 	result, err := removeOp.Apply(doc)
 	require.NoError(t, err, "Remove should succeed for existing field")
 
@@ -41,7 +41,7 @@ func TestOpRemove_Nested(t *testing.T) {
 	}
 
 	// Test removing a nested field
-	removeOp := NewOpRemoveOperation([]string{"foo", "bar"})
+	removeOp := NewRemove([]string{"foo", "bar"})
 	result, err := removeOp.Apply(doc)
 	require.NoError(t, err, "Remove should succeed for existing nested field")
 
@@ -62,7 +62,7 @@ func TestOpRemove_Array(t *testing.T) {
 	}
 
 	// Test removing an array element
-	removeOp := NewOpRemoveOperation([]string{"1"})
+	removeOp := NewRemove([]string{"1"})
 	result, err := removeOp.Apply(doc)
 	require.NoError(t, err, "Remove should succeed for existing array element")
 
@@ -81,7 +81,7 @@ func TestOpRemove_NonExistent(t *testing.T) {
 	}
 
 	// Test removing a non-existent field
-	removeOp := NewOpRemoveOperation([]string{"qux"})
+	removeOp := NewRemove([]string{"qux"})
 	_, err := removeOp.Apply(doc)
 	assert.Error(t, err, "Remove should fail for non-existent field")
 	assert.Contains(t, err.Error(), "path does not exist", "Error message should be descriptive")
@@ -94,14 +94,14 @@ func TestOpRemove_EmptyPath(t *testing.T) {
 	}
 
 	// Test removing with empty path
-	removeOp := NewOpRemoveOperation([]string{})
+	removeOp := NewRemove([]string{})
 	_, err := removeOp.Apply(doc)
 	assert.Error(t, err, "Remove should fail for empty path")
 	assert.Contains(t, err.Error(), "path cannot be empty", "Error message should mention empty path")
 }
 
 func TestOpRemove_InterfaceMethods(t *testing.T) {
-	removeOp := NewOpRemoveOperation([]string{"test"})
+	removeOp := NewRemove([]string{"test"})
 
 	// Test Op() method
 	assert.Equal(t, internal.OpRemoveType, removeOp.Op(), "Op() should return correct operation type")
@@ -114,7 +114,7 @@ func TestOpRemove_InterfaceMethods(t *testing.T) {
 }
 
 func TestOpRemove_ToJSON(t *testing.T) {
-	removeOp := NewOpRemoveOperation([]string{"test"})
+	removeOp := NewRemove([]string{"test"})
 
 	json, err := removeOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
@@ -124,7 +124,7 @@ func TestOpRemove_ToJSON(t *testing.T) {
 }
 
 func TestOpRemove_ToCompact(t *testing.T) {
-	removeOp := NewOpRemoveOperation([]string{"test"})
+	removeOp := NewRemove([]string{"test"})
 
 	// Test verbose format
 	compact, err := removeOp.ToCompact()
@@ -141,12 +141,12 @@ func TestOpRemove_ToCompact(t *testing.T) {
 
 func TestOpRemove_Validate(t *testing.T) {
 	// Test valid operation
-	removeOp := NewOpRemoveOperation([]string{"test"})
+	removeOp := NewRemove([]string{"test"})
 	err := removeOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
 	// Test invalid operation (empty path)
-	removeOp = NewOpRemoveOperation([]string{})
+	removeOp = NewRemove([]string{})
 	err = removeOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.Contains(t, err.Error(), "path cannot be empty", "Error message should mention empty path")

@@ -84,3 +84,9 @@ func (o *OpUndefinedOperation) Validate() error {
 func (o *OpUndefinedOperation) Path() []string {
 	return o.path
 }
+
+// Short aliases for common use
+var (
+	// NewUndefined creates a new undefined operation
+	NewUndefined = NewOpUndefinedOperation
+)

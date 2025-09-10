@@ -16,14 +16,14 @@ func TestOpTest_Basic(t *testing.T) {
 	}
 
 	// Test basic equality
-	op := NewOpTestOperation([]string{"foo"}, "bar")
+	op := NewTest([]string{"foo"}, "bar")
 
 	ok, err := op.Test(doc)
 	require.NoError(t, err, "Test should not fail for valid path")
 	assert.True(t, ok, "Test should pass for equal values")
 
 	// Test inequality
-	op = NewOpTestOperation([]string{"foo"}, "qux")
+	op = NewTest([]string{"foo"}, "qux")
 	ok, err = op.Test(doc)
 	require.NoError(t, err, "Test should not fail for valid path")
 	assert.False(t, ok, "Test should fail for different values")
@@ -35,19 +35,19 @@ func TestOpTest_Apply(t *testing.T) {
 	}
 
 	// Test successful apply
-	op := NewOpTestOperation([]string{"foo"}, "bar")
+	op := NewTest([]string{"foo"}, "bar")
 	result, err := op.Apply(doc)
 	require.NoError(t, err, "Apply should succeed for matching values")
 	assert.Equal(t, doc, result.Doc, "Apply should return the original document")
 
 	// Test failed apply
-	op = NewOpTestOperation([]string{"foo"}, "qux")
+	op = NewTest([]string{"foo"}, "qux")
 	_, err = op.Apply(doc)
 	assert.Error(t, err, "Apply should fail for non-matching values")
 }
 
 func TestOpTest_ToJSON(t *testing.T) {
-	op := NewOpTestOperation([]string{"foo"}, "bar")
+	op := NewTest([]string{"foo"}, "bar")
 
 	json, err := op.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
@@ -58,7 +58,7 @@ func TestOpTest_ToJSON(t *testing.T) {
 }
 
 func TestOpTest_ToCompact(t *testing.T) {
-	op := NewOpTestOperation([]string{"foo"}, "bar")
+	op := NewTest([]string{"foo"}, "bar")
 
 	// Test compact format
 	compact, err := op.ToCompact()
@@ -71,18 +71,18 @@ func TestOpTest_ToCompact(t *testing.T) {
 
 func TestOpTest_Validate(t *testing.T) {
 	// Test valid operation
-	op := NewOpTestOperation([]string{"foo"}, "bar")
+	op := NewTest([]string{"foo"}, "bar")
 	err := op.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
 	// Test invalid operation (empty path)
-	op = NewOpTestOperation([]string{}, "bar")
+	op = NewTest([]string{}, "bar")
 	err = op.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 }
 
 func TestOpTest_InterfaceMethods(t *testing.T) {
-	op := NewOpTestOperation([]string{"foo"}, "bar")
+	op := NewTest([]string{"foo"}, "bar")
 
 	// Test Op() method
 	assert.Equal(t, internal.OpTestType, op.Op(), "Op() should return correct operation type")

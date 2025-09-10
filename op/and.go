@@ -10,6 +10,9 @@ type OpAndOperation struct {
 	Operations []interface{} `json:"ops"` // Array of operations
 }
 
+// AndOperation is a non-stuttering alias for OpAndOperation.
+type AndOperation = OpAndOperation
+
 // NewOpAndOperation creates a new OpAndOperation operation.
 func NewOpAndOperation(path []string, ops []interface{}) *OpAndOperation {
 	return &OpAndOperation{
@@ -143,3 +146,9 @@ func (o *OpAndOperation) Path() []string {
 func (o *OpAndOperation) Not() bool {
 	return false
 }
+
+// Short aliases for common use
+var (
+	// NewAnd creates a new and operation
+	NewAnd = NewOpAndOperation
+)

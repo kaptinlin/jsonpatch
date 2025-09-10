@@ -110,3 +110,11 @@ func (op *OpTestStringLenOperation) Validate() error {
 	}
 	return nil
 }
+
+// Short aliases for common use
+var (
+	// NewTestStringLen creates a new test string length operation
+	NewTestStringLen = NewOpTestStringLenOperation
+	// NewTestStringLenWithNot creates a new test string length operation with not flag
+	NewTestStringLenWithNot = NewOpTestStringLenOperationWithNot
+)

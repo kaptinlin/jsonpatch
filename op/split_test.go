@@ -139,7 +139,7 @@ func TestOpSplit_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewOpSplitOperation(tt.path, tt.pos, tt.props)
+			op := NewSplit(tt.path, tt.pos, tt.props)
 			docCopy, err := DeepClone(tt.doc)
 			require.NoError(t, err)
 
@@ -158,12 +158,12 @@ func TestOpSplit_Apply(t *testing.T) {
 }
 
 func TestOpSplit_Op(t *testing.T) {
-	op := NewOpSplitOperation([]string{"text"}, 1, nil)
+	op := NewSplit([]string{"text"}, 1, nil)
 	assert.Equal(t, internal.OpSplitType, op.Op())
 }
 
 func TestOpSplit_Code(t *testing.T) {
-	op := NewOpSplitOperation([]string{"text"}, 1, nil)
+	op := NewSplit([]string{"text"}, 1, nil)
 	assert.Equal(t, internal.OpSplitCode, op.Code())
 }
 
@@ -171,7 +171,7 @@ func TestOpSplit_NewOpSplit(t *testing.T) {
 	path := []string{"user", "bio"}
 	pos := 2.0
 	props := map[string]interface{}{"type": "split"}
-	op := NewOpSplitOperation(path, pos, props)
+	op := NewSplit(path, pos, props)
 	assert.Equal(t, path, op.Path())
 	assert.Equal(t, pos, op.Pos)
 	assert.Equal(t, props, op.Props)

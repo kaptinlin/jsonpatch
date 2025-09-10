@@ -19,13 +19,13 @@ func main() {
 
 	// Create sample operations
 	ops := []internal.Op{
-		op.NewOpAddOperation([]string{"users", "0", "name"}, "John Doe"),
-		op.NewOpAddOperation([]string{"users", "0", "email"}, "john@example.com"),
-		op.NewOpReplaceOperation([]string{"users", "0", "age"}, 30),
-		op.NewOpRemoveOperation([]string{"temp"}),
-		op.NewOpMoveOperation([]string{"users", "0", "profile"}, []string{"users", "0", "info"}),
-		op.NewOpCopyOperation([]string{"users", "1"}, []string{"users", "0"}),
-		op.NewOpTestOperation([]string{"version"}, "1.0"),
+		op.NewAdd([]string{"users", "0", "name"}, "John Doe"),
+		op.NewAdd([]string{"users", "0", "email"}, "john@example.com"),
+		op.NewReplace([]string{"users", "0", "age"}, 30),
+		op.NewRemove([]string{"temp"}),
+		op.NewMove([]string{"users", "0", "profile"}, []string{"users", "0", "info"}),
+		op.NewCopy([]string{"users", "1"}, []string{"users", "0"}),
+		op.NewTest([]string{"version"}, "1.0"),
 	}
 
 	fmt.Printf("Operations to encode: %d\n\n", len(ops))
