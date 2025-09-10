@@ -18,13 +18,13 @@ type TextNode = Node
 // ElementNode is a type alias for better API clarity
 type ElementNode = Node
 
-// SlateNode is a backward-compatible alias for Node
+//nolint:revive // Backward compatibility alias
 type SlateNode = Node
 
-// SlateTextNode is a backward-compatible alias for TextNode
+//nolint:revive // Backward compatibility alias
 type SlateTextNode = TextNode
 
-// SlateElementNode is a backward-compatible alias for ElementNode
+//nolint:revive // Backward compatibility alias
 type SlateElementNode = ElementNode
 
 // IsText returns true if this is a text node

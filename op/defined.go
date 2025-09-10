@@ -9,7 +9,7 @@ type DefinedOperation struct {
 	BaseOp
 }
 
-// OpDefinedOperation is a backward-compatible alias for DefinedOperation.
+//nolint:revive // Backward compatibility alias
 type OpDefinedOperation = DefinedOperation
 
 // NewOpDefinedOperation creates a new OpDefinedOperation operation.

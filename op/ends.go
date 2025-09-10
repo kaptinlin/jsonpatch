@@ -14,7 +14,7 @@ type EndsOperation struct {
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case
 }
 
-// OpEndsOperation is a backward-compatible alias for EndsOperation.
+//nolint:revive // Backward compatibility alias
 type OpEndsOperation = EndsOperation
 
 // NewOpEndsOperation creates a new OpEndsOperation operation.

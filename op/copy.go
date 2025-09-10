@@ -10,7 +10,7 @@ type CopyOperation struct {
 	FromPath []string `json:"from"` // Source path
 }
 
-// OpCopyOperation is a backward-compatible alias for CopyOperation.
+//nolint:revive // Backward compatibility alias
 type OpCopyOperation = CopyOperation
 
 // NewOpCopyOperation creates a new OpCopyOperation operation.

@@ -15,7 +15,7 @@ type ExtendOperation struct {
 	DeleteNull bool                   `json:"deleteNull"` // Whether to delete null properties
 }
 
-// OpExtendOperation is a backward-compatible alias for ExtendOperation.
+//nolint:revive // Backward compatibility alias
 type OpExtendOperation = ExtendOperation
 
 // NewOpExtendOperation creates a new object extend operation.
