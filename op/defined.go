@@ -9,8 +9,7 @@ type DefinedOperation struct {
 	BaseOp
 }
 
-//nolint:revive // Backward compatibility alias
-type OpDefinedOperation = DefinedOperation
+type OpDefinedOperation = DefinedOperation //nolint:revive // Backward compatibility alias
 
 // NewOpDefinedOperation creates a new OpDefinedOperation operation.
 func NewOpDefinedOperation(path []string) *DefinedOperation {
