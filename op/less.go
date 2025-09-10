@@ -84,6 +84,7 @@ func (op *OpLessOperation) Validate() error {
 	return nil
 }
 
+// Path returns the path for the less operation.
 func (op *OpLessOperation) Path() []string {
 	return op.path
 }

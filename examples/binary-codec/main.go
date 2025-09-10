@@ -1,3 +1,4 @@
+// Package main demonstrates binary codec operations using JSON Patch.
 package main
 
 import (

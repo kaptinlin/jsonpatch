@@ -1,3 +1,4 @@
+// Package main demonstrates struct patching operations using JSON Patch.
 package main
 
 import (

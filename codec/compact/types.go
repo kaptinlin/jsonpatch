@@ -91,5 +91,9 @@ var (
 
 // Operation type aliases for compatibility
 type Operation = internal.Operation
+
+// CompactOperation represents a compact format operation.
 type CompactOperation = internal.CompactOperation
-type JsonPatchOptions = internal.Options
+
+// JSONPatchOptions contains options for JSON Patch operations.
+type JSONPatchOptions = internal.Options

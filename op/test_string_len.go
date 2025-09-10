@@ -71,9 +71,8 @@ func (op *OpTestStringLenOperation) Apply(doc any) (internal.OpResult[any], erro
 	if !lengthMatches {
 		if op.Not {
 			return internal.OpResult[any]{}, fmt.Errorf("%w: expected length NOT >= %d, but got %d", ErrStringLengthMismatch, length, len(actualValue))
-		} else {
-			return internal.OpResult[any]{}, fmt.Errorf("%w: expected length >= %d, got %d", ErrStringLengthMismatch, length, len(actualValue))
 		}
+		return internal.OpResult[any]{}, fmt.Errorf("%w: expected length >= %d, got %d", ErrStringLengthMismatch, length, len(actualValue))
 	}
 
 	// Test operations don't modify the document

@@ -225,73 +225,67 @@ func setValueAtPathWithMode(doc interface{}, path []string, value interface{}, i
 				if len(path) == 1 {
 					// This is modifying the root array, but we can't change doc directly
 					return ErrCannotModifyRootArray
-				} else {
-					// Get grandparent and update the parent
-					grandParentPath := path[:len(path)-2]
-					grandParentKey := path[len(path)-2]
-					if len(grandParentPath) == 0 {
-						// Parent is in root
-						if docMap, ok := doc.(map[string]interface{}); ok {
-							docMap[grandParentKey] = newSlice
-							return nil
-						} else {
-							return ErrCannotUpdateParent
-						}
-					} else {
-						grandParent, err := getValue(doc, grandParentPath)
-						if err != nil {
-							return err
-						}
-						if grandParentMap, ok := grandParent.(map[string]interface{}); ok {
-							grandParentMap[grandParentKey] = newSlice
-							return nil
-						} else {
-							return ErrCannotUpdateGrandparent
-						}
-					}
 				}
-			} else {
-				// Set mode: replace if within bounds, append if at end
-				if index < len(slice) {
-					// This is a replacement, use normal updateParent
-					return updateParent(parent, key, value)
-				} else {
-					// This is append at end
-					newSlice := make([]interface{}, len(slice)+1)
-					copy(newSlice, slice)
-					newSlice[len(slice)] = value
-
-					// We need to replace the array in its parent context
-					if len(path) == 1 {
-						// This is modifying the root array, but we can't change doc directly
-						return ErrCannotModifyRootArray
-					} else {
-						// Get grandparent and update the parent
-						grandParentPath := path[:len(path)-2]
-						grandParentKey := path[len(path)-2]
-						if len(grandParentPath) == 0 {
-							// Parent is in root
-							if docMap, ok := doc.(map[string]interface{}); ok {
-								docMap[grandParentKey] = newSlice
-								return nil
-							} else {
-								return ErrCannotUpdateParent
-							}
-						} else {
-							grandParent, err := getValue(doc, grandParentPath)
-							if err != nil {
-								return err
-							}
-							if grandParentMap, ok := grandParent.(map[string]interface{}); ok {
-								grandParentMap[grandParentKey] = newSlice
-								return nil
-							} else {
-								return ErrCannotUpdateGrandparent
-							}
-						}
+				// Get grandparent and update the parent
+				grandParentPath := path[:len(path)-2]
+				grandParentKey := path[len(path)-2]
+				if len(grandParentPath) == 0 {
+					// Parent is in root
+					docMap, ok := doc.(map[string]interface{})
+					if !ok {
+						return ErrCannotUpdateParent
 					}
+					docMap[grandParentKey] = newSlice
+					return nil
 				}
+				grandParent, err := getValue(doc, grandParentPath)
+				if err != nil {
+					return err
+				}
+				grandParentMap, ok := grandParent.(map[string]interface{})
+				if !ok {
+					return ErrCannotUpdateGrandparent
+				}
+				grandParentMap[grandParentKey] = newSlice
+				return nil
 			}
+			// Set mode: replace if within bounds, append if at end
+			if index < len(slice) {
+				// This is a replacement, use normal updateParent
+				return updateParent(parent, key, value)
+			}
+			// This is append at end
+			newSlice := make([]interface{}, len(slice)+1)
+			copy(newSlice, slice)
+			newSlice[len(slice)] = value
+
+			// We need to replace the array in its parent context
+			if len(path) == 1 {
+				// This is modifying the root array, but we can't change doc directly
+				return ErrCannotModifyRootArray
+			}
+			// Get grandparent and update the parent
+			grandParentPath := path[:len(path)-2]
+			grandParentKey := path[len(path)-2]
+			if len(grandParentPath) == 0 {
+				// Parent is in root
+				docMap, ok := doc.(map[string]interface{})
+				if !ok {
+					return ErrCannotUpdateParent
+				}
+				docMap[grandParentKey] = newSlice
+				return nil
+			}
+			grandParent, err := getValue(doc, grandParentPath)
+			if err != nil {
+				return err
+			}
+			grandParentMap, ok := grandParent.(map[string]interface{})
+			if !ok {
+				return ErrCannotUpdateGrandparent
+			}
+			grandParentMap[grandParentKey] = newSlice
+			return nil
 		}
 	}
 

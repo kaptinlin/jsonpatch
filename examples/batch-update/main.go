@@ -1,3 +1,4 @@
+// Package main demonstrates batch update operations using JSON Patch.
 package main
 
 import (

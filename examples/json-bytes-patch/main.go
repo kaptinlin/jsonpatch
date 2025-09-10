@@ -1,3 +1,4 @@
+// Package main demonstrates JSON bytes patching operations.
 package main
 
 import (

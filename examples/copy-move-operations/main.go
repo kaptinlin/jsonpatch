@@ -1,3 +1,4 @@
+// Package main demonstrates copy and move operations using JSON Patch.
 package main
 
 import (

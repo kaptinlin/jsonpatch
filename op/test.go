@@ -79,16 +79,15 @@ func (o *OpTestOperation) Apply(doc any) (internal.OpResult[any], error) {
 		// Test failed
 		if o.NotFlag {
 			return internal.OpResult[any]{}, fmt.Errorf("%w: expected not %v, but got %v", ErrTestOperationFailed, o.Value, value)
-		} else {
-			// Check if it's a string vs number comparison for specific error message
-			if _, ok := o.Value.(string); ok {
-				if _, ok := value.(float64); ok {
-					return internal.OpResult[any]{}, ErrTestOperationNumberStringMismatch
-				}
-				return internal.OpResult[any]{}, ErrTestOperationStringNotEquivalent
-			}
-			return internal.OpResult[any]{}, fmt.Errorf("%w: expected %v, got %v", ErrTestOperationFailed, o.Value, value)
 		}
+		// Check if it's a string vs number comparison for specific error message
+		if _, ok := o.Value.(string); ok {
+			if _, ok := value.(float64); ok {
+				return internal.OpResult[any]{}, ErrTestOperationNumberStringMismatch
+			}
+			return internal.OpResult[any]{}, ErrTestOperationStringNotEquivalent
+		}
+		return internal.OpResult[any]{}, fmt.Errorf("%w: expected %v, got %v", ErrTestOperationFailed, o.Value, value)
 	}
 
 	// Test operations don't modify the document and return nil for old value

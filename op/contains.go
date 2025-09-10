@@ -120,6 +120,7 @@ func (op *OpContainsOperation) Validate() error {
 	return nil
 }
 
+// Path returns the path for the contains operation.
 func (op *OpContainsOperation) Path() []string {
 	return op.path
 }

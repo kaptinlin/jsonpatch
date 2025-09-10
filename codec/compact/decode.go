@@ -92,7 +92,7 @@ func DecodeJSON(data []byte, opts ...DecoderOption) ([]internal.Op, error) {
 }
 
 // compactToOp converts a compact operation to an operation instance
-func compactToOp(compactOp CompactOp, options DecoderOptions) (internal.Op, error) {
+func compactToOp(compactOp CompactOp, _ DecoderOptions) (internal.Op, error) {
 	if len(compactOp) < 2 {
 		return nil, ErrCompactOperationMinLength
 	}

@@ -1,3 +1,4 @@
+// Package main demonstrates mutate option usage with JSON Patch.
 package main
 
 import (
@@ -65,11 +66,11 @@ func main() {
 
 // Helper functions
 func copyDocument(doc map[string]interface{}) map[string]interface{} {
-	copy := make(map[string]interface{})
+	docCopy := make(map[string]interface{})
 	for k, v := range doc {
-		copy[k] = v
+		docCopy[k] = v
 	}
-	return copy
+	return docCopy
 }
 
 func toJSON(v interface{}) string {

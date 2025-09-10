@@ -328,7 +328,7 @@ func TestOpTest_RFC6902_Section4_6(t *testing.T) {
 		}
 
 		// Test null
-		var nullDoc interface{} = nil
+		var nullDoc interface{}
 		patch[0] = map[string]interface{}{
 			"op":    "test",
 			"path":  "",

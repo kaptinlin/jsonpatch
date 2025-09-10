@@ -1,5 +1,7 @@
+// Package data contains test case data and specifications for JSON Patch operations.
 package data
 
+// SpecTestCases contains test cases for JSON Patch operations.
 var SpecTestCases = []TestCase{
 	{
 		Comment: "4.1. add with missing object",

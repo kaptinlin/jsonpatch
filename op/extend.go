@@ -35,9 +35,9 @@ func (op *OpExtendOperation) Code() int {
 }
 
 // Apply applies the object extend operation.
-func (o *OpExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (op *OpExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level extend specially
-	if len(o.Path()) == 0 {
+	if len(op.Path()) == 0 {
 		// Target is the root document
 		targetObj, ok := doc.(map[string]interface{})
 		if !ok {
@@ -51,13 +51,13 @@ func (o *OpExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 		}
 
 		// Use objExtend to properly handle the extension with deleteNull
-		extendedObj := objExtend(targetObj, o.Properties, o.DeleteNull)
+		extendedObj := objExtend(targetObj, op.Properties, op.DeleteNull)
 
 		return internal.OpResult[any]{Doc: extendedObj, Old: original}, nil
 	}
 
 	// Get the target object
-	target, err := getValue(doc, o.Path())
+	target, err := getValue(doc, op.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -69,10 +69,10 @@ func (o *OpExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	// Use objExtend to properly handle the extension with deleteNull
-	extendedObj := objExtend(targetObj, o.Properties, o.DeleteNull)
+	extendedObj := objExtend(targetObj, op.Properties, op.DeleteNull)
 
 	// Set the extended object back
-	err = setValueAtPath(doc, o.Path(), extendedObj)
+	err = setValueAtPath(doc, op.Path(), extendedObj)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -81,21 +81,21 @@ func (o *OpExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *OpExtendOperation) ToJSON() (internal.Operation, error) {
+func (op *OpExtendOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		"op":    string(internal.OpExtendType),
-		"path":  formatPath(o.Path()),
-		"props": o.Properties,
+		"path":  formatPath(op.Path()),
+		"props": op.Properties,
 	}
-	if o.DeleteNull {
-		result["deleteNull"] = o.DeleteNull
+	if op.DeleteNull {
+		result["deleteNull"] = op.DeleteNull
 	}
 	return result, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *OpExtendOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpExtendCode, o.Path(), o.Properties}, nil
+func (op *OpExtendOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpExtendCode, op.Path(), op.Properties}, nil
 }
 
 // Validate validates the extend operation.

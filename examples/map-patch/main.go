@@ -1,3 +1,4 @@
+// Package main demonstrates map patching operations using JSON Patch.
 package main
 
 import (

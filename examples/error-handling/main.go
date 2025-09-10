@@ -1,3 +1,4 @@
+// Package main demonstrates error handling with JSON Patch operations.
 package main
 
 import (

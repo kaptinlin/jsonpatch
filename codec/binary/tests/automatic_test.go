@@ -19,7 +19,7 @@ var unsupportedOps = map[string]struct{}{
 
 func TestAutomaticRoundtrip(t *testing.T) {
 	binCodec := binary.Codec{}
-	options := internal.JsonPatchOptions{CreateMatcher: jsonpatch.CreateMatcherDefault}
+	options := internal.JSONPatchOptions{CreateMatcher: jsonpatch.CreateMatcherDefault}
 
 	for name, opMap := range jsonsamples.SampleOperations {
 		if opType, ok := opMap["op"].(string); ok {

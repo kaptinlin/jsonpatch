@@ -1,3 +1,4 @@
+// Package op provides implementations for JSON Patch operations.
 package op
 
 import (

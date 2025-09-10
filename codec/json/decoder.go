@@ -7,7 +7,7 @@ import (
 
 // Decoder provides JSON patch decoding functionality with configurable options.
 type Decoder struct {
-	options internal.JsonPatchOptions
+	options internal.JSONPatchOptions
 }
 
 // Options represents configuration options for JSON codec operations.
@@ -18,7 +18,7 @@ type Options struct {
 }
 
 // NewDecoder creates a new Decoder with the given options.
-func NewDecoder(options internal.JsonPatchOptions) *Decoder {
+func NewDecoder(options internal.JSONPatchOptions) *Decoder {
 	return &Decoder{
 		options: options,
 	}

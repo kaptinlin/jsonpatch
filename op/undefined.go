@@ -80,6 +80,7 @@ func (o *OpUndefinedOperation) Validate() error {
 	return nil
 }
 
+// Path returns the path for the undefined operation.
 func (o *OpUndefinedOperation) Path() []string {
 	return o.path
 }

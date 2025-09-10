@@ -17,7 +17,7 @@ func CreateMatcherDefault(pattern string, ignoreCase bool) RegexMatcher {
 	regex, err := regexp.Compile(flags + pattern)
 	if err != nil {
 		// Return a matcher that always returns false if compilation fails
-		return func(value string) bool {
+		return func(_ string) bool {
 			return false
 		}
 	}

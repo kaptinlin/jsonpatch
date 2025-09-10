@@ -447,12 +447,12 @@ func handleStructDocument[T internal.Document](doc T, patch []internal.Operation
 // map input returns map output, etc.
 func ApplyOp[T internal.Document](doc T, operation internal.Op, opts ...internal.Option) (*internal.OpResult[T], error) {
 	// Convert operation to Operation format and use ApplyPatch
-	opJson, err := operation.ToJSON()
+	opJSON, err := operation.ToJSON()
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert operation to JSON: %w", err)
 	}
 
-	patch := []internal.Operation{opJson}
+	patch := []internal.Operation{opJSON}
 	result, err := ApplyPatch(doc, patch, opts...)
 	if err != nil {
 		return nil, err
@@ -489,11 +489,11 @@ func ApplyOps[T internal.Document](doc T, operations []internal.Op, opts ...inte
 	// Convert operations to Operation format and use ApplyPatch
 	patch := make([]internal.Operation, len(operations))
 	for i, op := range operations {
-		opJson, err := op.ToJSON()
+		opJSON, err := op.ToJSON()
 		if err != nil {
 			return nil, fmt.Errorf("operation %d: %w", i, err)
 		}
-		patch[i] = opJson
+		patch[i] = opJSON
 	}
 
 	return ApplyPatch(doc, patch, opts...)
@@ -511,7 +511,7 @@ func applyInternalPatch(doc interface{}, patch []internal.Operation, options *in
 	results := make([]internal.OpResult[any], 0, len(patch))
 
 	// Use codec/json decoder to convert operations to Op instances
-	decoder := jsoncodec.NewDecoder(internal.JsonPatchOptions{
+	decoder := jsoncodec.NewDecoder(internal.JSONPatchOptions{
 		CreateMatcher: options.CreateMatcher,
 	})
 

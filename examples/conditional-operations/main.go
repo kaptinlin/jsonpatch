@@ -1,3 +1,4 @@
+// Package main demonstrates conditional operations using JSON Patch.
 package main
 
 import (

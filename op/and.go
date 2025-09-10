@@ -134,6 +134,7 @@ func (o *OpAndOperation) Validate() error {
 	return nil
 }
 
+// Path returns the path for the AND operation.
 func (o *OpAndOperation) Path() []string {
 	return o.path
 }

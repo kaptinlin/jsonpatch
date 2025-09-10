@@ -1,22 +1,28 @@
+// Package internal provides internal types and constants for JSON Patch operations.
 package internal
 
 // OpType represents the string type for JSON Patch operation names,
 // such as "add", "remove", "replace", etc.
 // Used for type safety and constant references only.
-
 type OpType string
 
 const (
-	// JSON Patch (RFC 6902) operations
-	OpAddType     OpType = "add"
-	OpRemoveType  OpType = "remove"
+	// OpAddType represents the "add" operation type for JSON Patch (RFC 6902)
+	OpAddType OpType = "add"
+	// OpRemoveType represents the "remove" operation type for JSON Patch (RFC 6902)
+	OpRemoveType OpType = "remove"
+	// OpReplaceType represents the "replace" operation type for JSON Patch (RFC 6902)
 	OpReplaceType OpType = "replace"
-	OpMoveType    OpType = "move"
-	OpCopyType    OpType = "copy"
-	OpTestType    OpType = "test"
+	// OpMoveType represents the "move" operation type for JSON Patch (RFC 6902)
+	OpMoveType OpType = "move"
+	// OpCopyType represents the "copy" operation type for JSON Patch (RFC 6902)
+	OpCopyType OpType = "copy"
+	// OpTestType represents the "test" operation type for JSON Patch (RFC 6902)
+	OpTestType OpType = "test"
 
-	// JSON Predicate operations
-	OpContainsType      OpType = "contains"
+	// OpContainsType represents the "contains" operation type for JSON Predicate operations
+	OpContainsType OpType = "contains"
+	// OpDefinedType represents the "defined" operation type for JSON Predicate operations
 	OpDefinedType       OpType = "defined"
 	OpUndefinedType     OpType = "undefined"
 	OpTypeType          OpType = "type"
@@ -30,12 +36,12 @@ const (
 	OpMoreType          OpType = "more"
 	OpMatchesType       OpType = "matches"
 
-	// Composite operations
+	// OpAndType represents the "and" operation type for composite operations
 	OpAndType OpType = "and"
 	OpOrType  OpType = "or"
 	OpNotType OpType = "not"
 
-	// Extended operations
+	// OpFlipType represents the "flip" operation type for extended operations
 	OpFlipType   OpType = "flip"
 	OpIncType    OpType = "inc"
 	OpStrInsType OpType = "str_ins"

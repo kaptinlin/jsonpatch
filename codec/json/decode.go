@@ -40,7 +40,7 @@ func pathToStringSlice(path jsonpointer.Path) []string {
 }
 
 // OperationToOp converts JSON operation to Op instance.
-func OperationToOp(operation map[string]interface{}, options internal.JsonPatchOptions) (internal.Op, error) {
+func OperationToOp(operation map[string]interface{}, options internal.JSONPatchOptions) (internal.Op, error) {
 	opType, ok := operation["op"].(string)
 	if !ok {
 		return nil, ErrOpMissingOpField
@@ -238,7 +238,7 @@ func OperationToOp(operation map[string]interface{}, options internal.JsonPatchO
 }
 
 // OperationToPredicateOp converts JSON operation to PredicateOp instance.
-func OperationToPredicateOp(operation map[string]interface{}, options internal.JsonPatchOptions) (internal.Op, error) {
+func OperationToPredicateOp(operation map[string]interface{}, options internal.JSONPatchOptions) (internal.Op, error) {
 	opType, ok := operation["op"].(string)
 	if !ok {
 		return nil, ErrOpMissingOpField
@@ -528,7 +528,7 @@ func formatPath(path jsonpointer.Path) string {
 }
 
 // Decode converts JSON operations to Op instances.
-func Decode(operations []map[string]interface{}, options internal.JsonPatchOptions) ([]internal.Op, error) {
+func Decode(operations []map[string]interface{}, options internal.JSONPatchOptions) ([]internal.Op, error) {
 	ops := make([]internal.Op, 0, len(operations))
 	for _, operation := range operations {
 		o, err := OperationToOp(operation, options)
@@ -541,7 +541,7 @@ func Decode(operations []map[string]interface{}, options internal.JsonPatchOptio
 }
 
 // DecodeJSON converts JSON bytes to Op instances.
-func DecodeJSON(data []byte, options internal.JsonPatchOptions) ([]internal.Op, error) {
+func DecodeJSON(data []byte, options internal.JSONPatchOptions) ([]internal.Op, error) {
 	var operations []map[string]interface{}
 	if err := json.Unmarshal(data, &operations); err != nil {
 		return nil, err

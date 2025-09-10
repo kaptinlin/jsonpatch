@@ -1,3 +1,4 @@
+// Package main demonstrates JSON string patching operations.
 package main
 
 import (

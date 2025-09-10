@@ -71,6 +71,7 @@ func (o *OpDefinedOperation) Validate() error {
 	return nil
 }
 
-func (op *OpDefinedOperation) Path() []string {
-	return op.path
+// Path returns the path for the defined operation.
+func (o *OpDefinedOperation) Path() []string {
+	return o.path
 }

@@ -13,5 +13,5 @@ type Operation = internal.Operation
 // CompactOperation represents a compact format operation.
 type CompactOperation = internal.CompactOperation
 
-// JsonPatchOptions contains options for JSON Patch operations.
-type JsonPatchOptions = internal.JsonPatchOptions
+// JSONPatchOptions contains options for JSON Patch operations.
+type JSONPatchOptions = internal.JSONPatchOptions

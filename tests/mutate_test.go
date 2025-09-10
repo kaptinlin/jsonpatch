@@ -271,19 +271,19 @@ func TestMutatePerformanceCharacteristics(t *testing.T) {
 // Helper functions
 
 func copyMap(original map[string]interface{}) map[string]interface{} {
-	copy := make(map[string]interface{})
+	mapCopy := make(map[string]interface{})
 	for k, v := range original {
-		copy[k] = v
+		mapCopy[k] = v
 	}
-	return copy
+	return mapCopy
 }
 
 func deepCopyMap(original map[string]interface{}) map[string]interface{} {
-	copy := make(map[string]interface{})
+	mapCopy := make(map[string]interface{})
 	for k, v := range original {
 		switch val := v.(type) {
 		case map[string]interface{}:
-			copy[k] = deepCopyMap(val)
+			mapCopy[k] = deepCopyMap(val)
 		case []interface{}:
 			copySlice := make([]interface{}, len(val))
 			for i, item := range val {
@@ -293,12 +293,12 @@ func deepCopyMap(original map[string]interface{}) map[string]interface{} {
 					copySlice[i] = item
 				}
 			}
-			copy[k] = copySlice
+			mapCopy[k] = copySlice
 		default:
-			copy[k] = v
+			mapCopy[k] = v
 		}
 	}
-	return copy
+	return mapCopy
 }
 
 func isSameMapObject(a, b map[string]interface{}) bool {
@@ -308,7 +308,7 @@ func isSameMapObject(a, b map[string]interface{}) bool {
 }
 
 func isSameSliceObject(a, b []interface{}) bool {
-	return unsafe.SliceData(a) == unsafe.SliceData(b)
+	return unsafe.SliceData(a) == unsafe.SliceData(b) // #nosec G103 - intentional pointer comparison for test utility
 }
 
 func createLargeDocument(size int) map[string]interface{} {

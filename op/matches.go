@@ -123,6 +123,7 @@ func (o *OpMatchesOperation) Validate() error {
 	return nil
 }
 
+// Path returns the path for the matches operation.
 func (o *OpMatchesOperation) Path() []string {
 	return o.path
 }

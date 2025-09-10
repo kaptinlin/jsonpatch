@@ -114,6 +114,7 @@ func (o *OpMoreOperation) Validate() error {
 	return nil
 }
 
+// Path returns the path for the more operation.
 func (o *OpMoreOperation) Path() []string {
 	return o.path
 }

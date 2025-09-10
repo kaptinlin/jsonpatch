@@ -161,8 +161,8 @@ func TestOpMove_Apply(t *testing.T) {
 		assert.Equal(t, expectedMovedItem, destination["moved_item"])
 
 		// Verify source array was updated
-		complex := actualDoc["complex"].(map[string]interface{})
-		level1 := complex["level1"].(map[string]interface{})
+		complexObj := actualDoc["complex"].(map[string]interface{})
+		level1 := complexObj["level1"].(map[string]interface{})
 		level2 := level1["level2"].([]interface{})
 		assert.Len(t, level2, 1, "Source array should have one less element")
 		assert.Equal(t, map[string]interface{}{"id": 2, "data": "test2"}, level2[0])

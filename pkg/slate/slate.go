@@ -1,3 +1,4 @@
+// Package slate provides types for working with Slate.js editor nodes.
 package slate
 
 // SlateNode represents a Slate.js node that can be either a text node or an element node.

@@ -54,79 +54,86 @@ func WithMatcher(createMatcher func(pattern string, ignoreCase bool) RegexMatche
 	}
 }
 
-// JsonPatchTypes represents the valid JSON types for type operations.
-type JsonPatchTypes string
+// JSONPatchTypes represents the valid JSON types for type operations.
+type JSONPatchTypes string
 
 const (
-	JsonPatchTypeString  JsonPatchTypes = "string"
-	JsonPatchTypeNumber  JsonPatchTypes = "number"
-	JsonPatchTypeBoolean JsonPatchTypes = "boolean"
-	JsonPatchTypeObject  JsonPatchTypes = "object"
-	JsonPatchTypeInteger JsonPatchTypes = "integer"
-	JsonPatchTypeArray   JsonPatchTypes = "array"
-	JsonPatchTypeNull    JsonPatchTypes = "null"
+	// JSONPatchTypeString represents the string data type for JSON Patch type operations
+	JSONPatchTypeString JSONPatchTypes = "string"
+	// JSONPatchTypeNumber represents the number data type for JSON Patch type operations
+	JSONPatchTypeNumber JSONPatchTypes = "number"
+	// JSONPatchTypeBoolean represents the boolean data type for JSON Patch type operations
+	JSONPatchTypeBoolean JSONPatchTypes = "boolean"
+	// JSONPatchTypeObject represents the object data type for JSON Patch type operations
+	JSONPatchTypeObject JSONPatchTypes = "object"
+	// JSONPatchTypeInteger represents the integer data type for JSON Patch type operations
+	JSONPatchTypeInteger JSONPatchTypes = "integer"
+	// JSONPatchTypeArray represents the array data type for JSON Patch type operations
+	JSONPatchTypeArray JSONPatchTypes = "array"
+	// JSONPatchTypeNull represents the null data type for JSON Patch type operations
+	JSONPatchTypeNull JSONPatchTypes = "null"
 )
 
 // RegexMatcher is a function type that tests if a value matches a pattern.
 type RegexMatcher func(value string) bool
 
-// JsonPatchOptions contains options for JSON Patch operations.
+// JSONPatchOptions contains options for JSON Patch operations.
 // This is kept for decoder compatibility.
-type JsonPatchOptions struct {
+type JSONPatchOptions struct {
 	CreateMatcher func(pattern string, ignoreCase bool) RegexMatcher
 }
 
-// IsValidJsonPatchType checks if a type string is a valid JSON Patch type
-func IsValidJsonPatchType(typeStr string) bool {
-	switch JsonPatchTypes(typeStr) {
-	case JsonPatchTypeString, JsonPatchTypeNumber, JsonPatchTypeBoolean,
-		JsonPatchTypeObject, JsonPatchTypeInteger, JsonPatchTypeArray,
-		JsonPatchTypeNull:
+// IsValidJSONPatchType checks if a type string is a valid JSON Patch type
+func IsValidJSONPatchType(typeStr string) bool {
+	switch JSONPatchTypes(typeStr) {
+	case JSONPatchTypeString, JSONPatchTypeNumber, JSONPatchTypeBoolean,
+		JSONPatchTypeObject, JSONPatchTypeInteger, JSONPatchTypeArray,
+		JSONPatchTypeNull:
 		return true
 	default:
 		return false
 	}
 }
 
-// GetJsonPatchType returns the JSON Patch type for a given value
-func GetJsonPatchType(value interface{}) JsonPatchTypes {
+// GetJSONPatchType returns the JSON Patch type for a given value
+func GetJSONPatchType(value interface{}) JSONPatchTypes {
 	if value == nil {
-		return JsonPatchTypeNull
+		return JSONPatchTypeNull
 	}
 
 	switch v := value.(type) {
 	case string:
-		return JsonPatchTypeString
+		return JSONPatchTypeString
 	case bool:
-		return JsonPatchTypeBoolean
+		return JSONPatchTypeBoolean
 	case []interface{}, []string, []int, []float64:
-		return JsonPatchTypeArray
+		return JSONPatchTypeArray
 	case map[string]interface{}:
-		return JsonPatchTypeObject
+		return JSONPatchTypeObject
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-		return JsonPatchTypeInteger
+		return JSONPatchTypeInteger
 	case float32, float64:
 		// Check if it's actually an integer
 		switch f := v.(type) {
 		case float32:
 			if f == float32(int32(f)) {
-				return JsonPatchTypeInteger
+				return JSONPatchTypeInteger
 			}
 		case float64:
 			if f == float64(int64(f)) {
-				return JsonPatchTypeInteger
+				return JSONPatchTypeInteger
 			}
 		}
-		return JsonPatchTypeNumber
+		return JSONPatchTypeNumber
 	default:
 		// For other types, use simple checks
 		if isArrayType(value) {
-			return JsonPatchTypeArray
+			return JSONPatchTypeArray
 		}
 		if isObjectType(value) {
-			return JsonPatchTypeObject
+			return JSONPatchTypeObject
 		}
-		return JsonPatchTypeNull
+		return JSONPatchTypeNull
 	}
 }
 
@@ -146,8 +153,8 @@ func isObjectType(value interface{}) bool {
 
 // Operation type checking functions provide efficient type detection
 
-// IsJsonPatchOperation checks if operation is a core JSON Patch operation
-func IsJsonPatchOperation(op string) bool {
+// IsJSONPatchOperation checks if operation is a core JSON Patch operation
+func IsJSONPatchOperation(op string) bool {
 	switch op {
 	case string(OpAddType), string(OpRemoveType), string(OpReplaceType),
 		string(OpMoveType), string(OpCopyType), string(OpTestType):
@@ -186,8 +193,8 @@ func IsSecondOrderPredicateOperation(op string) bool {
 	}
 }
 
-// IsJsonPatchExtendedOperation checks if operation is an extended operation.
-func IsJsonPatchExtendedOperation(op string) bool {
+// IsJSONPatchExtendedOperation checks if operation is an extended operation.
+func IsJSONPatchExtendedOperation(op string) bool {
 	switch op {
 	case string(OpStrInsType), string(OpStrDelType), string(OpFlipType),
 		string(OpIncType), string(OpSplitType), string(OpMergeType),

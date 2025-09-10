@@ -4,21 +4,28 @@ import "github.com/kaptinlin/jsonpatch/internal"
 
 // Re-export all types from the internal package for convenience.
 
-// Core types
-type (
-	Operation = internal.Operation
-	OpType    = internal.OpType
-	Op        = internal.Op
-)
+// Operation represents a JSON patch operation.
+type Operation = internal.Operation
 
-// Generic types for type-safe JSON Patch operations
-type (
-	Document = internal.Document
-	Option   = internal.Option
-	Options  = internal.Options
-)
+// OpType represents the type of a JSON patch operation.
+type OpType = internal.OpType
 
+// Op represents an executable operation.
+type Op = internal.Op
+
+// Document defines the supported document types for JSON Patch operations.
+type Document = internal.Document
+
+// Option represents functional options for configuring patch operations.
+type Option = internal.Option
+
+// Options holds configuration parameters for patch operations.
+type Options = internal.Options
+
+// WithMutate configures whether the patch operation should modify the original document.
 var WithMutate = internal.WithMutate
+
+// WithMatcher configures a custom regex matcher for pattern operations.
 var WithMatcher = internal.WithMatcher
 
 // DefaultOptions returns the default configuration for patch operations.
@@ -29,8 +36,10 @@ func DefaultOptions() *internal.Options {
 	}
 }
 
-// Generic result types (requires Go 1.18+)
+// OpResult represents the result of a single operation with generic type support.
 type OpResult[T Document] = internal.OpResult[T]
+
+// PatchResult represents the result of applying a JSON Patch with generic type support.
 type PatchResult[T Document] = internal.PatchResult[T]
 
 // Operation type constants (string constants)
@@ -115,32 +124,45 @@ const (
 	OpOrCode            = internal.OpOrCode
 )
 
-// JSON Patch types
-type (
-	JsonPatchTypes   = internal.JsonPatchTypes
-	RegexMatcher     = internal.RegexMatcher
-	JsonPatchOptions = internal.JsonPatchOptions
-)
+// JSONPatchTypes represents the valid JSON types for type operations.
+type JSONPatchTypes = internal.JSONPatchTypes
 
-const (
-	JsonPatchTypeString  = internal.JsonPatchTypeString
-	JsonPatchTypeNumber  = internal.JsonPatchTypeNumber
-	JsonPatchTypeBoolean = internal.JsonPatchTypeBoolean
-	JsonPatchTypeObject  = internal.JsonPatchTypeObject
-	JsonPatchTypeInteger = internal.JsonPatchTypeInteger
-	JsonPatchTypeArray   = internal.JsonPatchTypeArray
-	JsonPatchTypeNull    = internal.JsonPatchTypeNull
-)
+// RegexMatcher is a function type that tests if a value matches a pattern.
+type RegexMatcher = internal.RegexMatcher
+
+// JSONPatchOptions contains options for JSON Patch operations.
+type JSONPatchOptions = internal.JSONPatchOptions
+
+// JSONPatchTypeString represents the JSON string type.
+const JSONPatchTypeString = internal.JSONPatchTypeString
+
+// JSONPatchTypeNumber represents the JSON number type.
+const JSONPatchTypeNumber = internal.JSONPatchTypeNumber
+
+// JSONPatchTypeBoolean represents the JSON boolean type.
+const JSONPatchTypeBoolean = internal.JSONPatchTypeBoolean
+
+// JSONPatchTypeObject represents the JSON object type.
+const JSONPatchTypeObject = internal.JSONPatchTypeObject
+
+// JSONPatchTypeInteger represents the JSON integer type.
+const JSONPatchTypeInteger = internal.JSONPatchTypeInteger
+
+// JSONPatchTypeArray represents the JSON array type.
+const JSONPatchTypeArray = internal.JSONPatchTypeArray
+
+// JSONPatchTypeNull represents the JSON null type.
+const JSONPatchTypeNull = internal.JSONPatchTypeNull
 
 // Re-export functions
 var (
-	IsValidJsonPatchType = internal.IsValidJsonPatchType
-	GetJsonPatchType     = internal.GetJsonPatchType
+	IsValidJSONPatchType = internal.IsValidJSONPatchType
+	GetJSONPatchType     = internal.GetJSONPatchType
 
 	// Operation type checking functions
-	IsJsonPatchOperation            = internal.IsJsonPatchOperation
+	IsJSONPatchOperation            = internal.IsJSONPatchOperation
 	IsPredicateOperation            = internal.IsPredicateOperation
 	IsFirstOrderPredicateOperation  = internal.IsFirstOrderPredicateOperation
 	IsSecondOrderPredicateOperation = internal.IsSecondOrderPredicateOperation
-	IsJsonPatchExtendedOperation    = internal.IsJsonPatchExtendedOperation
+	IsJSONPatchExtendedOperation    = internal.IsJSONPatchExtendedOperation
 )

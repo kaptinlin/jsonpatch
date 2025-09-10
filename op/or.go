@@ -136,6 +136,7 @@ func (o *OpOrOperation) Validate() error {
 	return nil
 }
 
+// Path returns the path for the OR operation.
 func (o *OpOrOperation) Path() []string {
 	return o.path
 }

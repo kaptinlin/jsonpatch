@@ -20,7 +20,7 @@ func TestCannotAddKeyToEmptyDocument(t *testing.T) {
 	}
 
 	options := jsonpatch.WithMutate(true)
-	var doc interface{} = nil
+	var doc interface{}
 	_, err := jsonpatch.ApplyPatch(doc, patch, options)
 	if err == nil {
 		t.Error("Expected error when adding key to empty document")
