@@ -208,8 +208,8 @@ func areMapsEqual(a, b map[string]interface{}) bool {
 func areValuesEqual(a, b interface{}) bool {
 	if reflect.TypeOf(a) != reflect.TypeOf(b) {
 		// Attempt numeric conversion if types are different but numeric
-		aFloat, aIsNum := toFloat64(a)
-		bFloat, bIsNum := toFloat64(b)
+		aFloat, aIsNum := op.ToFloat64(a)
+		bFloat, bIsNum := op.ToFloat64(b)
 		if aIsNum && bIsNum {
 			return aFloat == bFloat
 		}
@@ -246,27 +246,6 @@ func areValuesEqual(a, b interface{}) bool {
 		return areMapsEqual(convertMapToS(aVal), bVal)
 	default:
 		return reflect.DeepEqual(a, b)
-	}
-}
-
-func toFloat64(v interface{}) (float64, bool) {
-	switch val := v.(type) {
-	case int:
-		return float64(val), true
-	case int8:
-		return float64(val), true
-	case int16:
-		return float64(val), true
-	case int32:
-		return float64(val), true
-	case int64:
-		return float64(val), true
-	case float32:
-		return float64(val), true
-	case float64:
-		return val, true
-	default:
-		return 0, false
 	}
 }
 

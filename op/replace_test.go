@@ -83,7 +83,7 @@ func TestOpReplace_NonExistent(t *testing.T) {
 	replaceOp := NewReplace([]string{"qux"}, "new_value")
 	_, err := replaceOp.Apply(doc)
 	assert.Error(t, err, "Replace should fail for non-existent field")
-	assert.Contains(t, err.Error(), "path does not exist", "Error message should be descriptive")
+	assert.Contains(t, err.Error(), "path not found", "Error message should be descriptive")
 }
 
 func TestOpReplace_EmptyPath(t *testing.T) {

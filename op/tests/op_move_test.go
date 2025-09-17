@@ -126,7 +126,7 @@ func TestOpMove_Apply(t *testing.T) {
 
 		_, err := jsonpatch.ApplyPatch(doc, patch)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "path does not exist", "Error should indicate source path not found")
+		assert.Contains(t, err.Error(), "path not found", "Error should indicate source path not found")
 	})
 
 	t.Run("move complex nested structures", func(t *testing.T) {

@@ -97,13 +97,13 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 	case "flip":
 		return op.NewOpFlipOperation(path), nil
 	case "inc":
-		incVal, ok := toFloat64(operation["inc"])
+		incVal, ok := op.ToFloat64(operation["inc"])
 		if !ok {
 			return nil, ErrIncOpMissingInc
 		}
 		return op.NewOpIncOperation(path, incVal), nil
 	case "str_ins":
-		pos, ok := toFloat64(operation["pos"])
+		pos, ok := op.ToFloat64(operation["pos"])
 		if !ok {
 			return nil, ErrStrInsOpMissingPos
 		}
@@ -113,7 +113,7 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 		}
 		return op.NewOpStrInsOperation(path, pos, str), nil
 	case "str_del":
-		pos, ok := toFloat64(operation["pos"])
+		pos, ok := op.ToFloat64(operation["pos"])
 		if !ok {
 			return nil, ErrStrDelOpMissingPos
 		}
@@ -121,12 +121,12 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 		if str, ok := operation["str"].(string); ok {
 			return op.NewOpStrDelOperationWithStr(path, pos, str), nil
 		}
-		if lenVal, ok := toFloat64(operation["len"]); ok {
+		if lenVal, ok := op.ToFloat64(operation["len"]); ok {
 			return op.NewOpStrDelOperation(path, pos, lenVal), nil
 		}
 		return nil, ErrStrDelOpMissingFields
 	case "split":
-		pos, ok := toFloat64(operation["pos"])
+		pos, ok := op.ToFloat64(operation["pos"])
 		if !ok {
 			return nil, ErrSplitOpMissingPos
 		}
@@ -140,7 +140,7 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 			props = make(map[string]interface{}) // Default to empty map
 		}
 		pos := float64(0) // Default position
-		if posVal, ok := toFloat64(operation["pos"]); ok {
+		if posVal, ok := op.ToFloat64(operation["pos"]); ok {
 			pos = posVal
 		}
 		return op.NewOpMergeOperation(path, pos, props), nil
@@ -324,7 +324,7 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 			return nil, ErrTestStringOpMissingStr
 		}
 		pos := float64(0)
-		if posVal, ok := toFloat64(operation["pos"]); ok {
+		if posVal, ok := op.ToFloat64(operation["pos"]); ok {
 			pos = posVal
 		}
 		if pos != 0 {
@@ -332,7 +332,7 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		}
 		return op.NewOpTestStringOperation(path, str), nil
 	case "test_string_len":
-		lenVal, ok := toFloat64(operation["len"])
+		lenVal, ok := op.ToFloat64(operation["len"])
 		if !ok {
 			return nil, ErrTestStringLenOpMissingLen
 		}
@@ -416,13 +416,13 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		}
 		return op.NewOpInOperation(path, []interface{}{value}), nil
 	case "less":
-		value, ok := toFloat64(operation["value"])
+		value, ok := op.ToFloat64(operation["value"])
 		if !ok {
 			return nil, ErrLessOpMissingValue
 		}
 		return op.NewOpLessOperation(path, value), nil
 	case "more":
-		value, ok := toFloat64(operation["value"])
+		value, ok := op.ToFloat64(operation["value"])
 		if !ok {
 			return nil, ErrMoreOpMissingValue
 		}
@@ -564,36 +564,4 @@ func validateSingleTestType(typeStr string) error {
 		return ErrInvalidType
 	}
 	return nil
-}
-
-// toFloat64 converts various numeric types to float64
-func toFloat64(val interface{}) (float64, bool) {
-	switch v := val.(type) {
-	case float64:
-		return v, true
-	case float32:
-		return float64(v), true
-	case int:
-		return float64(v), true
-	case int8:
-		return float64(v), true
-	case int16:
-		return float64(v), true
-	case int32:
-		return float64(v), true
-	case int64:
-		return float64(v), true
-	case uint:
-		return float64(v), true
-	case uint8:
-		return float64(v), true
-	case uint16:
-		return float64(v), true
-	case uint32:
-		return float64(v), true
-	case uint64:
-		return float64(v), true
-	default:
-		return 0, false
-	}
 }

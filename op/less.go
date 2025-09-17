@@ -39,7 +39,7 @@ func (op *LessOperation) getAndValidateValue(doc any) (interface{}, float64, err
 	if err != nil {
 		return nil, 0, ErrPathNotFound
 	}
-	actualValue, ok := toFloat64(value)
+	actualValue, ok := ToFloat64(value)
 	if !ok {
 		return nil, 0, ErrNotNumber
 	}

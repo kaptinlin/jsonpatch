@@ -69,7 +69,7 @@ func TestOpMove_FromNonExistent(t *testing.T) {
 	moveOp := NewMove([]string{"target"}, []string{"qux"})
 	_, err := moveOp.Apply(doc)
 	assert.Error(t, err, "Move should fail for non-existent from path")
-	assert.Contains(t, err.Error(), "path does not exist", "Error message should be descriptive")
+	assert.Contains(t, err.Error(), "path not found", "Error message should be descriptive")
 }
 
 func TestOpMove_SamePath(t *testing.T) {

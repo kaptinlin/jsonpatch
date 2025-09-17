@@ -329,8 +329,8 @@ func pathExists(doc interface{}, path []string) bool {
 	return err == nil
 }
 
-// toFloat64 converts a value to float64, handling various numeric types, booleans, and strings.
-func toFloat64(val interface{}) (float64, bool) {
+// ToFloat64 converts a value to float64, handling various numeric types, booleans, and strings.
+func ToFloat64(val interface{}) (float64, bool) {
 	switch v := val.(type) {
 	case float64:
 		return v, true

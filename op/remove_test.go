@@ -84,7 +84,7 @@ func TestOpRemove_NonExistent(t *testing.T) {
 	removeOp := NewRemove([]string{"qux"})
 	_, err := removeOp.Apply(doc)
 	assert.Error(t, err, "Remove should fail for non-existent field")
-	assert.Contains(t, err.Error(), "path does not exist", "Error message should be descriptive")
+	assert.Contains(t, err.Error(), "path not found", "Error message should be descriptive")
 }
 
 func TestOpRemove_EmptyPath(t *testing.T) {

@@ -85,7 +85,7 @@ func (o *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 			p[k] = newValue
 			return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 		}
-		return internal.OpResult[any]{}, ErrPathDoesNotExist
+		return internal.OpResult[any]{}, ErrPathNotFound
 
 	case []interface{}:
 		k, ok := key.(int)
@@ -98,7 +98,7 @@ func (o *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 			p[k] = newValue
 			return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 		}
-		return internal.OpResult[any]{}, ErrPathDoesNotExist
+		return internal.OpResult[any]{}, ErrPathNotFound
 
 	default:
 		return internal.OpResult[any]{}, ErrUnsupportedParentType

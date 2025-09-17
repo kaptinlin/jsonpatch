@@ -54,7 +54,7 @@ func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 		case map[string]interface{}:
 			oldValue, exists := v[o.path[0]]
 			if !exists {
-				return internal.OpResult[any]{}, ErrPathDoesNotExist
+				return internal.OpResult[any]{}, ErrPathNotFound
 			}
 			delete(v, o.path[0])
 			return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
@@ -89,13 +89,13 @@ func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 		case map[string]interface{}:
 			if k, ok := key.(string); ok {
 				if _, exists := p[k]; !exists {
-					return internal.OpResult[any]{}, ErrPathDoesNotExist
+					return internal.OpResult[any]{}, ErrPathNotFound
 				}
 			}
 		case []interface{}:
 			if k, ok := key.(int); ok {
 				if k < 0 || k >= len(p) {
-					return internal.OpResult[any]{}, ErrPathDoesNotExist
+					return internal.OpResult[any]{}, ErrPathNotFound
 				}
 			}
 		}

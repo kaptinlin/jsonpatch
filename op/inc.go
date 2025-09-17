@@ -37,7 +37,7 @@ func (op *IncOperation) Path() []string {
 func (op *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if len(op.path) == 0 {
 		// Root level increment
-		oldValue, ok := toFloat64(doc)
+		oldValue, ok := ToFloat64(doc)
 		if !ok {
 			return internal.OpResult[any]{}, ErrNotNumber
 		}
@@ -55,7 +55,7 @@ func (op *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	currentValue := getValueFromParent(parent, key)
-	oldValue, ok := toFloat64(currentValue)
+	oldValue, ok := ToFloat64(currentValue)
 	if !ok {
 		return internal.OpResult[any]{}, ErrNotNumber
 	}
