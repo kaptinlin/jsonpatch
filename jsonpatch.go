@@ -358,9 +358,34 @@ func handleMapDocument[T internal.Document](doc T, patch []internal.Operation, o
 	}
 
 	// Convert result back to the original generic type T
-	resultT, ok := resultDoc.(T)
-	if !ok {
-		return nil, fmt.Errorf("%w: failed to convert result back to type %T", ErrConversionFailed, doc)
+	// Handle special case where result is nil (null replacement)
+	var resultT T
+	if resultDoc == nil {
+		// When the result is nil due to copying null to root, we need to handle type conversion
+		// For any/interface{} types, nil is valid; for concrete types, it's not
+		var zeroT T
+		zeroTType := reflect.TypeOf(zeroT)
+
+		// If T is interface{} or any, nil is a valid value
+		if zeroTType == nil || zeroTType.Kind() == reflect.Interface {
+			if nilResult, ok := any(nil).(T); ok {
+				resultT = nilResult
+			} else {
+				// Fallback to zero value if nil assignment fails
+				resultT = zeroT
+			}
+		} else {
+			// For concrete types like map[string]any, nil replacement means the operation
+			// is changing the document type, which should result in the nil value as any
+			// Since T cannot be nil for concrete types, this is a type conversion issue
+			return nil, fmt.Errorf("%w: operation resulted in null value, but target type %T cannot be null", ErrConversionFailed, doc)
+		}
+	} else {
+		var ok bool
+		resultT, ok = resultDoc.(T)
+		if !ok {
+			return nil, fmt.Errorf("%w: failed to convert result back to type %T", ErrConversionFailed, doc)
+		}
 	}
 
 	// Convert OpResult[any] to OpResult[T]

@@ -319,33 +319,6 @@ func updateParent(parent interface{}, key interface{}, value interface{}) error 
 	}
 }
 
-// deleteFromParent removes a value from the parent container
-func deleteFromParent(parent interface{}, key interface{}) error {
-	switch p := parent.(type) {
-	case map[string]interface{}:
-		if k, ok := key.(string); ok {
-			if _, exists := p[k]; !exists {
-				return ErrKeyDoesNotExist
-			}
-			delete(p, k)
-			return nil
-		}
-		return ErrInvalidKeyTypeMap
-	case []interface{}:
-		if k, ok := key.(int); ok {
-			if k < 0 || k >= len(p) {
-				return ErrIndexOutOfRange
-			}
-			// For slices, we need to modify the original slice reference
-			// This is a limitation - we can't easily modify slice length in place
-			// Return an error that indicates the caller needs to handle this differently
-			return ErrIndexOutOfRange
-		}
-		return ErrInvalidKeyTypeSlice
-	default:
-		return ErrUnsupportedParentType
-	}
-}
 
 // pathExists checks if a path exists in the document
 func pathExists(doc interface{}, path []string) bool {

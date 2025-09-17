@@ -68,18 +68,16 @@ func (op *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 	return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 }
 
-// updateParent updates the parent container with the new value
 func (op *IncOperation) updateParent(parent interface{}, key interface{}, value interface{}) error {
 	return updateParent(parent, key, value)
 }
 
 // ToJSON serializes the operation to JSON format.
 func (op *IncOperation) ToJSON() (internal.Operation, error) {
-	// 遵循 float64 统一化原则：始终输出 float64
 	return internal.Operation{
 		"op":   string(internal.OpIncType),
 		"path": formatPath(op.path),
-		"inc":  op.Inc, // 统一的 float64 输出
+		"inc":  op.Inc,
 	}, nil
 }
 
@@ -90,7 +88,6 @@ func (op *IncOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the increment operation.
 func (op *IncOperation) Validate() error {
-	// Empty path (root level) is allowed for inc operations
 	return nil
 }
 

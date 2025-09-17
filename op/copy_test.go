@@ -149,3 +149,41 @@ func TestOpCopy_Validate(t *testing.T) {
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.Contains(t, err.Error(), "path and from cannot be the same", "Error message should mention same paths")
 }
+
+func TestOpCopy_RFC6902_CopyToRoot(t *testing.T) {
+	// RFC 6902 compliance: copy to root with different types
+	tests := []struct {
+		name     string
+		doc      any
+		from     []string
+		expected any
+	}{
+		{
+			name:     "copy null to root",
+			doc:      map[string]interface{}{"foo": nil, "bar": "value"},
+			from:     []string{"foo"},
+			expected: nil,
+		},
+		{
+			name:     "copy string to root",
+			doc:      map[string]interface{}{"foo": "hello", "bar": "world"},
+			from:     []string{"foo"},
+			expected: "hello",
+		},
+		{
+			name:     "copy object to root",
+			doc:      map[string]interface{}{"foo": map[string]interface{}{"nested": true}, "bar": "value"},
+			from:     []string{"foo"},
+			expected: map[string]interface{}{"nested": true},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			copyOp := NewCopy([]string{}, tt.from)
+			result, err := copyOp.Apply(tt.doc)
+			require.NoError(t, err, "Copy to root should work")
+			assert.Equal(t, tt.expected, result.Doc, "Root should be replaced with copied value")
+		})
+	}
+}

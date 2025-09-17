@@ -69,7 +69,7 @@ func TestOpMove_FromNonExistent(t *testing.T) {
 	moveOp := NewMove([]string{"target"}, []string{"qux"})
 	_, err := moveOp.Apply(doc)
 	assert.Error(t, err, "Move should fail for non-existent from path")
-	assert.Contains(t, err.Error(), "path not found", "Error message should be descriptive")
+	assert.Contains(t, err.Error(), "path does not exist", "Error message should be descriptive")
 }
 
 func TestOpMove_SamePath(t *testing.T) {
@@ -181,4 +181,55 @@ func TestOpMove_Validate(t *testing.T) {
 	err = moveOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.Contains(t, err.Error(), "path and from cannot be the same", "Error message should mention same paths")
+}
+
+func TestOpMove_RFC6902_RemoveAddPattern(t *testing.T) {
+	// RFC 6902 compliance: move should follow remove->add pattern
+	tests := []struct {
+		name     string
+		doc      map[string]interface{}
+		from     []string
+		path     []string
+		expected map[string]interface{}
+	}{
+		{
+			name: "move from object property to array element",
+			doc: map[string]interface{}{
+				"baz": []interface{}{map[string]interface{}{"qux": "hello"}},
+				"bar": 1,
+			},
+			from: []string{"baz", "0", "qux"},
+			path: []string{"baz", "1"},
+			expected: map[string]interface{}{
+				"baz": []interface{}{map[string]interface{}{}, "hello"},
+				"bar": 1,
+			},
+		},
+		{
+			name: "move array element to front",
+			doc: map[string]interface{}{
+				"users": []interface{}{
+					map[string]interface{}{"name": "Alice"},
+					map[string]interface{}{"name": "Bob"},
+				},
+			},
+			from: []string{"users", "1"},
+			path: []string{"users", "0"},
+			expected: map[string]interface{}{
+				"users": []interface{}{
+					map[string]interface{}{"name": "Bob"},
+					map[string]interface{}{"name": "Alice"},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			moveOp := NewMove(tt.path, tt.from)
+			result, err := moveOp.Apply(tt.doc)
+			require.NoError(t, err, "Move operation should work")
+			assert.Equal(t, tt.expected, result.Doc, "Move should follow remove->add pattern per RFC 6902")
+		})
+	}
 }
