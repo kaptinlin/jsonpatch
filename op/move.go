@@ -37,6 +37,12 @@ func (o *MoveOperation) From() []string {
 
 // Apply applies the move operation.
 func (o *MoveOperation) Apply(doc any) (internal.OpResult[any], error) {
+	// Check that path and from are not the same
+	if pathEquals(o.Path(), o.FromPath) {
+		// Moving to the same location has no effect according to JSON Patch spec
+		return internal.OpResult[any]{Doc: doc, Old: nil}, nil
+	}
+
 	// Validate that from path exists
 	if !pathExists(doc, o.FromPath) {
 		return internal.OpResult[any]{}, ErrPathNotFound
@@ -47,16 +53,24 @@ func (o *MoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, ErrCannotMoveIntoChildren
 	}
 
-	// Check if this is a move within the same array
-	if len(o.FromPath) > 1 && len(o.Path()) > 1 &&
-		len(o.FromPath) == len(o.Path()) &&
-		pathEquals(o.FromPath[:len(o.FromPath)-1], o.Path()[:len(o.Path())-1]) {
-		// Check if the parent is actually an array
-		arrayPath := o.FromPath[:len(o.FromPath)-1]
-		if parent, err := getValue(doc, arrayPath); err == nil {
-			if _, ok := parent.([]interface{}); ok {
-				// Same array movement - use special logic
-				return o.applySameArrayMove(doc)
+	// Check if this is a move within the same array (including root array)
+	if len(o.FromPath) == len(o.Path()) {
+		// For root array (paths have length 1)
+		if len(o.FromPath) == 1 {
+			// Check if doc is actually an array
+			if _, ok := doc.([]interface{}); ok {
+				// Same array movement - use special logic for root array
+				return o.applySameRootArrayMove(doc)
+			}
+		} else if len(o.FromPath) > 1 &&
+			pathEquals(o.FromPath[:len(o.FromPath)-1], o.Path()[:len(o.Path())-1]) {
+			// Check if the parent is actually an array
+			arrayPath := o.FromPath[:len(o.FromPath)-1]
+			if parent, err := getValue(doc, arrayPath); err == nil {
+				if _, ok := parent.([]interface{}); ok {
+					// Same array movement - use special logic
+					return o.applySameArrayMove(doc)
+				}
 			}
 		}
 	}
@@ -165,6 +179,63 @@ func (o *MoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 	return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 }
 
+// applySameRootArrayMove handles movement within a root array
+func (o *MoveOperation) applySameRootArrayMove(doc any) (internal.OpResult[any], error) {
+	slice, ok := doc.([]interface{})
+	if !ok {
+		return internal.OpResult[any]{}, ErrNotAnArray
+	}
+
+	// Parse indices
+	fromIndex, err := parseArrayIndex(o.FromPath[0])
+	if err != nil {
+		return internal.OpResult[any]{}, fmt.Errorf("%w: invalid from index: %w", ErrInvalidIndex, err)
+	}
+
+	toIndex, err := parseArrayIndex(o.Path()[0])
+	if err != nil {
+		return internal.OpResult[any]{}, fmt.Errorf("%w: invalid to index: %w", ErrInvalidIndex, err)
+	}
+
+	// Validate indices
+	if fromIndex < 0 || fromIndex >= len(slice) {
+		return internal.OpResult[any]{}, ErrIndexOutOfRange
+	}
+	if toIndex < 0 || toIndex >= len(slice) {
+		return internal.OpResult[any]{}, ErrIndexOutOfRange
+	}
+
+	// Get the value to move and old value at target
+	value := slice[fromIndex]
+	oldValue := slice[toIndex]
+
+	// Create new array with the move
+	newSlice := make([]interface{}, 0, len(slice))
+
+	switch {
+	case fromIndex < toIndex:
+		// Moving forward: copy elements before fromIndex, skip fromIndex,
+		// copy until toIndex, insert value, copy rest
+		newSlice = append(newSlice, slice[:fromIndex]...)
+		newSlice = append(newSlice, slice[fromIndex+1:toIndex+1]...)
+		newSlice = append(newSlice, value)
+		newSlice = append(newSlice, slice[toIndex+1:]...)
+	case fromIndex > toIndex:
+		// Moving backward: copy elements before toIndex, insert value,
+		// copy until fromIndex (skip fromIndex), copy rest
+		newSlice = append(newSlice, slice[:toIndex]...)
+		newSlice = append(newSlice, value)
+		newSlice = append(newSlice, slice[toIndex:fromIndex]...)
+		newSlice = append(newSlice, slice[fromIndex+1:]...)
+	default:
+		// fromIndex == toIndex, no movement needed
+		return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
+	}
+
+	// Return the new array as the document
+	return internal.OpResult[any]{Doc: newSlice, Old: oldValue}, nil
+}
+
 // applySameArrayMove handles movement within the same array
 func (o *MoveOperation) applySameArrayMove(doc any) (internal.OpResult[any], error) {
 	// Parse indices
@@ -205,14 +276,15 @@ func (o *MoveOperation) applySameArrayMove(doc any) (internal.OpResult[any], err
 	// Create new array with the move using proper algorithm
 	newSlice := make([]interface{}, 0, len(slice))
 
-	if fromIndex < toIndex {
+	switch {
+	case fromIndex < toIndex:
 		// Moving forward: copy elements before fromIndex, skip fromIndex,
 		// copy until toIndex, insert value, copy rest
 		newSlice = append(newSlice, slice[:fromIndex]...)
 		newSlice = append(newSlice, slice[fromIndex+1:toIndex+1]...)
 		newSlice = append(newSlice, value)
 		newSlice = append(newSlice, slice[toIndex+1:]...)
-	} else {
+	default:
 		// Moving backward: copy elements before toIndex, insert value,
 		// copy until fromIndex (skip fromIndex), copy rest
 		newSlice = append(newSlice, slice[:toIndex]...)

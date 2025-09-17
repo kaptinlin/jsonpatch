@@ -82,10 +82,16 @@ func TestOpCopy_SamePath(t *testing.T) {
 }
 
 func TestOpCopy_EmptyPath(t *testing.T) {
+	// Empty path is valid for copy - it copies to root
 	copyOp := NewCopy([]string{}, []string{"foo"})
 	err := copyOp.Validate()
-	assert.Error(t, err, "Copy should fail validation for empty path")
-	assert.Contains(t, err.Error(), "path cannot be empty", "Error message should mention empty path")
+	assert.NoError(t, err, "Copy to root (empty path) should be valid")
+
+	// Test actual copy to root
+	doc := map[string]interface{}{"foo": "bar", "other": "value"}
+	result, err := copyOp.Apply(doc)
+	assert.NoError(t, err, "Copy to root should succeed")
+	assert.Equal(t, "bar", result.Doc, "Root should be replaced with copied value")
 }
 
 func TestOpCopy_EmptyFrom(t *testing.T) {
@@ -127,14 +133,17 @@ func TestOpCopy_Validate(t *testing.T) {
 	copyOp := NewCopy([]string{"target"}, []string{"source"})
 	err := copyOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
+
+	// Empty path is valid for copy (copies to root)
 	copyOp = NewCopy([]string{}, []string{"source"})
 	err = copyOp.Validate()
-	assert.Error(t, err, "Invalid operation should fail validation")
-	assert.Contains(t, err.Error(), "path cannot be empty", "Error message should mention empty path")
+	assert.NoError(t, err, "Copy to root (empty path) should be valid")
+
 	copyOp = NewCopy([]string{"target"}, []string{})
 	err = copyOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.Contains(t, err.Error(), "from path cannot be empty", "Error message should mention empty from path")
+
 	copyOp = NewCopy([]string{"same"}, []string{"same"})
 	err = copyOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")

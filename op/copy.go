@@ -55,15 +55,19 @@ func (o *CopyOperation) Apply(doc any) (internal.OpResult[any], error) {
 		}
 	}
 
+	// Handle empty path (root replacement)
+	if len(o.Path()) == 0 {
+		// Copy to root - replace entire document
+		return internal.OpResult[any]{Doc: clonedValue, Old: doc}, nil
+	}
+
 	// Optimize: inline old value retrieval, reducing function calls
 	var oldValue interface{}
-	if len(o.Path()) > 0 {
-		// Directly try to get value, more efficient than checking existence first
-		if old, err := getValue(doc, o.Path()); err == nil {
-			oldValue = old
-		}
-		// If the value is not found, oldValue remains nil, which is correct behavior
+	// Directly try to get value, more efficient than checking existence first
+	if old, err := getValue(doc, o.Path()); err == nil {
+		oldValue = old
 	}
+	// If the value is not found, oldValue remains nil, which is correct behavior
 
 	// Set value to target path
 	err = insertValueAtPath(doc, o.Path(), clonedValue)
@@ -90,9 +94,8 @@ func (o *CopyOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the copy operation.
 func (o *CopyOperation) Validate() error {
-	if len(o.Path()) == 0 {
-		return ErrPathEmpty
-	}
+	// Empty path is valid for copy (copies to root)
+	// Only from path cannot be empty
 	if len(o.FromPath) == 0 {
 		return ErrFromPathEmpty
 	}

@@ -73,11 +73,26 @@ func TestOpMove_FromNonExistent(t *testing.T) {
 }
 
 func TestOpMove_SamePath(t *testing.T) {
-	// Test moving to the same path
+	// Test moving to the same path (runtime behavior - should be no-op)
+	doc := map[string]interface{}{"foo": 1}
 	moveOp := NewMove([]string{"foo"}, []string{"foo"})
-	err := moveOp.Validate()
-	assert.Error(t, err, "Move should fail validation for same path and from")
-	assert.Contains(t, err.Error(), "path and from cannot be the same", "Error message should mention same paths")
+	result, err := moveOp.Apply(doc)
+	require.NoError(t, err, "Move to same location should have no effect")
+	assert.Equal(t, doc, result.Doc, "Document should remain unchanged")
+	assert.Nil(t, result.Old, "Old value should be nil for no-op")
+}
+
+func TestOpMove_RootArray(t *testing.T) {
+	// Test moving within root array
+	doc := []interface{}{"first", "second", "third"}
+	moveOp := NewMove([]string{"0"}, []string{"2"})
+	result, err := moveOp.Apply(doc)
+	require.NoError(t, err, "Move within root array should succeed")
+
+	resultArray := result.Doc.([]interface{})
+	// Moving "third" (index 2) to position 0, displacing "first"
+	assert.Equal(t, []interface{}{"third", "first", "second"}, resultArray, "Root array should be properly reordered")
+	assert.Equal(t, "first", result.Old, "Old value should be the displaced element")
 }
 
 func TestOpMove_EmptyPath(t *testing.T) {
