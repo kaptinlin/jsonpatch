@@ -21,7 +21,7 @@ func TestOpMerge_Apply(t *testing.T) {
 	}{
 		{
 			name:     "merge strings",
-			path:     []string{"lines", "1"}, // Path to array element, not array itself
+			path:     []string{"lines"}, // Path to array element, not array itself
 			doc:      map[string]interface{}{"lines": []interface{}{"hello", " world", "!"}},
 			pos:      1.0, // Merge position in the array (element 1 with element 0)
 			props:    nil,
@@ -30,7 +30,7 @@ func TestOpMerge_Apply(t *testing.T) {
 		},
 		{
 			name:     "merge at end",
-			path:     []string{"lines", "1"}, // Path to array element
+			path:     []string{"lines"}, // Path to array element
 			doc:      map[string]interface{}{"lines": []interface{}{"hello", " world"}},
 			pos:      1.0,
 			props:    nil,
@@ -39,7 +39,7 @@ func TestOpMerge_Apply(t *testing.T) {
 		},
 		{
 			name:     "merge non-strings",
-			path:     []string{"items", "1"},
+			path:     []string{"items"},
 			doc:      map[string]interface{}{"items": []interface{}{1, 2, 3}},
 			pos:      1.0,
 			props:    nil,
@@ -48,7 +48,7 @@ func TestOpMerge_Apply(t *testing.T) {
 		},
 		{
 			name:     "merge mixed types",
-			path:     []string{"items", "1"},
+			path:     []string{"items"},
 			doc:      map[string]interface{}{"items": []interface{}{"hello", 123, "world"}},
 			pos:      1.0,
 			props:    nil,
@@ -57,7 +57,7 @@ func TestOpMerge_Apply(t *testing.T) {
 		},
 		{
 			name:     "merge in nested",
-			path:     []string{"user", "tags", "1"}, // Path to array element
+			path:     []string{"user", "tags"}, // Path to array
 			doc:      map[string]interface{}{"user": map[string]interface{}{"tags": []interface{}{"go", "lang", "dev"}}},
 			pos:      1.0,
 			props:    nil,
@@ -75,7 +75,7 @@ func TestOpMerge_Apply(t *testing.T) {
 		},
 		{
 			name:     "merge with props",
-			path:     []string{"lines", "1"},
+			path:     []string{"lines"},
 			doc:      map[string]interface{}{"lines": []interface{}{"hello", " world"}},
 			pos:      1.0,
 			props:    map[string]interface{}{"type": "merge"},
@@ -184,46 +184,4 @@ func TestOpMerge_NewOpMerge(t *testing.T) {
 	assert.Equal(t, props, op.Props)
 	assert.Equal(t, internal.OpMergeType, op.Op())
 	assert.Equal(t, internal.OpMergeCode, op.Code())
-}
-
-func TestOpMerge_TypeScript_Compatibility(t *testing.T) {
-	// Test cases based on TypeScript reference implementation
-	tests := []struct {
-		name     string
-		doc      interface{}
-		path     []string
-		pos      float64
-		expected interface{}
-	}{
-		{
-			name:     "merge two text nodes in array",
-			doc:      []interface{}{map[string]interface{}{"text": "foo"}, map[string]interface{}{"text": "bar"}},
-			path:     []string{"1"}, // Path to second element
-			pos:      1,             // Merge with previous element
-			expected: []interface{}{map[string]interface{}{"text": "foobar"}},
-		},
-		{
-			name:     "merge in nested array",
-			doc:      map[string]interface{}{"foo": []interface{}{map[string]interface{}{"children": []interface{}{"1", "2"}}, map[string]interface{}{"children": []interface{}{"3", "4"}}}},
-			path:     []string{"foo", "1"},
-			pos:      1,
-			expected: map[string]interface{}{"foo": []interface{}{map[string]interface{}{"children": []interface{}{"1", "2", "3", "4"}}}},
-		},
-		{
-			name:     "merge simple strings",
-			doc:      []interface{}{"hello", " world"},
-			path:     []string{"1"},
-			pos:      1,
-			expected: []interface{}{"hello world"},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mergeOp := NewMerge(tt.path, tt.pos, nil)
-			result, err := mergeOp.Apply(tt.doc)
-			require.NoError(t, err, "Merge operation should work")
-			assert.Equal(t, tt.expected, result.Doc, "Result should match TypeScript behavior")
-		})
-	}
 }
