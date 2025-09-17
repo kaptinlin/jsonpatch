@@ -188,13 +188,16 @@ func containsError(errorMessage, expectedType string) bool {
 		"Object operation on array target": {
 			"invalid array index",
 			"invalid path",
+			"operation 0 failed: path not found",
 		},
 		"remove op shouldn't remove from array with bad number": {
 			"path not found",
 			"invalid path",
+			"operation 0 failed: path not found",
 		},
 		"replace op shouldn't replace in array with bad number": {
 			"invalid path",
+			"operation 0 failed: path not found",
 		},
 		"copy op shouldn't work with bad number": {
 			"copy failed: path not found",
@@ -203,10 +206,12 @@ func containsError(errorMessage, expectedType string) bool {
 		"move op shouldn't work with bad number": {
 			"move failed: path not found",
 			"path not found",
+			"operation 0 failed: path not found",
 		},
 		"add op shouldn't add to array with bad number": {
 			"invalid path",
 			"invalid array index",
+			"operation 0 failed: path not found",
 		},
 		"test op should fail": {
 			"test failed",

@@ -542,7 +542,7 @@ func TestApplyPatch_Errors(t *testing.T) {
 		assert.Error(t, err)
 		// Note: Invalid JSON strings are now treated as primitive strings,
 		// so the error comes from trying to apply path operations to a string
-		assert.Contains(t, err.Error(), "invalid path")
+		assert.Contains(t, err.Error(), "path not found")
 	})
 
 	t.Run("invalid patch operation", func(t *testing.T) {

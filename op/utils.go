@@ -120,7 +120,7 @@ func DeepClone(value interface{}) (interface{}, error) {
 func parseArrayIndex(token string) (int, error) {
 	index, err := strconv.Atoi(token)
 	if err != nil {
-		return 0, ErrInvalidPath
+		return 0, ErrPathNotFound
 	}
 	return index, nil
 }
@@ -128,7 +128,7 @@ func parseArrayIndex(token string) (int, error) {
 // navigateToParent navigates to the parent of the target path and returns the parent, key, and any error
 func navigateToParent(doc interface{}, path []string) (interface{}, interface{}, error) {
 	if len(path) == 0 {
-		return nil, nil, ErrInvalidPath
+		return nil, nil, ErrPathNotFound
 	}
 
 	parentPath := path[:len(path)-1]
@@ -155,9 +155,9 @@ func navigateToParent(doc interface{}, path []string) (interface{}, interface{},
 		if index, err := parseArrayIndex(key); err == nil {
 			return parent, index, nil
 		}
-		return nil, nil, ErrInvalidPath
+		return nil, nil, ErrPathNotFound
 	default:
-		return nil, nil, ErrInvalidPath
+		return nil, nil, ErrPathNotFound
 	}
 }
 
@@ -195,7 +195,7 @@ func insertValueAtPath(doc interface{}, path []string, value interface{}) error 
 func setValueAtPathWithMode(doc interface{}, path []string, value interface{}, insertMode bool) error {
 	if len(path) == 0 {
 		// Root level set - this should be handled by the caller
-		return ErrInvalidPath
+		return ErrPathNotFound
 	}
 
 	parent, key, err := navigateToParent(doc, path)
