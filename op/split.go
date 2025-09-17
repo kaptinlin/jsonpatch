@@ -1,8 +1,6 @@
 package op
 
 import (
-	"errors"
-
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/pkg/slate"
 )
@@ -42,64 +40,61 @@ func (op *SplitOperation) Path() []string {
 	return op.path
 }
 
-// Apply applies the string split operation.
+// Apply applies the split operation following TypeScript reference.
 func (op *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
-	// Handle root level split specially
+	// Get the target value
+	var target interface{}
+	var err error
+
 	if len(op.Path()) == 0 {
-		// Target is the root document
-		parts := op.splitValue(doc)
-		return internal.OpResult[any]{Doc: parts, Old: doc}, nil
+		target = doc
+	} else {
+		target, err = getValue(doc, op.Path())
+		if err != nil {
+			return internal.OpResult[any]{}, err
+		}
 	}
 
-	// Get the target value for non-root paths
-	target, err := getValue(doc, op.Path())
+	// Split the value following TypeScript logic
+	parts := op.splitValue(target)
+
+	// Following TypeScript reference behavior
+	if len(op.Path()) == 0 {
+		// Root level split - return the split result as new document
+		return internal.OpResult[any]{Doc: parts, Old: target}, nil
+	}
+
+	// For array elements, follow TypeScript pattern: replace element and insert new one
+	parent, key, err := navigateToParent(doc, op.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
-	// Split the value
-	parts := op.splitValue(target)
+	if slice, ok := parent.([]interface{}); ok {
+		if index, ok := key.(int); ok {
+			// TypeScript: ref.obj[ref.key] = tuple[0]; ref.obj.splice(ref.key + 1, 0, tuple[1]);
+			splitResult := parts.([]interface{})
 
-	// Check if we're splitting an array element
-	if op.isArrayElementPath(doc, op.Path()) {
-		// Special handling for array elements - insert the second part as a new element
-		err = op.handleArraySplit(doc, parts.([]interface{}))
-		if err != nil {
-			// Check if this is a root array modification error
-			if errors.Is(err, ErrCannotModifyRootArray) {
-				// Handle root array splitting specially
-				parentPath := op.Path()[:len(op.Path())-1]
-				if len(parentPath) == 0 {
-					// This is a root array element split
-					elementKey := op.Path()[len(op.Path())-1]
-					index, parseErr := parseArrayIndex(elementKey)
-					if parseErr != nil {
-						return internal.OpResult[any]{}, parseErr
-					}
+			// Create new array with split
+			newSlice := make([]interface{}, len(slice)+1)
+			copy(newSlice[:index], slice[:index])
+			newSlice[index] = splitResult[0]
+			newSlice[index+1] = splitResult[1]
+			copy(newSlice[index+2:], slice[index+1:])
 
-					rootArray, ok := doc.([]interface{})
-					if !ok {
-						return internal.OpResult[any]{}, ErrNotAnArray
-					}
-
-					if index < 0 || index >= len(rootArray) {
-						return internal.OpResult[any]{}, ErrArrayIndexOutOfBounds
-					}
-
-					// Create new array with the split result
-					newArray := make([]interface{}, len(rootArray)+1)
-					copy(newArray[:index], rootArray[:index])
-					newArray[index] = parts.([]interface{})[0]
-					newArray[index+1] = parts.([]interface{})[1]
-					copy(newArray[index+2:], rootArray[index+1:])
-
-					return internal.OpResult[any]{Doc: newArray, Old: target}, nil
-				}
+			// Update parent
+			parentPath := op.Path()[:len(op.Path())-1]
+			if len(parentPath) == 0 {
+				// Root array - return new array
+				return internal.OpResult[any]{Doc: newSlice, Old: target}, nil
 			}
-			return internal.OpResult[any]{}, err
+			err = setValueAtPath(doc, parentPath, newSlice)
+			if err != nil {
+				return internal.OpResult[any]{}, err
+			}
 		}
 	} else {
-		// For objects and other cases, replace the entire value
+		// For objects, replace the value with split result
 		err = setValueAtPath(doc, op.Path(), parts)
 		if err != nil {
 			return internal.OpResult[any]{}, err
@@ -107,88 +102,6 @@ func (op *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: target}, nil
-}
-
-// isArrayElementPath checks if the path points to an array element
-func (op *SplitOperation) isArrayElementPath(doc interface{}, path []string) bool {
-	if len(path) == 0 {
-		return false
-	}
-
-	// Get the parent path and check if it's an array
-	parentPath := path[:len(path)-1]
-	var parent interface{}
-	var err error
-
-	if len(parentPath) == 0 {
-		// Parent is the root document
-		parent = doc
-	} else {
-		parent, err = getValue(doc, parentPath)
-		if err != nil {
-			return false
-		}
-	}
-
-	_, isArray := parent.([]interface{})
-	return isArray
-}
-
-// handleArraySplit handles splitting when the target is an array element
-func (op *SplitOperation) handleArraySplit(doc interface{}, parts []interface{}) error {
-	if len(parts) != 2 {
-		return ErrArrayTooSmall
-	}
-
-	// Get parent array and element index
-	parentPath := op.Path()[:len(op.Path())-1]
-	elementKey := op.Path()[len(op.Path())-1]
-
-	var parentArray []interface{}
-	var ok bool
-
-	if len(parentPath) == 0 {
-		// Parent is the root document
-		parentArray, ok = doc.([]interface{})
-		if !ok {
-			return ErrNotAnArray
-		}
-	} else {
-		parent, err := getValue(doc, parentPath)
-		if err != nil {
-			return err
-		}
-
-		parentArray, ok = parent.([]interface{})
-		if !ok {
-			return ErrNotAnArray
-		}
-	}
-
-	// Parse the array index
-	index, err := parseArrayIndex(elementKey)
-	if err != nil {
-		return err
-	}
-
-	if index < 0 || index >= len(parentArray) {
-		return ErrArrayIndexOutOfBounds
-	}
-
-	// Create new array with the split result
-	newArray := make([]interface{}, len(parentArray)+1)
-	copy(newArray[:index], parentArray[:index])
-	newArray[index] = parts[0]
-	newArray[index+1] = parts[1]
-	copy(newArray[index+2:], parentArray[index+1:])
-
-	// Set the new array back
-	if len(parentPath) == 0 {
-		// We can't modify the root document directly, but we can return an error
-		// indicating that the caller should handle this case
-		return ErrCannotModifyRootArray
-	}
-	return setValueAtPath(doc, parentPath, newArray)
 }
 
 // splitValue splits a value based on its type

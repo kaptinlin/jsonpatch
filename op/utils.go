@@ -319,7 +319,6 @@ func updateParent(parent interface{}, key interface{}, value interface{}) error 
 	}
 }
 
-
 // pathExists checks if a path exists in the document
 func pathExists(doc interface{}, path []string) bool {
 	if len(path) == 0 {

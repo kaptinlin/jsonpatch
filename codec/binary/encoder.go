@@ -99,7 +99,7 @@ func encodeOp(encoder msgpack.Writer, i internal.Op) error {
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))
 		encodePath(encoder, o.Path())
-		return encodeValue(encoder, o.Values)
+		return encodeValue(encoder, o.Value)
 	case *op.StartsOperation:
 		encoder.WriteArraySize(3)
 		encoder.WriteUint8(uint8(o.Code()))

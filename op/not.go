@@ -7,7 +7,7 @@ import (
 // NotOperation represents a logical NOT operation that negates predicates.
 type NotOperation struct {
 	BaseOp
-	Operations []interface{} `json:"ops"` // Array of operations to negate
+	Operations []interface{} `json:"apply"` // Array of operations to apply (then negate)
 }
 
 // NewOpNotOperation creates a new NOT operation.

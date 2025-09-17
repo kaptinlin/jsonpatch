@@ -178,3 +178,60 @@ func TestOpSplit_NewOpSplit(t *testing.T) {
 	assert.Equal(t, internal.OpSplitType, op.Op())
 	assert.Equal(t, internal.OpSplitCode, op.Code())
 }
+
+func TestOpSplit_TypeScript_Compatibility(t *testing.T) {
+	// Test cases based on TypeScript reference implementation
+	tests := []struct {
+		name     string
+		doc      interface{}
+		path     []string
+		pos      float64
+		props    interface{}
+		expected interface{}
+	}{
+		{
+			name:     "split string without props",
+			doc:      map[string]interface{}{"text": "hello"},
+			path:     []string{"text"},
+			pos:      2,
+			props:    nil,
+			expected: map[string]interface{}{"text": []interface{}{"he", "llo"}},
+		},
+		{
+			name:  "split string with props",
+			doc:   map[string]interface{}{"text": "hello"},
+			path:  []string{"text"},
+			pos:   2,
+			props: map[string]interface{}{"bold": true},
+			expected: map[string]interface{}{"text": []interface{}{
+				map[string]interface{}{"text": "he", "bold": true},
+				map[string]interface{}{"text": "llo", "bold": true},
+			}},
+		},
+		{
+			name:     "split number",
+			doc:      map[string]interface{}{"num": 10},
+			path:     []string{"num"},
+			pos:      3,
+			props:    nil,
+			expected: map[string]interface{}{"num": []interface{}{3.0, 7.0}},
+		},
+		{
+			name:     "split root array element",
+			doc:      []interface{}{"hello world"},
+			path:     []string{"0"},
+			pos:      5,
+			props:    nil,
+			expected: []interface{}{"hello", " world"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			splitOp := NewSplit(tt.path, tt.pos, tt.props)
+			result, err := splitOp.Apply(tt.doc)
+			require.NoError(t, err, "Split operation should work")
+			assert.Equal(t, tt.expected, result.Doc, "Result should match TypeScript behavior")
+		})
+	}
+}

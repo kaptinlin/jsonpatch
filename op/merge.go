@@ -40,100 +40,84 @@ func (op *MergeOperation) Path() []string {
 	return op.path
 }
 
-// Apply applies the array merge operation.
+// Apply applies the merge operation following TypeScript reference.
 func (op *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
-	// Handle root level merge specially
-	if len(op.Path()) == 0 {
-		// Target is the root document
-		targetArr, ok := doc.([]interface{})
-		if !ok {
+	// Following TypeScript reference logic
+	parent, key, err := navigateToParent(doc, op.Path())
+	if err != nil {
+		if len(op.Path()) == 0 {
+			// Root level - check if it's an array
+			if slice, ok := doc.([]interface{}); ok {
+				return op.mergeRootArray(slice)
+			}
 			return internal.OpResult[any]{}, ErrNotAnArray
 		}
-
-		// Check if we have at least 2 elements and pos is valid
-		if len(targetArr) < 2 {
-			return internal.OpResult[any]{}, ErrArrayTooSmall
-		}
-		// High-performance type conversion (single, boundary conversion)
-		pos := int(op.Pos) // Already validated as safe integer
-		if pos <= 0 || pos >= len(targetArr) {
-			return internal.OpResult[any]{}, ErrPositionOutOfBounds
-		}
-
-		// Clone the target array
-		clonedTarget, err := DeepClone(targetArr)
-		if err != nil {
-			return internal.OpResult[any]{}, err
-		}
-
-		// Merge array elements
-		mergedArr, oldElements := op.mergeArrayElements(clonedTarget.([]interface{}), pos)
-
-		return internal.OpResult[any]{Doc: mergedArr, Old: oldElements}, nil
-	}
-
-	// Get the target value for non-root paths
-	target, err := getValue(doc, op.Path())
-	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
-	// Check if target is an array
-	targetArr, ok := target.([]interface{})
+	// Must be array reference (like TypeScript)
+	slice, ok := parent.([]interface{})
 	if !ok {
 		return internal.OpResult[any]{}, ErrNotAnArray
 	}
 
-	// Check if we have at least 2 elements and pos is valid
-	if len(targetArr) < 2 {
-		return internal.OpResult[any]{}, ErrArrayTooSmall
-	}
-	// High-performance type conversion (single, boundary conversion)
-	pos := int(op.Pos) // Already validated as safe integer
-	if pos <= 0 || pos >= len(targetArr) {
-		return internal.OpResult[any]{}, ErrPositionOutOfBounds
+	index, ok := key.(int)
+	if !ok {
+		return internal.OpResult[any]{}, ErrInvalidIndex
 	}
 
-	// Clone the target array
-	clonedTarget, err := DeepClone(targetArr)
-	if err != nil {
-		return internal.OpResult[any]{}, err
+	// TypeScript: if (ref.key <= 0) throw new Error('INVALID_KEY');
+	if index <= 0 {
+		return internal.OpResult[any]{}, ErrInvalidIndex
 	}
 
-	// Merge array elements
-	mergedArr, oldElements := op.mergeArrayElements(clonedTarget.([]interface{}), pos)
-
-	// Set the merged array back
-	err = setValueAtPath(doc, op.Path(), mergedArr)
-	if err != nil {
-		return internal.OpResult[any]{}, err
+	if index >= len(slice) {
+		return internal.OpResult[any]{}, ErrIndexOutOfRange
 	}
 
-	return internal.OpResult[any]{Doc: doc, Old: oldElements}, nil
-}
-
-// mergeArrayElements merges array elements at position pos-1 and pos (like TypeScript version).
-// Returns the new array and the old elements that were merged.
-func (op *MergeOperation) mergeArrayElements(arr []interface{}, pos int) ([]interface{}, []interface{}) {
-	if pos <= 0 || pos >= len(arr) {
-		return arr, nil
-	}
-
-	// Get elements to merge (pos-1 and pos, like TypeScript version)
-	one := arr[pos-1]
-	two := arr[pos]
-	oldElements := []interface{}{one, two}
-
-	// Merge the elements
+	// Get elements to merge (pos-1 and pos)
+	one := slice[index-1]
+	two := slice[index]
 	merged := op.mergeElements(one, two)
 
-	// Create new array with merged element
-	result := make([]interface{}, len(arr)-1)
-	copy(result[:pos-1], arr[:pos-1])
-	result[pos-1] = merged
-	copy(result[pos:], arr[pos+1:])
+	// Create new array with merged result
+	newSlice := make([]interface{}, len(slice)-1)
+	copy(newSlice[:index-1], slice[:index-1])
+	newSlice[index-1] = merged
+	copy(newSlice[index:], slice[index+1:])
 
-	return result, oldElements
+	// Update parent
+	parentPath := op.Path()[:len(op.Path())-1]
+	if len(parentPath) == 0 {
+		// Root array
+		return internal.OpResult[any]{Doc: newSlice, Old: []interface{}{one, two}}, nil
+	}
+
+	err = setValueAtPath(doc, parentPath, newSlice)
+	if err != nil {
+		return internal.OpResult[any]{}, err
+	}
+
+	return internal.OpResult[any]{Doc: doc, Old: []interface{}{one, two}}, nil
+}
+
+func (op *MergeOperation) mergeRootArray(slice []interface{}) (internal.OpResult[any], error) {
+	pos := int(op.Pos)
+	if pos <= 0 || pos >= len(slice) {
+		return internal.OpResult[any]{}, ErrInvalidIndex
+	}
+
+	one := slice[pos-1]
+	two := slice[pos]
+	merged := op.mergeElements(one, two)
+
+	// Create new array
+	newSlice := make([]interface{}, len(slice)-1)
+	copy(newSlice[:pos-1], slice[:pos-1])
+	newSlice[pos-1] = merged
+	copy(newSlice[pos:], slice[pos+1:])
+
+	return internal.OpResult[any]{Doc: newSlice, Old: []interface{}{one, two}}, nil
 }
 
 // mergeElements merges two elements based on their internal.

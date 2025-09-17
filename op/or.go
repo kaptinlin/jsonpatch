@@ -7,7 +7,7 @@ import (
 // OrOperation represents an OR operation that combines multiple predicate operations.
 type OrOperation struct {
 	BaseOp
-	Operations []interface{} `json:"ops"` // Array of operations
+	Operations []interface{} `json:"apply"` // Array of operations to apply
 }
 
 // NewOpOrOperation creates a new OpOrOperation operation.

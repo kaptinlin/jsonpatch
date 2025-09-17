@@ -7,7 +7,7 @@ import (
 // AndOperation represents an and operation that combines multiple predicate operations.
 type AndOperation struct {
 	BaseOp
-	Operations []interface{} `json:"ops"` // Array of operations
+	Operations []interface{} `json:"apply"` // Array of operations to apply
 }
 
 type OpAndOperation = AndOperation //nolint:revive // Backward compatibility alias
