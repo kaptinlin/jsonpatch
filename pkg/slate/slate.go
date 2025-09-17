@@ -18,14 +18,11 @@ type TextNode = Node
 // ElementNode is a type alias for better API clarity
 type ElementNode = Node
 
-// SlateNode is a backward-compatible alias for Node
-type SlateNode = Node
+type SlateNode = Node //nolint:revive // Backward compatibility alias
 
-// SlateTextNode is a backward-compatible alias for TextNode
-type SlateTextNode = TextNode
+type SlateTextNode = TextNode //nolint:revive // Backward compatibility alias
 
-// SlateElementNode is a backward-compatible alias for ElementNode
-type SlateElementNode = ElementNode
+type SlateElementNode = ElementNode //nolint:revive // Backward compatibility alias
 
 // IsText returns true if this is a text node
 func (n *Node) IsText() bool {

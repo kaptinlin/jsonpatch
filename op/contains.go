@@ -14,8 +14,7 @@ type ContainsOperation struct {
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case when comparing
 }
 
-// OpContainsOperation is a backward-compatible alias for ContainsOperation.
-type OpContainsOperation = ContainsOperation
+type OpContainsOperation = ContainsOperation //nolint:revive // Backward compatibility alias
 
 // NewOpContainsOperation creates a new OpContainsOperation operation.
 func NewOpContainsOperation(path []string, substring string) *ContainsOperation {

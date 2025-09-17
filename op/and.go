@@ -10,8 +10,7 @@ type AndOperation struct {
 	Operations []interface{} `json:"ops"` // Array of operations
 }
 
-// OpAndOperation is a backward-compatible alias for AndOperation.
-type OpAndOperation = AndOperation
+type OpAndOperation = AndOperation //nolint:revive // Backward compatibility alias
 
 // NewOpAndOperation creates a new AndOperation operation.
 func NewOpAndOperation(path []string, ops []interface{}) *AndOperation {

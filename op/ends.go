@@ -14,8 +14,7 @@ type EndsOperation struct {
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case
 }
 
-// OpEndsOperation is a backward-compatible alias for EndsOperation.
-type OpEndsOperation = EndsOperation
+type OpEndsOperation = EndsOperation //nolint:revive // Backward compatibility alias
 
 // NewOpEndsOperation creates a new OpEndsOperation operation.
 func NewOpEndsOperation(path []string, suffix string) *EndsOperation {
