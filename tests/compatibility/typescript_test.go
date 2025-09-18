@@ -1,0 +1,491 @@
+package compatibility
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/kaptinlin/jsonpatch"
+	"github.com/kaptinlin/jsonpatch/tests/testutils"
+	"github.com/stretchr/testify/assert"
+)
+
+// TypeScriptTestCase represents a test case from TypeScript implementation
+type TypeScriptTestCase struct {
+	Name       string                `json:"name"`
+	Doc        interface{}           `json:"doc"`
+	Patch      []jsonpatch.Operation `json:"patch"`
+	Expected   interface{}           `json:"expected,omitempty"`
+	ShouldFail bool                  `json:"shouldFail,omitempty"`
+	Comment    string                `json:"comment,omitempty"`
+	Source     string                `json:"source,omitempty"` // Which TypeScript file this came from
+}
+
+// TestTypeScriptParity verifies that our Go implementation behaves consistently with TypeScript
+func TestTypeScriptParity(t *testing.T) {
+	// Load test cases from known working operations
+	testCases := getKnownWorkingTestCases()
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			if tc.ShouldFail {
+				_ = testutils.ApplyOperationsWithError(t, tc.Doc, tc.Patch)
+			} else {
+				result := testutils.ApplyOperations(t, tc.Doc, tc.Patch)
+				assert.Equal(t, tc.Expected, result, tc.Comment)
+			}
+		})
+	}
+}
+
+// TestBasicOperationParity tests basic JSON Patch operations against TypeScript behavior
+func TestBasicOperationParity(t *testing.T) {
+	testCases := []TypeScriptTestCase{
+		{
+			Name: "add_to_object",
+			Doc:  map[string]interface{}{"foo": "bar"},
+			Patch: []jsonpatch.Operation{
+				{"op": "add", "path": "/baz", "value": "qux"},
+			},
+			Expected: map[string]interface{}{"foo": "bar", "baz": "qux"},
+			Comment:  "Should add new property to object",
+			Source:   "typescript:basic.spec.ts",
+		},
+		{
+			Name: "replace_value",
+			Doc:  map[string]interface{}{"foo": "bar"},
+			Patch: []jsonpatch.Operation{
+				{"op": "replace", "path": "/foo", "value": "baz"},
+			},
+			Expected: map[string]interface{}{"foo": "baz"},
+			Comment:  "Should replace existing value",
+			Source:   "typescript:basic.spec.ts",
+		},
+		{
+			Name: "remove_property",
+			Doc:  map[string]interface{}{"foo": "bar", "baz": "qux"},
+			Patch: []jsonpatch.Operation{
+				{"op": "remove", "path": "/baz"},
+			},
+			Expected: map[string]interface{}{"foo": "bar"},
+			Comment:  "Should remove property from object",
+			Source:   "typescript:basic.spec.ts",
+		},
+		{
+			Name: "test_successful",
+			Doc:  map[string]interface{}{"foo": "bar"},
+			Patch: []jsonpatch.Operation{
+				{"op": "test", "path": "/foo", "value": "bar"},
+			},
+			Expected: map[string]interface{}{"foo": "bar"},
+			Comment:  "Test should pass and leave document unchanged",
+			Source:   "typescript:test.spec.ts",
+		},
+		{
+			Name: "test_failure",
+			Doc:  map[string]interface{}{"foo": "bar"},
+			Patch: []jsonpatch.Operation{
+				{"op": "test", "path": "/foo", "value": "baz"},
+			},
+			ShouldFail: true,
+			Comment:    "Test should fail when values don't match",
+			Source:     "typescript:test.spec.ts",
+		},
+		{
+			Name: "copy_operation",
+			Doc:  map[string]interface{}{"foo": "bar"},
+			Patch: []jsonpatch.Operation{
+				{"op": "copy", "from": "/foo", "path": "/baz"},
+			},
+			Expected: map[string]interface{}{"foo": "bar", "baz": "bar"},
+			Comment:  "Should copy value to new location",
+			Source:   "typescript:copy.spec.ts",
+		},
+		{
+			Name: "move_operation",
+			Doc:  map[string]interface{}{"foo": "bar", "baz": "qux"},
+			Patch: []jsonpatch.Operation{
+				{"op": "move", "from": "/baz", "path": "/moved"},
+			},
+			Expected: map[string]interface{}{"foo": "bar", "moved": "qux"},
+			Comment:  "Should move value to new location",
+			Source:   "typescript:move.spec.ts",
+		},
+	}
+
+	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
+}
+
+// TestArrayOperationParity tests array operations against TypeScript behavior
+func TestArrayOperationParity(t *testing.T) {
+	testCases := []TypeScriptTestCase{
+		{
+			Name: "add_to_array_end",
+			Doc:  []interface{}{"foo", "bar"},
+			Patch: []jsonpatch.Operation{
+				{"op": "add", "path": "/-", "value": "baz"},
+			},
+			Expected: []interface{}{"foo", "bar", "baz"},
+			Comment:  "Should add to end of array",
+			Source:   "typescript:array.spec.ts",
+		},
+		{
+			Name: "add_to_array_middle",
+			Doc:  []interface{}{"foo", "bar"},
+			Patch: []jsonpatch.Operation{
+				{"op": "add", "path": "/1", "value": "baz"},
+			},
+			Expected: []interface{}{"foo", "baz", "bar"},
+			Comment:  "Should insert into array at index",
+			Source:   "typescript:array.spec.ts",
+		},
+		{
+			Name: "remove_from_array",
+			Doc:  []interface{}{"foo", "bar", "baz"},
+			Patch: []jsonpatch.Operation{
+				{"op": "remove", "path": "/1"},
+			},
+			Expected: []interface{}{"foo", "baz"},
+			Comment:  "Should remove from array at index",
+			Source:   "typescript:array.spec.ts",
+		},
+		{
+			Name: "replace_array_element",
+			Doc:  []interface{}{"foo", "bar"},
+			Patch: []jsonpatch.Operation{
+				{"op": "replace", "path": "/0", "value": "baz"},
+			},
+			Expected: []interface{}{"baz", "bar"},
+			Comment:  "Should replace array element",
+			Source:   "typescript:array.spec.ts",
+		},
+	}
+
+	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
+}
+
+// TestPredicateOperationParity tests predicate operations against TypeScript behavior
+func TestPredicateOperationParity(t *testing.T) {
+	testCases := []TypeScriptTestCase{
+		{
+			Name: "contains_successful",
+			Doc:  map[string]interface{}{"text": "hello world"},
+			Patch: []jsonpatch.Operation{
+				{"op": "contains", "path": "/text", "value": "world"},
+			},
+			Expected: map[string]interface{}{"text": "hello world"},
+			Comment:  "Contains should pass when substring exists",
+			Source:   "typescript:predicates.spec.ts",
+		},
+		{
+			Name: "contains_failure",
+			Doc:  map[string]interface{}{"text": "hello world"},
+			Patch: []jsonpatch.Operation{
+				{"op": "contains", "path": "/text", "value": "xyz"},
+			},
+			ShouldFail: true,
+			Comment:    "Contains should fail when substring doesn't exist",
+			Source:     "typescript:predicates.spec.ts",
+		},
+		{
+			Name: "type_check_number",
+			Doc:  map[string]interface{}{"value": 42},
+			Patch: []jsonpatch.Operation{
+				{"op": "type", "path": "/value", "value": "number"},
+			},
+			Expected: map[string]interface{}{"value": 42},
+			Comment:  "Type check should pass for correct type",
+			Source:   "typescript:type.spec.ts",
+		},
+		{
+			Name: "type_check_failure",
+			Doc:  map[string]interface{}{"value": "string"},
+			Patch: []jsonpatch.Operation{
+				{"op": "type", "path": "/value", "value": "number"},
+			},
+			ShouldFail: true,
+			Comment:    "Type check should fail for incorrect type",
+			Source:     "typescript:type.spec.ts",
+		},
+		{
+			Name: "less_than_check",
+			Doc:  map[string]interface{}{"value": 5},
+			Patch: []jsonpatch.Operation{
+				{"op": "less", "path": "/value", "value": 10},
+			},
+			Expected: map[string]interface{}{"value": 5},
+			Comment:  "Less than check should pass",
+			Source:   "typescript:comparison.spec.ts",
+		},
+		{
+			Name: "more_than_check",
+			Doc:  map[string]interface{}{"value": 15},
+			Patch: []jsonpatch.Operation{
+				{"op": "more", "path": "/value", "value": 10},
+			},
+			Expected: map[string]interface{}{"value": 15},
+			Comment:  "More than check should pass",
+			Source:   "typescript:comparison.spec.ts",
+		},
+	}
+
+	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
+}
+
+// TestExtendedOperationParity tests extended operations against TypeScript behavior
+func TestExtendedOperationParity(t *testing.T) {
+	testCases := []TypeScriptTestCase{
+		{
+			Name: "inc_operation",
+			Doc:  map[string]interface{}{"counter": 5},
+			Patch: []jsonpatch.Operation{
+				{"op": "inc", "path": "/counter", "inc": 3},
+			},
+			Expected: map[string]interface{}{"counter": float64(8)}, // JSON unmarshaling converts to float64
+			Comment:  "Increment should add to numeric value",
+			Source:   "typescript:inc.spec.ts",
+		},
+		{
+			Name: "flip_operation",
+			Doc:  map[string]interface{}{"enabled": true},
+			Patch: []jsonpatch.Operation{
+				{"op": "flip", "path": "/enabled"},
+			},
+			Expected: map[string]interface{}{"enabled": false},
+			Comment:  "Flip should toggle boolean value",
+			Source:   "typescript:flip.spec.ts",
+		},
+		{
+			Name: "str_ins_operation",
+			Doc:  map[string]interface{}{"text": "hello world"},
+			Patch: []jsonpatch.Operation{
+				{"op": "str_ins", "path": "/text", "pos": 5, "str": " beautiful"},
+			},
+			Expected: map[string]interface{}{"text": "hello beautiful world"},
+			Comment:  "String insert should insert text at position",
+			Source:   "typescript:strins.spec.ts",
+		},
+	}
+
+	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
+}
+
+// TestErrorHandlingParity tests error handling consistency with TypeScript
+func TestErrorHandlingParity(t *testing.T) {
+	testCases := []TypeScriptTestCase{
+		{
+			Name: "path_not_found",
+			Doc:  map[string]interface{}{"foo": "bar"},
+			Patch: []jsonpatch.Operation{
+				{"op": "remove", "path": "/nonexistent"},
+			},
+			ShouldFail: true,
+			Comment:    "Should fail when path doesn't exist",
+			Source:     "typescript:errors.spec.ts",
+		},
+		{
+			Name: "invalid_array_index",
+			Doc:  []interface{}{"foo", "bar"},
+			Patch: []jsonpatch.Operation{
+				{"op": "remove", "path": "/5"},
+			},
+			ShouldFail: true,
+			Comment:    "Should fail for out-of-bounds array index",
+			Source:     "typescript:errors.spec.ts",
+		},
+		{
+			Name: "type_mismatch_operation",
+			Doc:  map[string]interface{}{"value": "string"},
+			Patch: []jsonpatch.Operation{
+				{"op": "inc", "path": "/value", "inc": 1},
+			},
+			ShouldFail: true,
+			Comment:    "Should fail when operation type doesn't match value type",
+			Source:     "typescript:errors.spec.ts",
+		},
+	}
+
+	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
+}
+
+// TestSecondOrderPredicateParity tests working second-order predicates
+func TestSecondOrderPredicateParity(t *testing.T) {
+	testCases := []TypeScriptTestCase{
+		{
+			Name: "not_predicate_success",
+			Doc:  map[string]interface{}{"foo": 1, "bar": 2},
+			Patch: []jsonpatch.Operation{
+				{
+					"op":   "not",
+					"path": "",
+					"apply": []interface{}{
+						map[string]interface{}{"op": "test", "path": "/foo", "value": 2},
+					},
+				},
+			},
+			Expected: map[string]interface{}{"foo": 1, "bar": 2},
+			Comment:  "NOT should succeed when inner predicate fails",
+			Source:   "typescript:second-order-predicates.spec.ts",
+		},
+		{
+			Name: "not_predicate_failure",
+			Doc:  map[string]interface{}{"foo": 1, "bar": 2},
+			Patch: []jsonpatch.Operation{
+				{
+					"op":   "not",
+					"path": "",
+					"apply": []interface{}{
+						map[string]interface{}{"op": "test", "path": "/foo", "value": 1},
+					},
+				},
+			},
+			ShouldFail: true,
+			Comment:    "NOT should fail when inner predicate succeeds",
+			Source:     "typescript:second-order-predicates.spec.ts",
+		},
+	}
+
+	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
+}
+
+// getKnownWorkingTestCases returns a curated set of test cases that are known to work
+func getKnownWorkingTestCases() []TypeScriptTestCase {
+	var allTestCases []TypeScriptTestCase
+
+	// Combine all the working test cases
+	allTestCases = append(allTestCases, getBasicOperationTestCases()...)
+	allTestCases = append(allTestCases, getArrayOperationTestCases()...)
+	allTestCases = append(allTestCases, getPredicateOperationTestCases()...)
+	allTestCases = append(allTestCases, getExtendedOperationTestCases()...)
+	allTestCases = append(allTestCases, getErrorHandlingTestCases()...)
+	allTestCases = append(allTestCases, getSecondOrderPredicateTestCases()...)
+
+	return allTestCases
+}
+
+// Helper functions to get specific test case categories
+func getBasicOperationTestCases() []TypeScriptTestCase {
+	return []TypeScriptTestCase{
+		{
+			Name:     "basic_add",
+			Doc:      map[string]interface{}{"a": 1},
+			Patch:    []jsonpatch.Operation{{"op": "add", "path": "/b", "value": 2}},
+			Expected: map[string]interface{}{"a": 1, "b": 2},
+			Comment:  "Basic add operation",
+			Source:   "typescript:add.spec.ts",
+		},
+		{
+			Name:     "basic_remove",
+			Doc:      map[string]interface{}{"a": 1, "b": 2},
+			Patch:    []jsonpatch.Operation{{"op": "remove", "path": "/b"}},
+			Expected: map[string]interface{}{"a": 1},
+			Comment:  "Basic remove operation",
+			Source:   "typescript:remove.spec.ts",
+		},
+	}
+}
+
+func getArrayOperationTestCases() []TypeScriptTestCase {
+	return []TypeScriptTestCase{
+		{
+			Name:     "array_append",
+			Doc:      []interface{}{1, 2},
+			Patch:    []jsonpatch.Operation{{"op": "add", "path": "/-", "value": 3}},
+			Expected: []interface{}{1, 2, 3},
+			Comment:  "Array append operation",
+			Source:   "typescript:array.spec.ts",
+		},
+	}
+}
+
+func getPredicateOperationTestCases() []TypeScriptTestCase {
+	return []TypeScriptTestCase{
+		{
+			Name:     "predicate_contains",
+			Doc:      map[string]interface{}{"text": "hello"},
+			Patch:    []jsonpatch.Operation{{"op": "contains", "path": "/text", "value": "ell"}},
+			Expected: map[string]interface{}{"text": "hello"},
+			Comment:  "Predicate contains operation",
+			Source:   "typescript:contains.spec.ts",
+		},
+	}
+}
+
+func getExtendedOperationTestCases() []TypeScriptTestCase {
+	return []TypeScriptTestCase{
+		{
+			Name:     "extended_inc",
+			Doc:      map[string]interface{}{"num": 5},
+			Patch:    []jsonpatch.Operation{{"op": "inc", "path": "/num", "inc": 2}},
+			Expected: map[string]interface{}{"num": float64(7)},
+			Comment:  "Extended inc operation",
+			Source:   "typescript:inc.spec.ts",
+		},
+	}
+}
+
+func getErrorHandlingTestCases() []TypeScriptTestCase {
+	return []TypeScriptTestCase{
+		{
+			Name:       "error_path_not_found",
+			Doc:        map[string]interface{}{"a": 1},
+			Patch:      []jsonpatch.Operation{{"op": "test", "path": "/b", "value": 1}},
+			ShouldFail: true,
+			Comment:    "Path not found error",
+			Source:     "typescript:errors.spec.ts",
+		},
+	}
+}
+
+func getSecondOrderPredicateTestCases() []TypeScriptTestCase {
+	return []TypeScriptTestCase{
+		{
+			Name: "second_order_not",
+			Doc:  map[string]interface{}{"val": 1},
+			Patch: []jsonpatch.Operation{
+				{
+					"op":   "not",
+					"path": "",
+					"apply": []interface{}{
+						map[string]interface{}{"op": "test", "path": "/val", "value": 2},
+					},
+				},
+			},
+			Expected: map[string]interface{}{"val": 1},
+			Comment:  "Second-order NOT predicate",
+			Source:   "typescript:second-order-predicates.spec.ts",
+		},
+	}
+}
+
+// convertToMultiOpTestCases converts TypeScript test cases to multi-operation test cases
+func convertToMultiOpTestCases(tsCases []TypeScriptTestCase) []testutils.MultiOperationTestCase {
+	multiOpCases := make([]testutils.MultiOperationTestCase, 0, len(tsCases))
+	for _, tc := range tsCases {
+		multiOpCases = append(multiOpCases, testutils.MultiOperationTestCase{
+			Name:       tc.Name,
+			Doc:        tc.Doc,
+			Operations: tc.Patch,
+			Expected:   tc.Expected,
+			ShouldFail: tc.ShouldFail,
+			Comment:    fmt.Sprintf("%s (Source: %s)", tc.Comment, tc.Source),
+		})
+	}
+	return multiOpCases
+}
+
+// BenchmarkTypeScriptParity benchmarks the parity test suite
+func BenchmarkTypeScriptParity(b *testing.B) {
+	testCases := getKnownWorkingTestCases()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tc := range testCases {
+			if !tc.ShouldFail {
+				_, err := jsonpatch.ApplyPatch(tc.Doc, tc.Patch, jsonpatch.WithMutate(true))
+				if err != nil {
+					b.Errorf("Operation %s failed: %v", tc.Name, err)
+				}
+			}
+		}
+	}
+}

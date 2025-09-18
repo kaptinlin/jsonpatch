@@ -15,6 +15,8 @@ var (
 
 	// ErrIncOpMissingInc indicates inc operation is missing 'inc' field
 	ErrIncOpMissingInc = errors.New("inc operation missing 'inc' field")
+	// ErrIncOpInvalidType indicates inc operation 'inc' field must be a number
+	ErrIncOpInvalidType = errors.New("inc operation 'inc' field must be a number")
 	// ErrStrInsOpMissingPos indicates str_ins operation is missing 'pos' field
 	ErrStrInsOpMissingPos = errors.New("str_ins operation missing 'pos' field")
 	// ErrStrInsOpMissingStr indicates str_ins operation is missing 'str' field

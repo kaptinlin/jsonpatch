@@ -97,9 +97,13 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 	case "flip":
 		return op.NewOpFlipOperation(path), nil
 	case "inc":
-		incVal, ok := op.ToFloat64(operation["inc"])
-		if !ok {
+		incField, hasInc := operation["inc"]
+		if !hasInc {
 			return nil, ErrIncOpMissingInc
+		}
+		incVal, ok := op.ToFloat64(incField)
+		if !ok {
+			return nil, ErrIncOpInvalidType
 		}
 		return op.NewOpIncOperation(path, incVal), nil
 	case "str_ins":
