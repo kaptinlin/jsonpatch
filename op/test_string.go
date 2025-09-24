@@ -112,10 +112,10 @@ func (op *TestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
 // ToJSON serializes the operation to JSON format.
 func (op *TestStringOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
-		"op":   string(internal.OpTestStringType),
-		"path": formatPath(op.Path()),
-		"str":  op.Str,
-		"pos":  op.Pos,
+		Op:   string(internal.OpTestStringType),
+		Path: formatPath(op.Path()),
+		Str:  op.Str,
+		Pos:  int(op.Pos),
 	}
 	return result, nil
 }

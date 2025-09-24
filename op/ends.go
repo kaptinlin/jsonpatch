@@ -105,15 +105,12 @@ func (op *EndsOperation) getAndValidateString(doc any) (interface{}, string, err
 
 // ToJSON serializes the operation to JSON format.
 func (op *EndsOperation) ToJSON() (internal.Operation, error) {
-	result := internal.Operation{
-		"op":    string(internal.OpEndsType),
-		"path":  formatPath(op.Path()),
-		"value": op.Value,
-	}
-	if op.IgnoreCase {
-		result["ignore_case"] = op.IgnoreCase
-	}
-	return result, nil
+	return internal.Operation{
+		Op:         string(internal.OpEndsType),
+		Path:       formatPath(op.Path()),
+		Value:      op.Value,
+		IgnoreCase: op.IgnoreCase,
+	}, nil
 }
 
 // ToCompact serializes the operation to compact format.

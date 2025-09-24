@@ -23,9 +23,9 @@ func TestMutateOptionFunctionality(t *testing.T) {
 		originalSnapshot := copyMap(original)
 
 		patch := []jsonpatch.Operation{
-			{"op": "replace", "path": "/name", "value": "Jane"},
-			{"op": "add", "path": "/email", "value": "jane@example.com"},
-			{"op": "remove", "path": "/city"},
+			{Op: "replace", Path: "/name", Value: "Jane"},
+			{Op: "add", Path: "/email", Value: "jane@example.com"},
+			{Op: "remove", Path: "/city"},
 		}
 
 		options := jsonpatch.WithMutate(false)
@@ -54,9 +54,9 @@ func TestMutateOptionFunctionality(t *testing.T) {
 		}
 
 		patch := []jsonpatch.Operation{
-			{"op": "replace", "path": "/name", "value": "Jane"},
-			{"op": "add", "path": "/email", "value": "jane@example.com"},
-			{"op": "remove", "path": "/city"},
+			{Op: "replace", Path: "/name", Value: "Jane"},
+			{Op: "add", Path: "/email", Value: "jane@example.com"},
+			{Op: "remove", Path: "/city"},
 		}
 
 		options := jsonpatch.WithMutate(true)
@@ -83,8 +83,8 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			copy(originalSnapshot, original)
 
 			patch := []jsonpatch.Operation{
-				{"op": "replace", "path": "/1", "value": "blueberry"},
-				{"op": "add", "path": "/-", "value": "date"},
+				{Op: "replace", Path: "/1", Value: "blueberry"},
+				{Op: "add", Path: "/-", Value: "date"},
 			}
 
 			options := jsonpatch.WithMutate(false)
@@ -105,7 +105,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			original := []interface{}{"apple", "banana", "cherry"}
 
 			patch := []jsonpatch.Operation{
-				{"op": "replace", "path": "/1", "value": "blueberry"},
+				{Op: "replace", Path: "/1", Value: "blueberry"},
 			}
 
 			options := jsonpatch.WithMutate(true)
@@ -125,7 +125,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			original := []interface{}{"apple", "banana", "cherry"}
 
 			patch := []jsonpatch.Operation{
-				{"op": "add", "path": "/-", "value": "date"},
+				{Op: "add", Path: "/-", Value: "date"},
 			}
 
 			options := jsonpatch.WithMutate(true)
@@ -156,19 +156,19 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			{
 				name:     "String Replacement",
 				value:    "hello",
-				patch:    []jsonpatch.Operation{{"op": "replace", "path": "", "value": "world"}},
+				patch:    []jsonpatch.Operation{{Op: "replace", Path: "", Value: "world"}},
 				expected: "world",
 			},
 			{
 				name:     "Integer Replacement",
 				value:    42,
-				patch:    []jsonpatch.Operation{{"op": "replace", "path": "", "value": 99}},
+				patch:    []jsonpatch.Operation{{Op: "replace", Path: "", Value: 99}},
 				expected: 99,
 			},
 			{
 				name:     "Boolean Replacement",
 				value:    true,
-				patch:    []jsonpatch.Operation{{"op": "replace", "path": "", "value": false}},
+				patch:    []jsonpatch.Operation{{Op: "replace", Path: "", Value: false}},
 				expected: false,
 			},
 		}
@@ -211,9 +211,9 @@ func TestMutateOptionFunctionality(t *testing.T) {
 		}
 
 		patch := []jsonpatch.Operation{
-			{"op": "replace", "path": "/user/name", "value": "Jane"},
-			{"op": "add", "path": "/user/email", "value": "jane@example.com"},
-			{"op": "replace", "path": "/items/0/name", "value": "updated_item1"},
+			{Op: "replace", Path: "/user/name", Value: "Jane"},
+			{Op: "add", Path: "/user/email", Value: "jane@example.com"},
+			{Op: "replace", Path: "/items/0/name", Value: "updated_item1"},
 		}
 
 		t.Run("Mutate True - Deep Modification", func(t *testing.T) {
@@ -243,8 +243,8 @@ func TestMutatePerformanceCharacteristics(t *testing.T) {
 	// Create a substantial document for meaningful performance testing
 	largeDoc := createLargeDocument(1000)
 	patch := []jsonpatch.Operation{
-		{"op": "replace", "path": "/field_500", "value": "modified"},
-		{"op": "add", "path": "/new_field", "value": "new_value"},
+		{Op: "replace", Path: "/field_500", Value: "modified"},
+		{Op: "add", Path: "/new_field", Value: "new_value"},
 	}
 
 	t.Run("Performance Validation", func(t *testing.T) {
@@ -322,7 +322,7 @@ func createLargeDocument(size int) map[string]interface{} {
 // BenchmarkMutateVsClone benchmarks the performance difference
 func BenchmarkMutateVsClone(b *testing.B) {
 	patch := []jsonpatch.Operation{
-		{"op": "replace", "path": "/field_500", "value": "modified"},
+		{Op: "replace", Path: "/field_500", Value: "modified"},
 	}
 
 	b.Run("Mutate=false", func(b *testing.B) {

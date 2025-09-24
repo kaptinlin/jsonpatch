@@ -95,13 +95,10 @@ func (o *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
 // ToJSON converts the operation to JSON representation.
 func (o *MatchesOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
-		"op":    string(internal.OpMatchesType),
-		"path":  formatPath(o.Path()),
-		"value": o.Pattern,
-	}
-
-	if o.IgnoreCase {
-		result["ignore_case"] = o.IgnoreCase
+		Op:         string(internal.OpMatchesType),
+		Path:       formatPath(o.Path()),
+		Value:      o.Pattern,
+		IgnoreCase: o.IgnoreCase,
 	}
 
 	return result, nil

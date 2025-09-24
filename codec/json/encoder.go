@@ -12,7 +12,7 @@ func NewEncoder() *Encoder {
 }
 
 // Encode encodes operations to JSON format.
-func (e *Encoder) Encode(ops []internal.Op) ([]map[string]interface{}, error) {
+func (e *Encoder) Encode(ops []internal.Op) ([]internal.Operation, error) {
 	return Encode(ops)
 }
 

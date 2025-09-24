@@ -36,24 +36,24 @@ func main() {
 
 		// Update status
 		patch = append(patch, jsonpatch.Operation{
-			"op":    "replace",
-			"path":  serverPath + "/status",
-			"value": "updated",
+			Op:    "replace",
+			Path:  serverPath + "/status",
+			Value: "updated",
 		})
 
 		// Update version
 		patch = append(patch, jsonpatch.Operation{
-			"op":    "replace",
-			"path":  serverPath + "/version",
-			"value": "2.0",
+			Op:    "replace",
+			Path:  serverPath + "/version",
+			Value: "2.0",
 		})
 	}
 
 	// Update counter
 	patch = append(patch, jsonpatch.Operation{
-		"op":    "replace",
-		"path":  "/updated",
-		"value": 3,
+		Op:    "replace",
+		Path:  "/updated",
+		Value: 3,
 	})
 
 	fmt.Printf("\nApplying %d operations in batch...\n", len(patch))

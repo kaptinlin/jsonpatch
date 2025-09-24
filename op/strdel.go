@@ -155,17 +155,17 @@ func (op *StrDelOperation) applyStrDel(val string) string {
 // ToJSON serializes the operation to JSON format.
 func (op *StrDelOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
-		"op":   string(internal.OpStrDelType),
-		"path": formatPath(op.Path()),
-		"pos":  op.Pos,
+		Op:   string(internal.OpStrDelType),
+		Path: formatPath(op.Path()),
+		Pos:  int(op.Pos),
 	}
 
 	// If we have a specific string to delete, use "str" field
 	if op.Str != "" {
-		result["str"] = op.Str
+		result.Str = op.Str
 	} else {
 		// Otherwise use "len" field
-		result["len"] = op.Len
+		result.Len = int(op.Len)
 	}
 
 	return result, nil

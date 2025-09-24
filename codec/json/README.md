@@ -1,13 +1,16 @@
-# `json` codec for JSON Patch+ patches
+# JSON Codec for JSON Patch Operations
 
-`json` codec implements the nominal human-friendly encoding of JSON Patch+
-operations like described [JSON Patch specification](https://datatracker.ietf.org/doc/html/rfc6902).
+The `json` codec implements the standard JSON encoding/decoding for JSON Patch operations as defined in [RFC 6902](https://datatracker.ietf.org/doc/html/rfc6902), with full support for extended operations and JSON Predicate.
 
-This implementation provides **100% json-joy compatibility** with complete TypeScript API matching.
+**🎯 Key Features**: 100% json-joy compatibility, modern struct-based API, high-performance JSON v2 integration.
 
-Operations are encoded using JSON objects, for example, `add` operations:
+Operations use clean struct literals, for example:
 
-```json
+```go
+// New struct-based API ✅
+{Op: "add", Path: "/foo/bar", Value: 123}
+
+// JSON representation
 {"op": "add", "path": "/foo/bar", "value": 123}
 ```
 
@@ -21,44 +24,44 @@ Operations are encoded using JSON objects, for example, `add` operations:
 
 ## Usage
 
-### Basic Usage
+### Basic Usage with Struct API
 
 ```go
 import (
+    "github.com/kaptinlin/jsonpatch"
     "github.com/kaptinlin/jsonpatch/codec/json"
 )
 
-// Create operations from JSON
-patch := []map[string]interface{}{
-    {"op": "test", "path": "/foo", "value": "bar"},
-    {"op": "replace", "path": "/foo", "value": "baz"},
+// Create operations using clean struct syntax
+operations := []jsonpatch.Operation{
+    {Op: "test", Path: "/foo", Value: "bar"},
+    {Op: "replace", Path: "/foo", Value: "baz"},
+    {Op: "inc", Path: "/counter", Inc: 5},
+    {Op: "str_ins", Path: "/text", Pos: 0, Str: "Hello "},
 }
 
-// Configure options (optional)
-options := json.JsonPatchOptions{
-    CreateMatcher: func(pattern string, ignoreCase bool) json.RegexMatcher {
-        // Custom regex matcher implementation
-        return func(value string) bool {
-            // Your regex matching logic
-            return true
-        }
+// Apply directly using main API (recommended)
+result, err := jsonpatch.ApplyPatch(doc, operations)
+if err != nil {
+    // handle error
+}
+
+// Advanced: Use codec directly for custom workflows
+decoder := json.NewDecoder(json.Options{
+    CreateMatcher: func(pattern string, ignoreCase bool) func(string) bool {
+        // Custom regex implementation for security
+        return customRegexMatcher(pattern, ignoreCase)
     },
-}
+})
 
-// Decode to operations
-ops, err := json.Decode(patch, options)
+// Convert struct operations to Op instances  
+ops, err := json.DecodeOperations(operations, decoder.Options())
 if err != nil {
     // handle error
 }
 
-// Encode operations to JSON
+// Encode Op instances back to JSON
 encoded, err := json.EncodeJSON(ops)
-if err != nil {
-    // handle error
-}
-
-// Decode JSON to operations
-decoded, err := json.DecodeJSON(encoded, options)
 if err != nil {
     // handle error
 }

@@ -17,9 +17,9 @@ func TestMergeOp(t *testing.T) {
 		}
 		operations := []internal.Operation{
 			{
-				"op":   "merge",
-				"path": "",
-				"pos":  1,
+				Op:   "merge",
+				Path: "",
+				Pos:  1,
 			},
 		}
 		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -37,9 +37,9 @@ func TestMergeOp(t *testing.T) {
 		}
 		operations := []internal.Operation{
 			{
-				"op":   "merge",
-				"path": "",
-				"pos":  0,
+				Op:   "merge",
+				Path: "",
+				Pos:  0,
 			},
 		}
 		_, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -56,9 +56,9 @@ func TestMergeOp(t *testing.T) {
 		}
 		operations := []internal.Operation{
 			{
-				"op":   "merge",
-				"path": "/foo",
-				"pos":  2,
+				Op:   "merge",
+				Path: "/foo",
+				Pos:  2,
 			},
 		}
 		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -75,9 +75,9 @@ func TestMergeOp(t *testing.T) {
 	t.Run("cannot merge root", func(t *testing.T) {
 		operations := []internal.Operation{
 			{
-				"op":   "merge",
-				"path": "",
-				"pos":  1,
+				Op:   "merge",
+				Path: "",
+				Pos:  1,
 			},
 		}
 		_, err := jsonpatch.ApplyPatch(123, operations, internal.WithMutate(true))
@@ -88,9 +88,9 @@ func TestMergeOp(t *testing.T) {
 		state := []interface{}{"hello", " world"}
 		operations := []internal.Operation{
 			{
-				"op":   "merge",
-				"path": "",
-				"pos":  1,
+				Op:   "merge",
+				Path: "",
+				Pos:  1,
 			},
 		}
 		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -103,9 +103,9 @@ func TestMergeOp(t *testing.T) {
 		state := []interface{}{5, 3}
 		operations := []internal.Operation{
 			{
-				"op":   "merge",
-				"path": "",
-				"pos":  1,
+				Op:   "merge",
+				Path: "",
+				Pos:  1,
 			},
 		}
 		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -118,9 +118,9 @@ func TestMergeOp(t *testing.T) {
 		state := []interface{}{true, false}
 		operations := []internal.Operation{
 			{
-				"op":   "merge",
-				"path": "",
-				"pos":  1,
+				Op:   "merge",
+				Path: "",
+				Pos:  1,
 			},
 		}
 		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))

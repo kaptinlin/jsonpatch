@@ -22,8 +22,8 @@ func main() {
 	}
 
 	patch := []jsonpatch.Operation{
-		{"op": "replace", "path": "/name", "value": "Jane"},
-		{"op": "add", "path": "/city", "value": "New York"},
+		{Op: "replace", Path: "/name", Value: "Jane"},
+		{Op: "add", Path: "/city", Value: "New York"},
 	}
 
 	// Example 1: Safe mode (default) - preserves original
@@ -56,7 +56,7 @@ func main() {
 	fmt.Println("\n⚠️  Go Language Limitation")
 	primitiveDoc := "hello"
 	primitiveResult, _ := jsonpatch.ApplyPatch(primitiveDoc, []jsonpatch.Operation{
-		{"op": "replace", "path": "", "value": "world"},
+		{Op: "replace", Path: "", Value: "world"},
 	}, jsonpatch.WithMutate(true))
 
 	fmt.Printf("Primitive original: %q (unchanged)\n", primitiveDoc)

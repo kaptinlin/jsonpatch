@@ -2,200 +2,360 @@
 package binary
 
 import (
+	"bytes"
+
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/op"
-	msgpack "github.com/wapc/tinygo-msgpack"
+	"github.com/tinylib/msgp/msgp"
 )
 
 // encode converts a slice of operations to a byte slice in binary format.
 func (c *Codec) encode(ops []internal.Op) ([]byte, error) {
-	var sizer msgpack.Sizer
-	if err := encodeOps(&sizer, ops); err != nil {
+	var buf bytes.Buffer
+	writer := msgp.NewWriter(&buf)
+	if err := encodeOps(writer, ops); err != nil {
 		return nil, err
 	}
-
-	buf := make([]byte, sizer.Len())
-	encoder := msgpack.NewEncoder(buf)
-	if err := encodeOps(&encoder, ops); err != nil {
+	if err := writer.Flush(); err != nil {
 		return nil, err
 	}
-
-	return buf, nil
+	return buf.Bytes(), nil
 }
 
-func encodeOps(encoder msgpack.Writer, ops []internal.Op) error {
-	encoder.WriteFloat64(float64(len(ops)))
+func encodeOps(writer *msgp.Writer, ops []internal.Op) error {
+	if err := writer.WriteFloat64(float64(len(ops))); err != nil {
+		return err
+	}
 	for _, op := range ops {
-		if err := encodeOp(encoder, op); err != nil {
+		if err := encodeOp(writer, op); err != nil {
 			return err
 		}
-	}
-	return encoder.Err()
-}
-
-func encodeOp(encoder msgpack.Writer, i internal.Op) error {
-	switch o := i.(type) {
-	case *op.AddOperation:
-		encoder.WriteArraySize(3)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		return encodeValue(encoder, o.Value)
-	case *op.RemoveOperation:
-		encoder.WriteArraySize(2)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-	case *op.ReplaceOperation:
-		encoder.WriteArraySize(3)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		return encodeValue(encoder, o.Value)
-	case *op.MoveOperation:
-		encoder.WriteArraySize(3)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.From())
-		encodePath(encoder, o.Path())
-	case *op.CopyOperation:
-		encoder.WriteArraySize(3)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.From())
-		encodePath(encoder, o.Path())
-	case *op.TestOperation:
-		encoder.WriteArraySize(3)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		return encodeValue(encoder, o.Value)
-	// Predicate operations
-	case *op.TestTypeOperation:
-		encoder.WriteArraySize(3)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		return encodeValue(encoder, o.Types)
-	case *op.DefinedOperation:
-		encoder.WriteArraySize(2)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-	case *op.UndefinedOperation:
-		encoder.WriteArraySize(3)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		encoder.WriteBool(o.Not())
-		return encoder.Err()
-	case *op.LessOperation:
-		encoder.WriteArraySize(3)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		return encodeValue(encoder, o.Value)
-	case *op.MoreOperation:
-		encoder.WriteArraySize(3)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		return encodeValue(encoder, o.Value)
-	case *op.ContainsOperation:
-		encoder.WriteArraySize(3)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		return encodeValue(encoder, o.Value)
-	case *op.InOperation:
-		encoder.WriteArraySize(3)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		return encodeValue(encoder, o.Value)
-	case *op.StartsOperation:
-		encoder.WriteArraySize(3)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		return encodeValue(encoder, o.Value)
-	case *op.EndsOperation:
-		encoder.WriteArraySize(3)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		return encodeValue(encoder, o.Value)
-	case *op.MatchesOperation:
-		encoder.WriteArraySize(4)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		encoder.WriteString(o.Pattern)
-		encoder.WriteBool(o.IgnoreCase)
-		return encoder.Err()
-	case *op.TestStringOperation:
-		encoder.WriteArraySize(4)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		encoder.WriteString(o.Str)
-		encoder.WriteFloat64(o.Pos)
-		return encoder.Err()
-	case *op.TestStringLenOperation:
-		encoder.WriteArraySize(4)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		encoder.WriteFloat64(o.Length)
-		encoder.WriteBool(o.Not)
-		return encoder.Err()
-	// Type predicate operation
-	case *op.TypeOperation:
-		encoder.WriteArraySize(3)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		encoder.WriteString(o.TypeValue)
-		return encoder.Err()
-	// JSON Patch Extended
-	case *op.FlipOperation:
-		encoder.WriteArraySize(2)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-	case *op.IncOperation:
-		encoder.WriteArraySize(3)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		encoder.WriteFloat64(o.Inc)
-		return encoder.Err()
-	case *op.StrInsOperation:
-		encoder.WriteArraySize(4)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		encoder.WriteFloat64(o.Pos)
-		encoder.WriteString(o.Str)
-		return encoder.Err()
-	case *op.StrDelOperation:
-		encoder.WriteArraySize(4)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		encoder.WriteFloat64(o.Pos)
-		encoder.WriteFloat64(o.Len)
-		return encoder.Err()
-	case *op.SplitOperation:
-		encoder.WriteArraySize(4)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		encoder.WriteFloat64(o.Pos)
-		return encodeValue(encoder, o.Props)
-	case *op.ExtendOperation:
-		encoder.WriteArraySize(4)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		if err := encodeValue(encoder, o.Properties); err != nil {
-			return err
-		}
-		encoder.WriteBool(o.DeleteNull)
-		return encoder.Err()
-	case *op.MergeOperation:
-		encoder.WriteArraySize(4)
-		encoder.WriteUint8(uint8(o.Code()))
-		encodePath(encoder, o.Path())
-		encoder.WriteFloat64(o.Pos)
-		return encodeValue(encoder, o.Props)
 	}
 	return nil
 }
 
-func encodePath(encoder msgpack.Writer, path []string) {
-	encoder.WriteFloat64(float64(len(path)))
-	for _, segment := range path {
-		encoder.WriteString(segment)
+func encodeOp(writer *msgp.Writer, i internal.Op) error {
+	switch o := i.(type) {
+	case *op.AddOperation:
+		if err := writer.WriteArrayHeader(3); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		return encodeValue(writer, o.Value)
+	case *op.RemoveOperation:
+		if err := writer.WriteArrayHeader(2); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		return encodePath(writer, o.Path())
+	case *op.ReplaceOperation:
+		if err := writer.WriteArrayHeader(3); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		return encodeValue(writer, o.Value)
+	case *op.MoveOperation:
+		if err := writer.WriteArrayHeader(3); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.From()); err != nil {
+			return err
+		}
+		return encodePath(writer, o.Path())
+	case *op.CopyOperation:
+		if err := writer.WriteArrayHeader(3); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.From()); err != nil {
+			return err
+		}
+		return encodePath(writer, o.Path())
+	case *op.TestOperation:
+		if err := writer.WriteArrayHeader(3); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		return encodeValue(writer, o.Value)
+	// Predicate operations
+	case *op.TestTypeOperation:
+		if err := writer.WriteArrayHeader(3); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		return encodeValue(writer, o.Types)
+	case *op.DefinedOperation:
+		if err := writer.WriteArrayHeader(2); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		return encodePath(writer, o.Path())
+	case *op.UndefinedOperation:
+		if err := writer.WriteArrayHeader(3); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		return writer.WriteBool(o.Not())
+	case *op.LessOperation:
+		if err := writer.WriteArrayHeader(3); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		return encodeValue(writer, o.Value)
+	case *op.MoreOperation:
+		if err := writer.WriteArrayHeader(3); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		return encodeValue(writer, o.Value)
+	case *op.ContainsOperation:
+		if err := writer.WriteArrayHeader(3); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		return encodeValue(writer, o.Value)
+	case *op.InOperation:
+		if err := writer.WriteArrayHeader(3); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		return encodeValue(writer, o.Value)
+	case *op.StartsOperation:
+		if err := writer.WriteArrayHeader(3); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		return encodeValue(writer, o.Value)
+	case *op.EndsOperation:
+		if err := writer.WriteArrayHeader(3); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		return encodeValue(writer, o.Value)
+	case *op.MatchesOperation:
+		if err := writer.WriteArrayHeader(4); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		if err := writer.WriteString(o.Pattern); err != nil {
+			return err
+		}
+		return writer.WriteBool(o.IgnoreCase)
+	case *op.TestStringOperation:
+		if err := writer.WriteArrayHeader(4); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		if err := writer.WriteString(o.Str); err != nil {
+			return err
+		}
+		return writer.WriteFloat64(o.Pos)
+	case *op.TestStringLenOperation:
+		if err := writer.WriteArrayHeader(4); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		if err := writer.WriteFloat64(o.Length); err != nil {
+			return err
+		}
+		return writer.WriteBool(o.Not)
+	// Type predicate operation
+	case *op.TypeOperation:
+		if err := writer.WriteArrayHeader(3); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		return writer.WriteString(o.TypeValue)
+	// JSON Patch Extended
+	case *op.FlipOperation:
+		if err := writer.WriteArrayHeader(2); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		return encodePath(writer, o.Path())
+	case *op.IncOperation:
+		if err := writer.WriteArrayHeader(3); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		return writer.WriteFloat64(o.Inc)
+	case *op.StrInsOperation:
+		if err := writer.WriteArrayHeader(4); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		if err := writer.WriteFloat64(o.Pos); err != nil {
+			return err
+		}
+		return writer.WriteString(o.Str)
+	case *op.StrDelOperation:
+		if err := writer.WriteArrayHeader(4); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		if err := writer.WriteFloat64(o.Pos); err != nil {
+			return err
+		}
+		return writer.WriteFloat64(o.Len)
+	case *op.SplitOperation:
+		if err := writer.WriteArrayHeader(4); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		if err := writer.WriteFloat64(o.Pos); err != nil {
+			return err
+		}
+		return encodeValue(writer, o.Props)
+	case *op.ExtendOperation:
+		if err := writer.WriteArrayHeader(4); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		if err := encodeValue(writer, o.Properties); err != nil {
+			return err
+		}
+		return writer.WriteBool(o.DeleteNull)
+	case *op.MergeOperation:
+		if err := writer.WriteArrayHeader(4); err != nil {
+			return err
+		}
+		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
+			return err
+		}
+		if err := encodePath(writer, o.Path()); err != nil {
+			return err
+		}
+		if err := writer.WriteFloat64(o.Pos); err != nil {
+			return err
+		}
+		return encodeValue(writer, o.Props)
 	}
+	return nil
 }
 
-func encodeValue(encoder msgpack.Writer, value interface{}) error {
-	encoder.WriteAny(value)
-	return encoder.Err()
+func encodePath(writer *msgp.Writer, path []string) error {
+	if err := writer.WriteFloat64(float64(len(path))); err != nil {
+		return err
+	}
+	for _, segment := range path {
+		if err := writer.WriteString(segment); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func encodeValue(writer *msgp.Writer, value interface{}) error {
+	return writer.WriteIntf(value)
 }

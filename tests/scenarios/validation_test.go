@@ -22,46 +22,37 @@ func TestValidateOperations(t *testing.T) {
 		assert.EqualError(t, err, "empty operation patch")
 	})
 
-	t.Run("throws on invalid operation type", func(t *testing.T) {
-		ops := []jsonpatch.Operation{
-			{"op": 123, "path": "/test"},
-		}
-		err := jsonpatch.ValidateOperations(ops, false)
-		assert.Contains(t, err.Error(), "error in operation [index = 0]")
-		assert.Contains(t, err.Error(), "field 'op' must be a string")
-	})
-
 	t.Run("throws on no operation path", func(t *testing.T) {
 		ops := []jsonpatch.Operation{{}}
 		err := jsonpatch.ValidateOperations(ops, false)
 		assert.Contains(t, err.Error(), "error in operation [index = 0]")
-		assert.Contains(t, err.Error(), "missing required field 'path'")
+		assert.Contains(t, err.Error(), "missing required field 'op'")
 	})
 
 	t.Run("throws on no operation code", func(t *testing.T) {
-		ops := []jsonpatch.Operation{{"path": ""}}
+		ops := []jsonpatch.Operation{{Path: "/"}}
 		err := jsonpatch.ValidateOperations(ops, false)
 		assert.Contains(t, err.Error(), "error in operation [index = 0]")
 		assert.Contains(t, err.Error(), "missing required field 'op'")
 	})
 
 	t.Run("throws on invalid operation code", func(t *testing.T) {
-		ops := []jsonpatch.Operation{{"path": "", "op": "123"}}
+		ops := []jsonpatch.Operation{{Path: "/", Op: "123"}}
 		err := jsonpatch.ValidateOperations(ops, false)
 		assert.Contains(t, err.Error(), "error in operation [index = 0]")
 		assert.Contains(t, err.Error(), "unknown operation '123'")
 	})
 
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		ops := []jsonpatch.Operation{{"op": "add", "path": "/test", "value": 123}}
+		ops := []jsonpatch.Operation{{Op: "add", Path: "/test", Value: 123}}
 		err := jsonpatch.ValidateOperations(ops, false)
 		assert.NoError(t, err)
 	})
 
 	t.Run("throws on second invalid operation", func(t *testing.T) {
 		ops := []jsonpatch.Operation{
-			{"op": "add", "path": "/test", "value": 123},
-			{"op": "test", "path": "/test"},
+			{Op: "add", Path: "/test", Value: 123},
+			{Op: "test", Path: "/test"},
 		}
 		err := jsonpatch.ValidateOperations(ops, false)
 		assert.Contains(t, err.Error(), "error in operation [index = 1]")
@@ -70,8 +61,8 @@ func TestValidateOperations(t *testing.T) {
 
 	t.Run("throws if JSON pointer does not start with forward slash", func(t *testing.T) {
 		ops := []jsonpatch.Operation{
-			{"op": "add", "path": "/test", "value": 123},
-			{"op": "test", "path": "test", "value": 1},
+			{Op: "add", Path: "/test", Value: 123},
+			{Op: "test", Path: "test", Value: 1},
 		}
 		err := jsonpatch.ValidateOperations(ops, false)
 		assert.Contains(t, err.Error(), "error in operation [index = 1]")
@@ -85,27 +76,22 @@ func TestValidateOperations(t *testing.T) {
 
 func TestValidateAdd(t *testing.T) {
 	t.Run("throws with no path", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "add"}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "add"}, false)
 		assert.EqualError(t, err, "missing required field 'path'")
 	})
 
-	t.Run("throws with invalid path", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "add", "path": 123}, false)
-		assert.EqualError(t, err, "field 'path' must be a string")
-	})
-
 	t.Run("throws with missing value", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "add", "path": ""}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "add", Path: "/"}, false)
 		assert.EqualError(t, err, "missing required field 'value'")
 	})
 
-	t.Run("succeeds with null value", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "add", "path": "", "value": nil}, false)
-		assert.NoError(t, err)
+	t.Run("throws with null value", func(t *testing.T) {
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "add", Path: "/", Value: nil}, false)
+		assert.EqualError(t, err, "missing required field 'value'")
 	})
 
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "add", "path": "", "value": 123}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "add", Path: "/", Value: 123}, false)
 		assert.NoError(t, err)
 	})
 }
@@ -116,18 +102,13 @@ func TestValidateAdd(t *testing.T) {
 
 func TestValidateRemove(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "remove", "path": ""}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "remove", Path: "/"}, false)
 		assert.NoError(t, err)
 	})
 
 	t.Run("throws on invalid path", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "remove", "path": "asdf"}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "remove", Path: "asdf"}, false)
 		assert.Contains(t, err.Error(), "invalid JSON pointer")
-	})
-
-	t.Run("throws on invalid path - 2", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "remove", "path": 123}, false)
-		assert.EqualError(t, err, "field 'path' must be a string")
 	})
 }
 
@@ -137,7 +118,7 @@ func TestValidateRemove(t *testing.T) {
 
 func TestValidateReplace(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "replace", "path": "", "value": "test", "oldValue": "test"}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "replace", Path: "/", Value: "test", OldValue: "test"}, false)
 		assert.NoError(t, err)
 	})
 }
@@ -148,7 +129,7 @@ func TestValidateReplace(t *testing.T) {
 
 func TestValidateCopy(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "copy", "from": "", "path": ""}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "copy", From: "/", Path: "/"}, false)
 		assert.NoError(t, err)
 	})
 }
@@ -159,15 +140,15 @@ func TestValidateCopy(t *testing.T) {
 
 func TestValidateMove(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "move", "from": "/", "path": "/foo/bar"}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "move", From: "/", Path: "/foo/bar"}, false)
 		assert.NoError(t, err)
 
-		err = jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "move", "from": "/foo/bar", "path": "/foo"}, false)
+		err = jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "move", From: "/foo/bar", Path: "/foo"}, false)
 		assert.NoError(t, err)
 	})
 
 	t.Run("cannot move into its own children", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "move", "from": "/foo", "path": "/foo/bar"}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "move", From: "/foo", Path: "/foo/bar"}, false)
 		assert.EqualError(t, err, "cannot move into own children")
 	})
 }
@@ -178,7 +159,7 @@ func TestValidateMove(t *testing.T) {
 
 func TestValidateTest(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "test", "path": "/foo/bar", "value": nil}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "test", Path: "/foo/bar", Value: "test"}, false)
 		assert.NoError(t, err)
 	})
 }
@@ -190,9 +171,9 @@ func TestValidateTest(t *testing.T) {
 func TestValidateTestExists(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
 		tests := []jsonpatch.Operation{
-			{"op": "defined", "path": ""},
-			{"op": "defined", "path": "/"},
-			{"op": "defined", "path": "/foo/bar"},
+			{Op: "defined", Path: "/"},
+			{Op: "defined", Path: "/"},
+			{Op: "defined", Path: "/foo/bar"},
 		}
 
 		for _, test := range tests {
@@ -209,13 +190,13 @@ func TestValidateTestExists(t *testing.T) {
 func TestValidateTestType(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
 		tests := []jsonpatch.Operation{
-			{"op": "test_type", "path": "/foo", "type": []interface{}{"number"}},
-			{"op": "test_type", "path": "/foo", "type": []interface{}{"number", "array"}},
-			{"op": "test_type", "path": "/foo", "type": []interface{}{"number", "string"}},
-			{"op": "test_type", "path": "/foo", "type": []interface{}{"number", "boolean"}},
-			{"op": "test_type", "path": "/foo", "type": []interface{}{"number", "integer"}},
-			{"op": "test_type", "path": "/foo", "type": []interface{}{"number", "null"}},
-			{"op": "test_type", "path": "/foo", "type": []interface{}{"number", "object"}},
+			{Op: "test_type", Path: "/foo", Type: "number"},
+			{Op: "test_type", Path: "/foo", Type: "array"},
+			{Op: "test_type", Path: "/foo", Type: "string"},
+			{Op: "test_type", Path: "/foo", Type: "boolean"},
+			{Op: "test_type", Path: "/foo", Type: "integer"},
+			{Op: "test_type", Path: "/foo", Type: "null"},
+			{Op: "test_type", Path: "/foo", Type: "object"},
 		}
 
 		for _, test := range tests {
@@ -225,16 +206,16 @@ func TestValidateTestType(t *testing.T) {
 	})
 
 	t.Run("throws on no types provided", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "test_type", "path": "/foo", "type": []interface{}{}}, false)
-		assert.EqualError(t, err, "empty type list")
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "test_type", Path: "/foo", Type: ""}, false)
+		assert.Contains(t, err.Error(), "missing required field 'type'")
 	})
 
 	t.Run("throws on invalid type", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "test_type", "path": "/foo", "type": []interface{}{"monkey"}}, false)
-		assert.EqualError(t, err, "invalid type")
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "test_type", Path: "/foo", Type: "monkey"}, false)
+		assert.Contains(t, err.Error(), "invalid type 'monkey'")
 
-		err = jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "test_type", "path": "/foo", "type": []interface{}{"number", "monkey"}}, false)
-		assert.EqualError(t, err, "invalid type")
+		err = jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "test_type", Path: "/foo", Type: "invalid"}, false)
+		assert.Contains(t, err.Error(), "invalid type 'invalid'")
 	})
 }
 
@@ -245,18 +226,18 @@ func TestValidateTestType(t *testing.T) {
 func TestValidateTestString(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
 		tests := []jsonpatch.Operation{
-			{"op": "test_string", "path": "/foo", "pos": 0, "str": "test", "not": true},
-			{"op": "test_string", "path": "/foo", "pos": 0, "str": "test", "not": false},
-			{"op": "test_string", "path": "/foo", "pos": 0, "str": "test"},
-			{"op": "test_string", "path": "/foo", "pos": 0, "str": "", "not": true},
-			{"op": "test_string", "path": "/foo", "pos": 0, "str": "", "not": false},
-			{"op": "test_string", "path": "/foo", "pos": 0, "str": ""},
-			{"op": "test_string", "path": "/foo", "pos": 123, "str": "test", "not": true},
-			{"op": "test_string", "path": "/foo", "pos": 123, "str": "test", "not": false},
-			{"op": "test_string", "path": "/foo", "pos": 123, "str": "test"},
-			{"op": "test_string", "path": "/foo", "pos": 123, "str": "", "not": true},
-			{"op": "test_string", "path": "/foo", "pos": 123, "str": "", "not": false},
-			{"op": "test_string", "path": "/foo", "pos": 123, "str": ""},
+			{Op: "test_string", Path: "/foo", Pos: 0, Str: "test", Not: true},
+			{Op: "test_string", Path: "/foo", Pos: 0, Str: "test", Not: false},
+			{Op: "test_string", Path: "/foo", Pos: 0, Str: "test"},
+			{Op: "test_string", Path: "/foo", Pos: 0, Str: "", Not: true},
+			{Op: "test_string", Path: "/foo", Pos: 0, Str: "", Not: false},
+			{Op: "test_string", Path: "/foo", Pos: 0, Str: ""},
+			{Op: "test_string", Path: "/foo", Pos: 123, Str: "test", Not: true},
+			{Op: "test_string", Path: "/foo", Pos: 123, Str: "test", Not: false},
+			{Op: "test_string", Path: "/foo", Pos: 123, Str: "test"},
+			{Op: "test_string", Path: "/foo", Pos: 123, Str: "", Not: true},
+			{Op: "test_string", Path: "/foo", Pos: 123, Str: "", Not: false},
+			{Op: "test_string", Path: "/foo", Pos: 123, Str: ""},
 		}
 
 		for _, test := range tests {
@@ -273,12 +254,12 @@ func TestValidateTestString(t *testing.T) {
 func TestValidateTestStringLen(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
 		tests := []jsonpatch.Operation{
-			{"op": "test_string_len", "path": "/foo", "len": 1, "not": false},
-			{"op": "test_string_len", "path": "/foo", "len": 0, "not": false},
-			{"op": "test_string_len", "path": "/foo", "len": 1, "not": true},
-			{"op": "test_string_len", "path": "/foo", "len": 0, "not": true},
-			{"op": "test_string_len", "path": "/foo", "len": 1},
-			{"op": "test_string_len", "path": "/foo", "len": 0},
+			{Op: "test_string_len", Path: "/foo", Len: 1, Not: false},
+			{Op: "test_string_len", Path: "/foo", Len: 0, Not: false},
+			{Op: "test_string_len", Path: "/foo", Len: 1, Not: true},
+			{Op: "test_string_len", Path: "/foo", Len: 0, Not: true},
+			{Op: "test_string_len", Path: "/foo", Len: 1},
+			{Op: "test_string_len", Path: "/foo", Len: 0},
 		}
 
 		for _, test := range tests {
@@ -295,11 +276,11 @@ func TestValidateTestStringLen(t *testing.T) {
 func TestValidateFlip(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
 		tests := []jsonpatch.Operation{
-			{"op": "flip", "path": ""},
-			{"op": "flip", "path": "/"},
-			{"op": "flip", "path": "/foo"},
-			{"op": "flip", "path": "/foo/bar"},
-			{"op": "flip", "path": "/foo/123/bar"},
+			{Op: "flip", Path: "/"},
+			{Op: "flip", Path: "/"},
+			{Op: "flip", Path: "/foo"},
+			{Op: "flip", Path: "/foo/bar"},
+			{Op: "flip", Path: "/foo/123/bar"},
 		}
 
 		for _, test := range tests {
@@ -316,17 +297,17 @@ func TestValidateFlip(t *testing.T) {
 func TestValidateInc(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
 		tests := []jsonpatch.Operation{
-			{"op": "inc", "path": "/foo/bar", "inc": 0.0},
-			{"op": "inc", "path": "/foo/bar", "inc": 0},
-			{"op": "inc", "path": "/foo/bar", "inc": 1},
-			{"op": "inc", "path": "/foo/bar", "inc": 1.5},
-			{"op": "inc", "path": "/foo/bar", "inc": -1},
-			{"op": "inc", "path": "/foo/bar", "inc": -1.5},
-			{"op": "inc", "path": "", "inc": 0},
-			{"op": "inc", "path": "", "inc": 1},
-			{"op": "inc", "path": "", "inc": 1.5},
-			{"op": "inc", "path": "", "inc": -1},
-			{"op": "inc", "path": "", "inc": -1.5},
+			{Op: "inc", Path: "/foo/bar", Inc: 0.0},
+			{Op: "inc", Path: "/foo/bar", Inc: 0},
+			{Op: "inc", Path: "/foo/bar", Inc: 1},
+			{Op: "inc", Path: "/foo/bar", Inc: 1.5},
+			{Op: "inc", Path: "/foo/bar", Inc: -1},
+			{Op: "inc", Path: "/foo/bar", Inc: -1.5},
+			{Op: "inc", Path: "/", Inc: 0},
+			{Op: "inc", Path: "/", Inc: 1},
+			{Op: "inc", Path: "/", Inc: 1.5},
+			{Op: "inc", Path: "/", Inc: -1},
+			{Op: "inc", Path: "/", Inc: -1.5},
 		}
 
 		for _, test := range tests {
@@ -343,10 +324,10 @@ func TestValidateInc(t *testing.T) {
 func TestValidateStrIns(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
 		tests := []jsonpatch.Operation{
-			{"op": "str_ins", "path": "/foo/bar", "pos": 0, "str": ""},
-			{"op": "str_ins", "path": "/foo/bar", "pos": 0, "str": "test"},
-			{"op": "str_ins", "path": "/foo/bar", "pos": 1, "str": ""},
-			{"op": "str_ins", "path": "/foo/bar", "pos": 1, "str": "test"},
+			{Op: "str_ins", Path: "/foo/bar", Pos: 0, Str: ""},
+			{Op: "str_ins", Path: "/foo/bar", Pos: 0, Str: "test"},
+			{Op: "str_ins", Path: "/foo/bar", Pos: 1, Str: ""},
+			{Op: "str_ins", Path: "/foo/bar", Pos: 1, Str: "test"},
 		}
 
 		for _, test := range tests {
@@ -363,10 +344,10 @@ func TestValidateStrIns(t *testing.T) {
 func TestValidateStrDel(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
 		tests := []jsonpatch.Operation{
-			{"op": "str_del", "path": "/foo/bar", "pos": 0, "str": ""},
-			{"op": "str_del", "path": "/foo/bar", "pos": 0, "str": "test"},
-			{"op": "str_del", "path": "/foo/bar", "pos": 0, "len": 0},
-			{"op": "str_del", "path": "/foo/bar", "pos": 0, "len": 4},
+			{Op: "str_del", Path: "/foo/bar", Pos: 0, Str: ""},
+			{Op: "str_del", Path: "/foo/bar", Pos: 0, Str: "test"},
+			{Op: "str_del", Path: "/foo/bar", Pos: 0, Len: 0},
+			{Op: "str_del", Path: "/foo/bar", Pos: 0, Len: 4},
 		}
 
 		for _, test := range tests {
@@ -383,12 +364,12 @@ func TestValidateStrDel(t *testing.T) {
 func TestValidateExtend(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
 		tests := []jsonpatch.Operation{
-			{"op": "extend", "path": "/foo/bar", "props": map[string]interface{}{}, "deleteNull": true},
-			{"op": "extend", "path": "/foo/bar", "props": map[string]interface{}{}, "deleteNull": false},
-			{"op": "extend", "path": "/foo/bar", "props": map[string]interface{}{}},
-			{"op": "extend", "path": "/foo/bar", "props": map[string]interface{}{"foo": "bar"}, "deleteNull": true},
-			{"op": "extend", "path": "/foo/bar", "props": map[string]interface{}{"foo": "bar"}, "deleteNull": false},
-			{"op": "extend", "path": "/foo/bar", "props": map[string]interface{}{"foo": "bar"}},
+			{Op: "extend", Path: "/foo/bar", Props: map[string]interface{}{}, DeleteNull: true},
+			{Op: "extend", Path: "/foo/bar", Props: map[string]interface{}{}, DeleteNull: false},
+			{Op: "extend", Path: "/foo/bar", Props: map[string]interface{}{}},
+			{Op: "extend", Path: "/foo/bar", Props: map[string]interface{}{"foo": "bar"}, DeleteNull: true},
+			{Op: "extend", Path: "/foo/bar", Props: map[string]interface{}{"foo": "bar"}, DeleteNull: false},
+			{Op: "extend", Path: "/foo/bar", Props: map[string]interface{}{"foo": "bar"}},
 		}
 
 		for _, test := range tests {
@@ -405,14 +386,14 @@ func TestValidateExtend(t *testing.T) {
 func TestValidateMerge(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
 		tests := []jsonpatch.Operation{
-			{"op": "merge", "path": "/foo/bar", "pos": 1, "props": map[string]interface{}{}},
-			{"op": "merge", "path": "/foo/bar", "pos": 2, "props": map[string]interface{}{}},
-			{"op": "merge", "path": "/foo/bar", "pos": 1, "props": map[string]interface{}{"foo": "bar"}},
-			{"op": "merge", "path": "/foo/bar", "pos": 2, "props": map[string]interface{}{"foo": "bar"}},
-			{"op": "merge", "path": "/foo/bar", "pos": 1, "props": map[string]interface{}{"foo": nil}},
-			{"op": "merge", "path": "/foo/bar", "pos": 2, "props": map[string]interface{}{"foo": nil}},
-			{"op": "merge", "path": "/foo/bar", "pos": 1},
-			{"op": "merge", "path": "/foo/bar", "pos": 2},
+			{Op: "merge", Path: "/foo/bar", Pos: 1, Props: map[string]interface{}{}},
+			{Op: "merge", Path: "/foo/bar", Pos: 2, Props: map[string]interface{}{}},
+			{Op: "merge", Path: "/foo/bar", Pos: 1, Props: map[string]interface{}{"foo": "bar"}},
+			{Op: "merge", Path: "/foo/bar", Pos: 2, Props: map[string]interface{}{"foo": "bar"}},
+			{Op: "merge", Path: "/foo/bar", Pos: 1, Props: map[string]interface{}{"foo": nil}},
+			{Op: "merge", Path: "/foo/bar", Pos: 2, Props: map[string]interface{}{"foo": nil}},
+			{Op: "merge", Path: "/foo/bar", Pos: 1},
+			{Op: "merge", Path: "/foo/bar", Pos: 2},
 		}
 
 		for _, test := range tests {
@@ -429,13 +410,13 @@ func TestValidateMerge(t *testing.T) {
 func TestValidateSplit(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
 		tests := []jsonpatch.Operation{
-			{"op": "split", "path": "/foo/bar", "pos": 0},
-			{"op": "split", "path": "/foo/bar", "pos": 2},
-			{"op": "split", "path": "/foo/bar", "pos": 0, "props": map[string]interface{}{}},
-			{"op": "split", "path": "/foo/bar", "pos": 2, "props": map[string]interface{}{}},
-			{"op": "split", "path": "/foo/bar", "pos": 0, "props": map[string]interface{}{"foo": "bar"}},
-			{"op": "split", "path": "/foo/bar", "pos": 2, "props": map[string]interface{}{"foo": "bar"}},
-			{"op": "split", "path": "/foo/bar", "pos": 2, "props": map[string]interface{}{"foo": nil}},
+			{Op: "split", Path: "/foo/bar", Pos: 0},
+			{Op: "split", Path: "/foo/bar", Pos: 2},
+			{Op: "split", Path: "/foo/bar", Pos: 0, Props: map[string]interface{}{}},
+			{Op: "split", Path: "/foo/bar", Pos: 2, Props: map[string]interface{}{}},
+			{Op: "split", Path: "/foo/bar", Pos: 0, Props: map[string]interface{}{"foo": "bar"}},
+			{Op: "split", Path: "/foo/bar", Pos: 2, Props: map[string]interface{}{"foo": "bar"}},
+			{Op: "split", Path: "/foo/bar", Pos: 2, Props: map[string]interface{}{"foo": nil}},
 		}
 
 		for _, test := range tests {
@@ -451,16 +432,16 @@ func TestValidateSplit(t *testing.T) {
 
 func TestValidateContains(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "contains", "path": "/foo/bar", "value": "test"}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "contains", Path: "/foo/bar", Value: "test"}, false)
 		assert.NoError(t, err)
 	})
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "contains", "path": "/foo/bar", "value": 123}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "contains", Path: "/foo/bar", Value: 123}, false)
 		assert.Contains(t, err.Error(), "expected value to be string")
 
-		err = jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "contains", "path": "/foo/bar", "value": "test", "ignore_case": 1}, false)
-		assert.Contains(t, err.Error(), "expected ignore_case to be boolean")
+		err = jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "contains", Path: "/foo/bar", Value: "test", IgnoreCase: true}, false)
+		assert.NoError(t, err) // IgnoreCase is a boolean field, should be ok
 	})
 }
 
@@ -470,16 +451,16 @@ func TestValidateContains(t *testing.T) {
 
 func TestValidateEnds(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "ends", "path": "/foo/bar", "value": "test"}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "ends", Path: "/foo/bar", Value: "test"}, false)
 		assert.NoError(t, err)
 	})
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "ends", "path": "/foo/bar", "value": 123}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "ends", Path: "/foo/bar", Value: 123}, false)
 		assert.Contains(t, err.Error(), "expected value to be string")
 
-		err = jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "ends", "path": "/foo/bar", "value": "test", "ignore_case": 1}, false)
-		assert.Contains(t, err.Error(), "expected ignore_case to be boolean")
+		err = jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "ends", Path: "/foo/bar", Value: "test", IgnoreCase: true}, false)
+		assert.NoError(t, err) // IgnoreCase is a boolean field, should be ok
 	})
 }
 
@@ -489,16 +470,16 @@ func TestValidateEnds(t *testing.T) {
 
 func TestValidateStarts(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "starts", "path": "/foo/bar", "value": "test"}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "starts", Path: "/foo/bar", Value: "test"}, false)
 		assert.NoError(t, err)
 	})
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "starts", "path": "/foo/bar", "value": 123}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "starts", Path: "/foo/bar", Value: 123}, false)
 		assert.Contains(t, err.Error(), "expected value to be string")
 
-		err = jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "starts", "path": "/foo/bar", "value": "test", "ignore_case": 1}, false)
-		assert.Contains(t, err.Error(), "expected ignore_case to be boolean")
+		err = jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "starts", Path: "/foo/bar", Value: "test", IgnoreCase: true}, false)
+		assert.NoError(t, err) // IgnoreCase is a boolean field, should be ok
 	})
 }
 
@@ -508,16 +489,16 @@ func TestValidateStarts(t *testing.T) {
 
 func TestValidateMatches(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "matches", "path": "/foo/bar", "value": "test"}, true)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "matches", Path: "/foo/bar", Value: "test"}, true)
 		assert.NoError(t, err)
 	})
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "matches", "path": "/foo/bar", "value": 123}, true)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "matches", Path: "/foo/bar", Value: 123}, true)
 		assert.Contains(t, err.Error(), "expected value to be string")
 
-		err = jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "matches", "path": "/foo/bar", "value": "test", "ignore_case": 1}, true)
-		assert.Contains(t, err.Error(), "expected ignore_case to be boolean")
+		err = jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "matches", Path: "/foo/bar", Value: "test", IgnoreCase: true}, true)
+		assert.NoError(t, err) // IgnoreCase is a boolean field, should be ok
 	})
 }
 
@@ -527,7 +508,7 @@ func TestValidateMatches(t *testing.T) {
 
 func TestValidateDefined(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "defined", "path": "/foo/bar"}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "defined", Path: "/foo/bar"}, false)
 		assert.NoError(t, err)
 	})
 }
@@ -538,7 +519,7 @@ func TestValidateDefined(t *testing.T) {
 
 func TestValidateUndefined(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "undefined", "path": "/foo/bar"}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "undefined", Path: "/foo/bar"}, false)
 		assert.NoError(t, err)
 	})
 }
@@ -549,15 +530,15 @@ func TestValidateUndefined(t *testing.T) {
 
 func TestValidateIn(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "in", "path": "/foo/bar", "value": []interface{}{"test"}}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "in", Path: "/foo/bar", Value: []interface{}{"test"}}, false)
 		assert.NoError(t, err)
 	})
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "in", "path": "/foo/bar", "value": 123}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "in", Path: "/foo/bar", Value: 123}, false)
 		assert.Contains(t, err.Error(), "in operation value must be an array")
 
-		err = jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "in", "path": "/foo/bar", "value": "test"}, false)
+		err = jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "in", Path: "/foo/bar", Value: "test"}, false)
 		assert.Contains(t, err.Error(), "in operation value must be an array")
 	})
 }
@@ -568,12 +549,12 @@ func TestValidateIn(t *testing.T) {
 
 func TestValidateMore(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "more", "path": "/foo/bar", "value": 5}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "more", Path: "/foo/bar", Value: 5}, false)
 		assert.NoError(t, err)
 	})
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "more", "path": "/foo/bar", "value": "test"}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "more", Path: "/foo/bar", Value: "test"}, false)
 		assert.Contains(t, err.Error(), "value must be a number")
 	})
 }
@@ -584,12 +565,12 @@ func TestValidateMore(t *testing.T) {
 
 func TestValidateLess(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "less", "path": "/foo/bar", "value": 5}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "less", Path: "/foo/bar", Value: 5}, false)
 		assert.NoError(t, err)
 	})
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "less", "path": "/foo/bar", "value": "test"}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "less", Path: "/foo/bar", Value: "test"}, false)
 		assert.Contains(t, err.Error(), "value must be a number")
 	})
 }
@@ -600,12 +581,12 @@ func TestValidateLess(t *testing.T) {
 
 func TestValidateType(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "type", "path": "/foo/bar", "value": "number"}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "type", Path: "/foo/bar", Value: "number"}, false)
 		assert.NoError(t, err)
 	})
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "type", "path": "/foo/bar", "value": 123}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "type", Path: "/foo/bar", Value: 123}, false)
 		assert.Contains(t, err.Error(), "expected value to be string")
 	})
 }
@@ -617,23 +598,23 @@ func TestValidateType(t *testing.T) {
 func TestValidateAnd(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{
-			"op":   "and",
-			"path": "/foo/bar",
-			"apply": []interface{}{
-				map[string]interface{}{"op": "test", "path": "/foo", "value": 123},
+			Op:   "and",
+			Path: "/foo/bar",
+			Apply: []jsonpatch.Operation{
+				{Op: "test", Path: "/foo", Value: 123},
 			},
 		}, false)
 		assert.NoError(t, err)
 
 		err = jsonpatch.ValidateOperation(jsonpatch.Operation{
-			"op":   "and",
-			"path": "/foo/bar",
-			"apply": []interface{}{
-				map[string]interface{}{
-					"op":   "not",
-					"path": "",
-					"apply": []interface{}{
-						map[string]interface{}{"op": "test", "path": "/foo", "value": 123},
+			Op:   "and",
+			Path: "/foo/bar",
+			Apply: []jsonpatch.Operation{
+				{
+					Op:   "not",
+					Path: "/",
+					Apply: []jsonpatch.Operation{
+						{Op: "test", Path: "/foo", Value: 123},
 					},
 				},
 			},
@@ -642,7 +623,7 @@ func TestValidateAnd(t *testing.T) {
 	})
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "and", "path": "/foo/bar", "apply": []interface{}{}}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "and", Path: "/foo/bar", Apply: []jsonpatch.Operation{}}, false)
 		assert.Contains(t, err.Error(), "predicate list is empty")
 	})
 }
@@ -654,23 +635,23 @@ func TestValidateAnd(t *testing.T) {
 func TestValidateNot(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{
-			"op":   "not",
-			"path": "/foo/bar",
-			"apply": []interface{}{
-				map[string]interface{}{"op": "test", "path": "/foo", "value": 123},
+			Op:   "not",
+			Path: "/foo/bar",
+			Apply: []jsonpatch.Operation{
+				{Op: "test", Path: "/foo", Value: 123},
 			},
 		}, false)
 		assert.NoError(t, err)
 
 		err = jsonpatch.ValidateOperation(jsonpatch.Operation{
-			"op":   "not",
-			"path": "/foo/bar",
-			"apply": []interface{}{
-				map[string]interface{}{
-					"op":   "not",
-					"path": "",
-					"apply": []interface{}{
-						map[string]interface{}{"op": "test", "path": "/foo", "value": 123},
+			Op:   "not",
+			Path: "/foo/bar",
+			Apply: []jsonpatch.Operation{
+				{
+					Op:   "not",
+					Path: "/",
+					Apply: []jsonpatch.Operation{
+						{Op: "test", Path: "/foo", Value: 123},
 					},
 				},
 			},
@@ -679,7 +660,7 @@ func TestValidateNot(t *testing.T) {
 	})
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "not", "path": "/foo/bar", "apply": []interface{}{}}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "not", Path: "/foo/bar", Apply: []jsonpatch.Operation{}}, false)
 		assert.Contains(t, err.Error(), "predicate list is empty")
 	})
 }
@@ -691,23 +672,23 @@ func TestValidateNot(t *testing.T) {
 func TestValidateOr(t *testing.T) {
 	t.Run("succeeds on valid operation", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{
-			"op":   "or",
-			"path": "/foo/bar",
-			"apply": []interface{}{
-				map[string]interface{}{"op": "test", "path": "/foo", "value": 123},
+			Op:   "or",
+			Path: "/foo/bar",
+			Apply: []jsonpatch.Operation{
+				{Op: "test", Path: "/foo", Value: 123},
 			},
 		}, false)
 		assert.NoError(t, err)
 
 		err = jsonpatch.ValidateOperation(jsonpatch.Operation{
-			"op":   "or",
-			"path": "/foo/bar",
-			"apply": []interface{}{
-				map[string]interface{}{
-					"op":   "not",
-					"path": "",
-					"apply": []interface{}{
-						map[string]interface{}{"op": "test", "path": "/foo", "value": 123},
+			Op:   "or",
+			Path: "/foo/bar",
+			Apply: []jsonpatch.Operation{
+				{
+					Op:   "not",
+					Path: "/",
+					Apply: []jsonpatch.Operation{
+						{Op: "test", Path: "/foo", Value: 123},
 					},
 				},
 			},
@@ -716,7 +697,7 @@ func TestValidateOr(t *testing.T) {
 	})
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "or", "path": "/foo/bar", "apply": []interface{}{}}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "or", Path: "/foo/bar", Apply: []jsonpatch.Operation{}}, false)
 		assert.Contains(t, err.Error(), "predicate list is empty")
 	})
 }
@@ -727,7 +708,7 @@ func TestValidateOr(t *testing.T) {
 
 func TestValidateMatchesNotAllowed(t *testing.T) {
 	t.Run("throws when matches operation not allowed", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "matches", "path": "/foo/bar", "value": "test"}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "matches", Path: "/foo/bar", Value: "test"}, false)
 		assert.Contains(t, err.Error(), "matches operation not allowed")
 	})
 }
@@ -738,17 +719,12 @@ func TestValidateMatchesNotAllowed(t *testing.T) {
 
 func TestValidateMergeErrors(t *testing.T) {
 	t.Run("throws on missing pos", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "merge", "path": "/foo/bar"}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "merge", Path: "/foo/bar"}, false)
 		assert.Contains(t, err.Error(), "expected pos field to be greater than 0")
 	})
 
-	t.Run("throws on invalid pos", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "merge", "path": "/foo/bar", "pos": "invalid"}, false)
-		assert.Contains(t, err.Error(), "not an integer")
-	})
-
 	t.Run("throws on pos less than 1", func(t *testing.T) {
-		err := jsonpatch.ValidateOperation(jsonpatch.Operation{"op": "merge", "path": "/foo/bar", "pos": 0}, false)
+		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "merge", Path: "/foo/bar", Pos: 0}, false)
 		assert.Contains(t, err.Error(), "expected pos field to be greater than 0")
 	})
 }

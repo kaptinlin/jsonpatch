@@ -113,12 +113,12 @@ func (op *StartsOperation) Apply(doc any) (internal.OpResult[any], error) {
 // ToJSON serializes the operation to JSON format.
 func (op *StartsOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
-		"op":    string(internal.OpStartsType),
-		"path":  formatPath(op.Path()),
-		"value": op.Value,
+		Op:    string(internal.OpStartsType),
+		Path:  formatPath(op.Path()),
+		Value: op.Value,
 	}
 	if op.IgnoreCase {
-		result["ignore_case"] = op.IgnoreCase
+		result.IgnoreCase = op.IgnoreCase
 	}
 	return result, nil
 }

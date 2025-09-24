@@ -7,8 +7,8 @@ import (
 )
 
 // Encode converts operations to JSON format.
-func Encode(ops []internal.Op) ([]map[string]interface{}, error) {
-	operations := make([]map[string]interface{}, 0, len(ops))
+func Encode(ops []internal.Op) ([]internal.Operation, error) {
+	operations := make([]internal.Operation, 0, len(ops))
 	for _, operation := range ops {
 		jsonOp, err := operation.ToJSON()
 		if err != nil {

@@ -228,10 +228,18 @@ func getTypeNameWithIntegerSupport(value interface{}) string {
 
 // ToJSON serializes the operation to JSON format.
 func (op *TestTypeOperation) ToJSON() (internal.Operation, error) {
+	// For single type, use Type field; for multiple types, use Value field
+	if len(op.Types) == 1 {
+		return internal.Operation{
+			Op:   string(internal.OpTestTypeType),
+			Path: formatPath(op.Path()),
+			Type: op.Types[0],
+		}, nil
+	}
 	return internal.Operation{
-		"op":   string(internal.OpTestTypeType),
-		"path": formatPath(op.Path()),
-		"type": op.Types,
+		Op:    string(internal.OpTestTypeType),
+		Path:  formatPath(op.Path()),
+		Value: op.Types,
 	}, nil
 }
 

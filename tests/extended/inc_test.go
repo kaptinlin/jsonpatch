@@ -26,10 +26,10 @@ func TestIncOp(t *testing.T) {
 			"val4": 0,
 		}
 		operations := []internal.Operation{
-			{"op": "inc", "path": "/val1", "inc": 1},
-			{"op": "inc", "path": "/val2", "inc": 1},
-			{"op": "inc", "path": "/val3", "inc": 1},
-			{"op": "inc", "path": "/val4", "inc": 1},
+			{Op: "inc", Path: "/val1", Inc: 1},
+			{Op: "inc", Path: "/val2", Inc: 1},
+			{Op: "inc", Path: "/val3", Inc: 1},
+			{Op: "inc", Path: "/val4", Inc: 1},
 		}
 		result := applyOperationsInc(t, doc, operations)
 		expected := map[string]interface{}{
@@ -46,8 +46,8 @@ func TestIncOp(t *testing.T) {
 			"foo": 1,
 		}
 		operations := []internal.Operation{
-			{"op": "inc", "path": "/foo", "inc": 10},
-			{"op": "inc", "path": "/foo", "inc": -3},
+			{Op: "inc", Path: "/foo", Inc: 10},
+			{Op: "inc", Path: "/foo", Inc: -3},
 		}
 		result := applyOperationsInc(t, doc, operations)
 		expected := map[string]interface{}{
@@ -61,7 +61,7 @@ func TestIncOp(t *testing.T) {
 			"foo": 1,
 		}
 		operations := []internal.Operation{
-			{"op": "inc", "path": "/foo", "inc": 0.1},
+			{Op: "inc", Path: "/foo", Inc: 0.1},
 		}
 		result := applyOperationsInc(t, doc, operations)
 		expected := map[string]interface{}{
@@ -73,9 +73,9 @@ func TestIncOp(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
 		t.Run("increments from 0 to 5", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "inc",
-				"path": "",
-				"inc":  5,
+				Op:   "inc",
+				Path: "",
+				Inc:  5,
 			}
 			result := applyOperationsInc(t, 0, []internal.Operation{operation})
 			assert.Equal(t, float64(5), result)
@@ -83,9 +83,9 @@ func TestIncOp(t *testing.T) {
 
 		t.Run("increments from -0 to 5", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "inc",
-				"path": "",
-				"inc":  5,
+				Op:   "inc",
+				Path: "",
+				Inc:  5,
 			}
 			result := applyOperationsInc(t, -0, []internal.Operation{operation})
 			assert.Equal(t, float64(5), result)
@@ -95,9 +95,9 @@ func TestIncOp(t *testing.T) {
 	t.Run("object", func(t *testing.T) {
 		t.Run("increments from 0 to 5", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "inc",
-				"path": "/lala",
-				"inc":  5,
+				Op:   "inc",
+				Path: "/lala",
+				Inc:  5,
 			}
 			result := applyOperationsInc(t, map[string]interface{}{"lala": 0}, []internal.Operation{operation})
 			expected := map[string]interface{}{"lala": float64(5)}
@@ -106,9 +106,9 @@ func TestIncOp(t *testing.T) {
 
 		t.Run("increments from -0 to 5", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "inc",
-				"path": "/lala",
-				"inc":  5,
+				Op:   "inc",
+				Path: "/lala",
+				Inc:  5,
 			}
 			result := applyOperationsInc(t, map[string]interface{}{"lala": -0}, []internal.Operation{operation})
 			expected := map[string]interface{}{"lala": float64(5)}
@@ -117,9 +117,9 @@ func TestIncOp(t *testing.T) {
 
 		t.Run("casts string to number", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "inc",
-				"path": "/lala",
-				"inc":  5,
+				Op:   "inc",
+				Path: "/lala",
+				Inc:  5,
 			}
 			result := applyOperationsInc(t, map[string]interface{}{"lala": "4"}, []internal.Operation{operation})
 			expected := map[string]interface{}{"lala": float64(9)}
@@ -129,14 +129,14 @@ func TestIncOp(t *testing.T) {
 		t.Run("can increment twice", func(t *testing.T) {
 			operations := []internal.Operation{
 				{
-					"op":   "inc",
-					"path": "/lala",
-					"inc":  1,
+					Op:   "inc",
+					Path: "/lala",
+					Inc:  1,
 				},
 				{
-					"op":   "inc",
-					"path": "/lala",
-					"inc":  2,
+					Op:   "inc",
+					Path: "/lala",
+					Inc:  2,
 				},
 			}
 			result := applyOperationsInc(t, map[string]interface{}{"lala": 0}, operations)
@@ -148,9 +148,9 @@ func TestIncOp(t *testing.T) {
 	t.Run("array", func(t *testing.T) {
 		t.Run("increments from 0 to -3", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "inc",
-				"path": "/0",
-				"inc":  -3,
+				Op:   "inc",
+				Path: "/0",
+				Inc:  -3,
 			}
 			result := applyOperationsInc(t, []interface{}{0}, []internal.Operation{operation})
 			expected := []interface{}{float64(-3)}
@@ -159,9 +159,9 @@ func TestIncOp(t *testing.T) {
 
 		t.Run("increments from -0 to -3", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "inc",
-				"path": "/0",
-				"inc":  -3,
+				Op:   "inc",
+				Path: "/0",
+				Inc:  -3,
 			}
 			result := applyOperationsInc(t, []interface{}{-0}, []internal.Operation{operation})
 			expected := []interface{}{float64(-3)}

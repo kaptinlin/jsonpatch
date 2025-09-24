@@ -113,9 +113,9 @@ func TestOpMore_ToJSON(t *testing.T) {
 	json, err := op.ToJSON()
 
 	require.NoError(t, err)
-	assert.Equal(t, string(internal.OpMoreType), json["op"])
-	assert.Equal(t, "/age", json["path"])
-	assert.Equal(t, 18, json["value"]) // Expect int, not float64
+	assert.Equal(t, string(internal.OpMoreType), json.Op)
+	assert.Equal(t, "/age", json.Path)
+	assert.Equal(t, 18, json.Value) // Expect int, not float64
 }
 
 func TestOpMore_ToCompact(t *testing.T) {

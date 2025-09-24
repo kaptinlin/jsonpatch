@@ -28,29 +28,29 @@ func main() {
 	patch := []jsonpatch.Operation{
 		// Test: verify current value
 		{
-			"op":    "test",
-			"path":  "/name",
-			"value": "John",
+			Op:    "test",
+			Path:  "/name",
+			Value: "John",
 		},
 
 		// Replace: update existing field
 		{
-			"op":    "replace",
-			"path":  "/email",
-			"value": "new@example.com",
+			Op:    "replace",
+			Path:  "/email",
+			Value: "new@example.com",
 		},
 
 		// Add: create new field
 		{
-			"op":    "add",
-			"path":  "/city",
-			"value": "New York",
+			Op:    "add",
+			Path:  "/city",
+			Value: "New York",
 		},
 
 		// Remove: delete field
 		{
-			"op":   "remove",
-			"path": "/temp",
+			Op:   "remove",
+			Path: "/temp",
 		},
 	}
 

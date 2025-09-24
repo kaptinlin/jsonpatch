@@ -20,8 +20,8 @@ doc := map[string]interface{}{
 }
 
 patch := []jsonpatch.Operation{
-    {"op": "add", "path": "/email", "value": "alice@example.com"},
-    {"op": "replace", "path": "/age", "value": 26},
+    {Op: "add", Path: "/email", Value: "alice@example.com"},
+    {Op: "replace", Path: "/age", Value: 26},
 }
 
 result, err := jsonpatch.ApplyPatch(doc, patch)
@@ -41,13 +41,13 @@ Add new values to objects or arrays.
 
 ```go
 // Add to object
-{"op": "add", "path": "/newField", "value": "newValue"}
+{Op: "add", Path: "/newField", Value: "newValue"}
 
 // Add to end of array
-{"op": "add", "path": "/items/-", "value": "newItem"}
+{Op: "add", Path: "/items/-", Value: "newItem"}
 
 // Insert at specific array position
-{"op": "add", "path": "/items/0", "value": "firstItem"}
+{Op: "add", Path: "/items/0", Value: "firstItem"}
 ```
 
 ### Remove Operation
@@ -56,10 +56,10 @@ Remove values from objects or arrays.
 
 ```go
 // Remove object property
-{"op": "remove", "path": "/fieldToRemove"}
+{Op: "remove", Path: "/fieldToRemove"}
 
 // Remove array element
-{"op": "remove", "path": "/items/0"}
+{Op: "remove", Path: "/items/0"}
 ```
 
 ### Replace Operation
@@ -67,7 +67,7 @@ Remove values from objects or arrays.
 Replace existing values.
 
 ```go
-{"op": "replace", "path": "/existingField", "value": "newValue"}
+{Op: "replace", Path: "/existingField", Value: "newValue"}
 ```
 
 ### Move Operation
@@ -75,7 +75,7 @@ Replace existing values.
 Move values to new locations.
 
 ```go
-{"op": "move", "from": "/oldPath", "path": "/newPath"}
+{Op: "move", From: "/oldPath", Path: "/newPath"}
 ```
 
 ### Copy Operation
@@ -83,7 +83,7 @@ Move values to new locations.
 Copy values to new locations.
 
 ```go
-{"op": "copy", "from": "/sourcePath", "path": "/targetPath"}
+{Op: "copy", From: "/sourcePath", Path: "/targetPath"}
 ```
 
 ### Test Operation
@@ -92,10 +92,10 @@ Test if values match expectations. Supports optional `not` flag for inverted tes
 
 ```go
 // Test equality
-{"op": "test", "path": "/status", "value": "active"}
+{Op: "test", Path: "/status", Value: "active"}
 
 // Test inequality (inverted)
-{"op": "test", "path": "/status", "value": "inactive", "not": true}
+{Op: "test", Path: "/status", Value: "inactive", Not: true}
 ```
 
 ## Common Patterns
@@ -105,10 +105,10 @@ Test if values match expectations. Supports optional `not` flag for inverted tes
 ```go
 patch := []jsonpatch.Operation{
     // Test current value first
-    {"op": "test", "path": "/version", "value": 1},
+    {Op: "test", Path: "/version", Value: 1},
     // Then make changes
-    {"op": "replace", "path": "/status", "value": "updated"},
-    {"op": "replace", "path": "/version", "value": 2},
+    {Op: "replace", Path: "/status", Value: "updated"},
+    {Op: "replace", Path: "/version", Value: 2},
 }
 ```
 
@@ -117,11 +117,11 @@ patch := []jsonpatch.Operation{
 ```go
 patch := []jsonpatch.Operation{
     // Add to end
-    {"op": "add", "path": "/items/-", "value": "new item"},
+    {Op: "add", Path: "/items/-", Value: "new item"},
     // Insert at beginning
-    {"op": "add", "path": "/items/0", "value": "first item"},
+    {Op: "add", Path: "/items/0", Value: "first item"},
     // Remove specific element
-    {"op": "remove", "path": "/items/1"},
+    {Op: "remove", Path: "/items/1"},
 }
 ```
 
@@ -135,7 +135,7 @@ for i := 0; i < 3; i++ {
     patch = append(patch, jsonpatch.Operation{
         "op":    "replace",
         "path":  fmt.Sprintf("/items/%d/status", i),
-        "value": "processed",
+        Value: "processed",
     })
 }
 

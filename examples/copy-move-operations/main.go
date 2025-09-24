@@ -31,22 +31,22 @@ func main() {
 	patch := []jsonpatch.Operation{
 		// Copy email to create backup
 		{
-			"op":   "copy",
-			"from": "/user/email",
-			"path": "/backup_email",
+			Op:   "copy",
+			From: "/user/email",
+			Path: "/backup_email",
 		},
 
 		// Move theme to user preferences
 		{
-			"op":   "move",
-			"from": "/settings/theme",
-			"path": "/user/theme",
+			Op:   "move",
+			From: "/settings/theme",
+			Path: "/user/theme",
 		},
 
 		// Remove temporary data
 		{
-			"op":   "remove",
-			"path": "/temp",
+			Op:   "remove",
+			Path: "/temp",
 		},
 	}
 

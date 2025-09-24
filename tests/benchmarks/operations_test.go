@@ -18,42 +18,42 @@ func BenchmarkBasicOperations(b *testing.B) {
 			name: "add_simple_value",
 			doc:  map[string]interface{}{"foo": "bar"},
 			ops: []jsonpatch.Operation{
-				{"op": "add", "path": "/baz", "value": "qux"},
+				{Op: "add", Path: "/baz", Value: "qux"},
 			},
 		},
 		{
 			name: "replace_value",
 			doc:  map[string]interface{}{"foo": "bar", "baz": "qux"},
 			ops: []jsonpatch.Operation{
-				{"op": "replace", "path": "/foo", "value": "new_value"},
+				{Op: "replace", Path: "/foo", Value: "new_value"},
 			},
 		},
 		{
 			name: "remove_value",
 			doc:  map[string]interface{}{"foo": "bar", "baz": "qux"},
 			ops: []jsonpatch.Operation{
-				{"op": "remove", "path": "/baz"},
+				{Op: "remove", Path: "/baz"},
 			},
 		},
 		{
 			name: "test_operation",
 			doc:  map[string]interface{}{"foo": "bar"},
 			ops: []jsonpatch.Operation{
-				{"op": "test", "path": "/foo", "value": "bar"},
+				{Op: "test", Path: "/foo", Value: "bar"},
 			},
 		},
 		{
 			name: "copy_operation",
 			doc:  map[string]interface{}{"foo": "bar", "baz": map[string]interface{}{"deep": "value"}},
 			ops: []jsonpatch.Operation{
-				{"op": "copy", "from": "/baz", "path": "/copied"},
+				{Op: "copy", From: "/baz", Path: "/copied"},
 			},
 		},
 		{
 			name: "move_operation",
 			doc:  map[string]interface{}{"foo": "bar", "baz": "qux"},
 			ops: []jsonpatch.Operation{
-				{"op": "move", "from": "/baz", "path": "/moved"},
+				{Op: "move", From: "/baz", Path: "/moved"},
 			},
 		},
 	}
@@ -84,14 +84,14 @@ func BenchmarkExtendedOperations(b *testing.B) {
 			name: "inc_operation",
 			doc:  map[string]interface{}{"counter": 42},
 			ops: []jsonpatch.Operation{
-				{"op": "inc", "path": "/counter", "inc": 1},
+				{Op: "inc", Path: "/counter", Inc: 1},
 			},
 		},
 		{
 			name: "flip_operation",
 			doc:  map[string]interface{}{"enabled": true},
 			ops: []jsonpatch.Operation{
-				{"op": "flip", "path": "/enabled"},
+				{Op: "flip", Path: "/enabled"},
 			},
 		},
 		// Note: merge operation works on arrays, commenting out object merge for now
@@ -106,14 +106,14 @@ func BenchmarkExtendedOperations(b *testing.B) {
 			name: "strins_operation",
 			doc:  map[string]interface{}{"text": "hello world"},
 			ops: []jsonpatch.Operation{
-				{"op": "str_ins", "path": "/text", "pos": 5, "str": " beautiful"},
+				{Op: "str_ins", Path: "/text", Pos: 5, Str: " beautiful"},
 			},
 		},
 		{
 			name: "split_operation",
 			doc:  map[string]interface{}{"text": "hello,world,test"},
 			ops: []jsonpatch.Operation{
-				{"op": "split", "path": "/text", "pos": 5},
+				{Op: "split", Path: "/text", Pos: 5},
 			},
 		},
 	}
@@ -144,42 +144,42 @@ func BenchmarkPredicateOperations(b *testing.B) {
 			name: "contains_predicate",
 			doc:  map[string]interface{}{"text": "hello world"},
 			ops: []jsonpatch.Operation{
-				{"op": "contains", "path": "/text", "value": "world"},
+				{Op: "contains", Path: "/text", Value: "world"},
 			},
 		},
 		{
 			name: "starts_predicate",
 			doc:  map[string]interface{}{"text": "hello world"},
 			ops: []jsonpatch.Operation{
-				{"op": "starts", "path": "/text", "value": "hello"},
+				{Op: "starts", Path: "/text", Value: "hello"},
 			},
 		},
 		{
 			name: "ends_predicate",
 			doc:  map[string]interface{}{"text": "hello world"},
 			ops: []jsonpatch.Operation{
-				{"op": "ends", "path": "/text", "value": "world"},
+				{Op: "ends", Path: "/text", Value: "world"},
 			},
 		},
 		{
 			name: "type_predicate",
 			doc:  map[string]interface{}{"value": 42},
 			ops: []jsonpatch.Operation{
-				{"op": "type", "path": "/value", "value": "number"},
+				{Op: "type", Path: "/value", Value: "number"},
 			},
 		},
 		{
 			name: "less_predicate",
 			doc:  map[string]interface{}{"value": 42},
 			ops: []jsonpatch.Operation{
-				{"op": "less", "path": "/value", "value": 50},
+				{Op: "less", Path: "/value", Value: 50},
 			},
 		},
 		{
 			name: "more_predicate",
 			doc:  map[string]interface{}{"value": 42},
 			ops: []jsonpatch.Operation{
-				{"op": "more", "path": "/value", "value": 30},
+				{Op: "more", Path: "/value", Value: 30},
 			},
 		},
 	}
@@ -212,9 +212,9 @@ func BenchmarkSecondOrderPredicates(b *testing.B) {
 		//	doc:  map[string]interface{}{"foo": 1, "bar": 2},
 		//	ops: []jsonpatch.Operation{
 		//		{
-		//			"op":   "and",
-		//			"path": "",
-		//			"apply": []interface{}{
+		//			Op:   "and",
+		//			Path: "",
+		//			Apply: []interface{}{
 		//				map[string]interface{}{"op": "test", "path": "/foo", "value": 1},
 		//				map[string]interface{}{"op": "test", "path": "/bar", "value": 2},
 		//			},
@@ -227,9 +227,9 @@ func BenchmarkSecondOrderPredicates(b *testing.B) {
 		//	doc:  map[string]interface{}{"foo": 1, "bar": 2},
 		//	ops: []jsonpatch.Operation{
 		//		{
-		//			"op":   "or",
-		//			"path": "",
-		//			"apply": []interface{}{
+		//			Op:   "or",
+		//			Path: "",
+		//			Apply: []interface{}{
 		//				map[string]interface{}{"op": "test", "path": "/foo", "value": 1},
 		//				map[string]interface{}{"op": "test", "path": "/bar", "value": 3},
 		//			},
@@ -241,10 +241,10 @@ func BenchmarkSecondOrderPredicates(b *testing.B) {
 			doc:  map[string]interface{}{"foo": 1, "bar": 2},
 			ops: []jsonpatch.Operation{
 				{
-					"op":   "not",
-					"path": "",
-					"apply": []interface{}{
-						map[string]interface{}{"op": "test", "path": "/foo", "value": 2},
+					Op:   "not",
+					Path: "",
+					Apply: []jsonpatch.Operation{
+						{Op: "test", Path: "/foo", Value: 2},
 					},
 				},
 			},
@@ -314,9 +314,9 @@ func BenchmarkComplexDocument(b *testing.B) {
 			name: "add_new_user",
 			ops: []jsonpatch.Operation{
 				{
-					"op":   "add",
-					"path": "/users/-",
-					"value": map[string]interface{}{
+					Op:   "add",
+					Path: "/users/-",
+					Value: map[string]interface{}{
 						"id":   3,
 						"name": "Charlie",
 						"profile": map[string]interface{}{
@@ -330,14 +330,14 @@ func BenchmarkComplexDocument(b *testing.B) {
 		{
 			name: "update_user_preference",
 			ops: []jsonpatch.Operation{
-				{"op": "replace", "path": "/users/0/profile/preferences/theme", "value": "light"},
+				{Op: "replace", Path: "/users/0/profile/preferences/theme", Value: "light"},
 			},
 		},
 		{
 			name: "increment_stats",
 			ops: []jsonpatch.Operation{
-				{"op": "inc", "path": "/metadata/stats/total_users", "inc": 1},
-				{"op": "inc", "path": "/metadata/stats/active_users", "inc": 1},
+				{Op: "inc", Path: "/metadata/stats/total_users", Inc: 1},
+				{Op: "inc", Path: "/metadata/stats/active_users", Inc: 1},
 			},
 		},
 		// Note: Complex validation with and operation - commented out for benchmark stability
@@ -345,9 +345,9 @@ func BenchmarkComplexDocument(b *testing.B) {
 		//	name: "complex_validation",
 		//	ops: []jsonpatch.Operation{
 		//		{
-		//			"op":   "and",
-		//			"path": "",
-		//			"apply": []interface{}{
+		//			Op:   "and",
+		//			Path: "",
+		//			Apply: []interface{}{
 		//				map[string]interface{}{"op": "test", "path": "/metadata/version", "value": "1.0"},
 		//				map[string]interface{}{"op": "more", "path": "/metadata/stats/total_users", "value": 0},
 		//			},
@@ -390,8 +390,8 @@ func BenchmarkMutateVsImmutable(b *testing.B) {
 	}
 
 	ops := []jsonpatch.Operation{
-		{"op": "replace", "path": "/metadata/version", "value": 2},
-		{"op": "add", "path": "/metadata/updated", "value": true},
+		{Op: "replace", Path: "/metadata/version", Value: 2},
+		{Op: "add", Path: "/metadata/updated", Value: true},
 	}
 
 	b.Run("mutable", func(b *testing.B) {

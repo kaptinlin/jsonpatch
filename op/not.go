@@ -87,23 +87,23 @@ func (o *NotOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // ToJSON serializes the operation to JSON format.
 func (o *NotOperation) ToJSON() (internal.Operation, error) {
-	opsJSON := make([]interface{}, 0, len(o.Operations))
+	opsJSON := make([]internal.Operation, 0, len(o.Operations))
 	for _, op := range o.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {
-			return nil, ErrInvalidPredicateInNot
+			return internal.Operation{}, ErrInvalidPredicateInNot
 		}
 		jsonVal, err := predicateOp.ToJSON()
 		if err != nil {
-			return nil, err
+			return internal.Operation{}, err
 		}
 		opsJSON = append(opsJSON, jsonVal)
 	}
 
 	return internal.Operation{
-		"op":    string(internal.OpNotType),
-		"path":  formatPath(o.Path()),
-		"apply": opsJSON,
+		Op:    string(internal.OpNotType),
+		Path:  formatPath(o.Path()),
+		Apply: opsJSON,
 	}, nil
 }
 
@@ -113,11 +113,11 @@ func (o *NotOperation) ToCompact() (internal.CompactOperation, error) {
 	for _, op := range o.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {
-			return nil, ErrInvalidPredicateInNot
+			return internal.CompactOperation{}, ErrInvalidPredicateInNot
 		}
 		compact, err := predicateOp.ToCompact()
 		if err != nil {
-			return nil, err
+			return internal.CompactOperation{}, err
 		}
 		opsCompact = append(opsCompact, compact)
 	}

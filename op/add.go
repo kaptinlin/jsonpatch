@@ -125,9 +125,9 @@ func addAtPath(doc interface{}, path []string, value interface{}) (interface{}, 
 // ToJSON serializes the operation to JSON format.
 func (o *AddOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
-		"op":    string(internal.OpAddType),
-		"path":  formatPath(o.path),
-		"value": o.Value,
+		Op:    string(internal.OpAddType),
+		Path:  formatPath(o.path),
+		Value: o.Value,
 	}, nil
 }
 

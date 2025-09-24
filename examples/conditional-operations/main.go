@@ -28,27 +28,27 @@ func main() {
 	patch := []jsonpatch.Operation{
 		// Test: verify account is active
 		{
-			"op":    "test",
-			"path":  "/status",
-			"value": "active",
+			Op:    "test",
+			Path:  "/status",
+			Value: "active",
 		},
 		// Test: verify sufficient balance
 		{
-			"op":    "test",
-			"path":  "/balance",
-			"value": 1000.0,
+			Op:    "test",
+			Path:  "/balance",
+			Value: 1000.0,
 		},
 		// Perform withdrawal
 		{
-			"op":    "replace",
-			"path":  "/balance",
-			"value": 700.0,
+			Op:    "replace",
+			Path:  "/balance",
+			Value: 700.0,
 		},
 		// Increment version
 		{
-			"op":   "inc",
-			"path": "/version",
-			"inc":  1,
+			Op:   "inc",
+			Path: "/version",
+			Inc:  1,
 		},
 	}
 
@@ -69,14 +69,14 @@ func main() {
 	failPatch := []jsonpatch.Operation{
 		// This test will fail - wrong balance
 		{
-			"op":    "test",
-			"path":  "/balance",
-			"value": 2000.0, // Wrong amount
+			Op:    "test",
+			Path:  "/balance",
+			Value: 2000.0, // Wrong amount
 		},
 		{
-			"op":    "replace",
-			"path":  "/balance",
-			"value": 0.0,
+			Op:    "replace",
+			Path:  "/balance",
+			Value: 0.0,
 		},
 	}
 

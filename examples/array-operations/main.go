@@ -30,29 +30,29 @@ func main() {
 	patch := []jsonpatch.Operation{
 		// Add to end of array using "-"
 		{
-			"op":    "add",
-			"path":  "/users/-",
-			"value": map[string]interface{}{"id": 4, "name": "David"},
+			Op:    "add",
+			Path:  "/users/-",
+			Value: map[string]interface{}{"id": 4, "name": "David"},
 		},
 
 		// Insert at beginning
 		{
-			"op":    "add",
-			"path":  "/tags/0",
-			"value": "patch",
+			Op:    "add",
+			Path:  "/tags/0",
+			Value: "patch",
 		},
 
 		// Replace array element
 		{
-			"op":    "replace",
-			"path":  "/users/1/name",
-			"value": "Bobby",
+			Op:    "replace",
+			Path:  "/users/1/name",
+			Value: "Bobby",
 		},
 
 		// Remove array element
 		{
-			"op":   "remove",
-			"path": "/users/2",
+			Op:   "remove",
+			Path: "/users/2",
 		},
 	}
 

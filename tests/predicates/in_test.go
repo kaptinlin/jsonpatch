@@ -33,9 +33,9 @@ func TestInOp(t *testing.T) {
 				"hello": "world",
 			}
 			op := internal.Operation{
-				"op":   "in",
-				"path": "",
-				"value": []interface{}{
+				Op: "in",
+				Path: "",
+				Value: []interface{}{
 					1,
 					map[string]interface{}{
 						"hello": "world",
@@ -51,9 +51,9 @@ func TestInOp(t *testing.T) {
 				"hello": "world",
 			}
 			op := internal.Operation{
-				"op":    "in",
-				"path":  "",
-				"value": []interface{}{1},
+				Op: "in",
+				Path: "",
+				Value: []interface{}{1},
 			}
 			applyOperationWithErrorIn(t, obj, op)
 		})
@@ -65,9 +65,9 @@ func TestInOp(t *testing.T) {
 				},
 			}
 			op := internal.Operation{
-				"op":    "in",
-				"path":  "",
-				"value": []interface{}{1},
+				Op: "in",
+				Path: "",
+				Value: []interface{}{1},
 			}
 			applyOperationWithErrorIn(t, obj, op)
 		})

@@ -58,11 +58,11 @@ func (o *UndefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
 // ToJSON serializes the operation to JSON format.
 func (o *UndefinedOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
-		"op":   string(internal.OpUndefinedType),
-		"path": formatPath(o.path),
+		Op:   string(internal.OpUndefinedType),
+		Path: formatPath(o.path),
 	}
 	if o.not {
-		result["not"] = true
+		result.Not = true
 	}
 	return result, nil
 }

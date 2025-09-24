@@ -107,7 +107,38 @@ func getValue(doc interface{}, path []string) (interface{}, error) {
 
 // deepEqual performs a deep equality check between two values.
 func deepEqual(a, b interface{}) bool {
-	return reflect.DeepEqual(a, b)
+	// First try direct equality
+	if reflect.DeepEqual(a, b) {
+		return true
+	}
+	
+	// If not directly equal, check if both are actual numeric types
+	// (not strings or booleans that can be converted to numbers)
+	// and compare their numeric values
+	aIsActualNumeric := isActualNumericType(a)
+	bIsActualNumeric := isActualNumericType(b)
+	
+	if aIsActualNumeric && bIsActualNumeric {
+		// Both are actual numeric types, compare their numeric values
+		aFloat, _ := ToFloat64(a)
+		bFloat, _ := ToFloat64(b)
+		return aFloat == bFloat
+	}
+	
+	return false
+}
+
+// isActualNumericType checks if a value is an actual numeric type
+// (not a string or boolean that could be converted to a number)
+func isActualNumericType(val interface{}) bool {
+	switch val.(type) {
+	case float64, float32,
+		int, int8, int16, int32, int64,
+		uint, uint8, uint16, uint32, uint64:
+		return true
+	default:
+		return false
+	}
 }
 
 // DeepClone performs a deep clone of a value.
@@ -363,8 +394,9 @@ func ToFloat64(val interface{}) (float64, bool) {
 		}
 		return 0, true
 	case string:
-		// Try to parse string as number
-		if f, err := strconv.ParseFloat(v, 64); err == nil {
+		// Try to parse string as number (trim whitespace first)
+		trimmed := strings.TrimSpace(v)
+		if f, err := strconv.ParseFloat(trimmed, 64); err == nil {
 			return f, true
 		}
 		return 0, false
@@ -372,6 +404,7 @@ func ToFloat64(val interface{}) (float64, bool) {
 		return 0, false
 	}
 }
+
 
 // toString converts a value to string, handling various internal.
 func toString(value interface{}) (string, error) {

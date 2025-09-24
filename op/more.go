@@ -95,9 +95,9 @@ func (o *MoreOperation) ToJSON() (internal.Operation, error) {
 	}
 
 	return internal.Operation{
-		"op":    string(internal.OpMoreType),
-		"path":  formatPath(o.Path()),
-		"value": value,
+		Op:    string(internal.OpMoreType),
+		Path:  formatPath(o.Path()),
+		Value: value,
 	}, nil
 }
 

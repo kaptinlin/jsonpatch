@@ -42,9 +42,9 @@ func TestTypeOp(t *testing.T) {
 
 			for _, test := range tests {
 				op := internal.Operation{
-					"op":    "type",
-					"path":  "",
-					"value": test.typ,
+					Op:    "type",
+					Path:  "",
+					Value: test.typ,
 				}
 				applyOperationType(t, test.value, op)
 			}
@@ -65,9 +65,9 @@ func TestTypeOp(t *testing.T) {
 
 			for _, test := range tests {
 				op := internal.Operation{
-					"op":    "type",
-					"path":  "",
-					"value": test.typ,
+					Op:    "type",
+					Path:  "",
+					Value: test.typ,
 				}
 				applyOperationWithErrorType(t, test.value, op)
 			}
@@ -90,9 +90,9 @@ func TestTypeOp(t *testing.T) {
 
 			for _, test := range tests {
 				op := internal.Operation{
-					"op":    "type",
-					"path":  "/foo",
-					"value": test.typ,
+					Op:    "type",
+					Path:  "/foo",
+					Value: test.typ,
 				}
 				applyOperationType(t, test.obj, op)
 			}
@@ -113,9 +113,9 @@ func TestTypeOp(t *testing.T) {
 
 			for _, test := range tests {
 				op := internal.Operation{
-					"op":    "type",
-					"path":  "/foo",
-					"value": test.typ,
+					Op:    "type",
+					Path:  "/foo",
+					Value: test.typ,
 				}
 				applyOperationWithErrorType(t, test.obj, op)
 			}
@@ -138,9 +138,9 @@ func TestTypeOp(t *testing.T) {
 
 			for _, test := range tests {
 				op := internal.Operation{
-					"op":    "type",
-					"path":  "/0",
-					"value": test.typ,
+					Op:    "type",
+					Path:  "/0",
+					Value: test.typ,
 				}
 				applyOperationType(t, test.arr, op)
 			}
@@ -161,9 +161,9 @@ func TestTypeOp(t *testing.T) {
 
 			for _, test := range tests {
 				op := internal.Operation{
-					"op":    "type",
-					"path":  "/0",
-					"value": test.typ,
+					Op:    "type",
+					Path:  "/0",
+					Value: test.typ,
 				}
 				applyOperationWithErrorType(t, test.arr, op)
 			}

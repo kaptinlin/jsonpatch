@@ -125,13 +125,11 @@ func TestOpAnd_ToJSON(t *testing.T) {
 	json, err := andOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
 
-	assert.Equal(t, "and", json["op"], "JSON should contain correct op type")
-	assert.Equal(t, "/test", json["path"], "JSON should contain correct formatted path")
+	assert.Equal(t, "and", json.Op, "JSON should contain correct op type")
+	assert.Equal(t, "/test", json.Path, "JSON should contain correct formatted path")
 
 	// Check apply array
-	apply, ok := json["apply"].([]interface{})
-	require.True(t, ok, "JSON should contain apply array")
-	assert.Len(t, apply, 2, "JSON should contain correct number of operations")
+	assert.Len(t, json.Apply, 2, "JSON should contain correct number of operations")
 }
 
 func TestOpAnd_ToCompact(t *testing.T) {

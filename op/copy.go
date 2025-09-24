@@ -81,9 +81,9 @@ func (o *CopyOperation) Apply(doc any) (internal.OpResult[any], error) {
 // ToJSON serializes the operation to JSON format.
 func (o *CopyOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
-		"op":   string(internal.OpCopyType),
-		"path": formatPath(o.Path()),
-		"from": formatPath(o.FromPath),
+		Op:   string(internal.OpCopyType),
+		Path: formatPath(o.Path()),
+		From: formatPath(o.FromPath),
 	}, nil
 }
 

@@ -44,7 +44,7 @@ func TestBasicOperationParity(t *testing.T) {
 			Name: "add_to_object",
 			Doc:  map[string]interface{}{"foo": "bar"},
 			Patch: []jsonpatch.Operation{
-				{"op": "add", "path": "/baz", "value": "qux"},
+				{Op: "add", Path: "/baz", Value: "qux"},
 			},
 			Expected: map[string]interface{}{"foo": "bar", "baz": "qux"},
 			Comment:  "Should add new property to object",
@@ -54,7 +54,7 @@ func TestBasicOperationParity(t *testing.T) {
 			Name: "replace_value",
 			Doc:  map[string]interface{}{"foo": "bar"},
 			Patch: []jsonpatch.Operation{
-				{"op": "replace", "path": "/foo", "value": "baz"},
+				{Op: "replace", Path: "/foo", Value: "baz"},
 			},
 			Expected: map[string]interface{}{"foo": "baz"},
 			Comment:  "Should replace existing value",
@@ -64,7 +64,7 @@ func TestBasicOperationParity(t *testing.T) {
 			Name: "remove_property",
 			Doc:  map[string]interface{}{"foo": "bar", "baz": "qux"},
 			Patch: []jsonpatch.Operation{
-				{"op": "remove", "path": "/baz"},
+				{Op: "remove", Path: "/baz"},
 			},
 			Expected: map[string]interface{}{"foo": "bar"},
 			Comment:  "Should remove property from object",
@@ -74,7 +74,7 @@ func TestBasicOperationParity(t *testing.T) {
 			Name: "test_successful",
 			Doc:  map[string]interface{}{"foo": "bar"},
 			Patch: []jsonpatch.Operation{
-				{"op": "test", "path": "/foo", "value": "bar"},
+				{Op: "test", Path: "/foo", Value: "bar"},
 			},
 			Expected: map[string]interface{}{"foo": "bar"},
 			Comment:  "Test should pass and leave document unchanged",
@@ -84,7 +84,7 @@ func TestBasicOperationParity(t *testing.T) {
 			Name: "test_failure",
 			Doc:  map[string]interface{}{"foo": "bar"},
 			Patch: []jsonpatch.Operation{
-				{"op": "test", "path": "/foo", "value": "baz"},
+				{Op: "test", Path: "/foo", Value: "baz"},
 			},
 			ShouldFail: true,
 			Comment:    "Test should fail when values don't match",
@@ -94,7 +94,7 @@ func TestBasicOperationParity(t *testing.T) {
 			Name: "copy_operation",
 			Doc:  map[string]interface{}{"foo": "bar"},
 			Patch: []jsonpatch.Operation{
-				{"op": "copy", "from": "/foo", "path": "/baz"},
+				{Op: "copy", From: "/foo", Path: "/baz"},
 			},
 			Expected: map[string]interface{}{"foo": "bar", "baz": "bar"},
 			Comment:  "Should copy value to new location",
@@ -104,7 +104,7 @@ func TestBasicOperationParity(t *testing.T) {
 			Name: "move_operation",
 			Doc:  map[string]interface{}{"foo": "bar", "baz": "qux"},
 			Patch: []jsonpatch.Operation{
-				{"op": "move", "from": "/baz", "path": "/moved"},
+				{Op: "move", From: "/baz", Path: "/moved"},
 			},
 			Expected: map[string]interface{}{"foo": "bar", "moved": "qux"},
 			Comment:  "Should move value to new location",
@@ -122,7 +122,7 @@ func TestArrayOperationParity(t *testing.T) {
 			Name: "add_to_array_end",
 			Doc:  []interface{}{"foo", "bar"},
 			Patch: []jsonpatch.Operation{
-				{"op": "add", "path": "/-", "value": "baz"},
+				{Op: "add", Path: "/-", Value: "baz"},
 			},
 			Expected: []interface{}{"foo", "bar", "baz"},
 			Comment:  "Should add to end of array",
@@ -132,7 +132,7 @@ func TestArrayOperationParity(t *testing.T) {
 			Name: "add_to_array_middle",
 			Doc:  []interface{}{"foo", "bar"},
 			Patch: []jsonpatch.Operation{
-				{"op": "add", "path": "/1", "value": "baz"},
+				{Op: "add", Path: "/1", Value: "baz"},
 			},
 			Expected: []interface{}{"foo", "baz", "bar"},
 			Comment:  "Should insert into array at index",
@@ -142,7 +142,7 @@ func TestArrayOperationParity(t *testing.T) {
 			Name: "remove_from_array",
 			Doc:  []interface{}{"foo", "bar", "baz"},
 			Patch: []jsonpatch.Operation{
-				{"op": "remove", "path": "/1"},
+				{Op: "remove", Path: "/1"},
 			},
 			Expected: []interface{}{"foo", "baz"},
 			Comment:  "Should remove from array at index",
@@ -152,7 +152,7 @@ func TestArrayOperationParity(t *testing.T) {
 			Name: "replace_array_element",
 			Doc:  []interface{}{"foo", "bar"},
 			Patch: []jsonpatch.Operation{
-				{"op": "replace", "path": "/0", "value": "baz"},
+				{Op: "replace", Path: "/0", Value: "baz"},
 			},
 			Expected: []interface{}{"baz", "bar"},
 			Comment:  "Should replace array element",
@@ -170,7 +170,7 @@ func TestPredicateOperationParity(t *testing.T) {
 			Name: "contains_successful",
 			Doc:  map[string]interface{}{"text": "hello world"},
 			Patch: []jsonpatch.Operation{
-				{"op": "contains", "path": "/text", "value": "world"},
+				{Op: "contains", Path: "/text", Value: "world"},
 			},
 			Expected: map[string]interface{}{"text": "hello world"},
 			Comment:  "Contains should pass when substring exists",
@@ -180,7 +180,7 @@ func TestPredicateOperationParity(t *testing.T) {
 			Name: "contains_failure",
 			Doc:  map[string]interface{}{"text": "hello world"},
 			Patch: []jsonpatch.Operation{
-				{"op": "contains", "path": "/text", "value": "xyz"},
+				{Op: "contains", Path: "/text", Value: "xyz"},
 			},
 			ShouldFail: true,
 			Comment:    "Contains should fail when substring doesn't exist",
@@ -190,7 +190,7 @@ func TestPredicateOperationParity(t *testing.T) {
 			Name: "type_check_number",
 			Doc:  map[string]interface{}{"value": 42},
 			Patch: []jsonpatch.Operation{
-				{"op": "type", "path": "/value", "value": "number"},
+				{Op: "type", Path: "/value", Value: "number"},
 			},
 			Expected: map[string]interface{}{"value": 42},
 			Comment:  "Type check should pass for correct type",
@@ -200,7 +200,7 @@ func TestPredicateOperationParity(t *testing.T) {
 			Name: "type_check_failure",
 			Doc:  map[string]interface{}{"value": "string"},
 			Patch: []jsonpatch.Operation{
-				{"op": "type", "path": "/value", "value": "number"},
+				{Op: "type", Path: "/value", Value: "number"},
 			},
 			ShouldFail: true,
 			Comment:    "Type check should fail for incorrect type",
@@ -210,7 +210,7 @@ func TestPredicateOperationParity(t *testing.T) {
 			Name: "less_than_check",
 			Doc:  map[string]interface{}{"value": 5},
 			Patch: []jsonpatch.Operation{
-				{"op": "less", "path": "/value", "value": 10},
+				{Op: "less", Path: "/value", Value: 10},
 			},
 			Expected: map[string]interface{}{"value": 5},
 			Comment:  "Less than check should pass",
@@ -220,7 +220,7 @@ func TestPredicateOperationParity(t *testing.T) {
 			Name: "more_than_check",
 			Doc:  map[string]interface{}{"value": 15},
 			Patch: []jsonpatch.Operation{
-				{"op": "more", "path": "/value", "value": 10},
+				{Op: "more", Path: "/value", Value: 10},
 			},
 			Expected: map[string]interface{}{"value": 15},
 			Comment:  "More than check should pass",
@@ -238,7 +238,7 @@ func TestExtendedOperationParity(t *testing.T) {
 			Name: "inc_operation",
 			Doc:  map[string]interface{}{"counter": 5},
 			Patch: []jsonpatch.Operation{
-				{"op": "inc", "path": "/counter", "inc": 3},
+				{Op: "inc", Path: "/counter", Inc: 3},
 			},
 			Expected: map[string]interface{}{"counter": float64(8)}, // JSON unmarshaling converts to float64
 			Comment:  "Increment should add to numeric value",
@@ -248,7 +248,7 @@ func TestExtendedOperationParity(t *testing.T) {
 			Name: "flip_operation",
 			Doc:  map[string]interface{}{"enabled": true},
 			Patch: []jsonpatch.Operation{
-				{"op": "flip", "path": "/enabled"},
+				{Op: "flip", Path: "/enabled"},
 			},
 			Expected: map[string]interface{}{"enabled": false},
 			Comment:  "Flip should toggle boolean value",
@@ -258,7 +258,7 @@ func TestExtendedOperationParity(t *testing.T) {
 			Name: "str_ins_operation",
 			Doc:  map[string]interface{}{"text": "hello world"},
 			Patch: []jsonpatch.Operation{
-				{"op": "str_ins", "path": "/text", "pos": 5, "str": " beautiful"},
+				{Op: "str_ins", Path: "/text", Pos: 5, Str: " beautiful"},
 			},
 			Expected: map[string]interface{}{"text": "hello beautiful world"},
 			Comment:  "String insert should insert text at position",
@@ -276,7 +276,7 @@ func TestErrorHandlingParity(t *testing.T) {
 			Name: "path_not_found",
 			Doc:  map[string]interface{}{"foo": "bar"},
 			Patch: []jsonpatch.Operation{
-				{"op": "remove", "path": "/nonexistent"},
+				{Op: "remove", Path: "/nonexistent"},
 			},
 			ShouldFail: true,
 			Comment:    "Should fail when path doesn't exist",
@@ -286,7 +286,7 @@ func TestErrorHandlingParity(t *testing.T) {
 			Name: "invalid_array_index",
 			Doc:  []interface{}{"foo", "bar"},
 			Patch: []jsonpatch.Operation{
-				{"op": "remove", "path": "/5"},
+				{Op: "remove", Path: "/5"},
 			},
 			ShouldFail: true,
 			Comment:    "Should fail for out-of-bounds array index",
@@ -296,7 +296,7 @@ func TestErrorHandlingParity(t *testing.T) {
 			Name: "type_mismatch_operation",
 			Doc:  map[string]interface{}{"value": "string"},
 			Patch: []jsonpatch.Operation{
-				{"op": "inc", "path": "/value", "inc": 1},
+				{Op: "inc", Path: "/value", Inc: 1},
 			},
 			ShouldFail: true,
 			Comment:    "Should fail when operation type doesn't match value type",
@@ -315,10 +315,10 @@ func TestSecondOrderPredicateParity(t *testing.T) {
 			Doc:  map[string]interface{}{"foo": 1, "bar": 2},
 			Patch: []jsonpatch.Operation{
 				{
-					"op":   "not",
-					"path": "",
-					"apply": []interface{}{
-						map[string]interface{}{"op": "test", "path": "/foo", "value": 2},
+					Op:   "not",
+					Path: "",
+					Apply: []jsonpatch.Operation{
+						{Op: "test", Path: "/foo", Value: 2},
 					},
 				},
 			},
@@ -331,10 +331,10 @@ func TestSecondOrderPredicateParity(t *testing.T) {
 			Doc:  map[string]interface{}{"foo": 1, "bar": 2},
 			Patch: []jsonpatch.Operation{
 				{
-					"op":   "not",
-					"path": "",
-					"apply": []interface{}{
-						map[string]interface{}{"op": "test", "path": "/foo", "value": 1},
+					Op:   "not",
+					Path: "",
+					Apply: []jsonpatch.Operation{
+						{Op: "test", Path: "/foo", Value: 1},
 					},
 				},
 			},
@@ -368,7 +368,7 @@ func getBasicOperationTestCases() []TypeScriptTestCase {
 		{
 			Name:     "basic_add",
 			Doc:      map[string]interface{}{"a": 1},
-			Patch:    []jsonpatch.Operation{{"op": "add", "path": "/b", "value": 2}},
+			Patch:    []jsonpatch.Operation{{Op: "add", Path: "/b", Value: 2}},
 			Expected: map[string]interface{}{"a": 1, "b": 2},
 			Comment:  "Basic add operation",
 			Source:   "typescript:add.spec.ts",
@@ -376,7 +376,7 @@ func getBasicOperationTestCases() []TypeScriptTestCase {
 		{
 			Name:     "basic_remove",
 			Doc:      map[string]interface{}{"a": 1, "b": 2},
-			Patch:    []jsonpatch.Operation{{"op": "remove", "path": "/b"}},
+			Patch:    []jsonpatch.Operation{{Op: "remove", Path: "/b"}},
 			Expected: map[string]interface{}{"a": 1},
 			Comment:  "Basic remove operation",
 			Source:   "typescript:remove.spec.ts",
@@ -389,7 +389,7 @@ func getArrayOperationTestCases() []TypeScriptTestCase {
 		{
 			Name:     "array_append",
 			Doc:      []interface{}{1, 2},
-			Patch:    []jsonpatch.Operation{{"op": "add", "path": "/-", "value": 3}},
+			Patch:    []jsonpatch.Operation{{Op: "add", Path: "/-", Value: 3}},
 			Expected: []interface{}{1, 2, 3},
 			Comment:  "Array append operation",
 			Source:   "typescript:array.spec.ts",
@@ -402,7 +402,7 @@ func getPredicateOperationTestCases() []TypeScriptTestCase {
 		{
 			Name:     "predicate_contains",
 			Doc:      map[string]interface{}{"text": "hello"},
-			Patch:    []jsonpatch.Operation{{"op": "contains", "path": "/text", "value": "ell"}},
+			Patch:    []jsonpatch.Operation{{Op: "contains", Path: "/text", Value: "ell"}},
 			Expected: map[string]interface{}{"text": "hello"},
 			Comment:  "Predicate contains operation",
 			Source:   "typescript:contains.spec.ts",
@@ -415,7 +415,7 @@ func getExtendedOperationTestCases() []TypeScriptTestCase {
 		{
 			Name:     "extended_inc",
 			Doc:      map[string]interface{}{"num": 5},
-			Patch:    []jsonpatch.Operation{{"op": "inc", "path": "/num", "inc": 2}},
+			Patch:    []jsonpatch.Operation{{Op: "inc", Path: "/num", Inc: 2}},
 			Expected: map[string]interface{}{"num": float64(7)},
 			Comment:  "Extended inc operation",
 			Source:   "typescript:inc.spec.ts",
@@ -428,7 +428,7 @@ func getErrorHandlingTestCases() []TypeScriptTestCase {
 		{
 			Name:       "error_path_not_found",
 			Doc:        map[string]interface{}{"a": 1},
-			Patch:      []jsonpatch.Operation{{"op": "test", "path": "/b", "value": 1}},
+			Patch:      []jsonpatch.Operation{{Op: "test", Path: "/b", Value: 1}},
 			ShouldFail: true,
 			Comment:    "Path not found error",
 			Source:     "typescript:errors.spec.ts",
@@ -443,10 +443,10 @@ func getSecondOrderPredicateTestCases() []TypeScriptTestCase {
 			Doc:  map[string]interface{}{"val": 1},
 			Patch: []jsonpatch.Operation{
 				{
-					"op":   "not",
-					"path": "",
-					"apply": []interface{}{
-						map[string]interface{}{"op": "test", "path": "/val", "value": 2},
+					Op:   "not",
+					Path: "",
+					Apply: []jsonpatch.Operation{
+						{Op: "test", Path: "/val", Value: 2},
 					},
 				},
 			},

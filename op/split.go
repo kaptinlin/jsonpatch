@@ -199,12 +199,14 @@ func (op *SplitOperation) splitNumber(n float64) []interface{} {
 // ToJSON serializes the operation to JSON format.
 func (op *SplitOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
-		"op":   string(internal.OpSplitType),
-		"path": formatPath(op.Path()),
-		"pos":  op.Pos,
+		Op:   string(internal.OpSplitType),
+		Path: formatPath(op.Path()),
+		Pos:  int(op.Pos),
 	}
 	if op.Props != nil {
-		result["props"] = op.Props
+		if props, ok := op.Props.(map[string]any); ok {
+			result.Props = props
+		}
 	}
 	return result, nil
 }

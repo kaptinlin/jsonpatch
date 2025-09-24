@@ -85,12 +85,12 @@ func (op *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error)
 // ToJSON serializes the operation to JSON format.
 func (op *TestStringLenOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
-		"op":   string(internal.OpTestStringLenType),
-		"path": formatPath(op.Path()),
-		"len":  op.Length,
+		Op:   string(internal.OpTestStringLenType),
+		Path: formatPath(op.Path()),
+		Len:  int(op.Length),
 	}
 	if op.Not {
-		result["not"] = op.Not
+		result.Not = op.Not
 	}
 	return result, nil
 }

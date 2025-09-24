@@ -84,15 +84,12 @@ func (op *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // ToJSON serializes the operation to JSON format.
 func (op *ExtendOperation) ToJSON() (internal.Operation, error) {
-	result := internal.Operation{
-		"op":    string(internal.OpExtendType),
-		"path":  formatPath(op.Path()),
-		"props": op.Properties,
-	}
-	if op.DeleteNull {
-		result["deleteNull"] = op.DeleteNull
-	}
-	return result, nil
+	return internal.Operation{
+		Op:         string(internal.OpExtendType),
+		Path:       formatPath(op.Path()),
+		Props:      op.Properties,
+		DeleteNull: op.DeleteNull,
+	}, nil
 }
 
 // ToCompact serializes the operation to compact format.

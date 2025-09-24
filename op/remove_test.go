@@ -119,8 +119,8 @@ func TestOpRemove_ToJSON(t *testing.T) {
 	json, err := removeOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
 
-	assert.Equal(t, "remove", json["op"], "JSON should contain correct op type")
-	assert.Equal(t, "/test", json["path"], "JSON should contain correct formatted path")
+	assert.Equal(t, "remove", json.Op, "JSON should contain correct op type")
+	assert.Equal(t, "/test", json.Path, "JSON should contain correct formatted path")
 }
 
 func TestOpRemove_ToCompact(t *testing.T) {

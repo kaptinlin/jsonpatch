@@ -21,10 +21,10 @@ func applyOperationStrDel(t *testing.T, doc interface{}, op internal.Operation) 
 func TestStrDelOp(t *testing.T) {
 	t.Run("deletes characters from the beginning", func(t *testing.T) {
 		operation := internal.Operation{
-			"op":   "str_del",
-			"path": "",
-			"pos":  0,
-			"len":  7,
+			Op:   "str_del",
+			Path: "",
+			Pos:  0,
+			Len:  7,
 		}
 		result := applyOperationStrDel(t, "Hello, world!", operation)
 		assert.Equal(t, "world!", result)
@@ -32,10 +32,10 @@ func TestStrDelOp(t *testing.T) {
 
 	t.Run("deletes characters from the end", func(t *testing.T) {
 		operation := internal.Operation{
-			"op":   "str_del",
-			"path": "",
-			"pos":  5,
-			"len":  8,
+			Op:   "str_del",
+			Path: "",
+			Pos:  5,
+			Len:  8,
 		}
 		result := applyOperationStrDel(t, "Hello, world!", operation)
 		assert.Equal(t, "Hello", result)
@@ -43,10 +43,10 @@ func TestStrDelOp(t *testing.T) {
 
 	t.Run("deletes characters from the middle", func(t *testing.T) {
 		operation := internal.Operation{
-			"op":   "str_del",
-			"path": "",
-			"pos":  5,
-			"len":  10,
+			Op:   "str_del",
+			Path: "",
+			Pos:  5,
+			Len:  10,
 		}
 		result := applyOperationStrDel(t, "Hello beautiful world", operation)
 		assert.Equal(t, "Hello world", result)
@@ -55,16 +55,16 @@ func TestStrDelOp(t *testing.T) {
 	t.Run("can delete multiple times", func(t *testing.T) {
 		operations := []internal.Operation{
 			{
-				"op":   "str_del",
-				"path": "",
-				"pos":  5,
-				"len":  10,
+				Op:   "str_del",
+				Path: "",
+				Pos:  5,
+				Len:  10,
 			},
 			{
-				"op":   "str_del",
-				"path": "",
-				"pos":  5,
-				"len":  1,
+				Op:   "str_del",
+				Path: "",
+				Pos:  5,
+				Len:  1,
 			},
 		}
 		doc := "Hello beautiful world"
@@ -78,10 +78,10 @@ func TestStrDelOp(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
 		t.Run("deletes entire string", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "str_del",
-				"path": "",
-				"pos":  0,
-				"len":  5,
+				Op:   "str_del",
+				Path: "",
+				Pos:  0,
+				Len:  5,
 			}
 			result := applyOperationStrDel(t, "hello", operation)
 			assert.Equal(t, "", result)
@@ -91,10 +91,10 @@ func TestStrDelOp(t *testing.T) {
 	t.Run("object", func(t *testing.T) {
 		t.Run("deletes characters from the beginning", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "str_del",
-				"path": "/msg",
-				"pos":  0,
-				"len":  7,
+				Op:   "str_del",
+				Path: "/msg",
+				Pos:  0,
+				Len:  7,
 			}
 			result := applyOperationStrDel(t, map[string]interface{}{"msg": "Hello, world!"}, operation)
 			expected := map[string]interface{}{"msg": "world!"}
@@ -103,10 +103,10 @@ func TestStrDelOp(t *testing.T) {
 
 		t.Run("deletes characters from the end", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "str_del",
-				"path": "/msg",
-				"pos":  5,
-				"len":  8,
+				Op:   "str_del",
+				Path: "/msg",
+				Pos:  5,
+				Len:  8,
 			}
 			result := applyOperationStrDel(t, map[string]interface{}{"msg": "Hello, world!"}, operation)
 			expected := map[string]interface{}{"msg": "Hello"}
@@ -115,10 +115,10 @@ func TestStrDelOp(t *testing.T) {
 
 		t.Run("deletes characters from the middle", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "str_del",
-				"path": "/msg",
-				"pos":  5,
-				"len":  10,
+				Op:   "str_del",
+				Path: "/msg",
+				Pos:  5,
+				Len:  10,
 			}
 			result := applyOperationStrDel(t, map[string]interface{}{"msg": "Hello beautiful world"}, operation)
 			expected := map[string]interface{}{"msg": "Hello world"}
@@ -129,10 +129,10 @@ func TestStrDelOp(t *testing.T) {
 	t.Run("array", func(t *testing.T) {
 		t.Run("deletes characters from the beginning", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "str_del",
-				"path": "/0",
-				"pos":  0,
-				"len":  7,
+				Op:   "str_del",
+				Path: "/0",
+				Pos:  0,
+				Len:  7,
 			}
 			result := applyOperationStrDel(t, []interface{}{"Hello, world!"}, operation)
 			expected := []interface{}{"world!"}
@@ -141,10 +141,10 @@ func TestStrDelOp(t *testing.T) {
 
 		t.Run("deletes characters from the end", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "str_del",
-				"path": "/0",
-				"pos":  5,
-				"len":  8,
+				Op:   "str_del",
+				Path: "/0",
+				Pos:  5,
+				Len:  8,
 			}
 			result := applyOperationStrDel(t, []interface{}{"Hello, world!"}, operation)
 			expected := []interface{}{"Hello"}
@@ -153,10 +153,10 @@ func TestStrDelOp(t *testing.T) {
 
 		t.Run("deletes characters from the middle", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "str_del",
-				"path": "/0",
-				"pos":  5,
-				"len":  10,
+				Op:   "str_del",
+				Path: "/0",
+				Pos:  5,
+				Len:  10,
 			}
 			result := applyOperationStrDel(t, []interface{}{"Hello beautiful world"}, operation)
 			expected := []interface{}{"Hello world"}

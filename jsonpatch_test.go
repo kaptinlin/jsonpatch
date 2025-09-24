@@ -46,7 +46,7 @@ func TestApplyPatchBasic(t *testing.T) {
 			name: "single operation",
 			doc:  map[string]interface{}{"a": 1},
 			patch: []jsonpatch.Operation{
-				map[string]interface{}{"op": "add", "path": "/b", "value": 2},
+				{Op: "add", Path: "/b", Value: 2},
 			},
 			expected: map[string]interface{}{"a": 1, "b": 2},
 			wantErr:  false,
@@ -83,38 +83,38 @@ func TestValidateOperation(t *testing.T) {
 	}{
 		{
 			name:      "valid add operation",
-			operation: map[string]interface{}{"op": "add", "path": "/a", "value": 1},
+			operation: jsonpatch.Operation{Op: "add", Path: "/a", Value: 1},
 			wantErr:   false,
 		},
 		{
 			name:      "missing op field",
-			operation: map[string]interface{}{"path": "/a", "value": 1},
+			operation: jsonpatch.Operation{Path: "/a", Value: 1},
 			wantErr:   true,
 			errMsg:    "missing required field 'op'",
 		},
 		{
 			name:      "missing path field",
-			operation: map[string]interface{}{"op": "add", "value": 1},
+			operation: jsonpatch.Operation{Op: "add", Value: 1},
 			wantErr:   true,
 			errMsg:    "missing required field 'path'",
 		},
 		{
 			name:      "missing value field for add",
-			operation: map[string]interface{}{"op": "add", "path": "/a"},
+			operation: jsonpatch.Operation{Op: "add", Path: "/a"},
 			wantErr:   true,
 			errMsg:    "missing required field 'value'",
 		},
 		{
 			name:      "invalid operation type",
-			operation: map[string]interface{}{"op": "invalid", "path": "/a"},
+			operation: jsonpatch.Operation{Op: "invalid", Path: "/a"},
 			wantErr:   true,
 			errMsg:    "unknown operation 'invalid'",
 		},
 		{
-			name:      "nil operation",
-			operation: nil,
+			name:      "empty operation",
+			operation: jsonpatch.Operation{Op: "", Path: ""},
 			wantErr:   true,
-			errMsg:    "invalid operation",
+			errMsg:    "missing required field 'op'",
 		},
 	}
 
@@ -149,9 +149,9 @@ func TestApplyPatch_Struct(t *testing.T) {
 	}
 
 	patch := []jsonpatch.Operation{
-		map[string]interface{}{"op": "replace", "path": "/name", "value": "Jane"},
-		map[string]interface{}{"op": "add", "path": "/tags/-", "value": "golang"},
-		map[string]interface{}{"op": "add", "path": "/email", "value": "jane@example.com"},
+		{Op: "replace", Path: "/name", Value: "Jane"},
+		{Op: "add", Path: "/tags/-", Value: "golang"},
+		{Op: "add", Path: "/email", Value: "jane@example.com"},
 	}
 
 	// Apply patch
@@ -179,9 +179,9 @@ func TestApplyPatch_Map(t *testing.T) {
 	}
 
 	patch := []jsonpatch.Operation{
-		map[string]interface{}{"op": "replace", "path": "/name", "value": "Jane"},
-		map[string]interface{}{"op": "add", "path": "/tags/-", "value": "golang"},
-		map[string]interface{}{"op": "add", "path": "/email", "value": "jane@example.com"},
+		{Op: "replace", Path: "/name", Value: "Jane"},
+		{Op: "add", Path: "/tags/-", Value: "golang"},
+		{Op: "add", Path: "/email", Value: "jane@example.com"},
 	}
 
 	// Apply patch
@@ -206,9 +206,9 @@ func TestApplyPatch_JSONBytes(t *testing.T) {
 	before := []byte(`{"name":"John","tags":["dev"]}`)
 
 	patch := []jsonpatch.Operation{
-		map[string]interface{}{"op": "replace", "path": "/name", "value": "Jane"},
-		map[string]interface{}{"op": "add", "path": "/tags/-", "value": "golang"},
-		map[string]interface{}{"op": "add", "path": "/email", "value": "jane@example.com"},
+		{Op: "replace", Path: "/name", Value: "Jane"},
+		{Op: "add", Path: "/tags/-", Value: "golang"},
+		{Op: "add", Path: "/email", Value: "jane@example.com"},
 	}
 
 	// Apply patch
@@ -241,9 +241,9 @@ func TestApplyPatch_JSONString(t *testing.T) {
 	before := `{"name":"John","tags":["dev"]}`
 
 	patch := []jsonpatch.Operation{
-		map[string]interface{}{"op": "replace", "path": "/name", "value": "Jane"},
-		map[string]interface{}{"op": "add", "path": "/tags/-", "value": "golang"},
-		map[string]interface{}{"op": "add", "path": "/email", "value": "jane@example.com"},
+		{Op: "replace", Path: "/name", Value: "Jane"},
+		{Op: "add", Path: "/tags/-", Value: "golang"},
+		{Op: "add", Path: "/email", Value: "jane@example.com"},
 	}
 
 	// Apply patch
@@ -280,22 +280,22 @@ func TestArrayOperations(t *testing.T) {
 	// Array operations
 	patch := []jsonpatch.Operation{
 		// Insert at beginning
-		map[string]interface{}{
-			"op":    "add",
-			"path":  "/items/0",
-			"value": map[string]interface{}{"id": 0, "name": "Item 0"},
+		{
+			Op:    "add",
+			Path:  "/items/0",
+			Value: map[string]interface{}{"id": 0, "name": "Item 0"},
 		},
 		// Append at end
-		map[string]interface{}{
-			"op":    "add",
-			"path":  "/items/-",
-			"value": map[string]interface{}{"id": 4, "name": "Item 4"},
+		{
+			Op:    "add",
+			Path:  "/items/-",
+			Value: map[string]interface{}{"id": 4, "name": "Item 4"},
 		},
 		// Update middle item
-		map[string]interface{}{
-			"op":    "replace",
-			"path":  "/items/2/name",
-			"value": "Updated Item 1",
+		{
+			Op:    "replace",
+			Path:  "/items/2/name",
+			Value: "Updated Item 1",
 		},
 	}
 
@@ -321,15 +321,15 @@ func TestMultipleOperations(t *testing.T) {
 	}
 
 	patch := []jsonpatch.Operation{
-		map[string]interface{}{
-			"op":    "replace",
-			"path":  "/counters/a",
-			"value": 1,
+		{
+			Op:    "replace",
+			Path:  "/counters/a",
+			Value: 1,
 		},
-		map[string]interface{}{
-			"op":    "replace",
-			"path":  "/counters/b",
-			"value": 2,
+		{
+			Op:    "replace",
+			Path:  "/counters/b",
+			Value: 2,
 		},
 	}
 
@@ -359,7 +359,7 @@ func TestApplyPatch_WithMutate(t *testing.T) {
 	}
 
 	patch := []jsonpatch.Operation{
-		map[string]interface{}{"op": "replace", "path": "/name", "value": "Jane"},
+		{Op: "replace", Path: "/name", Value: "Jane"},
 	}
 
 	// Apply patch with mutate=true
@@ -399,26 +399,26 @@ func TestComplexDocument(t *testing.T) {
 	// Complex operations
 	patch := []jsonpatch.Operation{
 		// Add new employee to Engineering
-		map[string]interface{}{
-			"op":   "add",
-			"path": "/company/departments/0/employees/-",
-			"value": map[string]interface{}{
+		{
+			Op:   "add",
+			Path: "/company/departments/0/employees/-",
+			Value: map[string]interface{}{
 				"id":   3,
 				"name": "Charlie",
 				"role": "Senior Developer",
 			},
 		},
 		// Promote Bob to Senior Manager
-		map[string]interface{}{
-			"op":    "replace",
-			"path":  "/company/departments/0/employees/1/role",
-			"value": "Senior Manager",
+		{
+			Op:    "replace",
+			Path:  "/company/departments/0/employees/1/role",
+			Value: "Senior Manager",
 		},
 		// Update metadata
-		map[string]interface{}{
-			"op":    "replace",
-			"path":  "/metadata/lastUpdated",
-			"value": "2023-12-01",
+		{
+			Op:    "replace",
+			Path:  "/metadata/lastUpdated",
+			Value: "2023-12-01",
 		},
 	}
 
@@ -458,22 +458,22 @@ func TestSpecialCharacters(t *testing.T) {
 	// Operations with escaped paths
 	patch := []jsonpatch.Operation{
 		// Access key with tilde (~ becomes ~0)
-		map[string]interface{}{
-			"op":    "replace",
-			"path":  "/with~0tilde",
-			"value": "updated tilde",
+		{
+			Op:    "replace",
+			Path:  "/with~0tilde",
+			Value: "updated tilde",
 		},
 		// Access key with slash (/ becomes ~1)
-		map[string]interface{}{
-			"op":    "replace",
-			"path":  "/with~1slash",
-			"value": "updated slash",
+		{
+			Op:    "replace",
+			Path:  "/with~1slash",
+			Value: "updated slash",
 		},
 		// Access empty key
-		map[string]interface{}{
-			"op":    "replace",
-			"path":  "/",
-			"value": "updated empty",
+		{
+			Op:    "replace",
+			Path:  "/",
+			Value: "updated empty",
 		},
 	}
 
@@ -505,9 +505,9 @@ func TestErrorHandling(t *testing.T) {
 
 	// Patch with intentional error
 	patch := []jsonpatch.Operation{
-		map[string]interface{}{
-			"op":   "remove",
-			"path": "/user/nonexistent", // This will fail
+		{
+			Op:   "remove",
+			Path: "/user/nonexistent", // This will fail
 		},
 	}
 
@@ -524,7 +524,7 @@ func TestApplyPatch_Errors(t *testing.T) {
 	t.Run("invalid JSON bytes", func(t *testing.T) {
 		invalidJSON := []byte(`{invalid json}`)
 		patch := []jsonpatch.Operation{
-			map[string]interface{}{"op": "replace", "path": "/name", "value": "Jane"},
+			{Op: "replace", Path: "/name", Value: "Jane"},
 		}
 
 		_, err := jsonpatch.ApplyPatch(invalidJSON, patch)
@@ -535,7 +535,7 @@ func TestApplyPatch_Errors(t *testing.T) {
 	t.Run("invalid JSON string", func(t *testing.T) {
 		invalidJSON := `{invalid json}`
 		patch := []jsonpatch.Operation{
-			map[string]interface{}{"op": "replace", "path": "/name", "value": "Jane"},
+			{Op: "replace", Path: "/name", Value: "Jane"},
 		}
 
 		_, err := jsonpatch.ApplyPatch(invalidJSON, patch)
@@ -548,7 +548,7 @@ func TestApplyPatch_Errors(t *testing.T) {
 	t.Run("invalid patch operation", func(t *testing.T) {
 		doc := map[string]any{"name": "John"}
 		patch := []jsonpatch.Operation{
-			map[string]interface{}{"op": "invalid", "path": "/name", "value": "Jane"},
+			{Op: "invalid", Path: "/name", Value: "Jane"},
 		}
 
 		_, err := jsonpatch.ApplyPatch(doc, patch)
@@ -577,22 +577,22 @@ func Example() {
 	// Create patch operations
 	patch := []jsonpatch.Operation{
 		// Add a new field
-		map[string]interface{}{
-			"op":    "add",
-			"path":  "/user/active",
-			"value": true,
+		{
+			Op:    "add",
+			Path:  "/user/active",
+			Value: true,
 		},
 		// Update existing field
-		map[string]interface{}{
-			"op":    "replace",
-			"path":  "/user/age",
-			"value": 26,
+		{
+			Op:    "replace",
+			Path:  "/user/age",
+			Value: 26,
 		},
 		// Add to settings
-		map[string]interface{}{
-			"op":    "add",
-			"path":  "/settings/notifications",
-			"value": true,
+		{
+			Op:    "add",
+			Path:  "/settings/notifications",
+			Value: true,
 		},
 	}
 
@@ -701,7 +701,7 @@ func FuzzOperationSequence(f *testing.F) {
 				// Check if operations actually modify the document
 				hasModifyingOp := false
 				for _, op := range operations {
-					if opType, exists := op["op"]; exists && opType != "test" {
+					if op.Op != "" && op.Op != "test" {
 						hasModifyingOp = true
 						break
 					}
@@ -775,10 +775,10 @@ func FuzzJSONPointerPaths(f *testing.F) {
 		}
 
 		operations := []jsonpatch.Operation{
-			map[string]interface{}{
-				"op":    "test",
-				"path":  path,
-				"value": nil,
+			{
+				Op:    "test",
+				Path:  path,
+				Value: nil,
 			},
 		}
 
@@ -845,10 +845,10 @@ func FuzzOperationValues(f *testing.F) {
 
 		// Test add operation
 		operations := []jsonpatch.Operation{
-			map[string]interface{}{
-				"op":    "add",
-				"path":  "/fuzzed",
-				"value": value,
+			{
+				Op:    "add",
+				Path:  "/fuzzed",
+				Value: value,
 			},
 		}
 
@@ -875,10 +875,10 @@ func FuzzOperationValues(f *testing.F) {
 
 		// Test replace operation
 		operations = []jsonpatch.Operation{
-			map[string]interface{}{
-				"op":    "replace",
-				"path":  "/test",
-				"value": value,
+			{
+				Op:    "replace",
+				Path:  "/test",
+				Value: value,
 			},
 		}
 
@@ -916,33 +916,33 @@ func FuzzArrayIndices(f *testing.F) {
 		operations := [][]jsonpatch.Operation{
 			// Add operation
 			{
-				map[string]interface{}{
-					"op":    "add",
-					"path":  fmt.Sprintf("/array/%d", index),
-					"value": "fuzzed",
+				{
+					Op:    "add",
+					Path:  fmt.Sprintf("/array/%d", index),
+					Value: "fuzzed",
 				},
 			},
 			// Remove operation
 			{
-				map[string]interface{}{
-					"op":   "remove",
-					"path": fmt.Sprintf("/array/%d", index),
+				{
+					Op:   "remove",
+					Path: fmt.Sprintf("/array/%d", index),
 				},
 			},
 			// Replace operation
 			{
-				map[string]interface{}{
-					"op":    "replace",
-					"path":  fmt.Sprintf("/array/%d", index),
-					"value": "replaced",
+				{
+					Op:    "replace",
+					Path:  fmt.Sprintf("/array/%d", index),
+					Value: "replaced",
 				},
 			},
 			// Test operation
 			{
-				map[string]interface{}{
-					"op":    "test",
-					"path":  fmt.Sprintf("/array/%d", index),
-					"value": nil,
+				{
+					Op:    "test",
+					Path:  fmt.Sprintf("/array/%d", index),
+					Value: nil,
 				},
 			},
 		}
@@ -1002,26 +1002,26 @@ func FuzzComplexDocuments(f *testing.F) {
 		operations := [][]jsonpatch.Operation{
 			// Test root
 			{
-				map[string]interface{}{
-					"op":    "test",
-					"path":  "",
-					"value": doc,
+				{
+					Op:    "test",
+					Path:  "",
+					Value: doc,
 				},
 			},
 			// Replace root
 			{
-				map[string]interface{}{
-					"op":    "replace",
-					"path":  "",
-					"value": "replaced",
+				{
+					Op:    "replace",
+					Path:  "",
+					Value: "replaced",
 				},
 			},
 			// Add to root (if it's an object)
 			{
-				map[string]interface{}{
-					"op":    "add",
-					"path":  "/fuzzed",
-					"value": "added",
+				{
+					Op:    "add",
+					Path:  "/fuzzed",
+					Value: "added",
 				},
 			},
 		}

@@ -12,8 +12,8 @@ func TestDefinedOp(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
 		t.Run("succeeds when value is defined", func(t *testing.T) {
 			op := internal.Operation{
-				"op":   "defined",
-				"path": "",
+				Op: "defined",
+				Path: "",
 			}
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch("hello", patch, internal.WithMutate(true))
@@ -22,8 +22,8 @@ func TestDefinedOp(t *testing.T) {
 
 		t.Run("throws when value is undefined", func(t *testing.T) {
 			op := internal.Operation{
-				"op":   "defined",
-				"path": "/missing",
+				Op: "defined",
+				Path: "/missing",
 			}
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch(map[string]interface{}{}, patch, internal.WithMutate(true))
@@ -34,8 +34,8 @@ func TestDefinedOp(t *testing.T) {
 	t.Run("object", func(t *testing.T) {
 		t.Run("succeeds when property is defined", func(t *testing.T) {
 			op := internal.Operation{
-				"op":   "defined",
-				"path": "/foo",
+				Op: "defined",
+				Path: "/foo",
 			}
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch(map[string]interface{}{"foo": "bar"}, patch, internal.WithMutate(true))
@@ -44,8 +44,8 @@ func TestDefinedOp(t *testing.T) {
 
 		t.Run("throws when property is not defined", func(t *testing.T) {
 			op := internal.Operation{
-				"op":   "defined",
-				"path": "/missing",
+				Op: "defined",
+				Path: "/missing",
 			}
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch(map[string]interface{}{"foo": "bar"}, patch, internal.WithMutate(true))
@@ -56,8 +56,8 @@ func TestDefinedOp(t *testing.T) {
 	t.Run("array", func(t *testing.T) {
 		t.Run("succeeds when index is defined", func(t *testing.T) {
 			op := internal.Operation{
-				"op":   "defined",
-				"path": "/0",
+				Op: "defined",
+				Path: "/0",
 			}
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch([]interface{}{"hello"}, patch, internal.WithMutate(true))
@@ -66,8 +66,8 @@ func TestDefinedOp(t *testing.T) {
 
 		t.Run("throws when index is not defined", func(t *testing.T) {
 			op := internal.Operation{
-				"op":   "defined",
-				"path": "/5",
+				Op: "defined",
+				Path: "/5",
 			}
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch([]interface{}{"hello"}, patch, internal.WithMutate(true))

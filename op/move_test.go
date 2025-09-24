@@ -136,9 +136,9 @@ func TestOpMove_ToJSON(t *testing.T) {
 	json, err := moveOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
 
-	assert.Equal(t, "move", json["op"], "JSON should contain correct op type")
-	assert.Equal(t, "/target", json["path"], "JSON should contain correct formatted path")
-	assert.Equal(t, "/source", json["from"], "JSON should contain correct formatted from path")
+	assert.Equal(t, "move", json.Op, "JSON should contain correct op type")
+	assert.Equal(t, "/target", json.Path, "JSON should contain correct formatted path")
+	assert.Equal(t, "/source", json.From, "JSON should contain correct formatted from path")
 }
 
 func TestOpMove_ToCompact(t *testing.T) {

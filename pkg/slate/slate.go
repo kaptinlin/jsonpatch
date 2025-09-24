@@ -78,6 +78,14 @@ func (n *Node) SetProperty(key string, value interface{}) {
 	n.Properties[key] = value
 }
 
+// GetProperties returns all properties
+func (n *Node) GetProperties() map[string]interface{} {
+	if n.Properties == nil {
+		return make(map[string]interface{})
+	}
+	return n.Properties
+}
+
 // ToMap converts the node to map[string]interface{} for backward compatibility
 func (n *Node) ToMap() map[string]interface{} {
 	result := make(map[string]interface{})
@@ -298,6 +306,67 @@ func SplitElementNode(node *Node, pos int, props map[string]interface{}) []*Node
 	}
 
 	return []*Node{beforeNode, afterNode}
+}
+
+// BasicProps represents basic Slate.js properties
+type BasicProps map[string]interface{}
+
+// Property helper functions for common Slate.js properties
+
+// WithBold creates a property setter for bold text
+func WithBold(bold bool) map[string]interface{} {
+	return map[string]interface{}{"bold": bold}
+}
+
+// WithItalic creates a property setter for italic text
+func WithItalic(italic bool) map[string]interface{} {
+	return map[string]interface{}{"italic": italic}
+}
+
+// WithUnderline creates a property setter for underlined text
+func WithUnderline(underline bool) map[string]interface{} {
+	return map[string]interface{}{"underline": underline}
+}
+
+// WithStrikethrough creates a property setter for strikethrough text
+func WithStrikethrough(strikethrough bool) map[string]interface{} {
+	return map[string]interface{}{"strikethrough": strikethrough}
+}
+
+// WithCode creates a property setter for code text
+func WithCode(code bool) map[string]interface{} {
+	return map[string]interface{}{"code": code}
+}
+
+// CombineProps combines multiple property maps into a single map
+func CombineProps(props ...map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+	for _, prop := range props {
+		for k, v := range prop {
+			result[k] = v
+		}
+	}
+	return result
+}
+
+// NewBasicTextNode creates a new Slate text node with basic properties
+func NewBasicTextNode(text string, properties map[string]interface{}) *Node {
+	return NewTextNode(text, properties)
+}
+
+// NewBasicElementNode creates a new Slate element node with basic properties
+func NewBasicElementNode(children []TextNode, properties BasicProps) *Node {
+	// Convert []TextNode to []Node
+	nodeChildren := make([]Node, len(children))
+	copy(nodeChildren, children)
+	
+	// Convert BasicProps to map[string]interface{}
+	props := make(map[string]interface{})
+	for k, v := range properties {
+		props[k] = v
+	}
+	
+	return NewElementNode(nodeChildren, props)
 }
 
 // Legacy functions for backward compatibility with map[string]interface{}

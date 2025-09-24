@@ -83,9 +83,9 @@ func (op *InOperation) getValueAndCheckInArray(doc any) (interface{}, bool, erro
 // ToJSON serializes the operation to JSON format.
 func (op *InOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
-		"op":    string(internal.OpInType),
-		"path":  formatPath(op.Path()),
-		"value": op.Value,
+		Op:    string(internal.OpInType),
+		Path:  formatPath(op.Path()),
+		Value: op.Value,
 	}, nil
 }
 

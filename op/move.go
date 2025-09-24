@@ -80,9 +80,9 @@ func isPrefix(prefix, path []string) bool {
 // ToJSON serializes the operation to JSON format.
 func (o *MoveOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
-		"op":   string(internal.OpMoveType),
-		"path": formatPath(o.Path()),
-		"from": formatPath(o.FromPath),
+		Op:   string(internal.OpMoveType),
+		Path: formatPath(o.Path()),
+		From: formatPath(o.FromPath),
 	}, nil
 }
 

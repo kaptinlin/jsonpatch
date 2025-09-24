@@ -7,7 +7,6 @@ import (
 	"log"
 
 	"github.com/kaptinlin/jsonpatch"
-	"github.com/kaptinlin/jsonpatch/internal"
 )
 
 func main() {
@@ -35,11 +34,11 @@ func demoBasicJSONStringPatch() {
 	fmt.Printf("Before: %s\n", prettyJSONString(jsonStr))
 
 	// Define patch operations
-	patch := []internal.Operation{
-		{"op": "replace", "path": "/name", "value": "Charles Brown"},
-		{"op": "add", "path": "/company", "value": "TechStart Inc"},
-		{"op": "add", "path": "/tags/-", "value": "entrepreneur"},
-		{"op": "replace", "path": "/age", "value": 41},
+	patch := []jsonpatch.Operation{
+		{Op: "replace", Path: "/name", Value: "Charles Brown"},
+		{Op: "add", Path: "/company", Value: "TechStart Inc"},
+		{Op: "add", Path: "/tags/-", Value: "entrepreneur"},
+		{Op: "replace", Path: "/age", Value: 41},
 	}
 
 	// Apply patch - returns string
@@ -75,12 +74,12 @@ func demoAPIResponsePatch() {
 	fmt.Printf("Before:\n%s\n", prettyJSONString(apiResponse))
 
 	// Update user preferences and permissions
-	patch := []internal.Operation{
-		{"op": "replace", "path": "/data/user/email", "value": "john.doe@newcompany.com"},
-		{"op": "replace", "path": "/data/user/preferences/theme", "value": "light"},
-		{"op": "add", "path": "/data/user/preferences/notifications", "value": true},
-		{"op": "add", "path": "/data/permissions/-", "value": "admin"},
-		{"op": "replace", "path": "/timestamp", "value": "2024-01-15T11:00:00Z"},
+	patch := []jsonpatch.Operation{
+		{Op: "replace", Path: "/data/user/email", Value: "john.doe@newcompany.com"},
+		{Op: "replace", Path: "/data/user/preferences/theme", Value: "light"},
+		{Op: "add", Path: "/data/user/preferences/notifications", Value: true},
+		{Op: "add", Path: "/data/permissions/-", Value: "admin"},
+		{Op: "replace", Path: "/timestamp", Value: "2024-01-15T11:00:00Z"},
 	}
 
 	result, err := jsonpatch.ApplyPatch(apiResponse, patch)
@@ -116,13 +115,13 @@ func demoConfigurationPatch() {
 	fmt.Printf("Before:\n%s\n", prettyJSONString(configStr))
 
 	// Configuration updates
-	patch := []internal.Operation{
-		{"op": "replace", "path": "/server/host", "value": "0.0.0.0"},
-		{"op": "replace", "path": "/server/ssl", "value": true},
-		{"op": "add", "path": "/server/ssl_cert", "value": "/etc/ssl/cert.pem"},
-		{"op": "replace", "path": "/features/metrics", "value": true},
-		{"op": "add", "path": "/features/monitoring", "value": true},
-		{"op": "add", "path": "/redis", "value": map[string]interface{}{
+	patch := []jsonpatch.Operation{
+		{Op: "replace", Path: "/server/host", Value: "0.0.0.0"},
+		{Op: "replace", Path: "/server/ssl", Value: true},
+		{Op: "add", Path: "/server/ssl_cert", Value: "/etc/ssl/cert.pem"},
+		{Op: "replace", Path: "/features/metrics", Value: true},
+		{Op: "add", Path: "/features/monitoring", Value: true},
+		{Op: "add", Path: "/redis", Value: map[string]interface{}{
 			"host": "redis.example.com",
 			"port": 6379,
 		}},

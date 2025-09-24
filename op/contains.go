@@ -98,15 +98,12 @@ func (op *ContainsOperation) Code() int {
 
 // ToJSON serializes the operation to JSON format.
 func (op *ContainsOperation) ToJSON() (internal.Operation, error) {
-	result := internal.Operation{
-		"op":    string(internal.OpContainsType),
-		"path":  formatPath(op.Path()),
-		"value": op.Value,
-	}
-	if op.IgnoreCase {
-		result["ignore_case"] = op.IgnoreCase
-	}
-	return result, nil
+	return internal.Operation{
+		Op:         string(internal.OpContainsType),
+		Path:       formatPath(op.Path()),
+		Value:      op.Value,
+		IgnoreCase: op.IgnoreCase,
+	}, nil
 }
 
 // ToCompact serializes the operation to compact format.

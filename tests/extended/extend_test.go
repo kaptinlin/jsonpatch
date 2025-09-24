@@ -22,9 +22,9 @@ func TestExtendOp(t *testing.T) {
 		t.Run("can extend an object", func(t *testing.T) {
 			operations := []internal.Operation{
 				{
-					"op":   "extend",
-					"path": "",
-					"props": map[string]interface{}{
+					Op:   "extend",
+					Path: "",
+					Props: map[string]interface{}{
 						"a": "b",
 						"c": 3,
 					},
@@ -44,9 +44,9 @@ func TestExtendOp(t *testing.T) {
 		t.Run("can extend an object", func(t *testing.T) {
 			operations := []internal.Operation{
 				{
-					"op":   "extend",
-					"path": "/foo/0/lol",
-					"props": map[string]interface{}{
+					Op:   "extend",
+					Path: "/foo/0/lol",
+					Props: map[string]interface{}{
 						"b": 123,
 					},
 				},
@@ -77,9 +77,9 @@ func TestExtendOp(t *testing.T) {
 		t.Run("can set null", func(t *testing.T) {
 			operations := []internal.Operation{
 				{
-					"op":   "extend",
-					"path": "/foo/0/lol",
-					"props": map[string]interface{}{
+					Op:   "extend",
+					Path: "/foo/0/lol",
+					Props: map[string]interface{}{
 						"b": 123,
 						"c": nil,
 						"a": nil,
@@ -113,14 +113,14 @@ func TestExtendOp(t *testing.T) {
 		t.Run("can use null to delete a key", func(t *testing.T) {
 			operations := []internal.Operation{
 				{
-					"op":   "extend",
-					"path": "/foo/0/lol",
-					"props": map[string]interface{}{
+					Op:   "extend",
+					Path: "/foo/0/lol",
+					Props: map[string]interface{}{
 						"b": 123,
 						"c": nil,
 						"a": nil,
 					},
-					"deleteNull": true,
+					DeleteNull: true,
 				},
 			}
 			doc := map[string]interface{}{
@@ -150,9 +150,9 @@ func TestExtendOp(t *testing.T) {
 		t.Run("can extend an object", func(t *testing.T) {
 			operations := []internal.Operation{
 				{
-					"op":   "extend",
-					"path": "/foo/lol",
-					"props": map[string]interface{}{
+					Op:   "extend",
+					Path: "/foo/lol",
+					Props: map[string]interface{}{
 						"b": 123,
 					},
 				},
@@ -179,9 +179,9 @@ func TestExtendOp(t *testing.T) {
 		t.Run("can set null", func(t *testing.T) {
 			operations := []internal.Operation{
 				{
-					"op":   "extend",
-					"path": "/foo/lol",
-					"props": map[string]interface{}{
+					Op:   "extend",
+					Path: "/foo/lol",
+					Props: map[string]interface{}{
 						"b": 123,
 						"c": nil,
 						"a": nil,
@@ -211,14 +211,14 @@ func TestExtendOp(t *testing.T) {
 		t.Run("can use null to delete a key", func(t *testing.T) {
 			operations := []internal.Operation{
 				{
-					"op":   "extend",
-					"path": "/foo/lol",
-					"props": map[string]interface{}{
+					Op:   "extend",
+					Path: "/foo/lol",
+					Props: map[string]interface{}{
 						"b": 123,
 						"c": nil,
 						"a": nil,
 					},
-					"deleteNull": true,
+					DeleteNull: true,
 				},
 			}
 			doc := map[string]interface{}{

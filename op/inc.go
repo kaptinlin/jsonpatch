@@ -75,9 +75,9 @@ func (op *IncOperation) updateParent(parent interface{}, key interface{}, value 
 // ToJSON serializes the operation to JSON format.
 func (op *IncOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
-		"op":   string(internal.OpIncType),
-		"path": formatPath(op.path),
-		"inc":  op.Inc,
+		Op:   string(internal.OpIncType),
+		Path: formatPath(op.path),
+		Inc:  op.Inc,
 	}, nil
 }
 

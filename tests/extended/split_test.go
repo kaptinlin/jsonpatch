@@ -23,9 +23,9 @@ func TestSplitOp(t *testing.T) {
 			}
 			operations := []internal.Operation{
 				{
-					"op":   "split",
-					"path": "/0/children/0",
-					"pos":  1,
+					Op:   "split",
+					Path: "/0/children/0",
+					Pos:  1,
 				},
 			}
 			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -60,9 +60,9 @@ func TestSplitOp(t *testing.T) {
 			}
 			operations := []internal.Operation{
 				{
-					"op":   "split",
-					"path": "/0",
-					"pos":  1,
+					Op:   "split",
+					Path: "/0",
+					Pos:  1,
 				},
 			}
 			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -93,9 +93,9 @@ func TestSplitOp(t *testing.T) {
 				var state interface{} = "1234"
 				operations := []internal.Operation{
 					{
-						"op":   "split",
-						"path": "",
-						"pos":  2,
+						Op:   "split",
+						Path: "",
+						Pos:  2,
 					},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -108,9 +108,9 @@ func TestSplitOp(t *testing.T) {
 				var state interface{} = "1234"
 				operations := []internal.Operation{
 					{
-						"op":   "split",
-						"path": "",
-						"pos":  1,
+						Op:   "split",
+						Path: "",
+						Pos:  1,
 					},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -123,9 +123,9 @@ func TestSplitOp(t *testing.T) {
 				var state interface{} = "1234"
 				operations := []internal.Operation{
 					{
-						"op":   "split",
-						"path": "",
-						"pos":  0,
+						Op:   "split",
+						Path: "",
+						Pos:  0,
 					},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -138,9 +138,9 @@ func TestSplitOp(t *testing.T) {
 				var state interface{} = "1234"
 				operations := []internal.Operation{
 					{
-						"op":   "split",
-						"path": "",
-						"pos":  4,
+						Op:   "split",
+						Path: "",
+						Pos:  4,
 					},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -153,9 +153,9 @@ func TestSplitOp(t *testing.T) {
 				var state interface{} = "12345"
 				operations := []internal.Operation{
 					{
-						"op":   "split",
-						"path": "",
-						"pos":  99999,
+						Op:   "split",
+						Path: "",
+						Pos:  99999,
 					},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -168,9 +168,9 @@ func TestSplitOp(t *testing.T) {
 				var state interface{} = "12345"
 				operations := []internal.Operation{
 					{
-						"op":   "split",
-						"path": "",
-						"pos":  -1,
+						Op:   "split",
+						Path: "",
+						Pos:  -1,
 					},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -183,9 +183,9 @@ func TestSplitOp(t *testing.T) {
 				var state interface{} = "12345"
 				operations := []internal.Operation{
 					{
-						"op":   "split",
-						"path": "",
-						"pos":  -2,
+						Op:   "split",
+						Path: "",
+						Pos:  -2,
 					},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -198,9 +198,9 @@ func TestSplitOp(t *testing.T) {
 				var state interface{} = "12345"
 				operations := []internal.Operation{
 					{
-						"op":   "split",
-						"path": "",
-						"pos":  -7,
+						Op:   "split",
+						Path: "",
+						Pos:  -7,
 					},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -217,9 +217,9 @@ func TestSplitOp(t *testing.T) {
 				}
 				operations := []internal.Operation{
 					{
-						"op":   "split",
-						"path": "",
-						"pos":  3,
+						Op:   "split",
+						Path: "",
+						Pos:  3,
 					},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -238,9 +238,9 @@ func TestSplitOp(t *testing.T) {
 				}
 				operations := []internal.Operation{
 					{
-						"op":   "split",
-						"path": "",
-						"pos":  3,
+						Op:   "split",
+						Path: "",
+						Pos:  3,
 					},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -259,10 +259,10 @@ func TestSplitOp(t *testing.T) {
 				}
 				operations := []internal.Operation{
 					{
-						"op":    "split",
-						"path":  "",
-						"pos":   3,
-						"props": map[string]interface{}{"baz": "qux"},
+						Op:    "split",
+						Path:  "",
+						Pos:   3,
+						Props: map[string]interface{}{"baz": "qux"},
 					},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -281,10 +281,10 @@ func TestSplitOp(t *testing.T) {
 				}
 				operations := []internal.Operation{
 					{
-						"op":    "split",
-						"path":  "",
-						"pos":   3,
-						"props": map[string]interface{}{"foo": "1"},
+						Op:    "split",
+						Path:  "",
+						Pos:   3,
+						Props: map[string]interface{}{"foo": "1"},
 					},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -308,9 +308,9 @@ func TestSplitOp(t *testing.T) {
 				}
 				operations := []internal.Operation{
 					{
-						"op":   "split",
-						"path": "",
-						"pos":  1,
+						Op:   "split",
+						Path: "",
+						Pos:  1,
 					},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -341,10 +341,10 @@ func TestSplitOp(t *testing.T) {
 				}
 				operations := []internal.Operation{
 					{
-						"op":    "split",
-						"path":  "",
-						"pos":   2,
-						"props": map[string]interface{}{"f": 1},
+						Op:    "split",
+						Path:  "",
+						Pos:   2,
+						Props: map[string]interface{}{"f": 1},
 					},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -378,10 +378,10 @@ func TestSplitOp(t *testing.T) {
 				}
 				operations := []internal.Operation{
 					{
-						"op":    "split",
-						"path":  "",
-						"pos":   2,
-						"props": map[string]interface{}{"f": 2},
+						Op:    "split",
+						Path:  "",
+						Pos:   2,
+						Props: map[string]interface{}{"f": 2},
 					},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -418,10 +418,10 @@ func TestSplitOp(t *testing.T) {
 				}
 				operations := []internal.Operation{
 					{
-						"op":    "split",
-						"path":  "",
-						"pos":   2,
-						"props": map[string]interface{}{"f": 2, "a": 2},
+						Op:    "split",
+						Path:  "",
+						Pos:   2,
+						Props: map[string]interface{}{"f": 2, "a": 2},
 					},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -455,9 +455,9 @@ func TestSplitOp(t *testing.T) {
 			state := map[string]interface{}{"foo": "ab"}
 			operations := []internal.Operation{
 				{
-					"op":   "split",
-					"path": "/foo",
-					"pos":  1,
+					Op:   "split",
+					Path: "/foo",
+					Pos:  1,
 				},
 			}
 			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -470,10 +470,10 @@ func TestSplitOp(t *testing.T) {
 			state := map[string]interface{}{"foo": "ab"}
 			operations := []internal.Operation{
 				{
-					"op":    "split",
-					"path":  "/foo",
-					"pos":   1,
-					"props": map[string]interface{}{"z": "x"},
+					Op:    "split",
+					Path:  "/foo",
+					Pos:   1,
+					Props: map[string]interface{}{"z": "x"},
 				},
 			}
 			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -491,10 +491,10 @@ func TestSplitOp(t *testing.T) {
 			state := map[string]interface{}{"foo": map[string]interface{}{"text": "777"}}
 			operations := []internal.Operation{
 				{
-					"op":    "split",
-					"path":  "/foo",
-					"pos":   1,
-					"props": map[string]interface{}{"z": "x"},
+					Op:    "split",
+					Path:  "/foo",
+					Pos:   1,
+					Props: map[string]interface{}{"z": "x"},
 				},
 			}
 			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -512,9 +512,9 @@ func TestSplitOp(t *testing.T) {
 			state := map[string]interface{}{"foo": true}
 			operations := []internal.Operation{
 				{
-					"op":   "split",
-					"path": "/foo",
-					"pos":  1,
+					Op:   "split",
+					Path: "/foo",
+					Pos:  1,
 				},
 			}
 			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -527,9 +527,9 @@ func TestSplitOp(t *testing.T) {
 			state := map[string]interface{}{"foo": 10}
 			operations := []internal.Operation{
 				{
-					"op":   "split",
-					"path": "/foo",
-					"pos":  9,
+					Op:   "split",
+					Path: "/foo",
+					Pos:  9,
 				},
 			}
 			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -544,9 +544,9 @@ func TestSplitOp(t *testing.T) {
 			state := []interface{}{1, map[string]interface{}{"children": []interface{}{map[string]interface{}{"text": "a"}, map[string]interface{}{"text": "b"}}}, 2}
 			operations := []internal.Operation{
 				{
-					"op":   "split",
-					"path": "/1",
-					"pos":  0,
+					Op:   "split",
+					Path: "/1",
+					Pos:  0,
 				},
 			}
 			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
@@ -559,10 +559,10 @@ func TestSplitOp(t *testing.T) {
 			state := []interface{}{1, map[string]interface{}{"foo": "bar", "children": []interface{}{map[string]interface{}{"text": "a"}, map[string]interface{}{"text": "b"}}}, 2}
 			operations := []internal.Operation{
 				{
-					"op":    "split",
-					"path":  "/1",
-					"pos":   0,
-					"props": map[string]interface{}{"a": "b"},
+					Op:    "split",
+					Path:  "/1",
+					Pos:   0,
+					Props: map[string]interface{}{"a": "b"},
 				},
 			}
 			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))

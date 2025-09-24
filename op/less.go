@@ -65,9 +65,9 @@ func (op *LessOperation) ToJSON() (internal.Operation, error) {
 	}
 
 	return internal.Operation{
-		"op":    string(internal.OpLessType),
-		"path":  formatPath(op.Path()),
-		"value": value,
+		Op:    string(internal.OpLessType),
+		Path:  formatPath(op.Path()),
+		Value: value,
 	}, nil
 }
 

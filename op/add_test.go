@@ -70,9 +70,9 @@ func TestOpAdd_ToJSON(t *testing.T) {
 	json, err := op.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
 
-	assert.Equal(t, "add", json["op"], "JSON should contain correct op type")
-	assert.Equal(t, "/foo/bar", json["path"], "JSON should contain correct formatted path")
-	assert.Equal(t, "baz", json["value"], "JSON should contain correct value")
+	assert.Equal(t, "add", json.Op, "JSON should contain correct op type")
+	assert.Equal(t, "/foo/bar", json.Path, "JSON should contain correct formatted path")
+	assert.Equal(t, "baz", json.Value, "JSON should contain correct value")
 }
 
 func TestOpAdd_ToCompact(t *testing.T) {
@@ -115,5 +115,5 @@ func TestOpAdd_Constructor(t *testing.T) {
 	// Note: we can't directly access the value field, but we can test it through ToJSON
 	json, err := op.ToJSON()
 	require.NoError(t, err)
-	assert.Equal(t, value, json["value"], "Constructor should set correct value")
+	assert.Equal(t, value, json.Value, "Constructor should set correct value")
 }

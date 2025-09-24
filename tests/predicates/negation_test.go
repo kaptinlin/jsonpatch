@@ -13,14 +13,14 @@ func TestNegation(t *testing.T) {
 		{
 			Name:      "not_flag_succeeds_when_values_differ",
 			Doc:       map[string]interface{}{"value": 42},
-			Operation: jsonpatch.Operation{"op": "test", "path": "/value", "value": 100, "not": true},
+			Operation: jsonpatch.Operation{Op: "test", Path: "/value", Value: 100, Not: true},
 			Expected:  map[string]interface{}{"value": 42},
 			Comment:   "Test with not=true should succeed when values differ",
 		},
 		{
 			Name:       "not_flag_fails_when_values_match",
 			Doc:        map[string]interface{}{"value": 42},
-			Operation:  jsonpatch.Operation{"op": "test", "path": "/value", "value": 42, "not": true},
+			Operation:  jsonpatch.Operation{Op: "test", Path: "/value", Value: 42, Not: true},
 			ShouldFail: true,
 			Comment:    "Test with not=true should fail when values match",
 		},

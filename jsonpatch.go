@@ -536,22 +536,19 @@ func applyInternalPatch(doc interface{}, patch []internal.Operation, options *in
 	results := make([]internal.OpResult[any], 0, len(patch))
 
 	// Use codec/json decoder to convert operations to Op instances
-	decoder := jsoncodec.NewDecoder(internal.JSONPatchOptions{
+	// decoder is used internally by DecodeOperations
+
+	// Use new DecodeOperations function for struct-based operations
+	opInstances, err := jsoncodec.DecodeOperations(patch, internal.JSONPatchOptions{
 		CreateMatcher: options.CreateMatcher,
 	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to decode operations: %w", err)
+	}
 
-	for i, operation := range patch {
-		// Convert operation to Op instance using operationToOp equivalent
-		opInstance, err := decoder.Decode([]map[string]interface{}{operation})
-		if err != nil {
-			return nil, nil, fmt.Errorf(errOperationDecodeFailed, i, err)
-		}
-		if len(opInstance) == 0 {
-			return nil, nil, fmt.Errorf(errOperationFailed, i, ErrNoOperationDecoded)
-		}
-
+	for i, opInstance := range opInstances {
 		// Apply operation
-		opResult, err := opInstance[0].Apply(workingDoc)
+		opResult, err := opInstance.Apply(workingDoc)
 		if err != nil {
 			return nil, nil, fmt.Errorf(errOperationFailed, i, err)
 		}

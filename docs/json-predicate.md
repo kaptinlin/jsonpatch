@@ -33,9 +33,9 @@ doc := map[string]interface{}{
 }
 
 patch := []jsonpatch.Operation{
-    {"op": "defined", "path": "/user/name"},
-    {"op": "type", "path": "/user/age", "value": "number"},
-    {"op": "contains", "path": "/tags", "value": "admin"},
+    {Op: "defined", Path: "/user/name"},
+    {Op: "type", Path: "/user/age", Value: "number"},
+    {Op: "contains", Path: "/tags", Value: "admin"},
 }
 
 result, err := jsonpatch.ApplyPatch(doc, patch)
@@ -52,10 +52,10 @@ Test if a value equals the expected value.
 
 ```go
 // Test equality
-{"op": "test", "path": "/status", "value": "active"}
+{Op: "test", Path: "/status", Value: "active"}
 
 // Test inequality (inverted)
-{"op": "test", "path": "/status", "value": "inactive", "not": true}
+{Op: "test", Path: "/status", Value: "inactive", Not: true}
 ```
 
 ### Defined/Undefined Operations
@@ -64,10 +64,10 @@ Check if paths exist.
 
 ```go
 // Check if path exists
-{"op": "defined", "path": "/user/email"}
+{Op: "defined", Path: "/user/email"}
 
 // Check if path doesn't exist
-{"op": "undefined", "path": "/user/phone"}
+{Op: "undefined", Path: "/user/phone"}
 ```
 
 ### Type Operation
@@ -76,10 +76,10 @@ Check the type of a value.
 
 ```go
 // Single type
-{"op": "type", "path": "/user/age", "value": "number"}
+{Op: "type", Path: "/user/age", Value: "number"}
 
 // Multiple types
-{"op": "type", "path": "/data", "value": ["string", "number"]}
+{Op: "type", Path: "/data", Value: ["string", "number"]}
 ```
 
 Supported types: `"string"`, `"number"`, `"boolean"`, `"object"`, `"array"`, `"null"`, `"integer"`
@@ -90,10 +90,10 @@ Check if arrays contain values or strings contain substrings.
 
 ```go
 // Array contains
-{"op": "contains", "path": "/tags", "value": "admin"}
+{Op: "contains", Path: "/tags", Value: "admin"}
 
 // String contains
-{"op": "contains", "path": "/user/email", "value": "@example.com"}
+{Op: "contains", Path: "/user/email", Value: "@example.com"}
 ```
 
 ### String Operations
@@ -102,13 +102,13 @@ Test string prefixes and suffixes.
 
 ```go
 // Starts with
-{"op": "starts", "path": "/user/email", "value": "alice"}
+{Op: "starts", Path: "/user/email", Value: "alice"}
 
 // Ends with
-{"op": "ends", "path": "/user/email", "value": ".com"}
+{Op: "ends", Path: "/user/email", Value: ".com"}
 
 // Case-insensitive
-{"op": "starts", "path": "/user/name", "value": "ALICE", "ignore_case": true}
+{Op: "starts", Path: "/user/name", Value: "ALICE", IgnoreCase: true}
 ```
 
 ### Numeric Comparisons
@@ -117,10 +117,10 @@ Compare numeric values.
 
 ```go
 // Less than
-{"op": "less", "path": "/user/age", "value": 30}
+{Op: "less", Path: "/user/age", Value: 30}
 
 // Greater than
-{"op": "more", "path": "/user/age", "value": 18}
+{Op: "more", Path: "/user/age", Value: 18}
 ```
 
 ### In Operation
@@ -128,7 +128,7 @@ Compare numeric values.
 Check if a value is in an array.
 
 ```go
-{"op": "in", "path": "/user/role", "value": ["admin", "moderator", "user"]}
+{Op: "in", Path: "/user/role", Value: ["admin", "moderator", "user"]}
 ```
 
 ### Matches Operation
@@ -149,7 +149,7 @@ customMatcher := func(pattern string, ignoreCase bool) jsonpatch.RegexMatcher {
 }
 
 patch := []jsonpatch.Operation{
-    {"op": "matches", "path": "/user/email", "value": `^[^@]+@[^@]+\.[^@]+$`},
+    {Op: "matches", Path: "/user/email", Value: `^[^@]+@[^@]+\.[^@]+$`},
 }
 
 result, err := jsonpatch.ApplyPatch(doc, patch, 
@@ -166,10 +166,10 @@ All conditions must be true.
 ```go
 {
     "op": "and",
-    "apply": [
-        {"op": "defined", "path": "/user/email"},
-        {"op": "type", "path": "/user/age", "value": "number"},
-        {"op": "more", "path": "/user/age", "value": 18}
+    Apply: [
+        {Op: "defined", Path: "/user/email"},
+        {Op: "type", Path: "/user/age", Value: "number"},
+        {Op: "more", Path: "/user/age", Value: 18}
     ]
 }
 ```
@@ -181,9 +181,9 @@ At least one condition must be true.
 ```go
 {
     "op": "or",
-    "apply": [
-        {"op": "contains", "path": "/tags", "value": "admin"},
-        {"op": "contains", "path": "/tags", "value": "moderator"}
+    Apply: [
+        {Op: "contains", Path: "/tags", Value: "admin"},
+        {Op: "contains", Path: "/tags", Value: "moderator"}
     ]
 }
 ```
@@ -195,8 +195,8 @@ Invert a condition.
 ```go
 {
     "op": "not",
-    "apply": [
-        {"op": "contains", "path": "/tags", "value": "banned"}
+    Apply: [
+        {Op: "contains", Path: "/tags", Value: "banned"}
     ]
 }
 ```
@@ -209,12 +209,12 @@ Invert a condition.
 patch := []jsonpatch.Operation{
     {
         "op": "and",
-        "apply": []jsonpatch.Operation{
-            {"op": "defined", "path": "/user/name"},
-            {"op": "defined", "path": "/user/email"},
-            {"op": "type", "path": "/user/age", "value": "number"},
-            {"op": "more", "path": "/user/age", "value": 17},
-            {"op": "test", "path": "/user/active", "value": true},
+        Apply: []jsonpatch.Operation{
+            {Op: "defined", Path: "/user/name"},
+            {Op: "defined", Path: "/user/email"},
+            {Op: "type", Path: "/user/age", Value: "number"},
+            {Op: "more", Path: "/user/age", Value: 17},
+            {Op: "test", Path: "/user/active", Value: true},
         },
     },
 }
@@ -226,13 +226,13 @@ patch := []jsonpatch.Operation{
 patch := []jsonpatch.Operation{
     {
         "op": "or",
-        "apply": []jsonpatch.Operation{
-            {"op": "contains", "path": "/roles", "value": "admin"},
+        Apply: []jsonpatch.Operation{
+            {Op: "contains", Path: "/roles", Value: "admin"},
             {
                 "op": "and",
-                "apply": []jsonpatch.Operation{
-                    {"op": "contains", "path": "/roles", "value": "user"},
-                    {"op": "contains", "path": "/permissions", "value": "write"},
+                Apply: []jsonpatch.Operation{
+                    {Op: "contains", Path: "/roles", Value: "user"},
+                    {Op: "contains", Path: "/permissions", Value: "write"},
                 },
             },
         },
@@ -244,12 +244,12 @@ patch := []jsonpatch.Operation{
 
 ```go
 patch := []jsonpatch.Operation{
-    {"op": "defined", "path": "/required_field"},
-    {"op": "type", "path": "/required_field", "value": "string"},
+    {Op: "defined", Path: "/required_field"},
+    {Op: "type", Path: "/required_field", Value: "string"},
     {
         "op": "not",
-        "apply": []jsonpatch.Operation{
-            {"op": "test", "path": "/required_field", "value": ""},
+        Apply: []jsonpatch.Operation{
+            {Op: "test", Path: "/required_field", Value: ""},
         },
     },
 }

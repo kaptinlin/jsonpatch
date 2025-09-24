@@ -15,11 +15,11 @@ func TestAnd(t *testing.T) {
 			Doc:  map[string]interface{}{"foo": 1, "bar": 2},
 			Operations: []jsonpatch.Operation{
 				{
-					"op":   "and",
-					"path": "",
-					"apply": []interface{}{
-						map[string]interface{}{"op": "test", "path": "/foo", "value": 1},
-						map[string]interface{}{"op": "test", "path": "/bar", "value": 2},
+					Op:   "and",
+					Path: "",
+					Apply: []jsonpatch.Operation{
+						{Op: "test", Path: "/foo", Value: 1},
+						{Op: "test", Path: "/bar", Value: 2},
 					},
 				},
 			},
@@ -31,11 +31,11 @@ func TestAnd(t *testing.T) {
 			Doc:  map[string]interface{}{"foo": 2, "bar": 2},
 			Operations: []jsonpatch.Operation{
 				{
-					"op":   "and",
-					"path": "",
-					"apply": []interface{}{
-						map[string]interface{}{"op": "test", "path": "/foo", "value": 1},
-						map[string]interface{}{"op": "test", "path": "/bar", "value": 2},
+					Op:   "and",
+					Path: "",
+					Apply: []jsonpatch.Operation{
+						{Op: "test", Path: "/foo", Value: 1},
+						{Op: "test", Path: "/bar", Value: 2},
 					},
 				},
 			},

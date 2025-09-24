@@ -140,7 +140,60 @@ func convertTestCases(testCases []data.TestCase) []AutomatedTestCase {
 // convertPatch converts []map[string]any to []jsonpatch.Operation
 func convertPatch(patch []map[string]any) []jsonpatch.Operation {
 	result := make([]jsonpatch.Operation, len(patch))
-	copy(result, patch)
+	for i, op := range patch {
+		// Convert map to Operation struct
+		var operation jsonpatch.Operation
+		if v, ok := op["op"].(string); ok {
+			operation.Op = v
+		}
+		if v, ok := op["path"].(string); ok {
+			operation.Path = v
+		}
+		if v, exists := op["value"]; exists {
+			operation.Value = v
+		}
+		if v, ok := op["from"].(string); ok {
+			operation.From = v
+		}
+		if v, ok := op["inc"].(float64); ok {
+			operation.Inc = v
+		}
+		if v, ok := op["pos"].(int); ok {
+			operation.Pos = v
+		} else if v, ok := op["pos"].(float64); ok {
+			operation.Pos = int(v)
+		}
+		if v, ok := op["str"].(string); ok {
+			operation.Str = v
+		}
+		if v, ok := op["len"].(int); ok {
+			operation.Len = v
+		} else if v, ok := op["len"].(float64); ok {
+			operation.Len = int(v)
+		}
+		if v, ok := op["not"].(bool); ok {
+			operation.Not = v
+		}
+		if v, ok := op["type"].(string); ok {
+			operation.Type = v
+		}
+		if v, ok := op["ignore_case"].(bool); ok {
+			operation.IgnoreCase = v
+		}
+		if v, ok := op["apply"].([]jsonpatch.Operation); ok {
+			operation.Apply = v
+		}
+		if v, ok := op["props"].(map[string]any); ok {
+			operation.Props = v
+		}
+		if v, ok := op["deleteNull"].(bool); ok {
+			operation.DeleteNull = v
+		}
+		if v, ok := op["oldValue"]; ok {
+			operation.OldValue = v
+		}
+		result[i] = operation
+	}
 	return result
 }
 
@@ -490,11 +543,7 @@ func containsIgnoreCase(haystack, needle string) bool {
 // TestCannotAddKeyToEmptyDocument tests that adding key to empty document fails
 func TestCannotAddKeyToEmptyDocument(t *testing.T) {
 	patch := []jsonpatch.Operation{
-		map[string]interface{}{
-			"op":    "add",
-			"path":  "/foo",
-			"value": 123,
-		},
+		{Op: "add", Path: "/foo", Value: 123},
 	}
 
 	options := jsonpatch.WithMutate(true)
@@ -508,11 +557,7 @@ func TestCannotAddKeyToEmptyDocument(t *testing.T) {
 // TestCanOverwriteEmptyDocument tests that overwriting empty document works
 func TestCanOverwriteEmptyDocument(t *testing.T) {
 	patch := []jsonpatch.Operation{
-		map[string]interface{}{
-			"op":    "add",
-			"path":  "/foo",
-			"value": 123,
-		},
+		{Op: "add", Path: "/foo", Value: 123},
 	}
 
 	options := jsonpatch.WithMutate(true)
@@ -532,11 +577,7 @@ func TestCanOverwriteEmptyDocument(t *testing.T) {
 func TestCannotAddValueToNonexistingPath(t *testing.T) {
 	doc := map[string]interface{}{"foo": 123}
 	patch := []jsonpatch.Operation{
-		map[string]interface{}{
-			"op":    "add",
-			"path":  "/foo/bar/baz",
-			"value": "test",
-		},
+		{Op: "add", Path: "/foo/bar/baz", Value: "test"},
 	}
 
 	options := jsonpatch.WithMutate(true)

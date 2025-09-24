@@ -96,9 +96,9 @@ func TestOpUndefined_ToJSON(t *testing.T) {
 	json, err := undefinedOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
 
-	assert.Equal(t, "undefined", json["op"], "JSON should contain correct op type")
-	assert.Equal(t, "/test", json["path"], "JSON should contain correct formatted path")
-	assert.Nil(t, json["not"], "JSON should not contain not field when false")
+	assert.Equal(t, "undefined", json.Op, "JSON should contain correct op type")
+	assert.Equal(t, "/test", json.Path, "JSON should contain correct formatted path")
+	assert.False(t, json.Not, "JSON should not contain not field when false")
 }
 
 func TestOpUndefined_ToJSON_WithNot(t *testing.T) {
@@ -107,7 +107,7 @@ func TestOpUndefined_ToJSON_WithNot(t *testing.T) {
 	json, err := undefinedOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
 
-	assert.Equal(t, true, json["not"], "JSON should contain not field when true")
+	assert.Equal(t, true, json.Not, "JSON should contain not field when true")
 }
 
 func TestOpUndefined_ToCompact(t *testing.T) {

@@ -83,22 +83,22 @@ func (o *OrOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // ToJSON serializes the operation to JSON format.
 func (o *OrOperation) ToJSON() (internal.Operation, error) {
-	opsJSON := make([]interface{}, 0, len(o.Operations))
+	opsJSON := make([]internal.Operation, 0, len(o.Operations))
 	for _, op := range o.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {
-			return nil, ErrInvalidPredicateInOr
+			return internal.Operation{}, ErrInvalidPredicateInOr
 		}
 		jsonVal, err := predicateOp.ToJSON()
 		if err != nil {
-			return nil, err
+			return internal.Operation{}, err
 		}
 		opsJSON = append(opsJSON, jsonVal)
 	}
 	return internal.Operation{
-		"op":    string(internal.OpOrType),
-		"path":  formatPath(o.Path()),
-		"apply": opsJSON,
+		Op:    string(internal.OpOrType),
+		Path:  formatPath(o.Path()),
+		Apply: opsJSON,
 	}, nil
 }
 

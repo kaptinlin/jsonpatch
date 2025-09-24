@@ -21,10 +21,10 @@ func applyOperationStrIns(t *testing.T, doc interface{}, op internal.Operation) 
 func TestStrInsOp(t *testing.T) {
 	t.Run("inserts a string at the beginning", func(t *testing.T) {
 		operation := internal.Operation{
-			"op":   "str_ins",
-			"path": "",
-			"pos":  0,
-			"str":  "Hello, ",
+			Op:   "str_ins",
+			Path: "",
+			Pos:  0,
+			Str:  "Hello, ",
 		}
 		result := applyOperationStrIns(t, "world!", operation)
 		assert.Equal(t, "Hello, world!", result)
@@ -32,10 +32,10 @@ func TestStrInsOp(t *testing.T) {
 
 	t.Run("inserts a string at the end", func(t *testing.T) {
 		operation := internal.Operation{
-			"op":   "str_ins",
-			"path": "",
-			"pos":  5,
-			"str":  ", world",
+			Op:   "str_ins",
+			Path: "",
+			Pos:  5,
+			Str:  ", world",
 		}
 		result := applyOperationStrIns(t, "Hello", operation)
 		assert.Equal(t, "Hello, world", result)
@@ -43,10 +43,10 @@ func TestStrInsOp(t *testing.T) {
 
 	t.Run("inserts a string in the middle", func(t *testing.T) {
 		operation := internal.Operation{
-			"op":   "str_ins",
-			"path": "",
-			"pos":  5,
-			"str":  " beautiful",
+			Op:   "str_ins",
+			Path: "",
+			Pos:  5,
+			Str:  " beautiful",
 		}
 		result := applyOperationStrIns(t, "Hello world", operation)
 		assert.Equal(t, "Hello beautiful world", result)
@@ -55,16 +55,16 @@ func TestStrInsOp(t *testing.T) {
 	t.Run("can insert multiple times", func(t *testing.T) {
 		operations := []internal.Operation{
 			{
-				"op":   "str_ins",
-				"path": "",
-				"pos":  5,
-				"str":  " beautiful",
+				Op:   "str_ins",
+				Path: "",
+				Pos:  5,
+				Str:  " beautiful",
 			},
 			{
-				"op":   "str_ins",
-				"path": "",
-				"pos":  21,
-				"str":  " bright",
+				Op:   "str_ins",
+				Path: "",
+				Pos:  21,
+				Str:  " bright",
 			},
 		}
 		doc := "Hello world"
@@ -78,10 +78,10 @@ func TestStrInsOp(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
 		t.Run("inserts into empty string", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "str_ins",
-				"path": "",
-				"pos":  0,
-				"str":  "hello",
+				Op:   "str_ins",
+				Path: "",
+				Pos:  0,
+				Str:  "hello",
 			}
 			result := applyOperationStrIns(t, "", operation)
 			assert.Equal(t, "hello", result)
@@ -91,10 +91,10 @@ func TestStrInsOp(t *testing.T) {
 	t.Run("object", func(t *testing.T) {
 		t.Run("inserts a string at the beginning", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "str_ins",
-				"path": "/msg",
-				"pos":  0,
-				"str":  "Hello, ",
+				Op:   "str_ins",
+				Path: "/msg",
+				Pos:  0,
+				Str:  "Hello, ",
 			}
 			result := applyOperationStrIns(t, map[string]interface{}{"msg": "world!"}, operation)
 			expected := map[string]interface{}{"msg": "Hello, world!"}
@@ -103,10 +103,10 @@ func TestStrInsOp(t *testing.T) {
 
 		t.Run("inserts a string at the end", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "str_ins",
-				"path": "/msg",
-				"pos":  5,
-				"str":  ", world",
+				Op:   "str_ins",
+				Path: "/msg",
+				Pos:  5,
+				Str:  ", world",
 			}
 			result := applyOperationStrIns(t, map[string]interface{}{"msg": "Hello"}, operation)
 			expected := map[string]interface{}{"msg": "Hello, world"}
@@ -115,10 +115,10 @@ func TestStrInsOp(t *testing.T) {
 
 		t.Run("inserts a string in the middle", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "str_ins",
-				"path": "/msg",
-				"pos":  5,
-				"str":  " beautiful",
+				Op:   "str_ins",
+				Path: "/msg",
+				Pos:  5,
+				Str:  " beautiful",
 			}
 			result := applyOperationStrIns(t, map[string]interface{}{"msg": "Hello world"}, operation)
 			expected := map[string]interface{}{"msg": "Hello beautiful world"}
@@ -129,10 +129,10 @@ func TestStrInsOp(t *testing.T) {
 	t.Run("array", func(t *testing.T) {
 		t.Run("inserts a string at the beginning", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "str_ins",
-				"path": "/0",
-				"pos":  0,
-				"str":  "Hello, ",
+				Op:   "str_ins",
+				Path: "/0",
+				Pos:  0,
+				Str:  "Hello, ",
 			}
 			result := applyOperationStrIns(t, []interface{}{"world!"}, operation)
 			expected := []interface{}{"Hello, world!"}
@@ -141,10 +141,10 @@ func TestStrInsOp(t *testing.T) {
 
 		t.Run("inserts a string at the end", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "str_ins",
-				"path": "/0",
-				"pos":  5,
-				"str":  ", world",
+				Op:   "str_ins",
+				Path: "/0",
+				Pos:  5,
+				Str:  ", world",
 			}
 			result := applyOperationStrIns(t, []interface{}{"Hello"}, operation)
 			expected := []interface{}{"Hello, world"}
@@ -153,10 +153,10 @@ func TestStrInsOp(t *testing.T) {
 
 		t.Run("inserts a string in the middle", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "str_ins",
-				"path": "/0",
-				"pos":  5,
-				"str":  " beautiful",
+				Op:   "str_ins",
+				Path: "/0",
+				Pos:  5,
+				Str:  " beautiful",
 			}
 			result := applyOperationStrIns(t, []interface{}{"Hello world"}, operation)
 			expected := []interface{}{"Hello beautiful world"}

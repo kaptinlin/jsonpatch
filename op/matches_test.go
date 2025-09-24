@@ -124,10 +124,10 @@ func TestOpMatches_ToJSON(t *testing.T) {
 	json, err := op.ToJSON()
 	require.NoError(t, err)
 
-	assert.Equal(t, string(internal.OpMatchesType), json["op"])
-	assert.Equal(t, "/email", json["path"])
-	assert.Equal(t, `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, json["value"])
-	assert.Equal(t, true, json["ignore_case"])
+	assert.Equal(t, string(internal.OpMatchesType), json.Op)
+	assert.Equal(t, "/email", json.Path)
+	assert.Equal(t, `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, json.Value)
+	assert.Equal(t, true, json.IgnoreCase)
 }
 
 func TestOpMatches_ToCompact(t *testing.T) {

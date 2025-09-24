@@ -27,34 +27,34 @@ func main() {
 	patch := []jsonpatch.Operation{
 		// Insert at beginning
 		{
-			"op":   "str_ins",
-			"path": "/content",
-			"pos":  0,
-			"str":  "Welcome! ",
+			Op:   "str_ins",
+			Path: "/content",
+			Pos:  0,
+			Str:  "Welcome! ",
 		},
 
 		// Insert at end
 		{
-			"op":   "str_ins",
-			"path": "/content",
-			"pos":  21, // After "Welcome! Hello world!"
-			"str":  " How are you?",
+			Op:   "str_ins",
+			Path: "/content",
+			Pos:  21, // After "Welcome! Hello world!"
+			Str:  " How are you?",
 		},
 
 		// Insert in middle of title
 		{
-			"op":   "str_ins",
-			"path": "/title",
-			"pos":  2, // After "My"
-			"str":  " First",
+			Op:   "str_ins",
+			Path: "/title",
+			Pos:  2, // After "My"
+			Str:  " First",
 		},
 
 		// Add new tag
 		{
-			"op":   "str_ins",
-			"path": "/tags",
-			"pos":  7, // At end of "go,json"
-			"str":  ",patch",
+			Op:   "str_ins",
+			Path: "/tags",
+			Pos:  7, // At end of "go,json"
+			Str:  ",patch",
 		},
 	}
 

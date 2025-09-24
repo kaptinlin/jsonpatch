@@ -126,12 +126,12 @@ func TestOpOr_ToJSON(t *testing.T) {
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
 	jsonMap := json
 
-	assert.Equal(t, "or", jsonMap["op"], "JSON should contain correct op type")
-	assert.Equal(t, "/test", jsonMap["path"], "JSON should contain correct formatted path")
+	assert.Equal(t, "or", jsonMap.Op, "JSON should contain correct op type")
+	assert.Equal(t, "/test", jsonMap.Path, "JSON should contain correct formatted path")
 
 	// Check apply array
-	apply, ok := jsonMap["apply"].([]interface{})
-	require.True(t, ok, "JSON should contain apply array")
+	apply := jsonMap.Apply
+	require.NotNil(t, apply, "JSON should contain apply array")
 	assert.Len(t, apply, 2, "JSON should contain correct number of operations")
 }
 

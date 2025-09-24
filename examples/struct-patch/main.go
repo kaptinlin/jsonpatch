@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 
 	"github.com/kaptinlin/jsonpatch"
-	"github.com/kaptinlin/jsonpatch/internal"
 )
 
 // User represents a user profile with JSON tags
@@ -58,10 +57,10 @@ func demoBasicStructPatch() {
 	fmt.Printf("Before: %+v\n", user)
 
 	// Define patch operations
-	patch := []internal.Operation{
-		{"op": "replace", "path": "/name", "value": "Jane Smith"},
-		{"op": "replace", "path": "/age", "value": 28},
-		{"op": "replace", "path": "/email", "value": "jane.smith@example.com"},
+	patch := []jsonpatch.Operation{
+		{Op: "replace", Path: "/name", Value: "Jane Smith"},
+		{Op: "replace", Path: "/age", Value: 28},
+		{Op: "replace", Path: "/email", Value: "jane.smith@example.com"},
 	}
 
 	// Apply patch - preserves struct type
@@ -94,10 +93,10 @@ func demoComplexStructPatch() {
 	fmt.Printf("Before:\n%s\n", string(originalJSON))
 
 	// Complex patch operations including nested paths
-	patch := []internal.Operation{
-		{"op": "replace", "path": "/name", "value": "Wonder Woman"},
-		{"op": "replace", "path": "/profile/bio", "value": "DC Comics superhero and Amazon warrior"},
-		{"op": "add", "path": "/headquarters", "value": "Hall of Justice"},
+	patch := []jsonpatch.Operation{
+		{Op: "replace", Path: "/name", Value: "Wonder Woman"},
+		{Op: "replace", Path: "/profile/bio", Value: "DC Comics superhero and Amazon warrior"},
+		{Op: "add", Path: "/headquarters", Value: "Hall of Justice"},
 	}
 
 	// Apply patch with immutable option (default)
@@ -123,10 +122,10 @@ func demoArrayFieldOperations() {
 	fmt.Printf("Before: Tags = %v\n", user.Tags)
 
 	// Array operations on Tags field
-	patch := []internal.Operation{
-		{"op": "add", "path": "/tags/-", "value": "ux"},          // Append
-		{"op": "add", "path": "/tags/0", "value": "senior"},      // Insert at beginning
-		{"op": "replace", "path": "/tags/2", "value": "product"}, // Replace middle
+	patch := []jsonpatch.Operation{
+		{Op: "add", Path: "/tags/-", Value: "ux"},          // Append
+		{Op: "add", Path: "/tags/0", Value: "senior"},      // Insert at beginning
+		{Op: "replace", Path: "/tags/2", Value: "product"}, // Replace middle
 	}
 
 	result, err := jsonpatch.ApplyPatch(user, patch)

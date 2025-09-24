@@ -122,9 +122,9 @@ func TestOpReplace_ToJSON(t *testing.T) {
 	json, err := replaceOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
 
-	assert.Equal(t, "replace", json["op"], "JSON should contain correct op type")
-	assert.Equal(t, "/test", json["path"], "JSON should contain correct formatted path")
-	assert.Equal(t, "value", json["value"], "JSON should contain correct value")
+	assert.Equal(t, "replace", json.Op, "JSON should contain correct op type")
+	assert.Equal(t, "/test", json.Path, "JSON should contain correct formatted path")
+	assert.Equal(t, "value", json.Value, "JSON should contain correct value")
 }
 
 func TestOpReplace_ToCompact(t *testing.T) {

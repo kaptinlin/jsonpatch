@@ -7,7 +7,6 @@ import (
 	"log"
 
 	"github.com/kaptinlin/jsonpatch"
-	"github.com/kaptinlin/jsonpatch/internal"
 )
 
 func main() {
@@ -40,12 +39,12 @@ func demoBasicMapPatch() {
 	fmt.Printf("Before: %s\n", prettyMap(doc))
 
 	// Define patch operations
-	patch := []internal.Operation{
-		{"op": "replace", "path": "/name", "value": "Alice Johnson"},
-		{"op": "add", "path": "/email", "value": "alice@design.co"},
-		{"op": "add", "path": "/tags/-", "value": "ux"},
-		{"op": "replace", "path": "/age", "value": 26},
-		{"op": "add", "path": "/department", "value": "Product Design"},
+	patch := []jsonpatch.Operation{
+		{Op: "replace", Path: "/name", Value: "Alice Johnson"},
+		{Op: "add", Path: "/email", Value: "alice@design.co"},
+		{Op: "add", Path: "/tags/-", Value: "ux"},
+		{Op: "replace", Path: "/age", Value: 26},
+		{Op: "add", Path: "/department", Value: "Product Design"},
 	}
 
 	// Apply patch - returns map[string]any
@@ -82,13 +81,13 @@ func demoNestedMapPatch() {
 	fmt.Printf("Before:\n%s\n", prettyMap(doc))
 
 	// Nested operations
-	patch := []internal.Operation{
-		{"op": "replace", "path": "/user/name", "value": "Robert Smith"},
-		{"op": "add", "path": "/user/profile/skills/-", "value": "Docker"},
-		{"op": "replace", "path": "/user/profile/bio", "value": "Senior Full-stack Developer"},
-		{"op": "add", "path": "/user/contact/linkedin", "value": "linkedin.com/in/robertsmith"},
-		{"op": "replace", "path": "/metadata/version", "value": 2},
-		{"op": "add", "path": "/metadata/updated", "value": "2024-01-15"},
+	patch := []jsonpatch.Operation{
+		{Op: "replace", Path: "/user/name", Value: "Robert Smith"},
+		{Op: "add", Path: "/user/profile/skills/-", Value: "Docker"},
+		{Op: "replace", Path: "/user/profile/bio", Value: "Senior Full-stack Developer"},
+		{Op: "add", Path: "/user/contact/linkedin", Value: "linkedin.com/in/robertsmith"},
+		{Op: "replace", Path: "/metadata/version", Value: 2},
+		{Op: "add", Path: "/metadata/updated", Value: "2024-01-15"},
 	}
 
 	result, err := jsonpatch.ApplyPatch(doc, patch)
@@ -123,24 +122,24 @@ func demoDynamicMapPatch() {
 	fmt.Printf("Before:\n%s\n", prettyMap(doc))
 
 	// Dynamic updates (price changes, stock updates, new products)
-	patch := []internal.Operation{
+	patch := []jsonpatch.Operation{
 		// Update product prices
-		{"op": "replace", "path": "/products/0/price", "value": 899.99},
-		{"op": "replace", "path": "/products/2/stock", "value": 30},
+		{Op: "replace", Path: "/products/0/price", Value: 899.99},
+		{Op: "replace", Path: "/products/2/stock", Value: 30},
 
 		// Add new product
-		{"op": "add", "path": "/products/-", "value": map[string]any{
+		{Op: "add", Path: "/products/-", Value: map[string]any{
 			"id": 4, "name": "Monitor", "price": 299.99, "stock": 15,
 		}},
 
 		// Update store info
-		{"op": "add", "path": "/store/phone", "value": "+1-555-TECH"},
-		{"op": "add", "path": "/store/website", "value": "techstore.com"},
+		{Op: "add", Path: "/store/phone", Value: "+1-555-TECH"},
+		{Op: "add", Path: "/store/website", Value: "techstore.com"},
 
 		// Update stats
-		{"op": "replace", "path": "/stats/total_products", "value": 4},
-		{"op": "replace", "path": "/stats/total_value", "value": 1309.96},
-		{"op": "add", "path": "/stats/last_updated", "value": "2024-01-15T10:30:00Z"},
+		{Op: "replace", Path: "/stats/total_products", Value: 4},
+		{Op: "replace", Path: "/stats/total_value", Value: 1309.96},
+		{Op: "add", Path: "/stats/last_updated", Value: "2024-01-15T10:30:00Z"},
 	}
 
 	result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(false))

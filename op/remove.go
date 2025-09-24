@@ -131,12 +131,12 @@ func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 // ToJSON serializes the operation to JSON format.
 func (o *RemoveOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
-		"op":   string(internal.OpRemoveType),
-		"path": formatPath(o.path),
+		Op:   string(internal.OpRemoveType),
+		Path: formatPath(o.path),
 	}
 
 	if o.HasOldValue {
-		result["oldValue"] = o.OldValue
+		result.OldValue = o.OldValue
 	}
 
 	return result, nil

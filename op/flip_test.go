@@ -172,7 +172,7 @@ func TestOpFlip_NewOpFlip(t *testing.T) {
 	path := []string{"user", "active"}
 	op := NewFlip(path)
 
-	assert.Equal(t, path, op.path)
+	assert.Equal(t, path, op.Path())
 	assert.Equal(t, internal.OpFlipType, op.Op())
 	assert.Equal(t, internal.OpFlipCode, op.Code())
 }
@@ -202,7 +202,8 @@ func TestOpFlip_ComplexTypes(t *testing.T) {
 			require.NoError(t, err)
 
 			// Check that the result is the expected boolean
-			assert.Equal(t, tt.expected, result.Doc.(map[string]interface{})["value"])
+			resultDoc := result.Doc.(map[string]interface{})
+			assert.Equal(t, tt.expected, resultDoc["value"])
 		})
 	}
 }

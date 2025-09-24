@@ -107,7 +107,11 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 		}
 		return op.NewOpIncOperation(path, incVal), nil
 	case "str_ins":
-		pos, ok := op.ToFloat64(operation["pos"])
+		posVal, hasPosField := operation["pos"]
+		if !hasPosField {
+			return nil, ErrStrInsOpMissingPos
+		}
+		pos, ok := op.ToFloat64(posVal)
 		if !ok {
 			return nil, ErrStrInsOpMissingPos
 		}
@@ -117,7 +121,11 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 		}
 		return op.NewOpStrInsOperation(path, pos, str), nil
 	case "str_del":
-		pos, ok := op.ToFloat64(operation["pos"])
+		posVal, hasPosField := operation["pos"]
+		if !hasPosField {
+			return nil, ErrStrDelOpMissingPos
+		}
+		pos, ok := op.ToFloat64(posVal)
 		if !ok {
 			return nil, ErrStrDelOpMissingPos
 		}
@@ -130,7 +138,11 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 		}
 		return nil, ErrStrDelOpMissingFields
 	case "split":
-		pos, ok := op.ToFloat64(operation["pos"])
+		posVal, hasPosField := operation["pos"]
+		if !hasPosField {
+			return nil, ErrSplitOpMissingPos
+		}
+		pos, ok := op.ToFloat64(posVal)
 		if !ok {
 			return nil, ErrSplitOpMissingPos
 		}
@@ -542,6 +554,102 @@ func Decode(operations []map[string]interface{}, options internal.JSONPatchOptio
 		ops = append(ops, o)
 	}
 	return ops, nil
+}
+
+// DecodeOperations converts Operation structs to Op instances using json/v2
+func DecodeOperations(operations []internal.Operation, options internal.JSONPatchOptions) ([]internal.Op, error) {
+	// Convert Operation structs to maps manually to handle special float values
+	operationMaps := make([]map[string]interface{}, len(operations))
+	
+	for i, op := range operations {
+		opMap := make(map[string]interface{})
+		
+		// Always include op and path
+		opMap["op"] = op.Op
+		opMap["path"] = op.Path
+		
+		// Handle Value field - include for operations that require it
+		// For add/replace operations, even nil is a valid value
+		if op.Value != nil || op.Op == "add" || op.Op == "replace" || op.Op == "test" {
+			opMap["value"] = op.Value
+		}
+		if op.From != "" {
+			opMap["from"] = op.From
+		}
+		
+		// Handle Inc field specially to support NaN/Inf values
+		// Inc has no omitempty tag, so we include it for all operations
+		opMap["inc"] = op.Inc
+		
+		// Handle Pos field specially - include for all operations since 0 is a valid position
+		// This matches the struct tag change where we removed omitempty from Pos
+		opMap["pos"] = float64(op.Pos)
+		if op.Str != "" {
+			opMap["str"] = op.Str
+		}
+		// Handle Len field specially - include for all operations since 0 is a valid length
+		// This matches the struct tag change where we removed omitempty from Len
+		opMap["len"] = float64(op.Len)
+		if op.Not {
+			opMap["not"] = op.Not
+		}
+		if op.Type != "" {
+			opMap["type"] = op.Type
+		}
+		if op.IgnoreCase {
+			opMap["ignore_case"] = op.IgnoreCase
+		}
+		if len(op.Apply) > 0 {
+			// Convert nested operations recursively
+			nestedOps := make([]interface{}, len(op.Apply))
+			for j, nestedOp := range op.Apply {
+				nestedOpMap := make(map[string]interface{})
+				nestedOpMap["op"] = nestedOp.Op
+				nestedOpMap["path"] = nestedOp.Path
+				if nestedOp.Value != nil {
+					nestedOpMap["value"] = nestedOp.Value
+				}
+				if nestedOp.From != "" {
+					nestedOpMap["from"] = nestedOp.From
+				}
+				nestedOpMap["inc"] = nestedOp.Inc
+				if nestedOp.Pos != 0 {
+					nestedOpMap["pos"] = float64(nestedOp.Pos)
+				}
+				if nestedOp.Str != "" {
+					nestedOpMap["str"] = nestedOp.Str
+				}
+				if nestedOp.Len != 0 {
+					nestedOpMap["len"] = float64(nestedOp.Len)
+				}
+				if nestedOp.Not {
+					nestedOpMap["not"] = nestedOp.Not
+				}
+				if nestedOp.Type != "" {
+					nestedOpMap["type"] = nestedOp.Type
+				}
+				if nestedOp.IgnoreCase {
+					nestedOpMap["ignore_case"] = nestedOp.IgnoreCase
+				}
+				nestedOps[j] = nestedOpMap
+			}
+			opMap["apply"] = nestedOps
+		}
+		if len(op.Props) > 0 {
+			opMap["props"] = op.Props
+		}
+		if op.DeleteNull {
+			opMap["deleteNull"] = op.DeleteNull
+		}
+		if op.OldValue != nil {
+			opMap["oldValue"] = op.OldValue
+		}
+		
+		operationMaps[i] = opMap
+	}
+	
+	// Use existing map-based decoder
+	return Decode(operationMaps, options)
 }
 
 // DecodeJSON converts JSON bytes to Op instances.

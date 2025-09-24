@@ -26,10 +26,10 @@ func TestFlipOp(t *testing.T) {
 			"val4": 0,
 		}
 		operations := []internal.Operation{
-			{"op": "flip", "path": "/val1"},
-			{"op": "flip", "path": "/val2"},
-			{"op": "flip", "path": "/val3"},
-			{"op": "flip", "path": "/val4"},
+			{Op: "flip", Path: "/val1"},
+			{Op: "flip", Path: "/val2"},
+			{Op: "flip", Path: "/val3"},
+			{Op: "flip", Path: "/val4"},
 		}
 		result := applyOperationsFlip(t, doc, operations)
 		expected := map[string]interface{}{
@@ -44,8 +44,8 @@ func TestFlipOp(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
 		t.Run("flips true to false", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "flip",
-				"path": "",
+				Op:   "flip",
+				Path: "",
 			}
 			result := applyOperationsFlip(t, true, []internal.Operation{operation})
 			assert.Equal(t, false, result)
@@ -53,8 +53,8 @@ func TestFlipOp(t *testing.T) {
 
 		t.Run("flips false to true", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "flip",
-				"path": "",
+				Op:   "flip",
+				Path: "",
 			}
 			result := applyOperationsFlip(t, false, []internal.Operation{operation})
 			assert.Equal(t, true, result)
@@ -62,8 +62,8 @@ func TestFlipOp(t *testing.T) {
 
 		t.Run("flips truthy number to false", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "flip",
-				"path": "",
+				Op:   "flip",
+				Path: "",
 			}
 			result := applyOperationsFlip(t, 123, []internal.Operation{operation})
 			assert.Equal(t, false, result)
@@ -71,8 +71,8 @@ func TestFlipOp(t *testing.T) {
 
 		t.Run("flips zero to true", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "flip",
-				"path": "",
+				Op:   "flip",
+				Path: "",
 			}
 			result := applyOperationsFlip(t, 0, []internal.Operation{operation})
 			assert.Equal(t, true, result)
@@ -82,8 +82,8 @@ func TestFlipOp(t *testing.T) {
 	t.Run("object", func(t *testing.T) {
 		t.Run("flips true to false", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "flip",
-				"path": "/foo",
+				Op:   "flip",
+				Path: "/foo",
 			}
 			result := applyOperationsFlip(t, map[string]interface{}{"foo": true}, []internal.Operation{operation})
 			expected := map[string]interface{}{"foo": false}
@@ -92,8 +92,8 @@ func TestFlipOp(t *testing.T) {
 
 		t.Run("flips false to true", func(t *testing.T) {
 			operation := internal.Operation{
-				"op":   "flip",
-				"path": "/foo",
+				Op:   "flip",
+				Path: "/foo",
 			}
 			result := applyOperationsFlip(t, map[string]interface{}{"foo": false}, []internal.Operation{operation})
 			expected := map[string]interface{}{"foo": true}
@@ -105,12 +105,12 @@ func TestFlipOp(t *testing.T) {
 		t.Run("flips true to false and back", func(t *testing.T) {
 			operations := []internal.Operation{
 				{
-					"op":   "flip",
-					"path": "/0",
+					Op:   "flip",
+					Path: "/0",
 				},
 				{
-					"op":   "flip",
-					"path": "/1",
+					Op:   "flip",
+					Path: "/1",
 				},
 			}
 			result := applyOperationsFlip(t, []interface{}{true, false}, operations)

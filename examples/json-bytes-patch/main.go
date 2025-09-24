@@ -7,7 +7,6 @@ import (
 	"log"
 
 	"github.com/kaptinlin/jsonpatch"
-	"github.com/kaptinlin/jsonpatch/internal"
 )
 
 func main() {
@@ -39,11 +38,11 @@ func demoBasicJSONBytesPatch() {
 	fmt.Printf("Before:\n%s\n", prettyJSON(jsonData))
 
 	// Define patch operations
-	patch := []internal.Operation{
-		{"op": "replace", "path": "/name", "value": "Robert Johnson"},
-		{"op": "add", "path": "/email", "value": "bob.johnson@company.com"},
-		{"op": "replace", "path": "/age", "value": 36},
-		{"op": "add", "path": "/department", "value": "Engineering"},
+	patch := []jsonpatch.Operation{
+		{Op: "replace", Path: "/name", Value: "Robert Johnson"},
+		{Op: "add", Path: "/email", Value: "bob.johnson@company.com"},
+		{Op: "replace", Path: "/age", Value: 36},
+		{Op: "add", Path: "/department", Value: "Engineering"},
 	}
 
 	// Apply patch - returns []byte
@@ -76,12 +75,12 @@ func demoComplexJSONBytesPatch() {
 	fmt.Printf("Before:\n%s\n", prettyJSON(jsonData))
 
 	// Complex nested operations
-	patch := []internal.Operation{
-		{"op": "replace", "path": "/user/name", "value": "Alice Johnson"},
-		{"op": "add", "path": "/user/profile/skills/-", "value": "Rust"},
-		{"op": "replace", "path": "/user/profile/bio", "value": "Senior Software Engineer"},
-		{"op": "add", "path": "/user/email", "value": "alice.johnson@tech.com"},
-		{"op": "replace", "path": "/settings/theme", "value": "light"},
+	patch := []jsonpatch.Operation{
+		{Op: "replace", Path: "/user/name", Value: "Alice Johnson"},
+		{Op: "add", Path: "/user/profile/skills/-", Value: "Rust"},
+		{Op: "replace", Path: "/user/profile/bio", Value: "Senior Software Engineer"},
+		{Op: "add", Path: "/user/email", Value: "alice.johnson@tech.com"},
+		{Op: "replace", Path: "/settings/theme", Value: "light"},
 	}
 
 	result, err := jsonpatch.ApplyPatch(jsonData, patch)
@@ -109,12 +108,12 @@ func demoJSONBytesArrayOperations() {
 	fmt.Printf("Before:\n%s\n", prettyJSON(jsonData))
 
 	// Array-focused operations
-	patch := []internal.Operation{
-		{"op": "add", "path": "/members/-", "value": map[string]string{"name": "Alice", "role": "DevOps"}},
-		{"op": "replace", "path": "/members/0/role", "value": "Tech Lead"},
-		{"op": "add", "path": "/technologies/-", "value": "Docker"},
-		{"op": "add", "path": "/technologies/0", "value": "Kubernetes"},
-		{"op": "remove", "path": "/members/2"},
+	patch := []jsonpatch.Operation{
+		{Op: "add", Path: "/members/-", Value: map[string]string{"name": "Alice", "role": "DevOps"}},
+		{Op: "replace", Path: "/members/0/role", Value: "Tech Lead"},
+		{Op: "add", Path: "/technologies/-", Value: "Docker"},
+		{Op: "add", Path: "/technologies/0", Value: "Kubernetes"},
+		{Op: "remove", Path: "/members/2"},
 	}
 
 	result, err := jsonpatch.ApplyPatch(jsonData, patch)

@@ -138,8 +138,8 @@ func (op *FlipOperation) toBool(value interface{}) bool {
 // ToJSON serializes the operation to JSON format.
 func (op *FlipOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
-		"op":   string(internal.OpFlipType),
-		"path": formatPath(op.Path()),
+		Op:   string(internal.OpFlipType),
+		Path: formatPath(op.Path()),
 	}, nil
 }
 

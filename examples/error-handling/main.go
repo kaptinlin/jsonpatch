@@ -30,25 +30,25 @@ func main() {
 	successPatch := []jsonpatch.Operation{
 		// Test current values
 		{
-			"op":    "test",
-			"path":  "/status",
-			"value": "active",
+			Op:    "test",
+			Path:  "/status",
+			Value: "active",
 		},
 		{
-			"op":    "test",
-			"path":  "/balance",
-			"value": 1000.0,
+			Op:    "test",
+			Path:  "/balance",
+			Value: 1000.0,
 		},
 		// Make changes
 		{
-			"op":    "replace",
-			"path":  "/balance",
-			"value": 800.0,
+			Op:    "replace",
+			Path:  "/balance",
+			Value: 800.0,
 		},
 		{
-			"op":   "inc",
-			"path": "/version",
-			"inc":  1,
+			Op:   "inc",
+			Path: "/version",
+			Inc:  1,
 		},
 	}
 
@@ -66,14 +66,14 @@ func main() {
 
 	failPatch := []jsonpatch.Operation{
 		{
-			"op":    "test",
-			"path":  "/balance",
-			"value": 2000.0, // Wrong value
+			Op:    "test",
+			Path:  "/balance",
+			Value: 2000.0, // Wrong value
 		},
 		{
-			"op":    "replace",
-			"path":  "/balance",
-			"value": 0.0,
+			Op:    "replace",
+			Path:  "/balance",
+			Value: 0.0,
 		},
 	}
 
@@ -87,9 +87,9 @@ func main() {
 
 	invalidPatch := []jsonpatch.Operation{
 		{
-			"op":    "replace",
-			"path":  "/nonexistent",
-			"value": "value",
+			Op:    "replace",
+			Path:  "/nonexistent",
+			Value: "value",
 		},
 	}
 

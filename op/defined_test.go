@@ -71,11 +71,11 @@ func TestOpDefined_InterfaceMethods(t *testing.T) {
 func TestOpDefined_ToJSON(t *testing.T) {
 	definedOp := NewDefined([]string{"test"})
 
-	json, err := definedOp.ToJSON()
+	operation, err := definedOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
 
-	assert.Equal(t, "defined", json["op"], "JSON should contain correct op type")
-	assert.Equal(t, "/test", json["path"], "JSON should contain correct formatted path")
+	assert.Equal(t, "defined", operation.Op, "Operation should contain correct op type")
+	assert.Equal(t, "/test", operation.Path, "Operation should contain correct formatted path")
 }
 
 func TestOpDefined_ToCompact(t *testing.T) {

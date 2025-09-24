@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/kaptinlin/jsonpointer"
+	"github.com/kaptinlin/jsonpatch/internal"
 )
 
 // Base validation errors - define clearly and concisely
@@ -70,427 +71,325 @@ func ValidateOperations(ops []Operation, allowMatchesOp bool) error {
 
 // ValidateOperation validates a single JSON Patch operation.
 func ValidateOperation(operation Operation, allowMatchesOp bool) error {
-	if operation == nil {
-		return ErrInvalidOperation
+	// Validate op field first
+	if operation.Op == "" {
+		return ErrMissingOp
 	}
-
-	opMap := operation
 
 	// Validate path field
-	path, pathExists := opMap["path"]
-	if !pathExists {
+	if operation.Path == "" {
 		return ErrMissingPath
 	}
-	pathStr, isString := path.(string)
-	if !isString {
-		return ErrInvalidPath
-	}
-	if err := validateJSONPointer(pathStr); err != nil {
+	if err := validateJSONPointer(operation.Path); err != nil {
 		return ErrInvalidJSONPointer
 	}
 
-	// Validate op field
-	op, opExists := opMap["op"]
-	if !opExists {
-		return ErrMissingOp
-	}
-	opStr, isString := op.(string)
-	if !isString {
-		return ErrInvalidOp
-	}
-
 	// Validate operation by type
-	switch opStr {
+	switch operation.Op {
 	case "add":
-		return validateOperationAdd(opMap)
+		return validateOperationAdd(operation)
 	case "remove":
-		return validateOperationRemove(opMap)
+		return validateOperationRemove(operation)
 	case "replace":
-		return validateOperationReplace(opMap)
+		return validateOperationReplace(operation)
 	case "copy":
-		return validateOperationCopy(opMap)
+		return validateOperationCopy(operation)
 	case "move":
-		return validateOperationMove(opMap)
+		return validateOperationMove(operation)
 	case "flip":
 		return nil
 	case "inc":
-		return validateOperationInc(opMap)
+		return validateOperationInc(operation)
 	case "str_ins":
-		return validateOperationStrIns(opMap)
+		return validateOperationStrIns(operation)
 	case "str_del":
-		return validateOperationStrDel(opMap)
+		return validateOperationStrDel(operation)
 	case "extend":
-		return validateOperationExtend(opMap)
+		return validateOperationExtend(operation)
 	case "merge":
-		return validateOperationMerge(opMap)
+		return validateOperationMerge(operation)
 	case "split":
-		return validateOperationSplit(opMap)
+		return validateOperationSplit(operation)
 	default:
-		return validatePredicateOperation(opMap, opStr, allowMatchesOp)
+		return validatePredicateOperation(operation, operation.Op, allowMatchesOp)
 	}
 }
 
 // validatePredicateOperation validates predicate operations
-func validatePredicateOperation(opMap map[string]interface{}, opStr string, allowMatchesOp bool) error {
+func validatePredicateOperation(operation Operation, opStr string, allowMatchesOp bool) error {
 	switch opStr {
 	case "test":
-		return validateOperationTest(opMap)
+		return validateOperationTest(operation)
 	case "test_type":
-		return validateOperationTestType(opMap)
+		return validateOperationTestType(operation)
 	case "test_string":
-		return validateOperationTestString(opMap)
+		return validateOperationTestString(operation)
 	case "test_string_len":
-		return validateOperationTestStringLen(opMap)
+		return validateOperationTestStringLen(operation)
 	case "matches":
 		if !allowMatchesOp {
 			return ErrMatchesNotAllowed
 		}
-		return validateOperationMatches(opMap)
+		return validateOperationMatches(operation)
 	case "contains":
-		return validateOperationContains(opMap)
+		return validateOperationContains(operation)
 	case "ends":
-		return validateOperationEnds(opMap)
+		return validateOperationEnds(operation)
 	case "starts":
-		return validateOperationStarts(opMap)
+		return validateOperationStarts(operation)
 	case "in":
-		return validateOperationIn(opMap)
+		return validateOperationIn(operation)
 	case "more":
-		return validateOperationMore(opMap)
+		return validateOperationMore(operation)
 	case "less":
-		return validateOperationLess(opMap)
+		return validateOperationLess(operation)
 	case "type":
-		return validateOperationType(opMap)
+		return validateOperationType(operation)
 	case "defined":
 		return nil
 	case "undefined":
 		return nil
 	case "and", "or", "not":
-		return validateCompositeOperation(opMap, opStr, allowMatchesOp)
+		return validateCompositeOperation(operation, opStr, allowMatchesOp)
 	default:
 		return fmt.Errorf("%w: unknown operation '%s'", ErrInvalidOperation, opStr)
 	}
 }
 
 // Core operation validators
-func validateOperationAdd(opMap map[string]interface{}) error {
-	if _, exists := opMap["value"]; !exists {
+func validateOperationAdd(operation Operation) error {
+	if operation.Value == nil {
 		return ErrMissingValue
 	}
 	return nil
 }
 
-func validateOperationRemove(opMap map[string]interface{}) error {
-	if oldValue, exists := opMap["oldValue"]; exists && oldValue == nil {
-		return ErrInvalidOldValue
-	}
+func validateOperationRemove(_ Operation) error {
+	// OldValue is optional, no validation needed for struct-based approach
 	return nil
 }
 
-func validateOperationReplace(opMap map[string]interface{}) error {
-	if _, exists := opMap["value"]; !exists {
+func validateOperationReplace(operation Operation) error {
+	if operation.Value == nil {
 		return ErrMissingValue
 	}
-	if oldValue, exists := opMap["oldValue"]; exists && oldValue == nil {
-		return ErrInvalidOldValue
-	}
+	// OldValue is optional, no validation needed for struct-based approach
 	return nil
 }
 
-func validateOperationCopy(opMap map[string]interface{}) error {
-	from, exists := opMap["from"]
-	if !exists {
+func validateOperationCopy(operation Operation) error {
+	if operation.From == "" {
 		return ErrMissingFrom
 	}
-	fromStr, isString := from.(string)
-	if !isString {
-		return ErrInvalidFrom
-	}
-	return validateJSONPointer(fromStr)
+	return validateJSONPointer(operation.From)
 }
 
-func validateOperationMove(opMap map[string]interface{}) error {
-	from, exists := opMap["from"]
-	if !exists {
+func validateOperationMove(operation Operation) error {
+	if operation.From == "" {
 		return ErrMissingFrom
 	}
-	fromStr, isString := from.(string)
-	if !isString {
-		return ErrInvalidFrom
-	}
-	if err := validateJSONPointer(fromStr); err != nil {
+	if err := validateJSONPointer(operation.From); err != nil {
 		return err
 	}
 
-	pathStr, _ := opMap["path"].(string)
-	if strings.HasPrefix(pathStr, fromStr+"/") {
+	if strings.HasPrefix(operation.Path, operation.From+"/") {
 		return ErrCannotMoveToChildren
 	}
 	return nil
 }
 
-func validateOperationTest(opMap map[string]interface{}) error {
-	if _, exists := opMap["value"]; !exists {
+func validateOperationTest(operation Operation) error {
+	if operation.Value == nil {
 		return ErrMissingValue
 	}
-	return validateNot(opMap)
+	return nil
 }
 
 // Extended operation validators
-func validateOperationInc(opMap map[string]interface{}) error {
-	inc, exists := opMap["inc"]
-	if !exists {
-		return ErrInvalidIncValue
-	}
-	if !isNumber(inc) {
-		return ErrInvalidIncValue
-	}
+func validateOperationInc(_ Operation) error {
+	// Inc field can be any number, including 0
+	// The field is already defined, no validation needed
 	return nil
 }
 
-func validateOperationStrIns(opMap map[string]interface{}) error {
-	if err := validateNonNegativeInteger(opMap, "pos"); err != nil {
-		return err
+func validateOperationStrIns(operation Operation) error {
+	if operation.Pos < 0 {
+		return ErrNegativeNumber
 	}
-	str, exists := opMap["str"]
-	if !exists {
-		return ErrExpectedStringField
-	}
-	if _, isString := str.(string); !isString {
-		return ErrExpectedStringField
-	}
+	// Str field can be empty (for inserting empty string)
 	return nil
 }
 
-func validateOperationStrDel(opMap map[string]interface{}) error {
-	if err := validateNonNegativeInteger(opMap, "pos"); err != nil {
-		return err
+func validateOperationStrDel(operation Operation) error {
+	if operation.Pos < 0 {
+		return ErrNegativeNumber
 	}
 
-	_, hasStr := opMap["str"]
-	_, hasLen := opMap["len"]
-
-	if !hasStr && !hasLen {
-		return ErrEitherStrOrLen
-	}
-
-	if hasStr {
-		str := opMap["str"]
-		if _, isString := str.(string); !isString {
-			return ErrExpectedStringField
-		}
-	}
-
-	if hasLen {
-		return validateNonNegativeInteger(opMap, "len")
+	// Either Str or Len should be provided (but not required to error if both missing, as len=0 is valid)
+	if operation.Len < 0 {
+		return ErrNegativeNumber
 	}
 
 	return nil
 }
 
-func validateOperationExtend(opMap map[string]interface{}) error {
-	props, exists := opMap["props"]
-	if !exists || props == nil {
-		return ErrInvalidProps
-	}
-	if _, isMap := props.(map[string]interface{}); !isMap {
-		return ErrInvalidProps
-	}
-
-	if deleteNull, exists := opMap["deleteNull"]; exists {
-		if _, isBool := deleteNull.(bool); !isBool {
-			return ErrExpectedBooleanField
-		}
-	}
-
+func validateOperationExtend(_ Operation) error {
+	// Props can be nil (treated as empty object)
 	return nil
 }
 
-func validateOperationMerge(opMap map[string]interface{}) error {
-	pos, exists := opMap["pos"]
-	if !exists {
+func validateOperationMerge(operation Operation) error {
+	if operation.Pos < 1 {
 		return ErrPosGreaterThanZero
 	}
-	if !isInteger(pos) {
-		return ErrExpectedIntegerField
-	}
-	posInt := getIntValue(pos)
-	if posInt < 1 {
-		return ErrPosGreaterThanZero
-	}
-
-	if props, exists := opMap["props"]; exists {
-		if _, isMap := props.(map[string]interface{}); !isMap {
-			return ErrInvalidProps
-		}
-	}
-
 	return nil
 }
 
-func validateOperationSplit(opMap map[string]interface{}) error {
-	pos, exists := opMap["pos"]
-	if !exists {
-		return ErrExpectedIntegerField
-	}
-	if !isInteger(pos) {
-		return ErrExpectedIntegerField
-	}
-
-	if props, exists := opMap["props"]; exists {
-		if _, isMap := props.(map[string]interface{}); !isMap {
-			return ErrInvalidProps
-		}
-	}
-
+func validateOperationSplit(_ Operation) error {
+	// Pos can be any integer for split operation
 	return nil
 }
 
 // Predicate operation validators
-func validateOperationTestType(opMap map[string]interface{}) error {
-	typeField, exists := opMap["type"]
-	if !exists {
-		return ErrInvalidTypeField
+func validateOperationTestType(operation Operation) error {
+	if operation.Type == nil {
+		return fmt.Errorf("%w: missing required field 'type'", ErrInvalidTypeField)
 	}
-
-	typeSlice, isSlice := typeField.([]interface{})
-	if !isSlice {
-		return ErrInvalidTypeField
-	}
-
-	if len(typeSlice) < 1 {
-		return ErrEmptyTypeList
-	}
-
-	for _, t := range typeSlice {
-		typeStr, isString := t.(string)
-		if !isString {
-			return ErrInvalidType
+	
+	// Handle single type string
+	if typeStr, ok := operation.Type.(string); ok {
+		if typeStr == "" {
+			return fmt.Errorf("%w: missing required field 'type'", ErrInvalidTypeField)
 		}
-		if err := validateTestType(typeStr); err != nil {
-			return err
+		if !validTypesMap[typeStr] {
+			return fmt.Errorf("%w: invalid type '%s'", ErrInvalidType, typeStr)
 		}
+		return nil
+	}
+	
+	// Handle array of types
+	if typeSlice, ok := operation.Type.([]interface{}); ok {
+		if len(typeSlice) == 0 {
+			return fmt.Errorf("%w: type array cannot be empty", ErrInvalidTypeField)
+		}
+		for _, t := range typeSlice {
+			typeStr, isString := t.(string)
+			if !isString {
+				return fmt.Errorf("%w: all types must be strings", ErrInvalidType)
+			}
+			if !validTypesMap[typeStr] {
+				return fmt.Errorf("%w: invalid type '%s'", ErrInvalidType, typeStr)
+			}
+		}
+		return nil
+	}
+	
+	return fmt.Errorf("%w: type field must be string or array of strings", ErrInvalidType)
+}
+
+func validateOperationTestString(operation Operation) error {
+	if operation.Pos < 0 {
+		return ErrNegativeNumber
+	}
+	// Str can be empty (to test for empty string at position)
+	return nil
+}
+
+func validateOperationTestStringLen(operation Operation) error {
+	if operation.Len < 0 {
+		return ErrNegativeNumber
 	}
 	return nil
 }
 
-func validateOperationTestString(opMap map[string]interface{}) error {
-	if err := validateNot(opMap); err != nil {
-		return err
-	}
-	if err := validateNonNegativeInteger(opMap, "pos"); err != nil {
-		return err
-	}
-	str, exists := opMap["str"]
-	if !exists {
-		return ErrValueMustBeString
-	}
-	if _, isString := str.(string); !isString {
-		return ErrValueMustBeString
-	}
-	return nil
-}
-
-func validateOperationTestStringLen(opMap map[string]interface{}) error {
-	if err := validateNot(opMap); err != nil {
-		return err
-	}
-	return validateNonNegativeInteger(opMap, "len")
-}
-
-func validateOperationMatches(opMap map[string]interface{}) error {
-	if err := validateValueString(opMap, "value"); err != nil {
-		return err
-	}
-	return validateIgnoreCase(opMap)
-}
-
-func validateOperationContains(opMap map[string]interface{}) error {
-	if err := validateValueString(opMap, "value"); err != nil {
-		return err
-	}
-	return validateIgnoreCase(opMap)
-}
-
-func validateOperationEnds(opMap map[string]interface{}) error {
-	if err := validateValueString(opMap, "value"); err != nil {
-		return err
-	}
-	return validateIgnoreCase(opMap)
-}
-
-func validateOperationStarts(opMap map[string]interface{}) error {
-	if err := validateValueString(opMap, "value"); err != nil {
-		return err
-	}
-	return validateIgnoreCase(opMap)
-}
-
-func validateOperationIn(opMap map[string]interface{}) error {
-	value, exists := opMap["value"]
-	if !exists {
-		return ErrInOperationValueMustBeArray
-	}
-	if !isArray(value) {
-		return ErrInOperationValueMustBeArray
-	}
-	return nil
-}
-
-func validateOperationMore(opMap map[string]interface{}) error {
-	value, exists := opMap["value"]
-	if !exists {
-		return ErrValueMustBeNumber
-	}
-	if !isNumber(value) {
-		return ErrValueMustBeNumber
-	}
-	return nil
-}
-
-func validateOperationLess(opMap map[string]interface{}) error {
-	value, exists := opMap["value"]
-	if !exists {
-		return ErrValueMustBeNumber
-	}
-	if !isNumber(value) {
-		return ErrValueMustBeNumber
-	}
-	return nil
-}
-
-func validateOperationType(opMap map[string]interface{}) error {
-	value, exists := opMap["value"]
-	if !exists {
+func validateOperationMatches(operation Operation) error {
+	if operation.Value == nil {
 		return ErrExpectedValueToBeString
 	}
-	valueStr, isString := value.(string)
+	if _, isString := operation.Value.(string); !isString {
+		return ErrExpectedValueToBeString
+	}
+	return nil
+}
+
+func validateOperationContains(operation Operation) error {
+	if operation.Value == nil {
+		return ErrExpectedValueToBeString
+	}
+	if _, isString := operation.Value.(string); !isString {
+		return ErrExpectedValueToBeString
+	}
+	return nil
+}
+
+func validateOperationEnds(operation Operation) error {
+	if operation.Value == nil {
+		return ErrExpectedValueToBeString
+	}
+	if _, isString := operation.Value.(string); !isString {
+		return ErrExpectedValueToBeString
+	}
+	return nil
+}
+
+func validateOperationStarts(operation Operation) error {
+	if operation.Value == nil {
+		return ErrExpectedValueToBeString
+	}
+	if _, isString := operation.Value.(string); !isString {
+		return ErrExpectedValueToBeString
+	}
+	return nil
+}
+
+func validateOperationIn(operation Operation) error {
+	if operation.Value == nil {
+		return ErrInOperationValueMustBeArray
+	}
+	if !isArray(operation.Value) {
+		return ErrInOperationValueMustBeArray
+	}
+	return nil
+}
+
+func validateOperationMore(operation Operation) error {
+	if operation.Value == nil {
+		return ErrValueMustBeNumber
+	}
+	if !isNumber(operation.Value) {
+		return ErrValueMustBeNumber
+	}
+	return nil
+}
+
+func validateOperationLess(operation Operation) error {
+	if operation.Value == nil {
+		return ErrValueMustBeNumber
+	}
+	if !isNumber(operation.Value) {
+		return ErrValueMustBeNumber
+	}
+	return nil
+}
+
+func validateOperationType(operation Operation) error {
+	if operation.Value == nil {
+		return ErrExpectedValueToBeString
+	}
+	valueStr, isString := operation.Value.(string)
 	if !isString {
 		return ErrExpectedValueToBeString
 	}
 	return validateTestType(valueStr)
 }
 
-func validateCompositeOperation(opMap map[string]interface{}, opStr string, allowMatchesOp bool) error {
-	apply, exists := opMap["apply"]
-	if !exists {
-		return fmt.Errorf("%w: %s predicate operators must be an array", ErrMustBeArray, opStr)
-	}
-
-	applySlice, isSlice := apply.([]interface{})
-	if !isSlice {
-		return fmt.Errorf("%w: %s predicate operators must be an array", ErrMustBeArray, opStr)
-	}
-
-	if len(applySlice) == 0 {
+func validateCompositeOperation(operation internal.Operation, _ string, allowMatchesOp bool) error {
+	if len(operation.Apply) == 0 {
 		return ErrEmptyPredicateList
 	}
 
-	for _, predicate := range applySlice {
-		predicateMap, isMap := predicate.(map[string]interface{})
-		if !isMap {
-			return ErrInvalidOperation
-		}
-		if err := ValidateOperation(predicateMap, allowMatchesOp); err != nil {
+	for _, predicate := range operation.Apply {
+		if err := ValidateOperation(predicate, allowMatchesOp); err != nil {
 			return err
 		}
 	}
@@ -498,55 +397,6 @@ func validateCompositeOperation(opMap map[string]interface{}, opStr string, allo
 }
 
 // Helper validation functions
-func validateValueString(opMap map[string]interface{}, fieldName string) error {
-	value, exists := opMap[fieldName]
-	if !exists {
-		//nolint:err113 // Dynamic error message needed for field name specificity
-		return fmt.Errorf("expected %s to be string", fieldName)
-	}
-	valueStr, isString := value.(string)
-	if !isString {
-		//nolint:err113 // Dynamic error message needed for field name specificity
-		return fmt.Errorf("expected %s to be string", fieldName)
-	}
-	if len(valueStr) > 20000 {
-		return ErrValueTooLong
-	}
-	return nil
-}
-
-func validateIgnoreCase(opMap map[string]interface{}) error {
-	if ignoreCase, exists := opMap["ignore_case"]; exists {
-		if _, isBool := ignoreCase.(bool); !isBool {
-			return ErrExpectedIgnoreCaseBoolean
-		}
-	}
-	return nil
-}
-
-func validateNot(opMap map[string]interface{}) error {
-	if not, exists := opMap["not"]; exists {
-		if _, isBool := not.(bool); !isBool {
-			return ErrInvalidNotModifier
-		}
-	}
-	return nil
-}
-
-func validateNonNegativeInteger(opMap map[string]interface{}, fieldName string) error {
-	value, exists := opMap[fieldName]
-	if !exists {
-		return ErrExpectedIntegerField
-	}
-	if !isInteger(value) {
-		return ErrExpectedIntegerField
-	}
-	intValue := getIntValue(value)
-	if intValue < 0 {
-		return ErrNegativeNumber
-	}
-	return nil
-}
 
 func validateJSONPointer(path string) error {
 	return jsonpointer.Validate(path)
@@ -579,55 +429,7 @@ func isNumber(value interface{}) bool {
 	}
 }
 
-func isInteger(value interface{}) bool {
-	switch v := value.(type) {
-	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-		return true
-	case float64:
-		return v == float64(int64(v))
-	case float32:
-		return v == float32(int32(v))
-	default:
-		return false
-	}
-}
 
-func getIntValue(value interface{}) int64 {
-	switch v := value.(type) {
-	case int:
-		return int64(v)
-	case int8:
-		return int64(v)
-	case int16:
-		return int64(v)
-	case int32:
-		return int64(v)
-	case int64:
-		return v
-	case uint:
-		if v > uint(^uint64(0)>>1) {
-			return 0 // Return 0 for overflow cases
-		}
-		return int64(v)
-	case uint8:
-		return int64(v)
-	case uint16:
-		return int64(v)
-	case uint32:
-		return int64(v)
-	case uint64:
-		if v > (^uint64(0) >> 1) {
-			return 0 // Return 0 for overflow cases
-		}
-		return int64(v)
-	case float64:
-		return int64(v)
-	case float32:
-		return int64(v)
-	default:
-		return 0
-	}
-}
 
 func isArray(value interface{}) bool {
 	if value == nil {

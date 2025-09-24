@@ -103,9 +103,9 @@ func TestOpNot_ToJSON(t *testing.T) {
 	json, err := notOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
 
-	assert.Equal(t, "not", json["op"], "JSON should contain correct op type")
-	assert.Equal(t, "/foo", json["path"], "JSON should contain correct formatted path")
-	assert.NotNil(t, json["apply"], "JSON should contain apply field")
+	assert.Equal(t, "not", json.Op, "JSON should contain correct op type")
+	assert.Equal(t, "/foo", json.Path, "JSON should contain correct formatted path")
+	assert.NotNil(t, json.Apply, "JSON should contain apply field")
 }
 
 func TestOpNot_ToCompact(t *testing.T) {

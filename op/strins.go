@@ -124,10 +124,10 @@ func (op *StrInsOperation) applyStrIns(str string) string {
 // ToJSON serializes the operation to JSON format.
 func (op *StrInsOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
-		"op":   string(internal.OpStrInsType),
-		"path": formatPath(op.Path()),
-		"pos":  op.Pos,
-		"str":  op.Str,
+		Op:   string(internal.OpStrInsType),
+		Path: formatPath(op.Path()),
+		Pos:  int(op.Pos),
+		Str:  op.Str,
 	}, nil
 }
 

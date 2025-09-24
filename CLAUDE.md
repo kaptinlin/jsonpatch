@@ -6,6 +6,22 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 This is a comprehensive Go implementation of JSON Patch (RFC 6902), JSON Predicate, and extended operations for JSON document manipulation with full type safety and generic support. It's a Go port of json-joy/json-patch.
 
+## API Usage
+
+The library provides a clean struct-based API for JSON Patch operations:
+
+```go
+// Create operations using struct literals
+patch := []jsonpatch.Operation{
+    {Op: "add", Path: "/name", Value: "John"},
+    {Op: "inc", Path: "/age", Inc: 1},
+    {Op: "str_ins", Path: "/bio", Pos: 0, Str: "Hello "},
+}
+
+// Apply with type-safe generic API
+result, err := jsonpatch.ApplyPatch(doc, patch)
+```
+
 ## Development Commands
 
 ### Essential Commands

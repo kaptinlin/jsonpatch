@@ -36,17 +36,17 @@ func main() {
         "age":  30,
     }
 
-    // Create patch operations
+    // Create patch operations using struct syntax
     patch := []jsonpatch.Operation{
         {
-            "op":    "replace",
-            "path":  "/name",
-            "value": "Jane",
+            Op:    "replace",
+            Path:  "/name",
+            Value: "Jane",
         },
         {
-            "op":    "add",
-            "path":  "/email",
-            "value": "jane@example.com",
+            Op:    "add",
+            Path:  "/email",
+            Value: "jane@example.com",
         },
     }
 
@@ -87,8 +87,8 @@ func main() {
     user := User{Name: "John", Age: 30}
     
     patch := []jsonpatch.Operation{
-        {"op": "replace", "path": "/name", "value": "Jane"},
-        {"op": "add", "path": "/email", "value": "jane@example.com"},
+        {Op: "replace", Path: "/name", Value: "Jane"},
+        {Op: "add", Path: "/email", Value: "jane@example.com"},
     }
 
     // Type-safe: result.Doc is automatically typed as User
@@ -111,9 +111,9 @@ import "github.com/kaptinlin/jsonpatch/codec/compact"
 func main() {
     // Standard JSON Patch operations
     standardOps := []jsonpatch.Operation{
-        {"op": "add", "path": "/name", "value": "John"},
-        {"op": "replace", "path": "/age", "value": 30},
-        {"op": "remove", "path": "/temp"},
+        {Op: "add", Path: "/name", Value: "John"},
+        {Op: "replace", Path: "/age", Value: 30},
+        {Op: "remove", Path: "/temp"},
     }
 
     // Encode to compact format with numeric opcodes (35.9% space savings)
@@ -299,9 +299,9 @@ type Config struct {
 config := Config{Version: 1, Status: "active", Enabled: true}
 
 patch := []jsonpatch.Operation{
-    {"op": "inc", "path": "/version", "inc": 1},
-    {"op": "replace", "path": "/status", "value": "updated"},
-    {"op": "flip", "path": "/enabled"},
+    {Op: "inc", Path: "/version", Inc: 1},
+    {Op: "replace", Path: "/status", Value: "updated"},
+    {Op: "flip", Path: "/enabled"},
 }
 
 // result.Doc is automatically typed as Config
@@ -323,19 +323,19 @@ patch := []jsonpatch.Operation{
     {
         "op":    "test",
         "path":  "/version",
-        "value": 1,
+        Value: 1,
     },
     // Make the change
     {
         "op":    "replace",
         "path":  "/status",
-        "value": "updated",
+        Value: "updated",
     },
     // Increment version
     {
         "op":   "inc",
-        "path": "/version",
-        "inc":  1,
+        Path: "/version",
+        Inc:  1,
     },
 }
 
@@ -362,7 +362,7 @@ for i := 0; i < itemCount; i++ {
     patch = append(patch, jsonpatch.Operation{
         "op":    "replace",
         "path":  fmt.Sprintf("/items/%d/status", i),
-        "value": "processed",
+        Value: "processed",
     })
 }
 
@@ -376,19 +376,19 @@ patch := []jsonpatch.Operation{
     // Add to end of array
     {
         "op":   "add",
-        "path": "/users/-",
-        "value": map[string]interface{}{"name": "New User"},
+        Path: "/users/-",
+        Value: map[string]interface{}{"name": "New User"},
     },
     // Insert at specific position
     {
         "op":   "add",
-        "path": "/tags/0",
-        "value": "important",
+        Path: "/tags/0",
+        Value: "important",
     },
     // Remove array element
     {
         "op":   "remove",
-        "path": "/items/2",
+        Path: "/items/2",
     },
 }
 
@@ -402,15 +402,15 @@ patch := []jsonpatch.Operation{
     // Insert text at position
     {
         "op":   "str_ins",
-        "path": "/content",
-        "pos":  0,
+        Path: "/content",
+        Pos:  0,
         "str":  "Prefix: ",
     },
     // Insert at end
     {
         "op":   "str_ins",
-        "path": "/content",
-        "pos":  20,
+        Path: "/content",
+        Pos:  20,
         "str":  " (Updated)",
     },
 }
@@ -445,9 +445,9 @@ import "github.com/kaptinlin/jsonpatch/codec/compact"
 
 // Standard operations
 ops := []jsonpatch.Operation{
-    {"op": "add", "path": "/users/-", "value": map[string]string{"name": "Alice"}},
-    {"op": "inc", "path": "/counter", "inc": 1},
-    {"op": "flip", "path": "/enabled"},
+    {Op: "add", Path: "/users/-", Value: map[string]string{"name": "Alice"}},
+    {Op: "inc", Path: "/counter", Inc: 1},
+    {Op: "flip", Path: "/enabled"},
 }
 
 // Choose encoding format
@@ -509,8 +509,8 @@ result, err := jsonpatch.ApplyPatch(doc, patch,
 ```go
 // Good: Test before critical changes
 patch := []jsonpatch.Operation{
-    {"op": "test", "path": "/balance", "value": 1000.0},
-    {"op": "replace", "path": "/balance", "value": 500.0},
+    {Op: "test", Path: "/balance", Value: 1000.0},
+    {Op: "replace", Path: "/balance", Value: 500.0},
 }
 ```
 
@@ -553,9 +553,9 @@ if err == nil {
 ```go
 // Efficient: Single patch with multiple operations
 patch := []jsonpatch.Operation{
-    {"op": "replace", "path": "/status", "value": "active"},
-    {"op": "inc", "path": "/version", "inc": 1},
-    {"op": "add", "path": "/lastModified", "value": time.Now()},
+    {Op: "replace", Path: "/status", Value: "active"},
+    {Op: "inc", Path: "/version", Inc: 1},
+    {Op: "add", Path: "/lastModified", Value: time.Now()},
 }
 ```
 

@@ -108,13 +108,13 @@ func (o *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 // ToJSON serializes the operation to JSON format.
 func (o *ReplaceOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
-		"op":    string(internal.OpReplaceType),
-		"path":  formatPath(o.path),
-		"value": o.Value,
+		Op:    string(internal.OpReplaceType),
+		Path:  formatPath(o.path),
+		Value: o.Value,
 	}
 
 	if o.OldValue != nil {
-		result["oldValue"] = o.OldValue
+		result.OldValue = o.OldValue
 	}
 
 	return result, nil

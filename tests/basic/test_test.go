@@ -33,9 +33,9 @@ func TestTestOp(t *testing.T) {
 				"hello": "world",
 			}
 			op := internal.Operation{
-				"op":    "test",
-				"path":  "",
-				"value": map[string]interface{}{"hello": "world"},
+				Op:    "test",
+				Path:  "",
+				Value: map[string]interface{}{"hello": "world"},
 			}
 			result := applyOperation(t, obj, op)
 			assert.Equal(t, obj, result)
@@ -46,9 +46,9 @@ func TestTestOp(t *testing.T) {
 				"hello": "world",
 			}
 			op := internal.Operation{
-				"op":    "test",
-				"path":  "",
-				"value": 1,
+				Op:    "test",
+				Path:  "",
+				Value: 1,
 			}
 			applyOperationWithError(t, obj, op)
 		})
@@ -60,19 +60,19 @@ func TestTestOp(t *testing.T) {
 				},
 			}
 			op := internal.Operation{
-				"op":    "test",
-				"path":  "",
-				"value": 1,
+				Op:    "test",
+				Path:  "",
+				Value: 1,
 			}
 			applyOperationWithError(t, obj, op)
 		})
 
 		t.Run("should throw against root", func(t *testing.T) {
 			op := internal.Operation{
-				"op":    "test",
-				"path":  "",
-				"value": 2,
-				"not":   false,
+				Op:    "test",
+				Path:  "",
+				Value: 2,
+				Not:   false,
 			}
 			applyOperationWithError(t, 1, op)
 		})
@@ -80,10 +80,10 @@ func TestTestOp(t *testing.T) {
 		t.Run("should throw when object key is different", func(t *testing.T) {
 			obj := map[string]interface{}{"foo": 1}
 			op := internal.Operation{
-				"op":    "test",
-				"path":  "/foo",
-				"value": 2,
-				"not":   false,
+				Op:    "test",
+				Path:  "/foo",
+				Value: 2,
+				Not:   false,
 			}
 			applyOperationWithError(t, obj, op)
 		})
@@ -91,10 +91,10 @@ func TestTestOp(t *testing.T) {
 		t.Run("should not throw when object key is the same", func(t *testing.T) {
 			obj := map[string]interface{}{"foo": 1}
 			op := internal.Operation{
-				"op":    "test",
-				"path":  "/foo",
-				"value": 1,
-				"not":   false,
+				Op:    "test",
+				Path:  "/foo",
+				Value: 1,
+				Not:   false,
 			}
 			applyOperation(t, obj, op)
 		})
@@ -103,10 +103,10 @@ func TestTestOp(t *testing.T) {
 	t.Run("negative", func(t *testing.T) {
 		t.Run("should test against root", func(t *testing.T) {
 			op := internal.Operation{
-				"op":    "test",
-				"path":  "",
-				"value": 2,
-				"not":   true,
+				Op:    "test",
+				Path:  "",
+				Value: 2,
+				Not:   true,
 			}
 			applyOperation(t, 1, op)
 		})
@@ -114,10 +114,10 @@ func TestTestOp(t *testing.T) {
 		t.Run("should not throw when object key is different", func(t *testing.T) {
 			obj := map[string]interface{}{"foo": 1}
 			op := internal.Operation{
-				"op":    "test",
-				"path":  "/foo",
-				"value": 2,
-				"not":   true,
+				Op:    "test",
+				Path:  "/foo",
+				Value: 2,
+				Not:   true,
 			}
 			applyOperation(t, obj, op)
 		})
@@ -125,10 +125,10 @@ func TestTestOp(t *testing.T) {
 		t.Run("should throw when object key is the same", func(t *testing.T) {
 			obj := map[string]interface{}{"foo": 1}
 			op := internal.Operation{
-				"op":    "test",
-				"path":  "/foo",
-				"value": 1,
-				"not":   true,
+				Op:    "test",
+				Path:  "/foo",
+				Value: 1,
+				Not:   true,
 			}
 			applyOperationWithError(t, obj, op)
 		})

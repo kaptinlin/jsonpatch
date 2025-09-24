@@ -77,7 +77,7 @@ var (
 		},
 		{
 			name:  "MatchesOperation",
-			patch: []internal.Op{mustNewOpMatchesOperation(op.NewOpMatchesOperation([]string{"a", "str"}, "^hello.*d$", true))},
+			patch: []internal.Op{mustNewMatchesOperation([]string{"a", "str"}, "^hello.*d$", true)},
 		},
 		{
 			name:  "TestStringOperationWithPos",
@@ -122,7 +122,8 @@ var (
 	}
 )
 
-func mustNewOpMatchesOperation(op *op.MatchesOperation, err error) *op.MatchesOperation {
+func mustNewMatchesOperation(path []string, pattern string, ignoreCase bool) *op.MatchesOperation {
+	op, err := op.NewOpMatchesOperation(path, pattern, ignoreCase)
 	if err != nil {
 		panic(err)
 	}
@@ -186,7 +187,71 @@ func isOpEqual(a, b internal.Op) bool {
 		return false
 	}
 
-	return areMapsEqual(jsonA, jsonB)
+	return areOperationsEqual(jsonA, jsonB)
+}
+
+func areOperationsEqual(a, b internal.Operation) bool {
+	// Compare basic fields
+	if a.Op != b.Op || a.Path != b.Path {
+		return false
+	}
+	
+	// Compare values with special handling for numbers
+	if !areValuesEqual(a.Value, b.Value) {
+		return false
+	}
+	
+	// Compare other fields
+	if a.From != b.From || a.Str != b.Str || a.Type != b.Type {
+		return false
+	}
+	
+	// Compare numeric fields with tolerance
+	if !areNumericEqual(a.Inc, b.Inc) {
+		return false
+	}
+	
+	// Compare integer fields
+	if a.Pos != b.Pos || a.Len != b.Len {
+		return false
+	}
+	
+	// Compare boolean fields
+	if a.Not != b.Not || a.IgnoreCase != b.IgnoreCase || a.DeleteNull != b.DeleteNull {
+		return false
+	}
+	
+	// Compare map fields
+	if !areMapsEqual(a.Props, b.Props) {
+		return false
+	}
+	
+	// Compare OldValue
+	if !areValuesEqual(a.OldValue, b.OldValue) {
+		return false
+	}
+	
+	// Compare Apply operations
+	if len(a.Apply) != len(b.Apply) {
+		return false
+	}
+	for i := range a.Apply {
+		if !areOperationsEqual(a.Apply[i], b.Apply[i]) {
+			return false
+		}
+	}
+	
+	return true
+}
+
+func areNumericEqual(a, b float64) bool {
+	// Handle zero values
+	if a == 0 && b == 0 {
+		return true
+	}
+	
+	// Simple equality check for non-zero values
+	return a == b
 }
 
 func areMapsEqual(a, b map[string]interface{}) bool {
@@ -258,3 +323,4 @@ func convertMapToS(m map[interface{}]interface{}) map[string]interface{} {
 	}
 	return res
 }
+

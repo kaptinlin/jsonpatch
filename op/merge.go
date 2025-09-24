@@ -161,12 +161,12 @@ func (op *MergeOperation) mergeElements(one, two interface{}) interface{} {
 // ToJSON serializes the operation to JSON format.
 func (op *MergeOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
-		"op":   string(internal.OpMergeType),
-		"path": formatPath(op.Path()),
-		"pos":  op.Pos,
+		Op:   string(internal.OpMergeType),
+		Path: formatPath(op.Path()),
+		Pos:  int(op.Pos),
 	}
 	if len(op.Props) > 0 {
-		result["props"] = op.Props
+		result.Props = op.Props
 	}
 	return result, nil
 }

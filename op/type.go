@@ -86,9 +86,9 @@ func (op *TypeOperation) Apply(doc any) (internal.OpResult[any], error) {
 // ToJSON serializes the operation to JSON format.
 func (op *TypeOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
-		"op":    string(internal.OpTypeType),
-		"path":  formatPath(op.Path()),
-		"value": op.TypeValue,
+		Op:    string(internal.OpTypeType),
+		Path:  formatPath(op.Path()),
+		Value: op.TypeValue,
 	}, nil
 }
 
