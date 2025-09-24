@@ -321,19 +321,19 @@ fmt.Printf("Version: %d, Status: %s, Enabled: %t\n",
 patch := []jsonpatch.Operation{
     // Test current value before modifying
     {
-        "op":    "test",
-        "path":  "/version",
+        Op:    "test",
+        Path:  "/version",
         Value: 1,
     },
     // Make the change
     {
-        "op":    "replace",
-        "path":  "/status",
+        Op:    "replace",
+        Path:  "/status",
         Value: "updated",
     },
     // Increment version
     {
-        "op":   "inc",
+        Op:   "inc",
         Path: "/version",
         Inc:  1,
     },
@@ -360,8 +360,8 @@ var patch []jsonpatch.Operation
 // Update multiple items efficiently
 for i := 0; i < itemCount; i++ {
     patch = append(patch, jsonpatch.Operation{
-        "op":    "replace",
-        "path":  fmt.Sprintf("/items/%d/status", i),
+        Op:    "replace",
+        Path:  fmt.Sprintf("/items/%d/status", i),
         Value: "processed",
     })
 }
@@ -375,19 +375,19 @@ result, err := jsonpatch.ApplyPatch(doc, patch)
 patch := []jsonpatch.Operation{
     // Add to end of array
     {
-        "op":   "add",
+        Op:   "add",
         Path: "/users/-",
         Value: map[string]interface{}{"name": "New User"},
     },
     // Insert at specific position
     {
-        "op":   "add",
+        Op:   "add",
         Path: "/tags/0",
         Value: "important",
     },
     // Remove array element
     {
-        "op":   "remove",
+        Op:   "remove",
         Path: "/items/2",
     },
 }
@@ -401,17 +401,17 @@ result, err := jsonpatch.ApplyPatch(doc, patch)
 patch := []jsonpatch.Operation{
     // Insert text at position
     {
-        "op":   "str_ins",
+        Op:   "str_ins",
         Path: "/content",
         Pos:  0,
-        "str":  "Prefix: ",
+        Str:  "Prefix: ",
     },
     // Insert at end
     {
-        "op":   "str_ins",
+        Op:   "str_ins",
         Path: "/content",
         Pos:  20,
-        "str":  " (Updated)",
+        Str:  " (Updated)",
     },
 }
 

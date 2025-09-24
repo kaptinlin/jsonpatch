@@ -165,7 +165,7 @@ All conditions must be true.
 
 ```go
 {
-    "op": "and",
+    Op: "and",
     Apply: [
         {Op: "defined", Path: "/user/email"},
         {Op: "type", Path: "/user/age", Value: "number"},
@@ -180,7 +180,7 @@ At least one condition must be true.
 
 ```go
 {
-    "op": "or",
+    Op: "or",
     Apply: [
         {Op: "contains", Path: "/tags", Value: "admin"},
         {Op: "contains", Path: "/tags", Value: "moderator"}
@@ -194,7 +194,7 @@ Invert a condition.
 
 ```go
 {
-    "op": "not",
+    Op: "not",
     Apply: [
         {Op: "contains", Path: "/tags", Value: "banned"}
     ]
@@ -208,7 +208,7 @@ Invert a condition.
 ```go
 patch := []jsonpatch.Operation{
     {
-        "op": "and",
+        Op: "and",
         Apply: []jsonpatch.Operation{
             {Op: "defined", Path: "/user/name"},
             {Op: "defined", Path: "/user/email"},
@@ -225,11 +225,11 @@ patch := []jsonpatch.Operation{
 ```go
 patch := []jsonpatch.Operation{
     {
-        "op": "or",
+        Op: "or",
         Apply: []jsonpatch.Operation{
             {Op: "contains", Path: "/roles", Value: "admin"},
             {
-                "op": "and",
+                Op: "and",
                 Apply: []jsonpatch.Operation{
                     {Op: "contains", Path: "/roles", Value: "user"},
                     {Op: "contains", Path: "/permissions", Value: "write"},
@@ -247,7 +247,7 @@ patch := []jsonpatch.Operation{
     {Op: "defined", Path: "/required_field"},
     {Op: "type", Path: "/required_field", Value: "string"},
     {
-        "op": "not",
+        Op: "not",
         Apply: []jsonpatch.Operation{
             {Op: "test", Path: "/required_field", Value: ""},
         },

@@ -133,8 +133,8 @@ var patch []jsonpatch.Operation
 // Update multiple fields
 for i := 0; i < 3; i++ {
     patch = append(patch, jsonpatch.Operation{
-        "op":    "replace",
-        "path":  fmt.Sprintf("/items/%d/status", i),
+        Op:    "replace",
+        Path:  fmt.Sprintf("/items/%d/status", i),
         Value: "processed",
     })
 }
