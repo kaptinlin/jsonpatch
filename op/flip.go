@@ -38,10 +38,15 @@ func (op *FlipOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{Doc: flippedValue, Old: doc}, nil
 	}
 
-	// Get the value to flip
+	// Get the value to flip, or undefined if it doesn't exist
 	value, err := getValue(doc, op.Path())
+	var oldValue any
 	if err != nil {
-		return internal.OpResult[any]{}, err
+		// If path doesn't exist, treat as undefined (which becomes false, then flips to true)
+		value = nil
+		oldValue = nil
+	} else {
+		oldValue = value
 	}
 
 	// Flip the value
@@ -53,7 +58,7 @@ func (op *FlipOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, err
 	}
 
-	return internal.OpResult[any]{Doc: doc, Old: value}, nil
+	return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 }
 
 // flipValue flips boolean values or converts other types to boolean and flip
@@ -101,10 +106,16 @@ func (op *FlipOperation) toBool(value interface{}) bool {
 	case string:
 		return v != ""
 	default:
-		// For complex types, check if they are empty
+		// For complex types, arrays and objects are always truthy in JavaScript
 		val := reflect.ValueOf(value)
 		switch val.Kind() {
-		case reflect.Array, reflect.Slice, reflect.Map, reflect.Chan:
+		case reflect.Array, reflect.Slice:
+			// Arrays are always truthy in JavaScript, even if empty
+			return true
+		case reflect.Map:
+			// Objects are always truthy in JavaScript, even if empty
+			return true
+		case reflect.Chan:
 			return val.Len() > 0
 		case reflect.Ptr, reflect.Interface:
 			return !val.IsNil()

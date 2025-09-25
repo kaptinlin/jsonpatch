@@ -99,6 +99,33 @@ func TestFlipOp(t *testing.T) {
 			expected := map[string]interface{}{"foo": true}
 			assert.Equal(t, expected, result)
 		})
+
+		t.Run("treats empty arrays and objects as truthy", func(t *testing.T) {
+			operations := []internal.Operation{
+				{Op: "flip", Path: "/empty_array"},
+				{Op: "flip", Path: "/empty_object"},
+			}
+			doc := map[string]interface{}{
+				"empty_array":  []interface{}{},
+				"empty_object": map[string]interface{}{},
+			}
+			result := applyOperationsFlip(t, doc, operations)
+			expected := map[string]interface{}{
+				"empty_array":  false, // empty array is truthy -> false
+				"empty_object": false, // empty object is truthy -> false
+			}
+			assert.Equal(t, expected, result)
+		})
+
+		t.Run("creates value when path doesn't exist", func(t *testing.T) {
+			operation := internal.Operation{
+				Op:   "flip",
+				Path: "/newfield",
+			}
+			result := applyOperationsFlip(t, map[string]interface{}{}, []internal.Operation{operation})
+			expected := map[string]interface{}{"newfield": true}
+			assert.Equal(t, expected, result)
+		})
 	})
 
 	t.Run("array", func(t *testing.T) {

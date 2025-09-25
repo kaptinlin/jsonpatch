@@ -96,20 +96,22 @@ func (op *StrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // applyStrDel applies string deletion with optimized string building
 func (op *StrDelOperation) applyStrDel(val string) string {
-	// High-performance type conversion (single, boundary conversion)
-	pos := int(op.Pos) // Already validated as safe integer
-	// Handle negative position by returning original string (no deletion)
-	if pos < 0 {
-		return val
-	}
-
 	// Convert to runes once for proper Unicode handling
 	runes := []rune(val)
 	length := len(runes)
 
-	// Clamp position to valid bounds
-	if pos > length {
-		pos = length
+	// Handle position: negative positions count from end
+	pos := int(op.Pos)
+	if pos < 0 {
+		// Negative position counts from end
+		pos = length + pos
+		if pos < 0 {
+			// Position before start, no deletion
+			return val
+		}
+	} else if pos > length {
+		// Position after end, no deletion
+		return val
 	}
 
 	// Determine deletion length: str takes precedence over len

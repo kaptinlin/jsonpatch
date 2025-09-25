@@ -50,14 +50,14 @@ func (o *MoreOperation) Test(doc interface{}) (bool, error) {
 		//nolint:nilerr // This is intentional behavior for test operations
 		return false, nil
 	}
-	
+
 	greater := num > o.Value
-	
+
 	// Apply negation if needed
 	if o.NotFlag {
 		greater = !greater
 	}
-	
+
 	return greater, nil
 }
 
@@ -69,7 +69,7 @@ func (o *MoreOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	greater := num > o.Value
-	
+
 	// Apply negation if needed
 	if o.NotFlag {
 		greater = !greater

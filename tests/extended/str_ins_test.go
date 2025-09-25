@@ -124,6 +124,18 @@ func TestStrInsOp(t *testing.T) {
 			expected := map[string]interface{}{"msg": "Hello beautiful world"}
 			assert.Equal(t, expected, result)
 		})
+
+		t.Run("negative position counts from end", func(t *testing.T) {
+			operation := internal.Operation{
+				Op:   "str_ins",
+				Path: "/msg",
+				Pos:  -1,
+				Str:  "!",
+			}
+			result := applyOperationStrIns(t, map[string]interface{}{"msg": "Hello"}, operation)
+			expected := map[string]interface{}{"msg": "Hell!o"}
+			assert.Equal(t, expected, result)
+		})
 	})
 
 	t.Run("array", func(t *testing.T) {

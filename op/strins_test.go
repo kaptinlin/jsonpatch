@@ -121,7 +121,7 @@ func TestOpStrIns_Apply(t *testing.T) {
 			doc:      map[string]interface{}{"text": "abc"},
 			pos:      -1.0,
 			str:      "X",
-			expected: map[string]interface{}{"text": "Xabc"},
+			expected: map[string]interface{}{"text": "abXc"},
 			oldValue: "abc",
 		},
 	}

@@ -86,7 +86,7 @@ func (op *StartsOperation) Test(doc any) (bool, error) {
 	} else {
 		result = strings.HasPrefix(str, op.Value)
 	}
-	
+
 	// Apply negation if needed
 	return result != op.NotFlag, nil
 }

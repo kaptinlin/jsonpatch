@@ -24,7 +24,7 @@ func TestOpInc_Apply(t *testing.T) {
 			doc:      map[string]interface{}{"count": 1},
 			inc:      2,
 			expected: map[string]interface{}{"count": 3.0},
-			oldValue: 1.0,
+			oldValue: 1,
 		},
 		{
 			name:     "inc float field",
@@ -40,7 +40,7 @@ func TestOpInc_Apply(t *testing.T) {
 			doc:      map[string]interface{}{"count": 5},
 			inc:      -3,
 			expected: map[string]interface{}{"count": 2.0},
-			oldValue: 5.0,
+			oldValue: 5,
 		},
 		{
 			name:     "inc nested field",
@@ -48,7 +48,7 @@ func TestOpInc_Apply(t *testing.T) {
 			doc:      map[string]interface{}{"user": map[string]interface{}{"age": 20}},
 			inc:      1,
 			expected: map[string]interface{}{"user": map[string]interface{}{"age": 21.0}},
-			oldValue: 20.0,
+			oldValue: 20,
 		},
 		{
 			name:     "inc array element",
@@ -56,7 +56,7 @@ func TestOpInc_Apply(t *testing.T) {
 			doc:      map[string]interface{}{"nums": []interface{}{1, 2, 3}},
 			inc:      10,
 			expected: map[string]interface{}{"nums": []interface{}{1, 12.0, 3}},
-			oldValue: 2.0,
+			oldValue: 2,
 		},
 		{
 			name:     "inc root int",
@@ -75,11 +75,12 @@ func TestOpInc_Apply(t *testing.T) {
 			oldValue: 1.5,
 		},
 		{
-			name:    "path not found",
-			path:    []string{"notfound"},
-			doc:     map[string]interface{}{"count": 1},
-			inc:     1,
-			wantErr: true,
+			name:     "path not found creates value",
+			path:     []string{"notfound"},
+			doc:      map[string]interface{}{"count": 1},
+			inc:      5,
+			expected: map[string]interface{}{"count": 1, "notfound": 5.0},
+			oldValue: nil,
 		},
 		{
 			name:    "not a number",

@@ -45,19 +45,25 @@ func (op *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{Doc: result, Old: oldValue}, nil
 	}
 
-	if !pathExists(doc, op.path) {
-		return internal.OpResult[any]{}, ErrPathNotFound
-	}
-
 	parent, key, err := navigateToParent(doc, op.path)
 	if err != nil {
 		return internal.OpResult[any]{}, ErrPathNotFound
 	}
 
-	currentValue := getValueFromParent(parent, key)
-	oldValue, ok := ToFloat64(currentValue)
-	if !ok {
-		return internal.OpResult[any]{}, ErrNotNumber
+	// Check if path exists and get current value
+	var currentValue any
+	var oldValue float64
+	if pathExists(doc, op.path) {
+		currentValue = getValueFromParent(parent, key)
+		var ok bool
+		oldValue, ok = ToFloat64(currentValue)
+		if !ok {
+			return internal.OpResult[any]{}, ErrNotNumber
+		}
+	} else {
+		// Path doesn't exist, treat as undefined (which becomes 0 in JavaScript)
+		currentValue = nil
+		oldValue = 0
 	}
 	result := oldValue + op.Inc
 
@@ -65,7 +71,7 @@ func (op *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, err
 	}
 
-	return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
+	return internal.OpResult[any]{Doc: doc, Old: currentValue}, nil
 }
 
 func (op *IncOperation) updateParent(parent interface{}, key interface{}, value interface{}) error {

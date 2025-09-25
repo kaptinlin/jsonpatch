@@ -52,7 +52,7 @@ func (op *ContainsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	contains := strings.Contains(testValue, testString)
-	
+
 	// Apply negation if needed
 	if op.NotFlag {
 		contains = !contains
@@ -78,7 +78,7 @@ func (op *ContainsOperation) Test(doc any) (bool, error) {
 	}
 
 	contains := strings.Contains(testValue, testString)
-	
+
 	// Apply negation if needed
 	if op.NotFlag {
 		contains = !contains

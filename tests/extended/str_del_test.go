@@ -124,6 +124,18 @@ func TestStrDelOp(t *testing.T) {
 			expected := map[string]interface{}{"msg": "Hello world"}
 			assert.Equal(t, expected, result)
 		})
+
+		t.Run("negative position counts from end", func(t *testing.T) {
+			operation := internal.Operation{
+				Op:   "str_del",
+				Path: "/msg",
+				Pos:  -1,
+				Len:  1,
+			}
+			result := applyOperationStrDel(t, map[string]interface{}{"msg": "Hello!"}, operation)
+			expected := map[string]interface{}{"msg": "Hello"}
+			assert.Equal(t, expected, result)
+		})
 	})
 
 	t.Run("array", func(t *testing.T) {

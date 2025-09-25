@@ -95,7 +95,7 @@ func (o *MatchesOperation) Test(doc interface{}) (bool, error) {
 	}
 
 	matches := o.matcher.MatchString(str)
-	
+
 	// Apply negation if needed
 	if o.NotFlag {
 		matches = !matches
@@ -119,7 +119,7 @@ func (o *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	matches := o.matcher.MatchString(str)
-	
+
 	// Apply negation if needed
 	if o.NotFlag {
 		matches = !matches

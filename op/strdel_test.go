@@ -121,7 +121,7 @@ func TestOpStrDel_Apply(t *testing.T) {
 			doc:      map[string]interface{}{"text": "abc"},
 			pos:      -1.0,
 			length:   1.0,
-			expected: map[string]interface{}{"text": "abc"},
+			expected: map[string]interface{}{"text": "ab"},
 			oldValue: "abc",
 		},
 		{

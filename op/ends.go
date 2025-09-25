@@ -66,7 +66,7 @@ func (op *EndsOperation) Test(doc any) (bool, error) {
 	} else {
 		result = strings.HasSuffix(str, op.Value)
 	}
-	
+
 	// Apply negation if needed
 	return result != op.NotFlag, nil
 }

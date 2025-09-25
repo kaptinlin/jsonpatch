@@ -145,12 +145,12 @@ func deepEqual(a, b interface{}) bool {
 	// This allows numeric type coercion to happen for mixed numeric comparisons
 	aIsNumeric := isActualNumericType(a)
 	bIsNumeric := isActualNumericType(b)
-	
+
 	if canCompare && equal {
 		// If direct comparison succeeds, the values are equal
 		return true
 	}
-	
+
 	if canCompare && !aIsNumeric && !bIsNumeric {
 		// If both are non-numeric and comparable, return the direct result
 		return equal

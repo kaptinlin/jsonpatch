@@ -143,6 +143,17 @@ func TestIncOp(t *testing.T) {
 			expected := map[string]interface{}{"lala": float64(3)}
 			assert.Equal(t, expected, result)
 		})
+
+		t.Run("creates value when path doesn't exist", func(t *testing.T) {
+			operation := internal.Operation{
+				Op:   "inc",
+				Path: "/newfield",
+				Inc:  5,
+			}
+			result := applyOperationsInc(t, map[string]interface{}{}, []internal.Operation{operation})
+			expected := map[string]interface{}{"newfield": float64(5)}
+			assert.Equal(t, expected, result)
+		})
 	})
 
 	t.Run("array", func(t *testing.T) {

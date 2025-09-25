@@ -67,10 +67,10 @@ func TestOpFlip_Apply(t *testing.T) {
 			oldValue: nil,
 		},
 		{
-			name:     "flip empty array to true",
+			name:     "flip empty array to false",
 			path:     []string{"items"},
 			doc:      map[string]interface{}{"items": []interface{}{}},
-			expected: map[string]interface{}{"items": true},
+			expected: map[string]interface{}{"items": false},
 			oldValue: []interface{}{},
 		},
 		{
@@ -81,10 +81,10 @@ func TestOpFlip_Apply(t *testing.T) {
 			oldValue: []interface{}{1, 2, 3},
 		},
 		{
-			name:     "flip empty map to true",
+			name:     "flip empty map to false",
 			path:     []string{"config"},
 			doc:      map[string]interface{}{"config": map[string]interface{}{}},
-			expected: map[string]interface{}{"config": true},
+			expected: map[string]interface{}{"config": false},
 			oldValue: map[string]interface{}{},
 		},
 		{
@@ -123,10 +123,11 @@ func TestOpFlip_Apply(t *testing.T) {
 			oldValue: 42,
 		},
 		{
-			name:    "path not found",
-			path:    []string{"nonexistent"},
-			doc:     map[string]interface{}{"flag": true},
-			wantErr: true,
+			name:     "path not found creates true",
+			path:     []string{"nonexistent"},
+			doc:      map[string]interface{}{"flag": true},
+			expected: map[string]interface{}{"flag": true, "nonexistent": true},
+			oldValue: nil,
 		},
 		{
 			name:    "invalid path for array",

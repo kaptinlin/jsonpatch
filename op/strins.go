@@ -96,12 +96,16 @@ func (op *StrInsOperation) applyStrIns(str string) string {
 	runes := []rune(str)
 	runeLen := len(runes)
 
-	// High-performance type conversion (single, boundary conversion)
-	pos := int(op.Pos) // Already validated as safe integer
-	if pos > runeLen {
+	// Handle position: negative positions count from end
+	pos := int(op.Pos)
+	if pos < 0 {
+		// Negative position counts from end
+		pos = runeLen + pos
+		if pos < 0 {
+			pos = 0
+		}
+	} else if pos > runeLen {
 		pos = runeLen
-	} else if pos < 0 {
-		pos = 0
 	}
 
 	// Use strings.Builder for efficient string concatenation
