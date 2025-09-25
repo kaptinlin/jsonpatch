@@ -91,7 +91,7 @@ func TestOpOr_Apply_Fails(t *testing.T) {
 
 	_, err := orOp.Apply(doc)
 	assert.Error(t, err, "OR apply should fail when all operations fail")
-	assert.Contains(t, err.Error(), "or test failed", "Error message should be descriptive")
+	assert.ErrorIs(t, err, ErrOrTestFailed)
 }
 
 func TestOpOr_InterfaceMethods(t *testing.T) {
@@ -159,9 +159,8 @@ func TestOpOr_Validate(t *testing.T) {
 	err := orOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
-	// Test invalid operation (empty ops)
+	// Test valid empty operations (empty OR is valid, just returns false)
 	orOp = NewOr([]string{"test"}, []interface{}{})
 	err = orOp.Validate()
-	assert.Error(t, err, "Invalid operation should fail validation")
-	assert.Contains(t, err.Error(), "empty operation patch", "Error message should mention missing operands")
+	assert.NoError(t, err, "Empty operations are valid (though they return false)")
 }

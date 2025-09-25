@@ -114,7 +114,7 @@ func TestOpMatches_InvalidPattern(t *testing.T) {
 
 	_, err := NewMatches(path, invalidPattern, false)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "regex pattern error")
+	assert.ErrorIs(t, err, ErrRegexPattern)
 }
 
 func TestOpMatches_ToJSON(t *testing.T) {

@@ -49,7 +49,7 @@ func (op *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 		// Root level array
 		slice, ok := doc.([]interface{})
 		if !ok {
-			return internal.OpResult[any]{}, ErrNotAnArray
+			return internal.OpResult[any]{}, ErrInvalidTarget
 		}
 		targetArray = slice
 	} else {
@@ -60,7 +60,7 @@ func (op *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 		}
 		slice, ok := target.([]interface{})
 		if !ok {
-			return internal.OpResult[any]{}, ErrNotAnArray
+			return internal.OpResult[any]{}, ErrInvalidTarget
 		}
 		targetArray = slice
 	}

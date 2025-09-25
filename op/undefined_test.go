@@ -71,7 +71,7 @@ func TestOpUndefined_Apply(t *testing.T) {
 	undefinedOp = NewOpUndefinedOperation([]string{"foo"})
 	_, err = undefinedOp.Apply(doc)
 	assert.Error(t, err, "Undefined apply should fail for existing path")
-	assert.Contains(t, err.Error(), "undefined test failed", "Error message should be descriptive")
+	assert.ErrorIs(t, err, ErrUndefinedTestFailed)
 }
 
 func TestOpUndefined_InterfaceMethods(t *testing.T) {
@@ -125,5 +125,5 @@ func TestOpUndefined_Validate(t *testing.T) {
 	undefinedOp = NewOpUndefinedOperation([]string{})
 	err = undefinedOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
-	assert.Contains(t, err.Error(), "OP_PATH_INVALID", "Error message should mention empty path")
+	assert.ErrorIs(t, err, ErrPathEmpty)
 }

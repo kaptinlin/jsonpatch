@@ -164,9 +164,11 @@ func (op *TestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
 	shouldPass := matches != op.NotFlag
 	if !shouldPass {
 		if op.NotFlag {
-			return internal.OpResult[any]{}, fmt.Errorf("%w: expected substring NOT %q at position %d, but got %q", ErrSubstringMismatch, op.Str, pos, substring)
+			// When Not is true and test fails, it means the string DID match when we expected it not to
+			return internal.OpResult[any]{}, fmt.Errorf("%w: string matched %q at position %d when NOT expected", ErrSubstringMismatch, op.Str, pos)
 		}
-		return internal.OpResult[any]{}, fmt.Errorf("%w at position %d", ErrSubstringMismatch, pos)
+		// When Not is false and test fails, it means the string didn't match when we expected it to
+		return internal.OpResult[any]{}, fmt.Errorf("%w: expected %q at position %d, got %q", ErrSubstringMismatch, op.Str, pos, substring)
 	}
 
 	return internal.OpResult[any]{Doc: doc}, nil

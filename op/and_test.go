@@ -53,7 +53,7 @@ func TestOpAnd_Empty(t *testing.T) {
 	doc := map[string]interface{}{"foo": "bar"}
 	ok, err := andOp.Test(doc)
 	require.NoError(t, err, "AND test should not fail")
-	assert.False(t, ok, "Empty AND should return false")
+	assert.True(t, ok, "Empty AND should return true (vacuous truth)")
 }
 
 func TestOpAnd_Apply(t *testing.T) {
@@ -91,7 +91,7 @@ func TestOpAnd_Apply_Fails(t *testing.T) {
 
 	_, err := andOp.Apply(doc)
 	assert.Error(t, err, "AND apply should fail when any operation fails")
-	assert.Contains(t, err.Error(), "and test failed", "Error message should be descriptive")
+	assert.ErrorIs(t, err, ErrAndTestFailed)
 }
 
 func TestOpAnd_InterfaceMethods(t *testing.T) {
@@ -155,9 +155,8 @@ func TestOpAnd_Validate(t *testing.T) {
 	err := andOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
-	// Test invalid operation (empty ops)
+	// Test valid empty operations (vacuous truth allows this)
 	andOp = NewAnd([]string{"test"}, []interface{}{})
 	err = andOp.Validate()
-	assert.Error(t, err, "Invalid operation should fail validation")
-	assert.Contains(t, err.Error(), "empty operation patch", "Error message should mention missing operands")
+	assert.NoError(t, err, "Empty operations are valid (vacuous truth)")
 }

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch"
+	operrors "github.com/kaptinlin/jsonpatch/op"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -31,7 +32,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			_, err := jsonpatch.ApplyPatch("asdf", patch, jsonpatch.WithMutate(true))
 			require.Error(t, err)
-			assert.Contains(t, err.Error(), "does not match pattern")
+			assert.ErrorIs(t, err, operrors.ErrStringMismatch)
 		})
 
 		t.Run("succeeds with case insensitive matching", func(t *testing.T) {
@@ -198,7 +199,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
 			require.Error(t, err)
-			assert.Contains(t, err.Error(), "not a string")
+			assert.ErrorIs(t, err, operrors.ErrNotString)
 		})
 
 		t.Run("fails on missing path", func(t *testing.T) {
@@ -213,7 +214,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
 			require.Error(t, err)
-			assert.Contains(t, err.Error(), "NOT_FOUND")
+			assert.ErrorIs(t, err, operrors.ErrPathNotFound)
 		})
 	})
 }

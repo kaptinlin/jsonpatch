@@ -52,7 +52,7 @@ func TestOpDefined_Apply(t *testing.T) {
 	definedOp = NewDefined([]string{"qux"})
 	_, err = definedOp.Apply(doc)
 	assert.Error(t, err, "Defined apply should fail for non-existing path")
-	assert.Contains(t, err.Error(), "defined test failed", "Error message should be descriptive")
+	assert.ErrorIs(t, err, ErrDefinedTestFailed)
 }
 
 func TestOpDefined_InterfaceMethods(t *testing.T) {

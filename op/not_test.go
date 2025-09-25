@@ -73,7 +73,7 @@ func TestOpNot_Apply_Fails(t *testing.T) {
 
 	_, err := notOp.Apply(doc)
 	assert.Error(t, err, "NOT apply should fail when wrapped operation passes")
-	assert.Contains(t, err.Error(), "not test failed", "Error message should be descriptive")
+	assert.ErrorIs(t, err, ErrNotTestFailed)
 }
 
 func TestOpNot_InterfaceMethods(t *testing.T) {
@@ -133,5 +133,5 @@ func TestOpNot_Validate(t *testing.T) {
 	notOp = &NotOperation{BaseOp: NewBaseOp([]string{"test"}), Operations: []interface{}{}}
 	err = notOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
-	assert.Contains(t, err.Error(), "empty operation patch", "Error message should mention missing operand")
+	assert.ErrorIs(t, err, ErrNotNoOperands)
 }

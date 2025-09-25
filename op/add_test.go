@@ -102,7 +102,7 @@ func TestOpAdd_Validate(t *testing.T) {
 	op = NewAdd([]string{}, "bar")
 	err = op.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
-	assert.Contains(t, err.Error(), "OP_PATH_INVALID", "Error message should mention empty path")
+	assert.ErrorIs(t, err, ErrPathEmpty)
 }
 
 func TestOpAdd_Constructor(t *testing.T) {

@@ -4,30 +4,32 @@ import "errors"
 
 // Sentinel errors for path and validation related operations
 var (
-	// Core path errors - aligned with json-joy patterns
-	ErrPathNotFound     = errors.New("NOT_FOUND")
-	ErrPathDoesNotExist = errors.New("NOT_FOUND")
-	ErrInvalidPath      = errors.New("OP_PATH_INVALID")
-	ErrPathEmpty        = errors.New("OP_PATH_INVALID")
-	ErrFromPathEmpty    = errors.New("OP_FROM_INVALID")
+	// Core path errors
+	ErrPathNotFound     = errors.New("path not found")
+	ErrPathDoesNotExist = errors.New("path does not exist")
+	ErrInvalidPath      = errors.New("invalid path")
+	ErrPathEmpty        = errors.New("path cannot be empty")
+	ErrFromPathEmpty    = errors.New("from path cannot be empty")
 	ErrPathsIdentical   = errors.New("cannot move into own children")
 
-	// Array operation errors - aligned with json-joy patterns
-	ErrArrayIndexOutOfBounds = errors.New("INVALID_INDEX")
-	ErrIndexOutOfRange       = errors.New("INVALID_INDEX")
-	ErrNotAnArray            = errors.New("Not a array")
+	// Array operation errors
+	ErrArrayIndexOutOfBounds = errors.New("array index out of bounds")
+	ErrIndexOutOfRange       = errors.New("index out of range")
+	ErrNotAnArray            = errors.New("not an array")
 	ErrArrayTooSmall         = errors.New("array must have at least 2 elements")
-	ErrPositionOutOfBounds   = errors.New("INVALID_INDEX")
-	ErrPositionNegative      = errors.New("INVALID_INDEX")
+	ErrPositionOutOfBounds   = errors.New("position out of bounds")
+	ErrPositionNegative      = errors.New("position cannot be negative")
+	ErrInvalidTarget         = errors.New("invalid target")
 
-	// Type validation errors - aligned with json-joy patterns
-	ErrNotString     = errors.New("value is not a string")
-	ErrNotNumber     = errors.New("value must be a number")
-	ErrNotObject     = errors.New("value is not an object")
-	ErrInvalidType   = errors.New("invalid type")
-	ErrEmptyTypeList = errors.New("empty type list")
+	// Type validation errors
+	ErrNotString                 = errors.New("value is not a string")
+	ErrNotNumber                 = errors.New("value must be a number")
+	ErrNotObject                 = errors.New("value is not an object")
+	ErrInvalidType               = errors.New("invalid type")
+	ErrEmptyTypeList             = errors.New("empty type list")
+	ErrContainsValueMustBeString = errors.New("contains operation value must be a string")
 
-	// Operation execution errors - aligned with json-joy patterns
+	// Operation execution errors
 	ErrTestFailed          = errors.New("test failed")
 	ErrDefinedTestFailed   = errors.New("defined test failed")
 	ErrUndefinedTestFailed = errors.New("undefined test failed")
@@ -35,7 +37,7 @@ var (
 	ErrOrTestFailed        = errors.New("or test failed")
 	ErrNotTestFailed       = errors.New("not test failed")
 
-	// Value operation errors - aligned with json-joy patterns
+	// Value operation errors
 	ErrCannotReplace          = errors.New("NOT_FOUND")
 	ErrCannotAddToValue       = errors.New("cannot add to non-object/non-array value")
 	ErrCannotRemoveFromValue  = errors.New("cannot remove from non-object/non-array document")
@@ -49,24 +51,25 @@ var (
 	ErrInvalidKeyTypeSlice   = errors.New("invalid key type for slice")
 	ErrUnsupportedParentType = errors.New("unsupported parent type")
 
-	// String operation errors - aligned with json-joy patterns
-	ErrPositionOutOfStringRange = errors.New("INVALID_INDEX")
+	// String operation errors
+	ErrPositionOutOfStringRange = errors.New("position out of string range")
 	ErrSubstringTooLong         = errors.New("value too long")
 	ErrSubstringMismatch        = errors.New("substring does not match")
 	ErrStringLengthMismatch     = errors.New("string length mismatch")
 	ErrPatternEmpty             = errors.New("pattern cannot be empty")
-	ErrLengthNegative           = errors.New("INVALID_INDEX")
+	ErrLengthNegative           = errors.New("length cannot be negative")
 
 	// Type comparison errors
-	ErrTypeMismatch = errors.New("type mismatch")
+	ErrTypeMismatch     = errors.New("type mismatch")
+	ErrContainsMismatch = errors.New("contains check failed")
 
-	// Predicate operation errors - aligned with json-joy patterns
-	ErrInvalidPredicateInAnd = errors.New("OP_INVALID")
-	ErrInvalidPredicateInNot = errors.New("OP_INVALID")
-	ErrInvalidPredicateInOr  = errors.New("OP_INVALID")
-	ErrAndNoOperands         = errors.New("empty operation patch")
-	ErrNotNoOperands         = errors.New("empty operation patch")
-	ErrOrNoOperands          = errors.New("empty operation patch")
+	// Predicate operation errors
+	ErrInvalidPredicateInAnd = errors.New("invalid predicate in and operation")
+	ErrInvalidPredicateInNot = errors.New("invalid predicate in not operation")
+	ErrInvalidPredicateInOr  = errors.New("invalid predicate in or operation")
+	ErrAndNoOperands         = errors.New("and operation requires at least one operand")
+	ErrNotNoOperands         = errors.New("not operation requires operands")
+	ErrOrNoOperands          = errors.New("or operation requires at least one operand")
 
 	// Operation modification errors
 	ErrCannotModifyRootArray     = errors.New("cannot modify root array directly")
@@ -80,8 +83,8 @@ var (
 	ErrCannotConvertNilToString = errors.New("cannot convert nil to string")
 
 	// Test operation errors
-	ErrTestOperationNumberStringMismatch = errors.New("test operation failed: number is not equal to string")
-	ErrTestOperationStringNotEquivalent  = errors.New("test operation failed: string not equivalent")
+	ErrTestOperationNumberStringMismatch = errors.New("number is not equal to string")
+	ErrTestOperationStringNotEquivalent  = errors.New("string not equivalent")
 
 	// Base errors for dynamic wrapping with fmt.Errorf
 	ErrComparisonFailed    = errors.New("comparison failed")

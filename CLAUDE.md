@@ -113,6 +113,24 @@ This ensures the result maintains the same type as the input document.
 - Use `testify/assert` for assertions
 - Benchmark critical operations
 
+#### Error Testing Best Practices
+- **NEVER** compare error message content with `assert.Contains(t, err.Error(), "message")`
+- **USE** type-safe error checking with `assert.ErrorIs(t, err, ErrSpecificType)`
+- **PREFER** sentinel errors defined in `op/errors.go` for consistent error types
+- **PATTERN**: 
+  ```go
+  // Good: Type-safe error checking
+  assert.Error(t, err)
+  assert.ErrorIs(t, err, ErrPathNotFound)
+  
+  // Bad: Fragile message checking
+  assert.Contains(t, err.Error(), "NOT_FOUND")
+  ```
+- **AVAILABLE** assertions:
+  - `assert.ErrorIs(t, err, ErrType)` - Check specific error type
+  - `assert.ErrorAs(t, err, &targetType)` - Check error implements interface
+  - `assert.Error(t, err)` - Just verify error occurred
+
 ### Error Handling
 - Use json-joy compatible error messages
 - Static errors: Return predefined error constants

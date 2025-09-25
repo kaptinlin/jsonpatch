@@ -43,10 +43,9 @@ func (o *AndOperation) Ops() []internal.PredicateOp {
 
 // Test performs the AND operation.
 func (o *AndOperation) Test(doc interface{}) (bool, error) {
-	// If no operations, return false (empty AND is false)
+	// If no operations, return true (vacuous truth - empty AND is true)
 	if len(o.Operations) == 0 {
-		result := false
-		return result, nil
+		return true, nil
 	}
 
 	// Test all operations
@@ -121,9 +120,7 @@ func (o *AndOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the AND operation.
 func (o *AndOperation) Validate() error {
-	if len(o.Operations) == 0 {
-		return ErrAndNoOperands
-	}
+	// Empty operations are valid (vacuous truth)
 	for _, op := range o.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {

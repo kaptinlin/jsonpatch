@@ -83,7 +83,7 @@ func TestOpReplace_NonExistent(t *testing.T) {
 	replaceOp := NewReplace([]string{"qux"}, "new_value")
 	_, err := replaceOp.Apply(doc)
 	assert.Error(t, err, "Replace should fail for non-existent field")
-	assert.Contains(t, err.Error(), "NOT_FOUND", "Error message should be descriptive")
+	assert.ErrorIs(t, err, ErrPathNotFound)
 }
 
 func TestOpReplace_EmptyPath(t *testing.T) {
@@ -154,5 +154,5 @@ func TestOpReplace_Validate(t *testing.T) {
 	replaceOp = NewReplace([]string{}, "value")
 	err = replaceOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
-	assert.Contains(t, err.Error(), "OP_PATH_INVALID", "Error message should mention empty path")
+	assert.ErrorIs(t, err, ErrPathEmpty)
 }

@@ -121,9 +121,7 @@ func (o *OrOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the OR operation.
 func (o *OrOperation) Validate() error {
-	if len(o.Operations) == 0 {
-		return ErrOrNoOperands
-	}
+	// Empty operations are valid (though they return false)
 	for _, op := range o.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {

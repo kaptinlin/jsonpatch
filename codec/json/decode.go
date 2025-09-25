@@ -298,7 +298,13 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		return op.NewOpTypeOperation(path, value), nil
 	case "test_type":
 		// Handle both single type string and array of types
+		// First check for "type" field (standard), then fall back to "value" field (compatibility)
 		typeField := operation["type"]
+		if typeField == nil {
+			// Check for value field as fallback for compatibility
+			typeField = operation["value"]
+		}
+
 		if typeStr, ok := typeField.(string); ok {
 			// Validate single type
 			if err := validateSingleTestType(typeStr); err != nil {
@@ -369,12 +375,13 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		}
 		return op.NewOpTestStringLenOperation(path, lenVal), nil
 	case "contains":
-		value, ok := operation["value"].(string)
-		if !ok {
+		// Contains operation can have any value type (string for string contains, any for array contains)
+		value, hasValue := operation["value"]
+		if !hasValue {
 			return nil, ErrContainsOpMissingValue
 		}
 
-		// Check for ignore_case flag
+		// Check for ignore_case flag (only relevant for string values)
 		ignoreCase := false
 		if ic, ok := operation["ignore_case"].(bool); ok {
 			ignoreCase = ic
@@ -386,8 +393,12 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 			notFlag = n
 		}
 
-		// Use the most comprehensive constructor
-		return op.NewOpContainsOperationWithFlags(path, value, ignoreCase, notFlag), nil
+		// Convert value to string (contains only works with strings)
+		stringValue, ok := value.(string)
+		if !ok {
+			return nil, op.ErrContainsValueMustBeString
+		}
+		return op.NewOpContainsOperationWithFlags(path, stringValue, ignoreCase, notFlag), nil
 	case "ends":
 		value, ok := operation["value"].(string)
 		if !ok {
@@ -654,8 +665,14 @@ func DecodeOperations(operations []internal.Operation, options internal.JSONPatc
 		if op.Not {
 			opMap["not"] = op.Not
 		}
-		if op.Type != "" {
-			opMap["type"] = op.Type
+		// Handle Type field - could be string or interface{} for test_type operations
+		if op.Type != nil {
+			// For test_type operations, prefer Type field over Value field
+			if op.Op == "test_type" {
+				opMap["type"] = op.Type
+			} else if typeStr, ok := op.Type.(string); ok && typeStr != "" {
+				opMap["type"] = typeStr
+			}
 		}
 		if op.IgnoreCase {
 			opMap["ignore_case"] = op.IgnoreCase

@@ -63,13 +63,16 @@ func (op *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error)
 	// High-performance type conversion (single, boundary conversion)
 	length := int(op.Length) // Already validated as safe integer
 	// Check if the string length matches (>= comparison like TypeScript version)
-	// Use XOR pattern: NotFlag XOR condition - if they're the same, the test fails
+	// Use XOR pattern: NotFlag XOR condition - if they're different, the test passes
 	lengthMatches := len(actualValue) >= length
-	if op.NotFlag == lengthMatches {
+	shouldPass := lengthMatches != op.NotFlag
+	if !shouldPass {
 		// Test failed
 		if op.NotFlag {
-			return internal.OpResult[any]{}, fmt.Errorf("%w: expected length NOT >= %d, but got %d", ErrStringLengthMismatch, length, len(actualValue))
+			// When Not is true and test fails, it means the length DID match when we expected it not to
+			return internal.OpResult[any]{}, fmt.Errorf("%w: string length %d matched condition (>= %d) when NOT expected", ErrStringLengthMismatch, len(actualValue), length)
 		}
+		// When Not is false and test fails, it means the length didn't match when we expected it to
 		return internal.OpResult[any]{}, fmt.Errorf("%w: expected length >= %d, got %d", ErrStringLengthMismatch, length, len(actualValue))
 	}
 
