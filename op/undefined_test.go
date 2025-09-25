@@ -18,19 +18,19 @@ func TestOpUndefined_Basic(t *testing.T) {
 	}
 
 	// Test non-existing path
-	undefinedOp := NewUndefined([]string{"qux"}, false)
+	undefinedOp := NewOpUndefinedOperation([]string{"qux"})
 	ok, err := undefinedOp.Test(doc)
 	require.NoError(t, err, "Undefined test should not fail")
 	assert.True(t, ok, "Undefined should return true for non-existing path")
 
 	// Test existing path
-	undefinedOp = NewUndefined([]string{"foo"}, false)
+	undefinedOp = NewOpUndefinedOperation([]string{"foo"})
 	ok, err = undefinedOp.Test(doc)
 	require.NoError(t, err, "Undefined test should not fail")
 	assert.False(t, ok, "Undefined should return false for existing path")
 
 	// Test nested non-existing path
-	undefinedOp = NewUndefined([]string{"baz", "quux"}, false)
+	undefinedOp = NewOpUndefinedOperation([]string{"baz", "quux"})
 	ok, err = undefinedOp.Test(doc)
 	require.NoError(t, err, "Undefined test should not fail")
 	assert.True(t, ok, "Undefined should return true for non-existing nested path")
@@ -42,17 +42,17 @@ func TestOpUndefined_Not(t *testing.T) {
 		"foo": "bar",
 	}
 
-	// Test non-existing path with not=true
-	undefinedOp := NewUndefined([]string{"qux"}, true)
+	// Test non-existing path (standard undefined behavior)
+	undefinedOp := NewOpUndefinedOperation([]string{"qux"})
 	ok, err := undefinedOp.Test(doc)
 	require.NoError(t, err, "Undefined test should not fail")
-	assert.False(t, ok, "NOT undefined should return false for non-existing path")
+	assert.True(t, ok, "undefined should return true for non-existing path")
 
-	// Test existing path with not=true
-	undefinedOp = NewUndefined([]string{"foo"}, true)
+	// Test existing path (standard undefined behavior)
+	undefinedOp = NewOpUndefinedOperation([]string{"foo"})
 	ok, err = undefinedOp.Test(doc)
 	require.NoError(t, err, "Undefined test should not fail")
-	assert.True(t, ok, "NOT undefined should return true for existing path")
+	assert.False(t, ok, "undefined should return false for existing path")
 }
 
 func TestOpUndefined_Apply(t *testing.T) {
@@ -62,20 +62,20 @@ func TestOpUndefined_Apply(t *testing.T) {
 	}
 
 	// Test non-existing path
-	undefinedOp := NewUndefined([]string{"qux"}, false)
+	undefinedOp := NewOpUndefinedOperation([]string{"qux"})
 	result, err := undefinedOp.Apply(doc)
 	require.NoError(t, err, "Undefined apply should succeed for non-existing path")
 	assert.True(t, deepEqual(result.Doc, doc), "Apply should return the original document")
 
 	// Test existing path
-	undefinedOp = NewUndefined([]string{"foo"}, false)
+	undefinedOp = NewOpUndefinedOperation([]string{"foo"})
 	_, err = undefinedOp.Apply(doc)
 	assert.Error(t, err, "Undefined apply should fail for existing path")
 	assert.Contains(t, err.Error(), "undefined test failed", "Error message should be descriptive")
 }
 
 func TestOpUndefined_InterfaceMethods(t *testing.T) {
-	undefinedOp := NewUndefined([]string{"test"}, false)
+	undefinedOp := NewOpUndefinedOperation([]string{"test"})
 
 	// Test Op() method
 	assert.Equal(t, internal.OpUndefinedType, undefinedOp.Op(), "Op() should return correct operation type")
@@ -91,51 +91,39 @@ func TestOpUndefined_InterfaceMethods(t *testing.T) {
 }
 
 func TestOpUndefined_ToJSON(t *testing.T) {
-	undefinedOp := NewUndefined([]string{"test"}, false)
+	undefinedOp := NewOpUndefinedOperation([]string{"test"})
 
 	json, err := undefinedOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
 
 	assert.Equal(t, "undefined", json.Op, "JSON should contain correct op type")
 	assert.Equal(t, "/test", json.Path, "JSON should contain correct formatted path")
-	assert.False(t, json.Not, "JSON should not contain not field when false")
+	// Not field should not be present since undefined operation no longer supports direct negation
 }
 
-func TestOpUndefined_ToJSON_WithNot(t *testing.T) {
-	undefinedOp := NewUndefined([]string{"test"}, true)
-
-	json, err := undefinedOp.ToJSON()
-	require.NoError(t, err, "ToJSON should not fail for valid operation")
-
-	assert.Equal(t, true, json.Not, "JSON should contain not field when true")
-}
+// TestOpUndefined_ToJSON_WithNot has been removed since undefined operation
+// no longer supports direct negation. Use second-order predicate "not" for negation.
 
 func TestOpUndefined_ToCompact(t *testing.T) {
-	undefinedOp := NewUndefined([]string{"test"}, false)
+	undefinedOp := NewOpUndefinedOperation([]string{"test"})
 
-	// Test verbose format
+	// Test compact format (no longer includes 'not' parameter)
 	compact, err := undefinedOp.ToCompact()
 	require.NoError(t, err, "ToCompact should not fail for valid operation")
-	require.Len(t, compact, 3, "Compact format should have 3 elements")
+	require.Len(t, compact, 2, "Compact format should have 2 elements")
 	assert.Equal(t, internal.OpUndefinedCode, compact[0], "First element should be operation code")
 	assert.Equal(t, []string{"test"}, compact[1], "Second element should be path")
-	assert.Equal(t, false, compact[2], "Third element should be not flag")
-
-	// Test non-verbose format
-	compact, err = undefinedOp.ToCompact()
-	require.NoError(t, err, "ToCompact should not fail for valid operation")
-	require.Len(t, compact, 3, "Compact format should have 3 elements")
 }
 
 func TestOpUndefined_Validate(t *testing.T) {
 	// Test valid operation
-	undefinedOp := NewUndefined([]string{"test"}, false)
+	undefinedOp := NewOpUndefinedOperation([]string{"test"})
 	err := undefinedOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
 	// Test invalid operation (empty path)
-	undefinedOp = NewUndefined([]string{}, false)
+	undefinedOp = NewOpUndefinedOperation([]string{})
 	err = undefinedOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
-	assert.Contains(t, err.Error(), "path cannot be empty", "Error message should mention empty path")
+	assert.Contains(t, err.Error(), "OP_PATH_INVALID", "Error message should mention empty path")
 }

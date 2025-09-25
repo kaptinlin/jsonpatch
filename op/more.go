@@ -8,17 +8,26 @@ import (
 
 // MoreOperation represents a "more" predicate operation that checks if a value is greater than a specified number.
 type MoreOperation struct {
-	PredicateOpBase
-	Value float64 // The number to compare against
+	BaseOp
+	Value   float64 `json:"value"` // The number to compare against
+	NotFlag bool    `json:"not"`   // Whether to negate the result
 }
 
 // NewOpMoreOperation creates a new more operation.
 func NewOpMoreOperation(path []string, value float64) *MoreOperation {
 	return &MoreOperation{
-		PredicateOpBase: PredicateOpBase{
-			BaseOp: BaseOp{path: path},
-		},
-		Value: value,
+		BaseOp:  NewBaseOp(path),
+		Value:   value,
+		NotFlag: false,
+	}
+}
+
+// NewOpMoreOperationWithFlags creates a new more operation with full options.
+func NewOpMoreOperationWithFlags(path []string, value float64, notFlag bool) *MoreOperation {
+	return &MoreOperation{
+		BaseOp:  NewBaseOp(path),
+		Value:   value,
+		NotFlag: notFlag,
 	}
 }
 
@@ -41,7 +50,15 @@ func (o *MoreOperation) Test(doc interface{}) (bool, error) {
 		//nolint:nilerr // This is intentional behavior for test operations
 		return false, nil
 	}
-	return num > o.Value, nil
+	
+	greater := num > o.Value
+	
+	// Apply negation if needed
+	if o.NotFlag {
+		greater = !greater
+	}
+	
+	return greater, nil
 }
 
 // Apply applies the more operation.
@@ -51,7 +68,17 @@ func (o *MoreOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, err
 	}
 
-	if num <= o.Value {
+	greater := num > o.Value
+	
+	// Apply negation if needed
+	if o.NotFlag {
+		greater = !greater
+	}
+
+	if !greater {
+		if o.NotFlag {
+			return internal.OpResult[any]{}, fmt.Errorf("%w: value %f is greater than %f", ErrComparisonFailed, num, o.Value)
+		}
 		return internal.OpResult[any]{}, fmt.Errorf("%w: value %f is not greater than %f", ErrComparisonFailed, num, o.Value)
 	}
 
@@ -60,30 +87,15 @@ func (o *MoreOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // getAndValidateValue retrieves and validates the numeric value at the path
 func (o *MoreOperation) getAndValidateValue(doc interface{}) (interface{}, float64, error) {
-	// Get target value
-	val, err := getValue(doc, o.Path())
+	value, err := getValue(doc, o.Path())
 	if err != nil {
 		return nil, 0, ErrPathNotFound
 	}
-
-	// Convert to float64 for comparison
-	var num float64
-	switch v := val.(type) {
-	case int:
-		num = float64(v)
-	case int32:
-		num = float64(v)
-	case int64:
-		num = float64(v)
-	case float32:
-		num = float64(v)
-	case float64:
-		num = v
-	default:
+	actualValue, ok := ToFloat64(value)
+	if !ok {
 		return nil, 0, ErrNotNumber
 	}
-
-	return val, num, nil
+	return value, actualValue, nil
 }
 
 // ToJSON converts the operation to JSON representation.
@@ -98,12 +110,18 @@ func (o *MoreOperation) ToJSON() (internal.Operation, error) {
 		Op:    string(internal.OpMoreType),
 		Path:  formatPath(o.Path()),
 		Value: value,
+		Not:   o.NotFlag,
 	}, nil
 }
 
 // ToCompact converts the operation to compact array representation.
 func (o *MoreOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpMoreCode, o.Path(), o.Value}, nil
+}
+
+// Not returns the negation flag.
+func (o *MoreOperation) Not() bool {
+	return o.NotFlag
 }
 
 // Validate validates the more operation.

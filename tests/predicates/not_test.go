@@ -15,7 +15,7 @@ func TestNot(t *testing.T) {
 			Doc:  map[string]interface{}{"foo": 2, "bar": 2},
 			Operations: []jsonpatch.Operation{
 				{
-					Op: "not",
+					Op:   "not",
 					Path: "",
 					Apply: []jsonpatch.Operation{
 						{Op: "test", Path: "/foo", Value: 1},
@@ -31,7 +31,7 @@ func TestNot(t *testing.T) {
 			Doc:  map[string]interface{}{"foo": 2, "bar": 2},
 			Operations: []jsonpatch.Operation{
 				{
-					Op: "not",
+					Op:   "not",
 					Path: "",
 					Apply: []jsonpatch.Operation{
 						{Op: "test", Path: "/foo", Value: 1},
@@ -47,7 +47,7 @@ func TestNot(t *testing.T) {
 			Doc:  map[string]interface{}{"foo": 1, "bar": 2},
 			Operations: []jsonpatch.Operation{
 				{
-					Op: "not",
+					Op:   "not",
 					Path: "",
 					Apply: []jsonpatch.Operation{
 						{Op: "test", Path: "/foo", Value: 1},

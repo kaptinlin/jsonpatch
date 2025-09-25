@@ -15,7 +15,7 @@ func TestOr(t *testing.T) {
 			Doc:  map[string]interface{}{"foo": 2, "bar": 2},
 			Operations: []jsonpatch.Operation{
 				{
-					Op: "or",
+					Op:   "or",
 					Path: "",
 					Apply: []jsonpatch.Operation{
 						{Op: "test", Path: "/foo", Value: 1},
@@ -31,7 +31,7 @@ func TestOr(t *testing.T) {
 			Doc:  map[string]interface{}{"foo": 1, "bar": 2},
 			Operations: []jsonpatch.Operation{
 				{
-					Op: "or",
+					Op:   "or",
 					Path: "",
 					Apply: []jsonpatch.Operation{
 						{Op: "test", Path: "/foo", Value: 1},
@@ -47,7 +47,7 @@ func TestOr(t *testing.T) {
 			Doc:  map[string]interface{}{"foo": 3, "bar": 4},
 			Operations: []jsonpatch.Operation{
 				{
-					Op: "or",
+					Op:   "or",
 					Path: "",
 					Apply: []jsonpatch.Operation{
 						{Op: "test", Path: "/foo", Value: 1},

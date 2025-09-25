@@ -29,8 +29,8 @@ func TestContainsOp(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "contains",
-				Path: "",
+				Op:    "contains",
+				Path:  "",
 				Value: "oo b",
 			}
 			applyOperationContains(t, "foo bar", op)
@@ -38,8 +38,8 @@ func TestContainsOp(t *testing.T) {
 
 		t.Run("succeeds when matches start of the string", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "contains",
-				Path: "",
+				Op:    "contains",
+				Path:  "",
 				Value: "foo",
 			}
 			applyOperationContains(t, "foo bar", op)
@@ -47,9 +47,9 @@ func TestContainsOp(t *testing.T) {
 
 		t.Run("can ignore case", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "contains",
-				Path: "",
-				Value: "oo B",
+				Op:         "contains",
+				Path:       "",
+				Value:      "oo B",
 				IgnoreCase: true,
 			}
 			applyOperationContains(t, "foo bar", op)
@@ -57,8 +57,8 @@ func TestContainsOp(t *testing.T) {
 
 		t.Run("throws when case does not match", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "contains",
-				Path: "",
+				Op:    "contains",
+				Path:  "",
 				Value: "oo B",
 			}
 			applyOperationWithErrorContains(t, "foo bar", op)
@@ -66,8 +66,8 @@ func TestContainsOp(t *testing.T) {
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "contains",
-				Path: "",
+				Op:    "contains",
+				Path:  "",
 				Value: "oo 0",
 			}
 			applyOperationWithErrorContains(t, "foo bar", op)
@@ -78,8 +78,8 @@ func TestContainsOp(t *testing.T) {
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
 			obj := map[string]interface{}{"foo": "foo bar"}
 			op := internal.Operation{
-				Op: "contains",
-				Path: "/foo",
+				Op:    "contains",
+				Path:  "/foo",
 				Value: "oo b",
 			}
 			applyOperationContains(t, obj, op)
@@ -88,8 +88,8 @@ func TestContainsOp(t *testing.T) {
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
 			obj := map[string]interface{}{"foo": "foo bar"}
 			op := internal.Operation{
-				Op: "contains",
-				Path: "/foo",
+				Op:    "contains",
+				Path:  "/foo",
 				Value: "oo 0",
 			}
 			applyOperationWithErrorContains(t, obj, op)
@@ -100,8 +100,8 @@ func TestContainsOp(t *testing.T) {
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
 			arr := []interface{}{"foo bar"}
 			op := internal.Operation{
-				Op: "contains",
-				Path: "/0",
+				Op:    "contains",
+				Path:  "/0",
 				Value: "oo b",
 			}
 			applyOperationContains(t, arr, op)
@@ -110,8 +110,8 @@ func TestContainsOp(t *testing.T) {
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
 			arr := []interface{}{"foo bar"}
 			op := internal.Operation{
-				Op: "contains",
-				Path: "/0",
+				Op:    "contains",
+				Path:  "/0",
 				Value: "oo 0",
 			}
 			applyOperationWithErrorContains(t, arr, op)

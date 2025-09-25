@@ -12,6 +12,7 @@ type ContainsOperation struct {
 	BaseOp
 	Value      string `json:"value"`       // Substring to search for
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case when comparing
+	NotFlag    bool   `json:"not"`         // Whether to negate the result
 }
 
 type OpContainsOperation = ContainsOperation //nolint:revive // Backward compatibility alias
@@ -33,6 +34,16 @@ func NewOpContainsOperationWithIgnoreCase(path []string, substring string, ignor
 	}
 }
 
+// NewOpContainsOperationWithFlags creates a new OpContainsOperation operation with full options.
+func NewOpContainsOperationWithFlags(path []string, substring string, ignoreCase bool, notFlag bool) *ContainsOperation {
+	return &OpContainsOperation{
+		BaseOp:     NewBaseOp(path),
+		Value:      substring,
+		IgnoreCase: ignoreCase,
+		NotFlag:    notFlag,
+	}
+}
+
 // Apply applies the contains test operation to the document.
 func (op *ContainsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, actualValue, testValue, testString, err := op.getAndPrepareStrings(doc)
@@ -40,7 +51,17 @@ func (op *ContainsOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, err
 	}
 
-	if !strings.Contains(testValue, testString) {
+	contains := strings.Contains(testValue, testString)
+	
+	// Apply negation if needed
+	if op.NotFlag {
+		contains = !contains
+	}
+
+	if !contains {
+		if op.NotFlag {
+			return internal.OpResult[any]{}, fmt.Errorf("%w: string %q contains %q", ErrStringMismatch, actualValue, op.Value)
+		}
 		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not contain %q", ErrStringMismatch, actualValue, op.Value)
 	}
 	return internal.OpResult[any]{Doc: doc, Old: value}, nil
@@ -56,10 +77,18 @@ func (op *ContainsOperation) Test(doc any) (bool, error) {
 		return false, nil
 	}
 
-	return strings.Contains(testValue, testString), nil
+	contains := strings.Contains(testValue, testString)
+	
+	// Apply negation if needed
+	if op.NotFlag {
+		contains = !contains
+	}
+
+	return contains, nil
 }
 
 // getAndPrepareStrings retrieves the value, converts to string, and prepares test strings
+// Optimized to avoid unnecessary allocations in case-sensitive operations
 func (op *ContainsOperation) getAndPrepareStrings(doc any) (interface{}, string, string, string, error) {
 	value, err := getValue(doc, op.Path())
 	if err != nil {
@@ -71,19 +100,21 @@ func (op *ContainsOperation) getAndPrepareStrings(doc any) (interface{}, string,
 		return nil, "", "", "", ErrNotString
 	}
 
-	testValue := actualValue
-	testString := op.Value
-	if op.IgnoreCase {
-		testValue = strings.ToLower(actualValue)
-		testString = strings.ToLower(op.Value)
+	// Fast path: case-sensitive comparison (most common case)
+	if !op.IgnoreCase {
+		return value, actualValue, actualValue, op.Value, nil
 	}
+
+	// Slower path: case-insensitive comparison
+	testValue := strings.ToLower(actualValue)
+	testString := strings.ToLower(op.Value)
 
 	return value, actualValue, testValue, testString, nil
 }
 
-// Not returns false (contains operation doesn't support not modifier).
+// Not returns the negation flag.
 func (op *ContainsOperation) Not() bool {
-	return false
+	return op.NotFlag
 }
 
 // Op returns the operation type.
@@ -103,6 +134,7 @@ func (op *ContainsOperation) ToJSON() (internal.Operation, error) {
 		Path:       formatPath(op.Path()),
 		Value:      op.Value,
 		IgnoreCase: op.IgnoreCase,
+		Not:        op.NotFlag,
 	}, nil
 }
 

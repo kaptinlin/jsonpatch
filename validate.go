@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/kaptinlin/jsonpointer"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/kaptinlin/jsonpointer"
 )
 
 // Base validation errors - define clearly and concisely
@@ -255,7 +255,7 @@ func validateOperationTestType(operation Operation) error {
 	if operation.Type == nil {
 		return fmt.Errorf("%w: missing required field 'type'", ErrInvalidTypeField)
 	}
-	
+
 	// Handle single type string
 	if typeStr, ok := operation.Type.(string); ok {
 		if typeStr == "" {
@@ -266,7 +266,7 @@ func validateOperationTestType(operation Operation) error {
 		}
 		return nil
 	}
-	
+
 	// Handle array of types
 	if typeSlice, ok := operation.Type.([]interface{}); ok {
 		if len(typeSlice) == 0 {
@@ -283,7 +283,7 @@ func validateOperationTestType(operation Operation) error {
 		}
 		return nil
 	}
-	
+
 	return fmt.Errorf("%w: type field must be string or array of strings", ErrInvalidType)
 }
 
@@ -428,8 +428,6 @@ func isNumber(value interface{}) bool {
 		return false
 	}
 }
-
-
 
 func isArray(value interface{}) bool {
 	if value == nil {

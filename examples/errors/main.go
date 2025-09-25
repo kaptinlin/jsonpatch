@@ -4,8 +4,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/kaptinlin/jsonpatch/op"
 	"github.com/kaptinlin/jsonpatch"
+	"github.com/kaptinlin/jsonpatch/op"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 
 	// Example 1: Using ApplyOp with individual operations (demonstrates op package usage)
 	fmt.Println("--- Using ApplyOp with individual operations ---")
-	
+
 	// Test that passes
 	fmt.Println("\n1. Test that should pass:")
 	testOp := op.NewOpTestOperation([]string{"name"}, "John")
@@ -39,7 +39,7 @@ func main() {
 
 	// Example 2: Using ApplyPatch with Operation structs (consistent with other examples)
 	fmt.Println("\n--- Using ApplyPatch with Operation structs ---")
-	
+
 	fmt.Println("\n3. Test with invalid path:")
 	invalidPatch := []jsonpatch.Operation{
 		{Op: "test", Path: "/nonexistent", Value: "value"},
@@ -51,8 +51,8 @@ func main() {
 
 	fmt.Println("\n4. Multiple operations with one failing:")
 	mixedPatch := []jsonpatch.Operation{
-		{Op: "test", Path: "/name", Value: "John"},  // Should pass
-		{Op: "test", Path: "/age", Value: "wrong"},  // Should fail
+		{Op: "test", Path: "/name", Value: "John"},    // Should pass
+		{Op: "test", Path: "/age", Value: "wrong"},    // Should fail
 		{Op: "replace", Path: "/name", Value: "Jane"}, // Won't be reached
 	}
 	_, err = jsonpatch.ApplyPatch(doc, mixedPatch)

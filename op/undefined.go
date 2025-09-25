@@ -6,13 +6,13 @@ import (
 
 // UndefinedOperation represents an undefined operation that checks if a path doesn't exist.
 type UndefinedOperation struct {
-	PredicateOpBase
+	BaseOp
 }
 
 // NewOpUndefinedOperation creates a new undefined operation.
-func NewOpUndefinedOperation(path []string, not bool) *UndefinedOperation {
+func NewOpUndefinedOperation(path []string) *UndefinedOperation {
 	return &UndefinedOperation{
-		PredicateOpBase: NewPredicateOp(path, not),
+		BaseOp: NewBaseOp(path),
 	}
 }
 
@@ -30,11 +30,7 @@ func (o *UndefinedOperation) Code() int {
 func (o *UndefinedOperation) checkPathUndefined(doc interface{}) bool {
 	_, err := getValue(doc, o.path)
 	// Path doesn't exist means undefined is true
-	result := err != nil
-	if o.not {
-		result = !result
-	}
-	return result
+	return err != nil
 }
 
 // Test performs the undefined operation.
@@ -57,19 +53,15 @@ func (o *UndefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // ToJSON serializes the operation to JSON format.
 func (o *UndefinedOperation) ToJSON() (internal.Operation, error) {
-	result := internal.Operation{
+	return internal.Operation{
 		Op:   string(internal.OpUndefinedType),
 		Path: formatPath(o.path),
-	}
-	if o.not {
-		result.Not = true
-	}
-	return result, nil
+	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
 func (o *UndefinedOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpUndefinedCode, o.path, o.not}, nil
+	return internal.CompactOperation{internal.OpUndefinedCode, o.path}, nil
 }
 
 // Validate validates the undefined operation.

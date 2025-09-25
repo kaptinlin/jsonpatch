@@ -45,7 +45,7 @@ func main() {
 
 // demoBasicStructPatch demonstrates basic struct patching
 func demoBasicStructPatch() {
-	// Original user
+	// User to modify
 	user := User{
 		Name:   "John Doe",
 		Email:  "john@example.com",
@@ -88,7 +88,7 @@ func demoComplexStructPatch() {
 		},
 	}
 
-	// Print original (pretty formatted)
+	// Print current state (pretty formatted)
 	originalJSON, _ := json.MarshalIndent(user, "", "  ")
 	fmt.Printf("Before:\n%s\n", string(originalJSON))
 

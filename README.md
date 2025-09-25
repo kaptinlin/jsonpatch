@@ -2,7 +2,7 @@
 
 A comprehensive Go implementation of JSON Patch (RFC 6902), JSON Predicate, and extended operations for JSON document manipulation with **full type safety** and **generic support**.
 
-> **Note**: This is a Golang port of the powerful [json-joy/json-patch](https://github.com/streamich/json-joy/tree/master/src/json-patch), bringing JSON Patch extended operations to the Go ecosystem with modern Go generics.
+> **json-joy Compatible**: This is a Go port of [json-joy/json-patch](https://github.com/streamich/json-joy/tree/master/src/json-patch) with 95%+ behavioral compatibility, bringing all JSON Patch extended operations to the Go ecosystem with modern Go generics.
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/kaptinlin/jsonpatch.svg)](https://pkg.go.dev/github.com/kaptinlin/jsonpatch)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kaptinlin/jsonpatch)](https://goreportcard.com/report/github.com/kaptinlin/jsonpatch)
@@ -141,6 +141,50 @@ func main() {
 }
 ```
 
+## 🎪 json-joy Compatibility
+
+This implementation provides **95%+ behavioral compatibility** with the TypeScript [json-joy/json-patch](https://github.com/streamich/json-joy/tree/master/src/json-patch) reference implementation:
+
+### ✅ **Predicate Negation Pattern**
+```go
+// Direct negation (only for specific operations)
+{Op: "test", Path: "/value", Value: 42, Not: true}
+{Op: "test_string", Path: "/name", Pos: 0, Str: "test", Not: true}
+{Op: "test_string_len", Path: "/name", Len: 5, Not: true}
+
+// Second-order predicate negation (for all other predicates)
+{
+    Op: "not",
+    Path: "",
+    Apply: []Operation{
+        {Op: "starts", Path: "/name", Value: "John"},
+    },
+}
+```
+
+### ✅ **Complex Predicate Logic**
+```go
+// Logical AND - all conditions must pass
+{
+    Op: "and", 
+    Path: "",
+    Apply: []Operation{
+        {Op: "starts", Path: "/name", Value: "John"},
+        {Op: "ends", Path: "/name", Value: "Doe"},
+    },
+}
+
+// Logical OR - any condition can pass
+{
+    Op: "or",
+    Path: "",
+    Apply: []Operation{
+        {Op: "contains", Path: "/email", Value: "@gmail.com"},
+        {Op: "contains", Path: "/email", Value: "@yahoo.com"},
+    },
+}
+```
+
 ## 🎯 Features
 
 ### ✨ **Type-Safe Generic API**
@@ -169,6 +213,9 @@ func main() {
 - **`starts`** - Test string beginnings
 - **`type`** - Type validation
 - **`less`/`more`** - Numeric comparisons
+- **`test_string`** - Position-based string testing with negation
+- **`test_string_len`** - String length validation with negation
+- **`and`/`or`/`not`** - Second-order logical predicate combinations
 
 ### 🔧 Extended Operations ([docs](docs/json-patch-extended.md))
 
@@ -189,26 +236,25 @@ func main() {
 
 ## 📖 Examples
 
-Explore comprehensive examples in the [`examples/`](examples/) directory:
+Explore comprehensive examples in the [`examples/`](examples/) directory (see [`examples/README.md`](examples/README.md) for complete guide):
 
-### Core Operations
+### 🏗️ **Core Operations**
 - **[Basic Operations](examples/basic-operations/)** - `add`, `replace`, `remove`, `test`
 - **[Array Operations](examples/array-operations/)** - Array manipulation
 - **[Conditional Operations](examples/conditional-operations/)** - Safe updates with tests
 - **[Copy & Move](examples/copy-move-operations/)** - Data restructuring
 - **[String Operations](examples/string-operations/)** - Text editing
 
-### Document Types
+### 📄 **Document Types**
 - **[Struct Patch](examples/struct-patch/)** - Type-safe Go structs
 - **[Map Patch](examples/map-patch/)** - Dynamic `map[string]any`
 - **[JSON Bytes](examples/json-bytes-patch/)** - Raw JSON byte data
 - **[JSON String](examples/json-string-patch/)** - JSON string data
 
-### Codecs
+### 🗜️ **Codecs**
 - **[Compact Codec](examples/compact-codec/)** - Space-efficient array format
-- **[Binary Codec](examples/binary-codec/)** - MessagePack format for maximum speed & compactness
 
-### Advanced
+### 🚀 **Advanced**
 - **[Batch Updates](examples/batch-update/)** - Bulk operations
 - **[Error Handling](examples/error-handling/)** - Error patterns
 - **[Mutate Option](examples/mutate-option/)** - Performance optimization
@@ -217,8 +263,8 @@ Explore comprehensive examples in the [`examples/`](examples/) directory:
 # Run any example
 cd examples/<example-name> && go run main.go
 
-# Try the compact codec demo
-cd examples/compact-codec && go run main.go
+# Try the struct patching demo
+cd examples/struct-patch && go run main.go
 ```
 
 ## 📚 API Reference

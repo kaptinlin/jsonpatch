@@ -61,9 +61,9 @@ func main() {
 	numberDoc := 42.0
 	incPatch := []jsonpatch.Operation{
 		{
-			Op:  "inc",
-			Path: "",  // Root path for primitive value
-			Inc: 8,
+			Op:   "inc",
+			Path: "", // Root path for primitive value
+			Inc:  8,
 		},
 	}
 
@@ -78,7 +78,7 @@ func main() {
 	flipPatch := []jsonpatch.Operation{
 		{
 			Op:   "flip",
-			Path: "",  // Root path for primitive value
+			Path: "", // Root path for primitive value
 		},
 	}
 

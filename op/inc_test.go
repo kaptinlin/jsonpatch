@@ -141,7 +141,7 @@ func TestOpInc_ToJSON(t *testing.T) {
 	op := NewInc([]string{"count"}, 5.5)
 	jsonOp, err := op.ToJSON()
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, "inc", jsonOp.Op)
 	assert.Equal(t, "/count", jsonOp.Path)
 	assert.Equal(t, 5.5, jsonOp.Inc)

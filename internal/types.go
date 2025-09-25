@@ -7,23 +7,23 @@ type Operation struct {
 	Path  string `json:"path"`
 	Value any    `json:"value,omitempty"`
 	From  string `json:"from,omitempty"`
-	
+
 	// Extended operation fields
 	Inc float64 `json:"inc"` // No omitempty - 0 is a valid increment
 	Pos int     `json:"pos"` // No omitempty - 0 is a valid position
-	Str string  `json:"str,omitempty"`
+	Str string  `json:"str"`
 	Len int     `json:"len"` // No omitempty - 0 is a valid length
-	
+
 	// Predicate fields
-	Not        bool     `json:"not,omitempty"`
-	Type       any      `json:"type,omitempty"`
-	IgnoreCase bool     `json:"ignore_case,omitempty"`
+	Not        bool        `json:"not,omitempty"`
+	Type       any         `json:"type,omitempty"`
+	IgnoreCase bool        `json:"ignore_case,omitempty"`
 	Apply      []Operation `json:"apply,omitempty"`
-	
+
 	// Special fields
 	Props      map[string]any `json:"props,omitempty"`
-	DeleteNull bool          `json:"deleteNull,omitempty"`
-	OldValue   any           `json:"oldValue,omitempty"`
+	DeleteNull bool           `json:"deleteNull,omitempty"`
+	OldValue   any            `json:"oldValue,omitempty"`
 }
 
 // CompactOperation represents a compact format operation

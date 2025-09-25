@@ -27,7 +27,7 @@ func TestTestTypeOp(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
 		t.Run("succeeds when target has correct type", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "",
 				Type: []interface{}{"object"},
 			}
@@ -36,7 +36,7 @@ func TestTestTypeOp(t *testing.T) {
 
 		t.Run("succeeds when target has correct type in list of types", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "",
 				Type: []interface{}{"number", "object"},
 			}
@@ -45,7 +45,7 @@ func TestTestTypeOp(t *testing.T) {
 
 		t.Run("matches null as null type", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "",
 				Type: []interface{}{"null"},
 			}
@@ -54,7 +54,7 @@ func TestTestTypeOp(t *testing.T) {
 
 		t.Run("does not match null as object type", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "",
 				Type: []interface{}{"object"},
 			}
@@ -63,7 +63,7 @@ func TestTestTypeOp(t *testing.T) {
 
 		t.Run("matches number as number type", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "",
 				Type: []interface{}{"string", "number"},
 			}
@@ -72,7 +72,7 @@ func TestTestTypeOp(t *testing.T) {
 
 		t.Run("does not match number as object and string types", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "",
 				Type: []interface{}{"string", "object"},
 			}
@@ -81,7 +81,7 @@ func TestTestTypeOp(t *testing.T) {
 
 		t.Run("matches float as number type", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "",
 				Type: []interface{}{"string", "number"},
 			}
@@ -90,7 +90,7 @@ func TestTestTypeOp(t *testing.T) {
 
 		t.Run("does not match float as integer", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "",
 				Type: []interface{}{"integer"},
 			}
@@ -99,7 +99,7 @@ func TestTestTypeOp(t *testing.T) {
 
 		t.Run("matches natural number as integer type", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "",
 				Type: []interface{}{"integer"},
 			}
@@ -108,7 +108,7 @@ func TestTestTypeOp(t *testing.T) {
 
 		t.Run("does not match array as object type", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "",
 				Type: []interface{}{"object"},
 			}
@@ -117,7 +117,7 @@ func TestTestTypeOp(t *testing.T) {
 
 		t.Run("does not match array as null type", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "",
 				Type: []interface{}{"null"},
 			}
@@ -126,7 +126,7 @@ func TestTestTypeOp(t *testing.T) {
 
 		t.Run("matches array as array type", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "",
 				Type: []interface{}{"null", "object", "array"},
 			}
@@ -135,14 +135,14 @@ func TestTestTypeOp(t *testing.T) {
 
 		t.Run("matches boolean as boolean type", func(t *testing.T) {
 			op1 := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "",
 				Type: []interface{}{"boolean"},
 			}
 			execTestType(t, true, op1)
 
 			op2 := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "",
 				Type: []interface{}{"boolean"},
 			}
@@ -153,7 +153,7 @@ func TestTestTypeOp(t *testing.T) {
 	t.Run("object", func(t *testing.T) {
 		t.Run("matches string with string type", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "/a",
 				Type: []interface{}{"string"},
 			}
@@ -162,7 +162,7 @@ func TestTestTypeOp(t *testing.T) {
 
 		t.Run("does not match string as null type", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "/a",
 				Type: []interface{}{"null"},
 			}
@@ -173,7 +173,7 @@ func TestTestTypeOp(t *testing.T) {
 	t.Run("array", func(t *testing.T) {
 		t.Run("matches string with string type", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "/a/0",
 				Type: []interface{}{"string"},
 			}
@@ -182,7 +182,7 @@ func TestTestTypeOp(t *testing.T) {
 
 		t.Run("does not match string as null type", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_type",
+				Op:   "test_type",
 				Path: "/a/0",
 				Type: []interface{}{"null"},
 			}

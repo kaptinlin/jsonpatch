@@ -2,6 +2,7 @@ package op
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 )
@@ -9,25 +10,51 @@ import (
 // TestStringOperation represents a test operation that checks if a value is a string and matches a pattern.
 type TestStringOperation struct {
 	BaseOp
-	Str string  `json:"str"` // Expected string value
-	Pos float64 `json:"pos"` // Position within string (optional)
+	Str        string `json:"str"`                   // Expected string value
+	Pos        int    `json:"pos"`                   // Position within string
+	NotFlag    bool   `json:"not,omitempty"`         // Whether to negate the result
+	IgnoreCase bool   `json:"ignore_case,omitempty"` // Whether to ignore case
 }
 
 // NewOpTestStringOperation creates a new OpTestStringOperation operation.
 func NewOpTestStringOperation(path []string, expectedValue string) *TestStringOperation {
 	return &TestStringOperation{
-		BaseOp: NewBaseOp(path),
-		Str:    expectedValue,
-		Pos:    0, // Default position
+		BaseOp:  NewBaseOp(path),
+		Str:     expectedValue,
+		Pos:     0,     // Default position
+		NotFlag: false, // Default not flag
 	}
 }
 
 // NewOpTestStringOperationWithPos creates a new OpTestStringOperation operation with position.
 func NewOpTestStringOperationWithPos(path []string, expectedValue string, pos float64) *TestStringOperation {
 	return &TestStringOperation{
-		BaseOp: NewBaseOp(path),
-		Str:    expectedValue,
-		Pos:    pos,
+		BaseOp:  NewBaseOp(path),
+		Str:     expectedValue,
+		Pos:     int(pos),
+		NotFlag: false, // Default not flag
+	}
+}
+
+// NewOpTestStringOperationWithPosAndNot creates a new OpTestStringOperation operation with position and not flag.
+func NewOpTestStringOperationWithPosAndNot(path []string, expectedValue string, pos float64, notFlag bool) *TestStringOperation {
+	return &TestStringOperation{
+		BaseOp:     NewBaseOp(path),
+		Str:        expectedValue,
+		Pos:        int(pos),
+		NotFlag:    notFlag,
+		IgnoreCase: false,
+	}
+}
+
+// NewOpTestStringOperationWithIgnoreCase creates a new OpTestStringOperation operation with ignore case flag.
+func NewOpTestStringOperationWithIgnoreCase(path []string, expectedValue string, pos float64, notFlag bool, ignoreCase bool) *TestStringOperation {
+	return &TestStringOperation{
+		BaseOp:     NewBaseOp(path),
+		Str:        expectedValue,
+		Pos:        int(pos),
+		NotFlag:    notFlag,
+		IgnoreCase: ignoreCase,
 	}
 }
 
@@ -67,7 +94,31 @@ func (op *TestStringOperation) Test(doc any) (bool, error) {
 		return false, nil // Return false if not string or byte slice
 	}
 
-	return str == op.Str, nil
+	// Implement the same logic as json-joy reference
+	// const length = (val as string).length;
+	// const start = Math.min(this.pos, length);
+	// const end = Math.min(this.pos + this.str.length, length);
+	// const test = (val as string).substring(start, end) === this.str;
+	// return this.not ? !test : test;
+
+	length := len(str)
+	start := op.Pos
+	if start > length {
+		start = length
+	}
+	end := op.Pos + len(op.Str)
+	if end > length {
+		end = length
+	}
+
+	substring := str[start:end]
+	var test bool
+	if op.IgnoreCase {
+		test = strings.EqualFold(substring, op.Str)
+	} else {
+		test = substring == op.Str
+	}
+	return op.NotFlag != test, nil // XOR with NotFlag for negation
 }
 
 // Apply applies the test string operation to the document.
@@ -90,7 +141,7 @@ func (op *TestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	// High-performance type conversion (single, boundary conversion)
-	pos := int(op.Pos) // Already validated as safe integer
+	pos := op.Pos // Already validated as safe integer
 	// Check if substring matches at the specified position
 	if pos < 0 || pos > len(str) {
 		return internal.OpResult[any]{}, ErrPositionOutOfStringRange
@@ -102,7 +153,19 @@ func (op *TestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	substring := str[pos:endPos]
-	if substring != op.Str {
+	var matches bool
+	if op.IgnoreCase {
+		matches = strings.EqualFold(substring, op.Str)
+	} else {
+		matches = substring == op.Str
+	}
+
+	// Apply negation logic using XOR (same as Test method)
+	shouldPass := matches != op.NotFlag
+	if !shouldPass {
+		if op.NotFlag {
+			return internal.OpResult[any]{}, fmt.Errorf("%w: expected substring NOT %q at position %d, but got %q", ErrSubstringMismatch, op.Str, pos, substring)
+		}
 		return internal.OpResult[any]{}, fmt.Errorf("%w at position %d", ErrSubstringMismatch, pos)
 	}
 
@@ -112,10 +175,12 @@ func (op *TestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
 // ToJSON serializes the operation to JSON format.
 func (op *TestStringOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
-		Op:   string(internal.OpTestStringType),
-		Path: formatPath(op.Path()),
-		Str:  op.Str,
-		Pos:  int(op.Pos),
+		Op:         string(internal.OpTestStringType),
+		Path:       formatPath(op.Path()),
+		Str:        op.Str,
+		Pos:        op.Pos,
+		Not:        op.NotFlag,
+		IgnoreCase: op.IgnoreCase,
 	}
 	return result, nil
 }
@@ -123,6 +188,11 @@ func (op *TestStringOperation) ToJSON() (internal.Operation, error) {
 // ToCompact serializes the operation to compact format.
 func (op *TestStringOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpTestStringCode, op.Path(), op.Str}, nil
+}
+
+// Not returns whether this operation is a negation predicate.
+func (op *TestStringOperation) Not() bool {
+	return op.NotFlag
 }
 
 // Validate validates the test string operation.

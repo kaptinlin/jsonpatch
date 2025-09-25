@@ -84,7 +84,7 @@ func TestOpRemove_NonExistent(t *testing.T) {
 	removeOp := NewRemove([]string{"qux"})
 	_, err := removeOp.Apply(doc)
 	assert.Error(t, err, "Remove should fail for non-existent field")
-	assert.Contains(t, err.Error(), "path not found", "Error message should be descriptive")
+	assert.Contains(t, err.Error(), "NOT_FOUND", "Error message should be descriptive")
 }
 
 func TestOpRemove_EmptyPath(t *testing.T) {
@@ -97,7 +97,7 @@ func TestOpRemove_EmptyPath(t *testing.T) {
 	removeOp := NewRemove([]string{})
 	_, err := removeOp.Apply(doc)
 	assert.Error(t, err, "Remove should fail for empty path")
-	assert.Contains(t, err.Error(), "path cannot be empty", "Error message should mention empty path")
+	assert.Contains(t, err.Error(), "OP_PATH_INVALID", "Error message should mention empty path")
 }
 
 func TestOpRemove_InterfaceMethods(t *testing.T) {
@@ -149,5 +149,5 @@ func TestOpRemove_Validate(t *testing.T) {
 	removeOp = NewRemove([]string{})
 	err = removeOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
-	assert.Contains(t, err.Error(), "path cannot be empty", "Error message should mention empty path")
+	assert.Contains(t, err.Error(), "OP_PATH_INVALID", "Error message should mention empty path")
 }

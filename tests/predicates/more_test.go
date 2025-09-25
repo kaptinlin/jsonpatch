@@ -12,8 +12,8 @@ func TestMoreOp(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
 		t.Run("succeeds when value is higher than requested", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "more",
-				Path: "",
+				Op:    "more",
+				Path:  "",
 				Value: 99,
 			}
 			patch := []internal.Operation{op}
@@ -23,8 +23,8 @@ func TestMoreOp(t *testing.T) {
 
 		t.Run("fails when value is not higher than requested", func(t *testing.T) {
 			op1 := internal.Operation{
-				Op: "more",
-				Path: "",
+				Op:    "more",
+				Path:  "",
 				Value: 123,
 			}
 			patch1 := []internal.Operation{op1}
@@ -32,8 +32,8 @@ func TestMoreOp(t *testing.T) {
 			require.Error(t, err1)
 
 			op2 := internal.Operation{
-				Op: "more",
-				Path: "",
+				Op:    "more",
+				Path:  "",
 				Value: 124,
 			}
 			patch2 := []internal.Operation{op2}

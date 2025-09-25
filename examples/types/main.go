@@ -14,31 +14,31 @@ type User struct {
 }
 
 func main() {
-	// Struct operations using new Operation syntax
+	// Apply patch operations to struct
 	user := User{Name: "John", Age: 30}
 	patch := []jsonpatch.Operation{
 		{Op: "add", Path: "/email", Value: "john@example.com"},
 	}
-	
+
 	result, err := jsonpatch.ApplyPatch(user, patch)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
-	
+
 	fmt.Printf("Updated user: %+v\n", result.Doc)
 
-	// JSON operations using new Operation syntax
+	// Apply patch operations to JSON string
 	jsonStr := `{"name":"Alice","age":25}`
 	jsonPatch := []jsonpatch.Operation{
 		{Op: "replace", Path: "/age", Value: 26},
 	}
-	
+
 	jsonResult, err := jsonpatch.ApplyPatch(jsonStr, jsonPatch)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
-	
+
 	fmt.Printf("Updated JSON: %s\n", jsonResult.Doc)
 }

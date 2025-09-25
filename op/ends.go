@@ -12,6 +12,7 @@ type EndsOperation struct {
 	BaseOp
 	Value      string `json:"value"`       // Expected suffix
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case
+	NotFlag    bool   `json:"not"`         // Whether to negate the result
 }
 
 type OpEndsOperation = EndsOperation //nolint:revive // Backward compatibility alias
@@ -59,10 +60,15 @@ func (op *EndsOperation) Test(doc any) (bool, error) {
 		return false, nil
 	}
 
+	var result bool
 	if op.IgnoreCase {
-		return strings.HasSuffix(strings.ToLower(str), strings.ToLower(op.Value)), nil
+		result = strings.HasSuffix(strings.ToLower(str), strings.ToLower(op.Value))
+	} else {
+		result = strings.HasSuffix(str, op.Value)
 	}
-	return strings.HasSuffix(str, op.Value), nil
+	
+	// Apply negation if needed
+	return result != op.NotFlag, nil
 }
 
 // Apply applies the ends test operation to the document.
@@ -79,7 +85,13 @@ func (op *EndsOperation) Apply(doc any) (internal.OpResult[any], error) {
 		hasSuffix = strings.HasSuffix(str, op.Value)
 	}
 
-	if !hasSuffix {
+	// Apply negation if needed
+	result := hasSuffix != op.NotFlag
+
+	if !result {
+		if op.NotFlag {
+			return internal.OpResult[any]{}, fmt.Errorf("%w: string %q ends with %q (negated test failed)", ErrStringMismatch, str, op.Value)
+		}
 		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not end with %q", ErrStringMismatch, str, op.Value)
 	}
 
@@ -105,17 +117,28 @@ func (op *EndsOperation) getAndValidateString(doc any) (interface{}, string, err
 
 // ToJSON serializes the operation to JSON format.
 func (op *EndsOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:         string(internal.OpEndsType),
-		Path:       formatPath(op.Path()),
-		Value:      op.Value,
-		IgnoreCase: op.IgnoreCase,
-	}, nil
+	result := internal.Operation{
+		Op:    string(internal.OpEndsType),
+		Path:  formatPath(op.Path()),
+		Value: op.Value,
+	}
+	if op.IgnoreCase {
+		result.IgnoreCase = op.IgnoreCase
+	}
+	if op.NotFlag {
+		result.Not = op.NotFlag
+	}
+	return result, nil
 }
 
 // ToCompact serializes the operation to compact format.
 func (op *EndsOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpEndsCode, op.Path(), op.Value}, nil
+}
+
+// Not returns the negation flag for this operation.
+func (op *EndsOperation) Not() bool {
+	return op.NotFlag
 }
 
 // Validate validates the ends operation.

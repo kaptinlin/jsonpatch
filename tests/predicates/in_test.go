@@ -33,7 +33,7 @@ func TestInOp(t *testing.T) {
 				"hello": "world",
 			}
 			op := internal.Operation{
-				Op: "in",
+				Op:   "in",
 				Path: "",
 				Value: []interface{}{
 					1,
@@ -51,8 +51,8 @@ func TestInOp(t *testing.T) {
 				"hello": "world",
 			}
 			op := internal.Operation{
-				Op: "in",
-				Path: "",
+				Op:    "in",
+				Path:  "",
 				Value: []interface{}{1},
 			}
 			applyOperationWithErrorIn(t, obj, op)
@@ -65,8 +65,8 @@ func TestInOp(t *testing.T) {
 				},
 			}
 			op := internal.Operation{
-				Op: "in",
-				Path: "",
+				Op:    "in",
+				Path:  "",
 				Value: []interface{}{1},
 			}
 			applyOperationWithErrorIn(t, obj, op)

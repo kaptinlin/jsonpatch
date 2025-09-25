@@ -10,8 +10,9 @@ import (
 // MatchesOperation represents a "matches" predicate operation that checks if a string matches a regex pattern.
 type MatchesOperation struct {
 	BaseOp
-	Pattern    string         // The regex pattern string
-	IgnoreCase bool           // Case insensitive flag
+	Pattern    string         `json:"value"`       // The regex pattern string
+	IgnoreCase bool           `json:"ignore_case"` // Case insensitive flag
+	NotFlag    bool           `json:"not"`         // Whether to negate the result
 	matcher    *regexp.Regexp // Compiled regex matcher
 }
 
@@ -34,6 +35,31 @@ func NewOpMatchesOperation(path []string, pattern string, ignoreCase bool) (*Mat
 		BaseOp:     NewBaseOp(path),
 		Pattern:    pattern,
 		IgnoreCase: ignoreCase,
+		NotFlag:    false,
+		matcher:    matcher,
+	}, nil
+}
+
+// NewOpMatchesOperationWithFlags creates a new matches operation with full options.
+func NewOpMatchesOperationWithFlags(path []string, pattern string, ignoreCase bool, notFlag bool) (*MatchesOperation, error) {
+	// Compile the regex pattern
+	var regexPattern string
+	if ignoreCase {
+		regexPattern = "(?i)" + pattern
+	} else {
+		regexPattern = pattern
+	}
+
+	matcher, err := regexp.Compile(regexPattern)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrRegexPattern, err)
+	}
+
+	return &MatchesOperation{
+		BaseOp:     NewBaseOp(path),
+		Pattern:    pattern,
+		IgnoreCase: ignoreCase,
+		NotFlag:    notFlag,
 		matcher:    matcher,
 	}, nil
 }
@@ -68,7 +94,14 @@ func (o *MatchesOperation) Test(doc interface{}) (bool, error) {
 		return false, nil
 	}
 
-	return o.matcher.MatchString(str), nil
+	matches := o.matcher.MatchString(str)
+	
+	// Apply negation if needed
+	if o.NotFlag {
+		matches = !matches
+	}
+
+	return matches, nil
 }
 
 // Apply applies the matches operation.
@@ -85,7 +118,17 @@ func (o *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, ErrNotString
 	}
 
-	if !o.matcher.MatchString(str) {
+	matches := o.matcher.MatchString(str)
+	
+	// Apply negation if needed
+	if o.NotFlag {
+		matches = !matches
+	}
+
+	if !matches {
+		if o.NotFlag {
+			return internal.OpResult[any]{}, fmt.Errorf("%w: string '%s' matches pattern", ErrStringMismatch, str)
+		}
 		return internal.OpResult[any]{}, fmt.Errorf("%w: string '%s' does not match pattern", ErrStringMismatch, str)
 	}
 
@@ -99,6 +142,7 @@ func (o *MatchesOperation) ToJSON() (internal.Operation, error) {
 		Path:       formatPath(o.Path()),
 		Value:      o.Pattern,
 		IgnoreCase: o.IgnoreCase,
+		Not:        o.NotFlag,
 	}
 
 	return result, nil
@@ -107,6 +151,11 @@ func (o *MatchesOperation) ToJSON() (internal.Operation, error) {
 // ToCompact converts the operation to compact array representation.
 func (o *MatchesOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpMatchesCode, o.Path(), o.Pattern, o.IgnoreCase}, nil
+}
+
+// Not returns the negation flag.
+func (o *MatchesOperation) Not() bool {
+	return o.NotFlag
 }
 
 // Validate validates the matches operation.

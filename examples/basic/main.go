@@ -10,7 +10,7 @@ import (
 func main() {
 	doc := map[string]any{"name": "John", "age": 30}
 
-	// Using new struct-based Operation syntax
+	// Create patch operations
 	patch := []jsonpatch.Operation{
 		{Op: "add", Path: "/email", Value: "john@example.com"},
 		{Op: "replace", Path: "/name", Value: "Jane"},
@@ -21,6 +21,6 @@ func main() {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
-	
+
 	fmt.Printf("After operations: %+v\n", result.Doc)
 }

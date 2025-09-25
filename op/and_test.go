@@ -159,5 +159,5 @@ func TestOpAnd_Validate(t *testing.T) {
 	andOp = NewAnd([]string{"test"}, []interface{}{})
 	err = andOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
-	assert.Contains(t, err.Error(), "must have at least one operand", "Error message should mention missing operands")
+	assert.Contains(t, err.Error(), "empty operation patch", "Error message should mention missing operands")
 }

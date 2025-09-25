@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/go-json-experiment/json"
-	"github.com/stretchr/testify/require"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/require"
 )
 
 // Simple test data for benchmarking - using struct-based Operations

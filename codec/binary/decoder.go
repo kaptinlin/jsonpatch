@@ -98,11 +98,7 @@ func decodeOp(reader *msgp.Reader) (internal.Op, error) {
 	case internal.OpDefinedCode:
 		return op.NewOpDefinedOperation(path), nil
 	case internal.OpUndefinedCode:
-		not, err := reader.ReadBool()
-		if err != nil {
-			return nil, err
-		}
-		return op.NewOpUndefinedOperation(path, not), nil
+		return op.NewOpUndefinedOperation(path), nil
 	case internal.OpLessCode:
 		value, err := decodeValue(reader)
 		if err != nil {

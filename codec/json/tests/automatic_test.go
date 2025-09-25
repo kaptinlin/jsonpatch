@@ -39,7 +39,7 @@ func TestAutomaticCodec(t *testing.T) {
 
 			// Convert expected operation map to Operation struct for comparison
 			expectedOp := mapToOperation(operation)
-			
+
 			// Verify round-trip consistency by comparing the struct fields
 			assert.Equal(t, expectedOp.Op, encoded[0].Op)
 			assert.Equal(t, expectedOp.Path, encoded[0].Path)
@@ -102,7 +102,7 @@ func TestCodecRoundTrip(t *testing.T) {
 // mapToOperation converts a map[string]interface{} to internal.Operation struct
 func mapToOperation(opMap map[string]interface{}) internal.Operation {
 	op := internal.Operation{}
-	
+
 	// Set basic fields first
 	if val, ok := opMap["op"].(string); ok {
 		op.Op = val
@@ -140,7 +140,7 @@ func mapToOperation(opMap map[string]interface{}) internal.Operation {
 	if val, exists := opMap["oldValue"]; exists {
 		op.OldValue = val
 	}
-	
+
 	// Handle value and type fields with special logic for test_type operations
 	if op.Op == "test_type" {
 		// For test_type operations, type field logic takes precedence
@@ -179,7 +179,7 @@ func mapToOperation(opMap map[string]interface{}) internal.Operation {
 			op.Type = typeStr
 		}
 	}
-	
+
 	// Handle apply field for compound operations
 	if val, ok := opMap["apply"].([]interface{}); ok {
 		applyOps := make([]internal.Operation, 0, len(val))
@@ -190,6 +190,6 @@ func mapToOperation(opMap map[string]interface{}) internal.Operation {
 		}
 		op.Apply = applyOps
 	}
-	
+
 	return op
 }

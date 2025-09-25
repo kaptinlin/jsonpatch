@@ -218,53 +218,51 @@ func containsError(errorMessage, expectedType string) bool {
 	errorMappings := map[string][]string{
 		// Legacy error mappings (keep existing compatibility)
 		"path /a does not exist -- missing objects are not created recursively": {
-			"path does not exist -- missing objects are not created recursively",
+			"NOT_FOUND",
 		},
 		"add to a non-existent target": {
-			"path does not exist -- missing objects are not created recursively",
+			"NOT_FOUND",
 		},
 		"number is not equal to string": {
 			"string not equivalent",
 		},
 		"Out of bounds (upper)": {
-			"array index out of bounds",
-			"index out of range",
+			"INVALID_INDEX",
 		},
 		"Out of bounds (lower)": {
-			"array index out of bounds",
-			"index out of range",
+			"INVALID_INDEX",
 		},
 		"test op shouldn't get array element 1": {
-			"test failed: path not found",
-			"path not found",
+			"test operation failed: path not found",
+			"NOT_FOUND",
 		},
 		"Object operation on array target": {
 			"invalid array index",
 			"invalid path",
-			"operation 0 failed: path not found",
+			"operation 0 failed: NOT_FOUND",
 		},
 		"remove op shouldn't remove from array with bad number": {
-			"path not found",
+			"NOT_FOUND",
 			"invalid path",
-			"operation 0 failed: path not found",
+			"operation 0 failed: NOT_FOUND",
 		},
 		"replace op shouldn't replace in array with bad number": {
 			"invalid path",
-			"operation 0 failed: path not found",
+			"operation 0 failed: NOT_FOUND",
 		},
 		"copy op shouldn't work with bad number": {
-			"copy failed: path not found",
-			"path not found",
+			"copy failed: NOT_FOUND",
+			"NOT_FOUND",
 		},
 		"move op shouldn't work with bad number": {
-			"move failed: path not found",
-			"path not found",
-			"operation 0 failed: path not found",
+			"move failed: NOT_FOUND",
+			"NOT_FOUND",
+			"operation 0 failed: NOT_FOUND",
 		},
 		"add op shouldn't add to array with bad number": {
 			"invalid path",
 			"invalid array index",
-			"operation 0 failed: path not found",
+			"operation 0 failed: NOT_FOUND",
 		},
 		"test op should fail": {
 			"test failed",
@@ -320,10 +318,10 @@ func containsError(errorMessage, expectedType string) bool {
 		// New error mappings for op/errors.go definitions
 		// Path related errors
 		"path cannot be empty": {
-			"ErrPathEmpty", "path cannot be empty",
+			"ErrPathEmpty", "OP_PATH_INVALID",
 		},
 		"from path cannot be empty": {
-			"ErrFromPathEmpty", "from path cannot be empty",
+			"ErrFromPathEmpty", "OP_FROM_INVALID",
 		},
 		"path and from cannot be the same": {
 			"ErrPathsIdentical", "path and from cannot be the same",
@@ -461,7 +459,7 @@ func containsError(errorMessage, expectedType string) bool {
 
 		// Path operation specific errors - complete prefixed error mappings
 		"path not found": {
-			"path not found", "ErrPathNotFound",
+			"NOT_FOUND", "ErrPathNotFound",
 			"path does not exist", "ErrPathDoesNotExist",
 			"contains failed: path not found",
 			"ends failed: path not found",

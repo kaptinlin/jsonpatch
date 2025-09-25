@@ -213,7 +213,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
 			require.Error(t, err)
-			assert.Contains(t, err.Error(), "path not found")
+			assert.Contains(t, err.Error(), "NOT_FOUND")
 		})
 	})
 }

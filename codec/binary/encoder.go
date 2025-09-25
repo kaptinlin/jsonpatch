@@ -120,16 +120,13 @@ func encodeOp(writer *msgp.Writer, i internal.Op) error {
 		}
 		return encodePath(writer, o.Path())
 	case *op.UndefinedOperation:
-		if err := writer.WriteArrayHeader(3); err != nil {
+		if err := writer.WriteArrayHeader(2); err != nil {
 			return err
 		}
 		if err := writer.WriteUint8(uint8(o.Code())); err != nil {
 			return err
 		}
-		if err := encodePath(writer, o.Path()); err != nil {
-			return err
-		}
-		return writer.WriteBool(o.Not())
+		return encodePath(writer, o.Path())
 	case *op.LessOperation:
 		if err := writer.WriteArrayHeader(3); err != nil {
 			return err
@@ -223,7 +220,7 @@ func encodeOp(writer *msgp.Writer, i internal.Op) error {
 		if err := writer.WriteString(o.Str); err != nil {
 			return err
 		}
-		return writer.WriteFloat64(o.Pos)
+		return writer.WriteFloat64(float64(o.Pos))
 	case *op.TestStringLenOperation:
 		if err := writer.WriteArrayHeader(4); err != nil {
 			return err
@@ -237,7 +234,7 @@ func encodeOp(writer *msgp.Writer, i internal.Op) error {
 		if err := writer.WriteFloat64(o.Length); err != nil {
 			return err
 		}
-		return writer.WriteBool(o.Not)
+		return writer.WriteBool(o.Not())
 	// Type predicate operation
 	case *op.TypeOperation:
 		if err := writer.WriteArrayHeader(3); err != nil {

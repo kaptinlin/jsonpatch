@@ -69,7 +69,7 @@ func TestOpMove_FromNonExistent(t *testing.T) {
 	moveOp := NewMove([]string{"target"}, []string{"qux"})
 	_, err := moveOp.Apply(doc)
 	assert.Error(t, err, "Move should fail for non-existent from path")
-	assert.Contains(t, err.Error(), "path not found", "Error message should be descriptive")
+	assert.Contains(t, err.Error(), "NOT_FOUND", "Error message should be descriptive")
 }
 
 func TestOpMove_SamePath(t *testing.T) {
@@ -100,7 +100,7 @@ func TestOpMove_EmptyPath(t *testing.T) {
 	moveOp := NewMove([]string{}, []string{"foo"})
 	err := moveOp.Validate()
 	assert.Error(t, err, "Move should fail validation for empty path")
-	assert.Contains(t, err.Error(), "path cannot be empty", "Error message should mention empty path")
+	assert.Contains(t, err.Error(), "OP_PATH_INVALID", "Error message should mention empty path")
 }
 
 func TestOpMove_EmptyFrom(t *testing.T) {
@@ -108,7 +108,7 @@ func TestOpMove_EmptyFrom(t *testing.T) {
 	moveOp := NewMove([]string{"target"}, []string{})
 	err := moveOp.Validate()
 	assert.Error(t, err, "Move should fail validation for empty from path")
-	assert.Contains(t, err.Error(), "from path cannot be empty", "Error message should mention empty from path")
+	assert.Contains(t, err.Error(), "OP_FROM_INVALID", "Error message should mention empty from path")
 }
 
 func TestOpMove_InterfaceMethods(t *testing.T) {
@@ -168,19 +168,19 @@ func TestOpMove_Validate(t *testing.T) {
 	moveOp = NewMove([]string{}, []string{"source"})
 	err = moveOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
-	assert.Contains(t, err.Error(), "path cannot be empty", "Error message should mention empty path")
+	assert.Contains(t, err.Error(), "OP_PATH_INVALID", "Error message should mention empty path")
 
 	// Test invalid operation (empty from)
 	moveOp = NewMove([]string{"target"}, []string{})
 	err = moveOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
-	assert.Contains(t, err.Error(), "from path cannot be empty", "Error message should mention empty from path")
+	assert.Contains(t, err.Error(), "OP_FROM_INVALID", "Error message should mention empty from path")
 
 	// Test invalid operation (same path and from)
 	moveOp = NewMove([]string{"same"}, []string{"same"})
 	err = moveOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
-	assert.Contains(t, err.Error(), "path and from cannot be the same", "Error message should mention same paths")
+	assert.Contains(t, err.Error(), "cannot move into own children", "Error message should mention same paths")
 }
 
 func TestOpMove_RFC6902_RemoveAddPattern(t *testing.T) {

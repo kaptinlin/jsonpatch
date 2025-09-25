@@ -12,8 +12,8 @@ func TestEndsOp(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
 		t.Run("succeeds when string ends with suffix", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "ends",
-				Path: "",
+				Op:    "ends",
+				Path:  "",
 				Value: "world",
 			}
 			patch := []internal.Operation{op}
@@ -23,8 +23,8 @@ func TestEndsOp(t *testing.T) {
 
 		t.Run("throws when string does not end with suffix", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "ends",
-				Path: "",
+				Op:    "ends",
+				Path:  "",
 				Value: "Hello",
 			}
 			patch := []internal.Operation{op}
@@ -34,9 +34,9 @@ func TestEndsOp(t *testing.T) {
 
 		t.Run("can ignore case", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "ends",
-				Path: "",
-				Value: "WORLD",
+				Op:         "ends",
+				Path:       "",
+				Value:      "WORLD",
 				IgnoreCase: true,
 			}
 			patch := []internal.Operation{op}
@@ -48,8 +48,8 @@ func TestEndsOp(t *testing.T) {
 	t.Run("object", func(t *testing.T) {
 		t.Run("succeeds when string ends with suffix", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "ends",
-				Path: "/msg",
+				Op:    "ends",
+				Path:  "/msg",
 				Value: "world",
 			}
 			patch := []internal.Operation{op}
@@ -59,8 +59,8 @@ func TestEndsOp(t *testing.T) {
 
 		t.Run("throws when string does not end with suffix", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "ends",
-				Path: "/msg",
+				Op:    "ends",
+				Path:  "/msg",
 				Value: "Hello",
 			}
 			patch := []internal.Operation{op}
@@ -72,8 +72,8 @@ func TestEndsOp(t *testing.T) {
 	t.Run("array", func(t *testing.T) {
 		t.Run("succeeds when string ends with suffix", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "ends",
-				Path: "/0",
+				Op:    "ends",
+				Path:  "/0",
 				Value: "world",
 			}
 			patch := []internal.Operation{op}
@@ -83,8 +83,8 @@ func TestEndsOp(t *testing.T) {
 
 		t.Run("throws when string does not end with suffix", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "ends",
-				Path: "/0",
+				Op:    "ends",
+				Path:  "/0",
 				Value: "Hello",
 			}
 			patch := []internal.Operation{op}

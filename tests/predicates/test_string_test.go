@@ -29,7 +29,7 @@ func TestTestString(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_string",
+				Op:   "test_string",
 				Path: "",
 				Pos:  1,
 				Str:  "oo b",
@@ -39,7 +39,7 @@ func TestTestString(t *testing.T) {
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "test_string",
+				Op:   "test_string",
 				Path: "",
 				Pos:  3,
 				Str:  "oo",
@@ -48,7 +48,7 @@ func TestTestString(t *testing.T) {
 
 			// This should succeed
 			op2 := internal.Operation{
-				Op: "test_string",
+				Op:   "test_string",
 				Path: "",
 				Pos:  4,
 				Str:  "bar",
@@ -61,7 +61,7 @@ func TestTestString(t *testing.T) {
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
 			obj := map[string]interface{}{"a": "b", "test": "foo bar"}
 			op := internal.Operation{
-				Op: "test_string",
+				Op:   "test_string",
 				Path: "/test",
 				Pos:  1,
 				Str:  "oo b",
@@ -72,7 +72,7 @@ func TestTestString(t *testing.T) {
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
 			obj := map[string]interface{}{"test": "foo bar"}
 			op := internal.Operation{
-				Op: "test_string",
+				Op:   "test_string",
 				Path: "/test",
 				Pos:  3,
 				Str:  "oo",
@@ -85,7 +85,7 @@ func TestTestString(t *testing.T) {
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
 			obj := map[string]interface{}{"a": "b", "test": []interface{}{"foo bar"}}
 			op := internal.Operation{
-				Op: "test_string",
+				Op:   "test_string",
 				Path: "/test/0",
 				Pos:  1,
 				Str:  "oo b",
@@ -96,7 +96,7 @@ func TestTestString(t *testing.T) {
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
 			obj := map[string]interface{}{"test": []interface{}{"foo bar"}}
 			op := internal.Operation{
-				Op: "test_string",
+				Op:   "test_string",
 				Path: "/test/0",
 				Pos:  3,
 				Str:  "oo",

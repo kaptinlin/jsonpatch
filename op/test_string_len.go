@@ -9,25 +9,25 @@ import (
 // TestStringLenOperation represents a test operation that checks if a string value has a specific length.
 type TestStringLenOperation struct {
 	BaseOp
-	Length float64 `json:"len"` // Expected string length
-	Not    bool    `json:"not"` // Whether to negate the result
+	Length  float64 `json:"len"` // Expected string length
+	NotFlag bool    `json:"not"` // Whether to negate the result
 }
 
 // NewOpTestStringLenOperation creates a new OpTestStringLenOperation operation.
 func NewOpTestStringLenOperation(path []string, expectedLength float64) *TestStringLenOperation {
 	return &TestStringLenOperation{
-		BaseOp: NewBaseOp(path),
-		Length: expectedLength,
-		Not:    false,
+		BaseOp:  NewBaseOp(path),
+		Length:  expectedLength,
+		NotFlag: false,
 	}
 }
 
 // NewOpTestStringLenOperationWithNot creates a new OpTestStringLenOperation operation with not flag.
 func NewOpTestStringLenOperationWithNot(path []string, expectedLength float64, not bool) *TestStringLenOperation {
 	return &TestStringLenOperation{
-		BaseOp: NewBaseOp(path),
-		Length: expectedLength,
-		Not:    not,
+		BaseOp:  NewBaseOp(path),
+		Length:  expectedLength,
+		NotFlag: not,
 	}
 }
 
@@ -63,13 +63,11 @@ func (op *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error)
 	// High-performance type conversion (single, boundary conversion)
 	length := int(op.Length) // Already validated as safe integer
 	// Check if the string length matches (>= comparison like TypeScript version)
+	// Use XOR pattern: NotFlag XOR condition - if they're the same, the test fails
 	lengthMatches := len(actualValue) >= length
-	if op.Not {
-		lengthMatches = !lengthMatches
-	}
-
-	if !lengthMatches {
-		if op.Not {
+	if op.NotFlag == lengthMatches {
+		// Test failed
+		if op.NotFlag {
 			return internal.OpResult[any]{}, fmt.Errorf("%w: expected length NOT >= %d, but got %d", ErrStringLengthMismatch, length, len(actualValue))
 		}
 		return internal.OpResult[any]{}, fmt.Errorf("%w: expected length >= %d, got %d", ErrStringLengthMismatch, length, len(actualValue))
@@ -89,8 +87,8 @@ func (op *TestStringLenOperation) ToJSON() (internal.Operation, error) {
 		Path: formatPath(op.Path()),
 		Len:  int(op.Length),
 	}
-	if op.Not {
-		result.Not = op.Not
+	if op.NotFlag {
+		result.Not = op.NotFlag
 	}
 	return result, nil
 }
@@ -109,6 +107,33 @@ func (op *TestStringLenOperation) Validate() error {
 		return ErrLengthNegative
 	}
 	return nil
+}
+
+// Test tests the string length condition on the document.
+func (op *TestStringLenOperation) Test(doc any) (bool, error) {
+	// Get the value at the path
+	value, err := getValue(doc, op.Path())
+	if err != nil {
+		return false, ErrPathNotFound
+	}
+
+	// Convert value to string
+	actualValue, err := toString(value)
+	if err != nil {
+		return false, ErrNotString
+	}
+
+	// High-performance type conversion (single, boundary conversion)
+	length := int(op.Length) // Already validated as safe integer
+	// Check if the string length matches (>= comparison like TypeScript version)
+	lengthMatches := len(actualValue) >= length
+	// Use XOR pattern: NotFlag XOR condition - if they're different, the test passes
+	return op.NotFlag != lengthMatches, nil
+}
+
+// Not returns whether this is a negation predicate.
+func (op *TestStringLenOperation) Not() bool {
+	return op.NotFlag
 }
 
 // Short aliases for common use

@@ -28,7 +28,7 @@ func main() {
 
 // demoBasicMapPatch demonstrates basic map patching
 func demoBasicMapPatch() {
-	// Original document as map
+	// Document to modify
 	doc := map[string]any{
 		"name":   "Alice Cooper",
 		"age":    25,

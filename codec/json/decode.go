@@ -129,8 +129,9 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 		if !ok {
 			return nil, ErrStrDelOpMissingPos
 		}
+
 		// str_del can have either str or len parameter
-		if str, ok := operation["str"].(string); ok {
+		if str, ok := operation["str"].(string); ok && str != "" {
 			return op.NewOpStrDelOperationWithStr(path, pos, str), nil
 		}
 		if lenVal, ok := op.ToFloat64(operation["len"]); ok {
@@ -288,7 +289,7 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 	case "defined":
 		return op.NewOpDefinedOperation(path), nil
 	case "undefined":
-		return op.NewOpUndefinedOperation(path, false), nil
+		return op.NewOpUndefinedOperation(path), nil
 	case "type":
 		value, ok := operation["value"].(string)
 		if !ok {
@@ -343,8 +344,12 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		if posVal, ok := op.ToFloat64(operation["pos"]); ok {
 			pos = posVal
 		}
-		if pos != 0 {
-			return op.NewOpTestStringOperationWithPos(path, str, pos), nil
+		notFlag, _ := operation["not"].(bool)
+		ignoreCase, _ := operation["ignore_case"].(bool)
+
+		// Use the most specific constructor based on what fields are set
+		if pos != 0 || notFlag || ignoreCase {
+			return op.NewOpTestStringOperationWithIgnoreCase(path, str, pos, notFlag, ignoreCase), nil
 		}
 		return op.NewOpTestStringOperation(path, str), nil
 	case "test_string_len":
@@ -375,10 +380,14 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 			ignoreCase = ic
 		}
 
-		if ignoreCase {
-			return op.NewOpContainsOperationWithIgnoreCase(path, value, ignoreCase), nil
+		// Check for not flag
+		notFlag := false
+		if n, ok := operation["not"].(bool); ok {
+			notFlag = n
 		}
-		return op.NewOpContainsOperation(path, value), nil
+
+		// Use the most comprehensive constructor
+		return op.NewOpContainsOperationWithFlags(path, value, ignoreCase, notFlag), nil
 	case "ends":
 		value, ok := operation["value"].(string)
 		if !ok {
@@ -391,10 +400,20 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 			ignoreCase = ic
 		}
 
-		if ignoreCase {
-			return op.NewOpEndsOperationWithIgnoreCase(path, value, ignoreCase), nil
+		// Check for not flag
+		notFlag := false
+		if n, ok := operation["not"].(bool); ok {
+			notFlag = n
 		}
-		return op.NewOpEndsOperation(path, value), nil
+
+		// Create the operation with appropriate flags
+		endsOp := &op.EndsOperation{
+			BaseOp:     op.NewBaseOp(path),
+			Value:      value,
+			IgnoreCase: ignoreCase,
+			NotFlag:    notFlag,
+		}
+		return endsOp, nil
 	case "starts":
 		value, ok := operation["value"].(string)
 		if !ok {
@@ -407,10 +426,20 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 			ignoreCase = ic
 		}
 
-		if ignoreCase {
-			return op.NewOpStartsOperationWithIgnoreCase(path, value, ignoreCase), nil
+		// Check for not flag
+		notFlag := false
+		if n, ok := operation["not"].(bool); ok {
+			notFlag = n
 		}
-		return op.NewOpStartsOperation(path, value), nil
+
+		// Create the operation with appropriate flags
+		startsOp := &op.StartsOperation{
+			BaseOp:     op.NewBaseOp(path),
+			Value:      value,
+			IgnoreCase: ignoreCase,
+			NotFlag:    notFlag,
+		}
+		return startsOp, nil
 	case "matches":
 		value, ok := operation["value"].(string)
 		if !ok {
@@ -420,7 +449,12 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		if ic, ok := operation["ignore_case"].(bool); ok {
 			ignoreCase = ic
 		}
-		matchesOp, err := op.NewOpMatchesOperation(path, value, ignoreCase)
+		// Check for not flag
+		notFlag := false
+		if n, ok := operation["not"].(bool); ok {
+			notFlag = n
+		}
+		matchesOp, err := op.NewOpMatchesOperationWithFlags(path, value, ignoreCase, notFlag)
 		if err != nil {
 			return nil, err
 		}
@@ -442,7 +476,12 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		if !ok {
 			return nil, ErrMoreOpMissingValue
 		}
-		return op.NewOpMoreOperation(path, value), nil
+		// Check for not flag
+		notFlag := false
+		if n, ok := operation["not"].(bool); ok {
+			notFlag = n
+		}
+		return op.NewOpMoreOperationWithFlags(path, value, notFlag), nil
 	case "and":
 		apply, ok := operation["apply"].([]interface{})
 		if !ok {
@@ -526,7 +565,30 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 }
 
 // mergePaths merges two paths for composite operations.
+// If subPath is absolute (starts from root), it takes precedence over basePath.
+// If subPath is empty, use basePath.
+// Otherwise, combine them.
 func mergePaths(basePath, subPath jsonpointer.Path) jsonpointer.Path {
+	// If subPath is empty, use basePath
+	if len(subPath) == 0 {
+		return basePath
+	}
+
+	// If both paths are the same, don't merge - just use one
+	if len(basePath) == len(subPath) {
+		same := true
+		for i := range basePath {
+			if fmt.Sprintf("%v", basePath[i]) != fmt.Sprintf("%v", subPath[i]) {
+				same = false
+				break
+			}
+		}
+		if same {
+			return subPath // Use child path
+		}
+	}
+
+	// Normal merging for different paths
 	result := make(jsonpointer.Path, 0, len(basePath)+len(subPath))
 	result = append(result, basePath...)
 	result = append(result, subPath...)
@@ -560,14 +622,14 @@ func Decode(operations []map[string]interface{}, options internal.JSONPatchOptio
 func DecodeOperations(operations []internal.Operation, options internal.JSONPatchOptions) ([]internal.Op, error) {
 	// Convert Operation structs to maps manually to handle special float values
 	operationMaps := make([]map[string]interface{}, len(operations))
-	
+
 	for i, op := range operations {
 		opMap := make(map[string]interface{})
-		
+
 		// Always include op and path
 		opMap["op"] = op.Op
 		opMap["path"] = op.Path
-		
+
 		// Handle Value field - include for operations that require it
 		// For add/replace operations, even nil is a valid value
 		if op.Value != nil || op.Op == "add" || op.Op == "replace" || op.Op == "test" {
@@ -576,17 +638,16 @@ func DecodeOperations(operations []internal.Operation, options internal.JSONPatc
 		if op.From != "" {
 			opMap["from"] = op.From
 		}
-		
+
 		// Handle Inc field specially to support NaN/Inf values
 		// Inc has no omitempty tag, so we include it for all operations
 		opMap["inc"] = op.Inc
-		
+
 		// Handle Pos field specially - include for all operations since 0 is a valid position
 		// This matches the struct tag change where we removed omitempty from Pos
 		opMap["pos"] = float64(op.Pos)
-		if op.Str != "" {
-			opMap["str"] = op.Str
-		}
+		// Always include str field for test_string operations, even if empty
+		opMap["str"] = op.Str
 		// Handle Len field specially - include for all operations since 0 is a valid length
 		// This matches the struct tag change where we removed omitempty from Len
 		opMap["len"] = float64(op.Len)
@@ -644,10 +705,10 @@ func DecodeOperations(operations []internal.Operation, options internal.JSONPatc
 		if op.OldValue != nil {
 			opMap["oldValue"] = op.OldValue
 		}
-		
+
 		operationMaps[i] = opMap
 	}
-	
+
 	// Use existing map-based decoder
 	return Decode(operationMaps, options)
 }

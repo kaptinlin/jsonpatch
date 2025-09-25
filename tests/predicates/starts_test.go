@@ -12,8 +12,8 @@ func TestStartsOp(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
 		t.Run("succeeds when string starts with prefix", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "starts",
-				Path: "",
+				Op:    "starts",
+				Path:  "",
 				Value: "Hello",
 			}
 			patch := []internal.Operation{op}
@@ -23,8 +23,8 @@ func TestStartsOp(t *testing.T) {
 
 		t.Run("throws when string does not start with prefix", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "starts",
-				Path: "",
+				Op:    "starts",
+				Path:  "",
 				Value: "World",
 			}
 			patch := []internal.Operation{op}
@@ -34,9 +34,9 @@ func TestStartsOp(t *testing.T) {
 
 		t.Run("can ignore case", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "starts",
-				Path: "",
-				Value: "hello",
+				Op:         "starts",
+				Path:       "",
+				Value:      "hello",
 				IgnoreCase: true,
 			}
 			patch := []internal.Operation{op}
@@ -48,8 +48,8 @@ func TestStartsOp(t *testing.T) {
 	t.Run("object", func(t *testing.T) {
 		t.Run("succeeds when string starts with prefix", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "starts",
-				Path: "/msg",
+				Op:    "starts",
+				Path:  "/msg",
 				Value: "Hello",
 			}
 			patch := []internal.Operation{op}
@@ -59,8 +59,8 @@ func TestStartsOp(t *testing.T) {
 
 		t.Run("throws when string does not start with prefix", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "starts",
-				Path: "/msg",
+				Op:    "starts",
+				Path:  "/msg",
 				Value: "World",
 			}
 			patch := []internal.Operation{op}
@@ -72,8 +72,8 @@ func TestStartsOp(t *testing.T) {
 	t.Run("array", func(t *testing.T) {
 		t.Run("succeeds when string starts with prefix", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "starts",
-				Path: "/0",
+				Op:    "starts",
+				Path:  "/0",
 				Value: "Hello",
 			}
 			patch := []internal.Operation{op}
@@ -83,8 +83,8 @@ func TestStartsOp(t *testing.T) {
 
 		t.Run("throws when string does not start with prefix", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "starts",
-				Path: "/0",
+				Op:    "starts",
+				Path:  "/0",
 				Value: "World",
 			}
 			patch := []internal.Operation{op}

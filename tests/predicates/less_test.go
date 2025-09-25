@@ -12,8 +12,8 @@ func TestLessOp(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
 		t.Run("succeeds when value is lower than requested", func(t *testing.T) {
 			op := internal.Operation{
-				Op: "less",
-				Path: "",
+				Op:    "less",
+				Path:  "",
 				Value: 124,
 			}
 			patch := []internal.Operation{op}
@@ -23,8 +23,8 @@ func TestLessOp(t *testing.T) {
 
 		t.Run("fails when value is not lower than requested", func(t *testing.T) {
 			op1 := internal.Operation{
-				Op: "less",
-				Path: "",
+				Op:    "less",
+				Path:  "",
 				Value: 123,
 			}
 			patch1 := []internal.Operation{op1}
@@ -32,8 +32,8 @@ func TestLessOp(t *testing.T) {
 			require.Error(t, err1)
 
 			op2 := internal.Operation{
-				Op: "less",
-				Path: "",
+				Op:    "less",
+				Path:  "",
 				Value: 1,
 			}
 			patch2 := []internal.Operation{op2}

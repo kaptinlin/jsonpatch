@@ -181,7 +181,7 @@ func compactToOp(compactOp Op, _ DecoderOptions) (internal.Op, error) {
 		return op.NewOpDefinedOperation(path), nil
 
 	case internal.OpUndefinedType:
-		return op.NewOpUndefinedOperation(path, false), nil
+		return op.NewOpUndefinedOperation(path), nil
 
 	case internal.OpContainsType:
 		if len(compactOp) < 3 {

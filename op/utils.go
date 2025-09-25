@@ -24,14 +24,24 @@ func pathEquals(p1, p2 []string) bool {
 }
 
 // formatPath formats a path slice into a JSON Pointer string.
+// Optimized for common cases with pre-allocated buffer and single-pass construction.
 func formatPath(path []string) string {
 	if len(path) == 0 {
 		return ""
 	}
 
+	// Fast path for single segment (very common)
+	if len(path) == 1 {
+		return "/" + path[0]
+	}
+
 	var builder strings.Builder
-	estimatedSize := len(path) * 9
-	builder.Grow(estimatedSize)
+	// More accurate size estimation based on actual segment lengths
+	totalLen := len(path) // One '/' per segment
+	for _, segment := range path {
+		totalLen += len(segment)
+	}
+	builder.Grow(totalLen)
 
 	for _, segment := range path {
 		builder.WriteByte('/')
@@ -106,26 +116,58 @@ func getValue(doc interface{}, path []string) (interface{}, error) {
 }
 
 // deepEqual performs a deep equality check between two values.
+// Optimized to avoid expensive reflect.DeepEqual for common numeric cases.
 func deepEqual(a, b interface{}) bool {
-	// First try direct equality
-	if reflect.DeepEqual(a, b) {
+	// Fast path: both nil
+	if a == nil && b == nil {
+		return true
+	}
+
+	// Fast path: one nil, other not
+	if a == nil || b == nil {
+		return false
+	}
+
+	// Fast path: try direct comparison for comparable types of the same type
+	// Use defer+recover to handle uncomparable types gracefully
+	equal := false
+	canCompare := true
+	func() {
+		defer func() {
+			if recover() != nil {
+				canCompare = false
+			}
+		}()
+		equal = (a == b)
+	}()
+
+	// Only return direct comparison result if both values are not numeric types
+	// This allows numeric type coercion to happen for mixed numeric comparisons
+	aIsNumeric := isActualNumericType(a)
+	bIsNumeric := isActualNumericType(b)
+	
+	if canCompare && equal {
+		// If direct comparison succeeds, the values are equal
 		return true
 	}
 	
-	// If not directly equal, check if both are actual numeric types
-	// (not strings or booleans that can be converted to numbers)
-	// and compare their numeric values
-	aIsActualNumeric := isActualNumericType(a)
-	bIsActualNumeric := isActualNumericType(b)
-	
-	if aIsActualNumeric && bIsActualNumeric {
-		// Both are actual numeric types, compare their numeric values
-		aFloat, _ := ToFloat64(a)
-		bFloat, _ := ToFloat64(b)
-		return aFloat == bFloat
+	if canCompare && !aIsNumeric && !bIsNumeric {
+		// If both are non-numeric and comparable, return the direct result
+		return equal
 	}
-	
-	return false
+
+	// Check if either is a numeric type for coercion
+	if aIsNumeric && bIsNumeric {
+		// Both are actual numeric types, compare their numeric values
+		aFloat, aOk := ToFloat64(a)
+		bFloat, bOk := ToFloat64(b)
+		if aOk && bOk {
+			return aFloat == bFloat
+		}
+	}
+
+	// Fall back to reflect.DeepEqual for complex types
+	return reflect.DeepEqual(a, b)
 }
 
 // isActualNumericType checks if a value is an actual numeric type
@@ -361,23 +403,36 @@ func pathExists(doc interface{}, path []string) bool {
 }
 
 // ToFloat64 converts a value to float64, handling various numeric types, booleans, and strings.
+// This matches JavaScript's Number() behavior for type coercion.
+// Optimized for common numeric types with fast paths.
 func ToFloat64(val interface{}) (float64, bool) {
+	// Handle nil (null in JSON) - JavaScript Number(null) returns 0
+	if val == nil {
+		return 0, true
+	}
+
 	switch v := val.(type) {
 	case float64:
 		return v, true
-	case float32:
-		return float64(v), true
 	case int:
 		return float64(v), true
-	case int8:
-		return float64(v), true
-	case int16:
+	case float32:
 		return float64(v), true
 	case int32:
 		return float64(v), true
 	case int64:
 		return float64(v), true
+	case bool:
+		// Convert boolean to number: true -> 1, false -> 0
+		if v {
+			return 1, true
+		}
+		return 0, true
 	case uint:
+		return float64(v), true
+	case int8:
+		return float64(v), true
+	case int16:
 		return float64(v), true
 	case uint8:
 		return float64(v), true
@@ -387,24 +442,75 @@ func ToFloat64(val interface{}) (float64, bool) {
 		return float64(v), true
 	case uint64:
 		return float64(v), true
-	case bool:
-		// Convert boolean to number: true -> 1, false -> 0
-		if v {
-			return 1, true
-		}
-		return 0, true
 	case string:
-		// Try to parse string as number (trim whitespace first)
-		trimmed := strings.TrimSpace(v)
-		if f, err := strconv.ParseFloat(trimmed, 64); err == nil {
-			return f, true
-		}
-		return 0, false
+		return parseStringToFloat(v)
 	default:
 		return 0, false
 	}
 }
 
+// parseStringToFloat optimizes string-to-float conversion with fast paths
+func parseStringToFloat(v string) (float64, bool) {
+	// Fast path: check for empty string first (common case)
+	if len(v) == 0 {
+		return 0, true
+	}
+
+	// Fast path: check for simple numeric strings without trimming
+	if len(v) <= 15 && isSimpleNumeric(v) {
+		if f, err := strconv.ParseFloat(v, 64); err == nil {
+			return f, true
+		}
+	}
+
+	// Slower path: trim whitespace and try parsing
+	trimmed := strings.TrimSpace(v)
+	if trimmed == "" {
+		return 0, true
+	}
+
+	if f, err := strconv.ParseFloat(trimmed, 64); err == nil {
+		return f, true
+	}
+
+	return 0, false
+}
+
+// isSimpleNumeric checks if string contains only numeric characters (fast path)
+func isSimpleNumeric(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
+
+	i := 0
+	// Allow leading minus sign
+	if s[0] == '-' {
+		if len(s) == 1 {
+			return false
+		}
+		i = 1
+	}
+
+	hasDigit := false
+	hasDot := false
+
+	for ; i < len(s); i++ {
+		c := s[i]
+		switch {
+		case c >= '0' && c <= '9':
+			hasDigit = true
+		case c == '.' && !hasDot:
+			hasDot = true
+		case c == 'e' || c == 'E':
+			// Handle scientific notation - delegate to strconv.ParseFloat
+			return hasDigit
+		default:
+			return false
+		}
+	}
+
+	return hasDigit
+}
 
 // toString converts a value to string, handling various internal.
 func toString(value interface{}) (string, error) {

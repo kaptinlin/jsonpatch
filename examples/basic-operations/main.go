@@ -13,11 +13,11 @@ import (
 func main() {
 	fmt.Println("=== Basic Operations ===")
 
-	// Original document
+	// Document to modify
 	doc := map[string]interface{}{
 		"name":  "John",
 		"age":   30,
-		"email": "old@example.com",
+		"email": "original@example.com",
 		"temp":  "remove_me",
 	}
 
@@ -37,7 +37,7 @@ func main() {
 		{
 			Op:    "replace",
 			Path:  "/email",
-			Value: "new@example.com",
+			Value: "updated@example.com",
 		},
 
 		// Add: create new field

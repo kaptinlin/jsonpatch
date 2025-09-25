@@ -16,9 +16,9 @@ func main() {
 	// System with multiple servers
 	system := map[string]interface{}{
 		"servers": []interface{}{
-			map[string]interface{}{"id": "srv1", "status": "old", "version": "1.0"},
-			map[string]interface{}{"id": "srv2", "status": "old", "version": "1.0"},
-			map[string]interface{}{"id": "srv3", "status": "old", "version": "1.0"},
+			map[string]interface{}{"id": "srv1", "status": "inactive", "version": "1.0"},
+			map[string]interface{}{"id": "srv2", "status": "inactive", "version": "1.0"},
+			map[string]interface{}{"id": "srv3", "status": "inactive", "version": "1.0"},
 		},
 		"updated": 0,
 	}

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## Project Overview
 
-This is a comprehensive Go implementation of JSON Patch (RFC 6902), JSON Predicate, and extended operations for JSON document manipulation with full type safety and generic support. It's a Go port of json-joy/json-patch.
+This is a comprehensive Go implementation of JSON Patch (RFC 6902), JSON Predicate, and extended operations for JSON document manipulation with full type safety and generic support. It's a Go port of json-joy/json-patch with 95%+ behavioral compatibility.
 
 ## API Usage
 
@@ -90,7 +90,7 @@ All operations implement the `internal.Op` interface with methods:
 
 Predicate operations also implement `internal.PredicateOp` with:
 - `Test()` - Tests condition on document
-- `Not()` - Whether it's a negation predicate
+- `Not()` - Whether the operation supports direct negation
 
 ### Type-Safe Generic API
 The main API uses Go generics to maintain type safety:
@@ -99,23 +99,13 @@ func ApplyPatch[T any](doc T, operations []Operation, opts ...Option) (*Result[T
 ```
 This ensures the result maintains the same type as the input document.
 
-## Development Guidelines (from .cursor/rules.mdc)
+## Development Guidelines
 
 ### Core Principles
 - All comments and documentation must be in English
 - Follow Go conventions and idioms
+- Maintain json-joy behavioral compatibility
 - Prioritize correctness over performance
-- Measure before optimize
-
-### Performance Optimization Approach
-- Conservative optimization first - use proven safe patterns
-- Single change iteration - one optimization at a time
-- Immediate rollback for >2% performance regression
-- Focus on:
-  - String operations with `strings.Builder`
-  - Boolean logic simplification
-  - Type specialization for simple types
-  - Inline simple operations
 
 ### Testing Standards
 - Table-driven tests with clear test cases
@@ -124,7 +114,7 @@ This ensures the result maintains the same type as the input document.
 - Benchmark critical operations
 
 ### Error Handling
-- Define base errors as constants in errors.go files
+- Use json-joy compatible error messages
 - Static errors: Return predefined error constants
 - Dynamic errors: Use `fmt.Errorf("%w: context", baseError, ...)`
 - Error checking: Use `errors.Is()` for type-safe checks
@@ -145,12 +135,12 @@ This ensures the result maintains the same type as the input document.
 - Type checks: `defined`, `undefined`, `type`
 - String operations: `starts`, `ends`, `contains`, `matches`
 - Comparisons: `less`, `more`, `in`
-- String length: `strlen`
+- String tests: `test_string`, `test_string_len`
 
 ### Extended Operations
 - `flip` - Toggle boolean values
 - `inc` - Increment numeric values
-- `strins`/`strdel` - String insertion/deletion
+- `str_ins`/`str_del` - String insertion/deletion
 - `split` - Split strings into arrays
 - `merge` - Deep merge objects
 - `extend` - Extend arrays
@@ -160,8 +150,21 @@ This ensures the result maintains the same type as the input document.
 
 ## Important Implementation Notes
 
+### json-joy Compatibility
+1. **Negation Pattern**: Only `test`, `test_string`, `test_string_len` support direct `not` field
+2. **Second-Order Predicates**: Use `{op: "not", apply: [...]}` for negating other predicates
+3. **Empty Path Format**: Second-order predicates use `path: ""` with absolute paths in `apply` operations
+4. **Type Coercion**: Follows JavaScript Number() semantics for numeric operations
+
+### Core Features
 1. **Path Handling**: All paths use JSON Pointer format with proper escaping
 2. **Immutability**: Operations can be immutable (default) or mutate in-place (WithMutate option)
 3. **Error Propagation**: Operations return detailed errors with path context
 4. **Type Conversion**: The library handles conversion between document types automatically
 5. **Validation**: All operations validate their parameters before execution
+
+### Performance Characteristics
+- Optimized for production workloads
+- Memory-efficient string operations
+- Efficient path resolution
+- Type-safe generic operations

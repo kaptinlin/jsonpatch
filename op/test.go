@@ -37,11 +37,9 @@ func (o *TestOperation) Test(doc interface{}) (bool, error) {
 	// Get target value
 	target, err := getValue(doc, o.Path())
 	if err != nil {
-		// If path not found and we're negating, that's success
-		if o.NotFlag {
-			return true, nil
-		}
-		return false, err
+		// If path not found, return inverse of 'not' flag (matches json-joy behavior)
+		//nolint:nilerr // This is intentional JSON Patch behavior - path not found is not an error
+		return o.NotFlag, nil
 	}
 
 	// Compare values and apply negation using XOR logic
@@ -63,11 +61,12 @@ func (o *TestOperation) Path() []string {
 func (o *TestOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, err := getValue(doc, o.path)
 	if err != nil {
-		// If path not found and we're negating, that's success
-		if o.NotFlag {
-			return internal.OpResult[any]{Doc: doc, Old: nil}, nil
+		// If path not found, determine test result based on 'not' flag (matches json-joy behavior)
+		shouldPass := o.NotFlag
+		if !shouldPass {
+			return internal.OpResult[any]{}, fmt.Errorf("%w: path not found", ErrTestOperationFailed)
 		}
-		return internal.OpResult[any]{}, err
+		return internal.OpResult[any]{Doc: doc, Old: nil}, nil
 	}
 
 	isEqual := deepEqual(value, o.Value)

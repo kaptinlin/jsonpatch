@@ -359,13 +359,13 @@ func NewBasicElementNode(children []TextNode, properties BasicProps) *Node {
 	// Convert []TextNode to []Node
 	nodeChildren := make([]Node, len(children))
 	copy(nodeChildren, children)
-	
+
 	// Convert BasicProps to map[string]interface{}
 	props := make(map[string]interface{})
 	for k, v := range properties {
 		props[k] = v
 	}
-	
+
 	return NewElementNode(nodeChildren, props)
 }
 

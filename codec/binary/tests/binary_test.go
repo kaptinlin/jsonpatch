@@ -49,7 +49,7 @@ var (
 		},
 		{
 			name:  "UndefinedOperation",
-			patch: []internal.Op{op.NewOpUndefinedOperation([]string{"a", "b", "f"}, false)},
+			patch: []internal.Op{op.NewOpUndefinedOperation([]string{"a", "b", "f"})},
 		},
 		{
 			name:  "LessOperation",
@@ -195,42 +195,42 @@ func areOperationsEqual(a, b internal.Operation) bool {
 	if a.Op != b.Op || a.Path != b.Path {
 		return false
 	}
-	
+
 	// Compare values with special handling for numbers
 	if !areValuesEqual(a.Value, b.Value) {
 		return false
 	}
-	
+
 	// Compare other fields
 	if a.From != b.From || a.Str != b.Str || a.Type != b.Type {
 		return false
 	}
-	
+
 	// Compare numeric fields with tolerance
 	if !areNumericEqual(a.Inc, b.Inc) {
 		return false
 	}
-	
+
 	// Compare integer fields
 	if a.Pos != b.Pos || a.Len != b.Len {
 		return false
 	}
-	
+
 	// Compare boolean fields
 	if a.Not != b.Not || a.IgnoreCase != b.IgnoreCase || a.DeleteNull != b.DeleteNull {
 		return false
 	}
-	
+
 	// Compare map fields
 	if !areMapsEqual(a.Props, b.Props) {
 		return false
 	}
-	
+
 	// Compare OldValue
 	if !areValuesEqual(a.OldValue, b.OldValue) {
 		return false
 	}
-	
+
 	// Compare Apply operations
 	if len(a.Apply) != len(b.Apply) {
 		return false
@@ -240,7 +240,7 @@ func areOperationsEqual(a, b internal.Operation) bool {
 			return false
 		}
 	}
-	
+
 	return true
 }
 
@@ -249,7 +249,7 @@ func areNumericEqual(a, b float64) bool {
 	if a == 0 && b == 0 {
 		return true
 	}
-	
+
 	// Simple equality check for non-zero values
 	return a == b
 }
@@ -323,4 +323,3 @@ func convertMapToS(m map[interface{}]interface{}) map[string]interface{} {
 	}
 	return res
 }
-
