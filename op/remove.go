@@ -67,10 +67,10 @@ func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 				return internal.OpResult[any]{}, ErrArrayIndexOutOfBounds
 			}
 			oldValue := v[index]
-			// Create new array without the removed element
-			newArray := make([]interface{}, 0, len(v)-1)
-			newArray = append(newArray, v[:index]...)
-			newArray = append(newArray, v[index+1:]...)
+			// Optimize: pre-allocate exact size and use copy
+			newArray := make([]interface{}, len(v)-1)
+			copy(newArray, v[:index])
+			copy(newArray[index:], v[index+1:])
 			return internal.OpResult[any]{Doc: newArray, Old: oldValue}, nil
 		default:
 			return internal.OpResult[any]{}, ErrCannotRemoveFromValue
@@ -112,10 +112,10 @@ func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 			if k < 0 || k >= len(p) {
 				return internal.OpResult[any]{}, ErrIndexOutOfRange
 			}
-			// Create new slice without the removed element
-			newSlice := make([]interface{}, 0, len(p)-1)
-			newSlice = append(newSlice, p[:k]...)
-			newSlice = append(newSlice, p[k+1:]...)
+			// Optimize: pre-allocate exact size and use copy
+			newSlice := make([]interface{}, len(p)-1)
+			copy(newSlice, p[:k])
+			copy(newSlice[k:], p[k+1:])
 			if err := setValueAtPath(doc, o.path[:len(o.path)-1], newSlice); err != nil {
 				return internal.OpResult[any]{}, err
 			}

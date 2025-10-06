@@ -2,8 +2,9 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/go-json-experiment/json"
+	"github.com/go-json-experiment/json/jsontext"
 	"log"
 
 	"github.com/kaptinlin/jsonpatch"
@@ -143,7 +144,7 @@ func prettyJSONString(jsonStr string) string {
 		return jsonStr // Return original if parsing fails
 	}
 
-	pretty, err := json.MarshalIndent(obj, "", "  ")
+	pretty, err := json.Marshal(obj, jsontext.Multiline(true))
 	if err != nil {
 		return jsonStr // Return original if formatting fails
 	}

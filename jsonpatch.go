@@ -49,8 +49,7 @@ var (
 
 // Error message templates
 const (
-	errOperationFailed       = "operation %d failed: %w"
-	errOperationDecodeFailed = "operation %d decode failed: %w"
+	errOperationFailed = "operation %d failed: %w"
 )
 
 // ApplyPatch applies a JSON Patch to any supported document type.
@@ -103,38 +102,44 @@ func ApplyPatch[T internal.Document](doc T, patch []internal.Operation, opts ...
 // dispatchByDocumentType routes the patch operation to the appropriate handler
 // based on the runtime type of the document.
 func dispatchByDocumentType[T internal.Document](doc T, patch []internal.Operation, options *internal.Options) (*internal.PatchResult[T], error) {
-	docValue := reflect.ValueOf(doc)
+	// Try direct type assertion first (zero-cost, faster than reflection)
+	switch d := any(doc).(type) {
+	case []byte:
+		return handleJSONBytes(doc, patch, options)
+	case string:
+		return handleJSONString(doc, patch, options)
+	case map[string]any:
+		return handleMapDocument(doc, patch, options)
+	case nil:
+		return handleStructDocument(doc, patch, options)
+	case bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+		return handlePrimitiveDocument(doc, patch, options)
+	case []any:
+		return handlePrimitiveDocument(doc, patch, options)
+	default:
+		// Only use reflection for complex types
+		return dispatchByReflection(doc, d, patch, options)
+	}
+}
+
+// dispatchByReflection handles complex types that need reflection
+func dispatchByReflection[T internal.Document](doc T, docAny any, patch []internal.Operation, options *internal.Options) (*internal.PatchResult[T], error) {
+	docValue := reflect.ValueOf(docAny)
 
 	// Handle nil/zero values
-	if !docValue.IsValid() || (docValue.Kind() == reflect.Ptr && docValue.IsNil()) {
+	if !docValue.IsValid() || (docValue.Kind() == reflect.Pointer && docValue.IsNil()) {
 		return handleStructDocument(doc, patch, options)
 	}
 
 	docType := docValue.Type()
 
-	// Handle []byte documents (JSON data)
-	if docType == reflect.TypeOf([]byte{}) {
-		return handleJSONBytes(doc, patch, options)
+	// Handle slice types (including custom slice types)
+	if docType.Kind() == reflect.Slice {
+		return handlePrimitiveDocument(doc, patch, options)
 	}
 
-	// Handle string documents (JSON strings)
-	if docType.Kind() == reflect.String {
-		return handleJSONString(doc, patch, options)
-	}
-
-	// Handle map[string]any documents (direct JSON objects)
-	if docType == reflect.TypeOf(map[string]any{}) {
-		return handleMapDocument(doc, patch, options)
-	}
-
-	// Handle primitive types and slices directly
-	if docType.Kind() == reflect.Bool ||
-		docType.Kind() == reflect.Int || docType.Kind() == reflect.Int8 || docType.Kind() == reflect.Int16 ||
-		docType.Kind() == reflect.Int32 || docType.Kind() == reflect.Int64 ||
-		docType.Kind() == reflect.Uint || docType.Kind() == reflect.Uint8 || docType.Kind() == reflect.Uint16 ||
-		docType.Kind() == reflect.Uint32 || docType.Kind() == reflect.Uint64 ||
-		docType.Kind() == reflect.Float32 || docType.Kind() == reflect.Float64 ||
-		docType.Kind() == reflect.Interface || docType.Kind() == reflect.Slice {
+	// Handle interface types
+	if docType.Kind() == reflect.Interface {
 		return handlePrimitiveDocument(doc, patch, options)
 	}
 
@@ -527,7 +532,7 @@ func ApplyOps[T internal.Document](doc T, operations []internal.Op, opts ...inte
 // applyInternalPatch is an internal helper for applying patches to interface{} documents.
 // This is used internally by the generic ApplyPatch function.
 // Returns results compatible with the new generic type system.
-func applyInternalPatch(doc interface{}, patch []internal.Operation, options *internal.Options) (interface{}, []internal.OpResult[any], error) {
+func applyInternalPatch(doc any, patch []internal.Operation, options *internal.Options) (any, []internal.OpResult[any], error) {
 	workingDoc := doc
 	if !options.Mutate {
 		workingDoc = deepclone.Clone(doc)
@@ -546,9 +551,9 @@ func applyInternalPatch(doc interface{}, patch []internal.Operation, options *in
 		return nil, nil, fmt.Errorf("failed to decode operations: %w", err)
 	}
 
-	for i, opInstance := range opInstances {
+	for i := range opInstances {
 		// Apply operation
-		opResult, err := opInstance.Apply(workingDoc)
+		opResult, err := opInstances[i].Apply(workingDoc)
 		if err != nil {
 			return nil, nil, fmt.Errorf(errOperationFailed, i, err)
 		}

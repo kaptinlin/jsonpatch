@@ -1,7 +1,7 @@
 package jsonpatch_test
 
 import (
-	"encoding/json"
+	"github.com/go-json-experiment/json"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch"

@@ -2,8 +2,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/go-json-experiment/json"
 	"log"
 
 	"github.com/kaptinlin/jsonpatch/codec/binary"

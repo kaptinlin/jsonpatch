@@ -2,10 +2,10 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/go-json-experiment/json v0.0.0-20250910080747-cc2cfa0554c3 h1:02WINGfSX5w0Mn+F28UyRoSt9uvMhKguwWMlOAh6U/0=
 github.com/go-json-experiment/json v0.0.0-20250910080747-cc2cfa0554c3/go.mod h1:uNVvRXArCGbZ508SxYYTC5v1JWoz2voff5pm25jU1Ok=
-github.com/kaptinlin/deepclone v0.1.1 h1:xvL1RMQbn/lR/mvTg5ggyihq5ZlFqtS/I5h0tTTzZps=
-github.com/kaptinlin/deepclone v0.1.1/go.mod h1:JrgHKTw3SOxuZBgBl+w5mg6BteS7Ic9vzGdWW+RrBkU=
-github.com/kaptinlin/jsonpointer v0.4.5 h1:PhEsg1gG/C+AkYskh8uP9fmB2mi7lfpZKJmm4pHAcIw=
-github.com/kaptinlin/jsonpointer v0.4.5/go.mod h1:CbnEJSurI6RflcChh0YcjBOTlOh69GiHrDi3vNPcZIQ=
+github.com/kaptinlin/deepclone v0.2.0 h1:K7Gou+JD7Yk4wh+p2WAwD3Pel/5dl6TmMmHW6zM9Q+U=
+github.com/kaptinlin/deepclone v0.2.0/go.mod h1:S/bgnS0AceLZxDHEqxNJqJPw2nITbi59J6hneoPVp6Y=
+github.com/kaptinlin/jsonpointer v0.4.6 h1:hAett1YROLwxAOKZS08hsJueXr1w0fTMSvWq2x1IoUA=
+github.com/kaptinlin/jsonpointer v0.4.6/go.mod h1:5pHXLIYd2FgV0rUEsChp6xTOvcC2OFk7kF/cjhHzL4g=
 github.com/philhofer/fwd v1.2.0 h1:e6DnBTl7vGY+Gz322/ASL4Gyp1FspeMvx1RNDoToZuM=
 github.com/philhofer/fwd v1.2.0/go.mod h1:RqIHx9QI14HlwKwm98g9Re5prTQ6LdeRQn+gXJFxsJM=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

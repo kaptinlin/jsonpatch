@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"encoding/json"
+	"github.com/go-json-experiment/json"
+	"github.com/go-json-experiment/json/jsontext"
 
 	"github.com/kaptinlin/jsonpatch"
 )
@@ -89,7 +90,7 @@ func demoComplexStructPatch() {
 	}
 
 	// Print current state (pretty formatted)
-	originalJSON, _ := json.MarshalIndent(user, "", "  ")
+	originalJSON, _ := json.Marshal(user, jsontext.Multiline(true))
 	fmt.Printf("Before:\n%s\n", string(originalJSON))
 
 	// Complex patch operations including nested paths
@@ -106,7 +107,7 @@ func demoComplexStructPatch() {
 	}
 
 	// Print result (pretty formatted)
-	patchedJSON, _ := json.MarshalIndent(result.Doc, "", "  ")
+	patchedJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
 	fmt.Printf("After:\n%s\n", string(patchedJSON))
 	fmt.Printf("✅ Operations applied: %d\n", len(result.Res))
 }

@@ -1,11 +1,12 @@
 package jsonpatch_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"testing"
 
+	"github.com/go-json-experiment/json"
+	"github.com/go-json-experiment/json/jsontext"
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -303,7 +304,7 @@ func TestArrayOperations(t *testing.T) {
 	result, err := jsonpatch.ApplyPatch(doc, patch)
 	require.NoError(t, err)
 
-	resultJSON, _ := json.MarshalIndent(result.Doc, "", "  ")
+	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
 	t.Logf("Array operations result:\n%s", string(resultJSON))
 
 	// Verify the result
@@ -337,7 +338,7 @@ func TestMultipleOperations(t *testing.T) {
 	result, err := jsonpatch.ApplyPatch(doc, patch)
 	require.NoError(t, err)
 
-	resultJSON, _ := json.MarshalIndent(result.Doc, "", "  ")
+	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
 	t.Logf("Multiple operations result:\n%s", string(resultJSON))
 
 	// Verify the result
@@ -426,7 +427,7 @@ func TestComplexDocument(t *testing.T) {
 	result, err := jsonpatch.ApplyPatch(doc, patch)
 	require.NoError(t, err)
 
-	resultJSON, _ := json.MarshalIndent(result.Doc, "", "  ")
+	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
 	t.Logf("Complex document result:\n%s", string(resultJSON))
 
 	// Verify the changes
@@ -481,7 +482,7 @@ func TestSpecialCharacters(t *testing.T) {
 	result, err := jsonpatch.ApplyPatch(doc, patch)
 	require.NoError(t, err)
 
-	resultJSON, _ := json.MarshalIndent(result.Doc, "", "  ")
+	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
 	t.Logf("Special characters result:\n%s", string(resultJSON))
 
 	// Verify the updates
@@ -604,21 +605,21 @@ func Example() {
 	}
 
 	// Print result
-	resultJSON, _ := json.MarshalIndent(result.Doc, "", "  ")
+	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true), json.Deterministic(true))
 	fmt.Println(string(resultJSON))
 
 	// Output:
 	// {
-	//   "settings": {
-	//     "notifications": true,
-	//     "theme": "dark"
-	//   },
-	//   "user": {
-	//     "active": true,
-	//     "age": 26,
-	//     "email": "alice@example.com",
-	//     "name": "Alice"
-	//   }
+	// 	"settings": {
+	// 		"notifications": true,
+	// 		"theme": "dark"
+	// 	},
+	// 	"user": {
+	// 		"active": true,
+	// 		"age": 26,
+	// 		"email": "alice@example.com",
+	// 		"name": "Alice"
+	// 	}
 	// }
 }
 
@@ -658,7 +659,8 @@ func FuzzOperationSequence(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, patchJSON string) {
 		// Skip obviously invalid JSON
-		if !json.Valid([]byte(patchJSON)) {
+		var testPatch interface{}
+		if err := json.Unmarshal([]byte(patchJSON), &testPatch); err != nil {
 			t.Skip("Invalid JSON")
 		}
 
@@ -828,7 +830,8 @@ func FuzzOperationValues(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, valueJSON string) {
 		// Skip obviously invalid JSON
-		if !json.Valid([]byte(valueJSON)) {
+		var testValue interface{}
+		if err := json.Unmarshal([]byte(valueJSON), &testValue); err != nil {
 			t.Skip("Invalid JSON")
 		}
 
@@ -867,7 +870,8 @@ func FuzzOperationValues(f *testing.F) {
 			if fuzzedValue, exists := resultMap["fuzzed"]; exists {
 				// The value should be equivalent (though not necessarily identical due to JSON round-trip)
 				fuzzedJSON, _ := json.Marshal(fuzzedValue)
-				if !json.Valid(fuzzedJSON) {
+				var testUnmarshal interface{}
+				if err := json.Unmarshal(fuzzedJSON, &testUnmarshal); err != nil {
 					t.Errorf("Fuzzed value in result is not valid JSON")
 				}
 			}
@@ -983,7 +987,8 @@ func FuzzComplexDocuments(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, docJSON string) {
 		// Skip obviously invalid JSON
-		if !json.Valid([]byte(docJSON)) {
+		var testDoc interface{}
+		if err := json.Unmarshal([]byte(docJSON), &testDoc); err != nil {
 			t.Skip("Invalid JSON")
 		}
 
@@ -1085,7 +1090,11 @@ func FuzzEdgeCases(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, docJSON, patchJSON string) {
 		// Skip obviously invalid JSON
-		if !json.Valid([]byte(docJSON)) || !json.Valid([]byte(patchJSON)) {
+		var testDoc, testPatch interface{}
+		if err := json.Unmarshal([]byte(docJSON), &testDoc); err != nil {
+			t.Skip("Invalid JSON")
+		}
+		if err := json.Unmarshal([]byte(patchJSON), &testPatch); err != nil {
 			t.Skip("Invalid JSON")
 		}
 

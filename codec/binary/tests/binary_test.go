@@ -7,6 +7,8 @@ import (
 	"github.com/kaptinlin/jsonpatch/codec/binary"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/op"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -135,16 +137,12 @@ func TestRoundtrip(t *testing.T) {
 	for _, tt := range Patches {
 		t.Run(tt.name, func(t *testing.T) {
 			encoded, err := codec.Encode(tt.patch)
-			if err != nil {
-				t.Fatalf("Encode() error = %v", err)
-			}
+			require.NoError(t, err, "Encode should not error")
+
 			decoded, err := codec.Decode(encoded)
-			if err != nil {
-				t.Fatalf("Decode() error = %v", err)
-			}
-			if !areOpsEqual(tt.patch, decoded) {
-				t.Fatalf("decoded patch is not equal to original patch.\ngot = %v\nwant = %v", decoded, tt.patch)
-			}
+			require.NoError(t, err, "Decode should not error")
+
+			assert.True(t, areOpsEqual(tt.patch, decoded), "decoded patch should equal original patch")
 		})
 	}
 }

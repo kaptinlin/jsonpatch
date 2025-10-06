@@ -116,7 +116,7 @@ func getValue(doc interface{}, path []string) (interface{}, error) {
 }
 
 // deepEqual performs a deep equality check between two values.
-// Optimized to avoid expensive reflect.DeepEqual for common numeric cases.
+// Optimized to avoid expensive reflect.DeepEqual for common types.
 func deepEqual(a, b interface{}) bool {
 	// Fast path: both nil
 	if a == nil && b == nil {
@@ -128,7 +128,35 @@ func deepEqual(a, b interface{}) bool {
 		return false
 	}
 
-	// Fast path: try direct comparison for comparable types of the same type
+	// Fast path: strings (very common)
+	if aStr, aIsStr := a.(string); aIsStr {
+		if bStr, bIsStr := b.(string); bIsStr {
+			return aStr == bStr
+		}
+		return false
+	}
+
+	// Fast path: booleans
+	if aBool, aIsBool := a.(bool); aIsBool {
+		if bBool, bIsBool := b.(bool); bIsBool {
+			return aBool == bBool
+		}
+		return false
+	}
+
+	// Fast path: numeric types (only if both are actual numbers, not string conversions)
+	aFloat, aIsNum := toNumericValue(a)
+	bFloat, bIsNum := toNumericValue(b)
+	if aIsNum && bIsNum {
+		return aFloat == bFloat
+	}
+
+	// Only one is numeric - not equal
+	if aIsNum != bIsNum {
+		return false
+	}
+
+	// Fast path: try direct comparison for comparable types
 	// Use defer+recover to handle uncomparable types gracefully
 	equal := false
 	canCompare := true
@@ -141,45 +169,45 @@ func deepEqual(a, b interface{}) bool {
 		equal = (a == b)
 	}()
 
-	// Only return direct comparison result if both values are not numeric types
-	// This allows numeric type coercion to happen for mixed numeric comparisons
-	aIsNumeric := isActualNumericType(a)
-	bIsNumeric := isActualNumericType(b)
-
-	if canCompare && equal {
-		// If direct comparison succeeds, the values are equal
-		return true
-	}
-
-	if canCompare && !aIsNumeric && !bIsNumeric {
-		// If both are non-numeric and comparable, return the direct result
+	if canCompare {
 		return equal
 	}
 
-	// Check if either is a numeric type for coercion
-	if aIsNumeric && bIsNumeric {
-		// Both are actual numeric types, compare their numeric values
-		aFloat, aOk := ToFloat64(a)
-		bFloat, bOk := ToFloat64(b)
-		if aOk && bOk {
-			return aFloat == bFloat
-		}
-	}
-
-	// Fall back to reflect.DeepEqual for complex types
+	// Slow path: complex types (maps, slices, structs)
 	return reflect.DeepEqual(a, b)
 }
 
-// isActualNumericType checks if a value is an actual numeric type
-// (not a string or boolean that could be converted to a number)
-func isActualNumericType(val interface{}) bool {
-	switch val.(type) {
-	case float64, float32,
-		int, int8, int16, int32, int64,
-		uint, uint8, uint16, uint32, uint64:
-		return true
+// toNumericValue converts a value to float64 if it's an actual numeric type
+// (not a string that could be parsed as a number).
+// Returns the float64 value and true if successful, 0 and false otherwise.
+func toNumericValue(val interface{}) (float64, bool) {
+	switch v := val.(type) {
+	case float64:
+		return v, true
+	case float32:
+		return float64(v), true
+	case int:
+		return float64(v), true
+	case int8:
+		return float64(v), true
+	case int16:
+		return float64(v), true
+	case int32:
+		return float64(v), true
+	case int64:
+		return float64(v), true
+	case uint:
+		return float64(v), true
+	case uint8:
+		return float64(v), true
+	case uint16:
+		return float64(v), true
+	case uint32:
+		return float64(v), true
+	case uint64:
+		return float64(v), true
 	default:
-		return false
+		return 0, false
 	}
 }
 

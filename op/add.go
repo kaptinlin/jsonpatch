@@ -81,8 +81,12 @@ func addAtPath(doc interface{}, path []string, value interface{}) (interface{}, 
 				displacedElement = v[index]
 			}
 
-			v = append(v[:index], append([]interface{}{value}, v[index:]...)...)
-			return v, displacedElement, nil
+			// Optimize: pre-allocate correct size and use copy to avoid double allocation
+			newV := make([]interface{}, len(v)+1)
+			copy(newV, v[:index])
+			newV[index] = value
+			copy(newV[index+1:], v[index:])
+			return newV, displacedElement, nil
 		default:
 			return nil, nil, ErrCannotAddToValue
 		}

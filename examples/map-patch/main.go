@@ -2,8 +2,9 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/go-json-experiment/json"
+	"github.com/go-json-experiment/json/jsontext"
 	"log"
 
 	"github.com/kaptinlin/jsonpatch"
@@ -157,7 +158,7 @@ func demoDynamicMapPatch() {
 
 // prettyMap formats a map for better readability
 func prettyMap(m map[string]any) string {
-	data, err := json.MarshalIndent(m, "", "  ")
+	data, err := json.Marshal(m, jsontext.Multiline(true))
 	if err != nil {
 		return fmt.Sprintf("%+v", m) // Fallback to Go's default formatting
 	}

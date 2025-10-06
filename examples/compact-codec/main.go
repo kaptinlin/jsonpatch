@@ -4,8 +4,9 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/go-json-experiment/json"
+	"github.com/go-json-experiment/json/jsontext"
 	"log"
 
 	"github.com/kaptinlin/jsonpatch/codec/compact"
@@ -36,7 +37,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	jsonBytes, _ := json.MarshalIndent(jsonOps, "", "  ")
+	jsonBytes, _ := json.Marshal(jsonOps, jsontext.Multiline(true))
 	fmt.Printf("Size: %d bytes\n", len(jsonBytes))
 	fmt.Printf("Content:\n%s\n\n", jsonBytes)
 
@@ -46,7 +47,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	compactBytes, _ := json.MarshalIndent(compactOps, "", "  ")
+	compactBytes, _ := json.Marshal(compactOps, jsontext.Multiline(true))
 	fmt.Printf("Size: %d bytes\n", len(compactBytes))
 	fmt.Printf("Content:\n%s\n\n", compactBytes)
 
@@ -56,7 +57,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	compactStringBytes, _ := json.MarshalIndent(compactStringOps, "", "  ")
+	compactStringBytes, _ := json.Marshal(compactStringOps, jsontext.Multiline(true))
 	fmt.Printf("Size: %d bytes\n", len(compactStringBytes))
 	fmt.Printf("Content:\n%s\n\n", compactStringBytes)
 
