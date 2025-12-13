@@ -4,8 +4,8 @@ github.com/go-json-experiment/json v0.0.0-20251027170946-4849db3c2f7e h1:Lf/gRko
 github.com/go-json-experiment/json v0.0.0-20251027170946-4849db3c2f7e/go.mod h1:uNVvRXArCGbZ508SxYYTC5v1JWoz2voff5pm25jU1Ok=
 github.com/kaptinlin/deepclone v0.2.1 h1:1/gEg5jtUxFSRfsrWFDOE1RMqbCVjDVQCzH92nDFSjg=
 github.com/kaptinlin/deepclone v0.2.1/go.mod h1:S/bgnS0AceLZxDHEqxNJqJPw2nITbi59J6hneoPVp6Y=
-github.com/kaptinlin/jsonpointer v0.4.6 h1:hAett1YROLwxAOKZS08hsJueXr1w0fTMSvWq2x1IoUA=
-github.com/kaptinlin/jsonpointer v0.4.6/go.mod h1:5pHXLIYd2FgV0rUEsChp6xTOvcC2OFk7kF/cjhHzL4g=
+github.com/kaptinlin/jsonpointer v0.4.7 h1:oX3Me9gS4eyWEnzju3OI3pJktxD6QbRIwlccRWy3S6g=
+github.com/kaptinlin/jsonpointer v0.4.7/go.mod h1:5pHXLIYd2FgV0rUEsChp6xTOvcC2OFk7kF/cjhHzL4g=
 github.com/philhofer/fwd v1.2.0 h1:e6DnBTl7vGY+Gz322/ASL4Gyp1FspeMvx1RNDoToZuM=
 github.com/philhofer/fwd v1.2.0/go.mod h1:RqIHx9QI14HlwKwm98g9Re5prTQ6LdeRQn+gXJFxsJM=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
