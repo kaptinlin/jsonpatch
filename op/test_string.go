@@ -205,10 +205,23 @@ func (op *TestStringOperation) Validate() error {
 	return nil
 }
 
+// NewOpTestStringOperationFull creates a new OpTestStringOperation operation with all parameters.
+func NewOpTestStringOperationFull(path []string, str string, pos float64, not bool) *TestStringOperation {
+	return &TestStringOperation{
+		BaseOp:     NewBaseOp(path),
+		Str:        str,
+		Pos:        int(pos),
+		NotFlag:    not,
+		IgnoreCase: false,
+	}
+}
+
 // Short aliases for common use
 var (
 	// NewTestString creates a new test string operation
 	NewTestString = NewOpTestStringOperation
 	// NewTestStringWithPos creates a new test string operation with position
 	NewTestStringWithPos = NewOpTestStringOperationWithPos
+	// NewTestStringFull creates a new test string operation with all parameters
+	NewTestStringFull = NewOpTestStringOperationFull
 )

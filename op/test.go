@@ -22,6 +22,15 @@ func NewOpTestOperation(path []string, value interface{}) *TestOperation {
 	}
 }
 
+// NewOpTestOperationWithNot creates a new OpTestOperation operation with not flag.
+func NewOpTestOperationWithNot(path []string, value interface{}, not bool) *TestOperation {
+	return &TestOperation{
+		BaseOp:  NewBaseOp(path),
+		Value:   value,
+		NotFlag: not,
+	}
+}
+
 // Op returns the operation type.
 func (o *TestOperation) Op() internal.OpType {
 	return internal.OpTestType

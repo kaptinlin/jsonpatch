@@ -220,9 +220,16 @@ func WithStringOpcode(useString bool) EncoderOption
 
 ## Supported Operations
 
-Currently supports all standard JSON Patch operations and basic extended/predicate operations:
+The compact codec now supports **all** JSON Patch operations with full encoding and decoding:
 
-✅ **Standard**: add, remove, replace, move, copy, test  
-✅ **Extended**: flip, inc  
-✅ **Predicates**: defined, undefined, contains, starts, ends  
-⏳ **Coming Soon**: merge, extend, string operations, composite predicates 
+### Standard JSON Patch (RFC 6902)
+✅ add, remove, replace, move, copy, test
+
+### Extended Operations
+✅ flip, inc, str_ins, str_del, split, merge, extend
+
+### JSON Predicate Operations
+✅ defined, undefined, contains, starts, ends, matches, type, test_type, test_string, test_string_len, in, less, more
+
+### Second-Order Predicates (Composite Operations)
+✅ and, or, not

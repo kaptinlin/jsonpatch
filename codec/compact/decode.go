@@ -92,7 +92,7 @@ func DecodeJSON(data []byte, opts ...DecoderOption) ([]internal.Op, error) {
 }
 
 // compactToOp converts a compact operation to an operation instance
-func compactToOp(compactOp Op, _ DecoderOptions) (internal.Op, error) {
+func compactToOp(compactOp Op, opts DecoderOptions) (internal.Op, error) {
 	if len(compactOp) < 2 {
 		return nil, ErrCompactOperationMinLength
 	}
@@ -161,8 +161,11 @@ func compactToOp(compactOp Op, _ DecoderOptions) (internal.Op, error) {
 		if len(compactOp) < 3 {
 			return nil, ErrTestOperationRequiresValue
 		}
-		// Currently test operation doesn't have a "not" variant in constructors
-		return op.NewTest(path, compactOp[2]), nil
+		not := false
+		if len(compactOp) >= 4 {
+			not = toBool(compactOp[3])
+		}
+		return op.NewOpTestOperationWithNot(path, compactOp[2], not), nil
 
 	case internal.OpFlipType:
 		return op.NewOpFlipOperation(path), nil
@@ -171,8 +174,8 @@ func compactToOp(compactOp Op, _ DecoderOptions) (internal.Op, error) {
 		if len(compactOp) < 3 {
 			return nil, ErrIncOperationRequiresDelta
 		}
-		delta, ok := compactOp[2].(float64)
-		if !ok {
+		delta, err := toFloat64(compactOp[2])
+		if err != nil {
 			return nil, ErrIncOperationDeltaNotNumber
 		}
 		return op.NewOpIncOperation(path, delta), nil
@@ -193,14 +196,9 @@ func compactToOp(compactOp Op, _ DecoderOptions) (internal.Op, error) {
 		}
 		ignoreCase := false
 		if len(compactOp) >= 4 {
-			if ignoreCaseVal, ok := compactOp[3].(float64); ok && ignoreCaseVal == 1 {
-				ignoreCase = true
-			}
+			ignoreCase = toBool(compactOp[3])
 		}
-		if ignoreCase {
-			return op.NewOpContainsOperationWithIgnoreCase(path, value, ignoreCase), nil
-		}
-		return op.NewOpContainsOperation(path, value), nil
+		return op.NewOpContainsOperationWithIgnoreCase(path, value, ignoreCase), nil
 
 	case internal.OpStartsType:
 		if len(compactOp) < 3 {
@@ -212,14 +210,9 @@ func compactToOp(compactOp Op, _ DecoderOptions) (internal.Op, error) {
 		}
 		ignoreCase := false
 		if len(compactOp) >= 4 {
-			if ignoreCaseVal, ok := compactOp[3].(float64); ok && ignoreCaseVal == 1 {
-				ignoreCase = true
-			}
+			ignoreCase = toBool(compactOp[3])
 		}
-		if ignoreCase {
-			return op.NewOpStartsOperationWithIgnoreCase(path, value, ignoreCase), nil
-		}
-		return op.NewOpStartsOperation(path, value), nil
+		return op.NewOpStartsOperationWithIgnoreCase(path, value, ignoreCase), nil
 
 	case internal.OpEndsType:
 		if len(compactOp) < 3 {
@@ -231,130 +224,237 @@ func compactToOp(compactOp Op, _ DecoderOptions) (internal.Op, error) {
 		}
 		ignoreCase := false
 		if len(compactOp) >= 4 {
-			if ignoreCaseVal, ok := compactOp[3].(float64); ok && ignoreCaseVal == 1 {
-				ignoreCase = true
-			}
+			ignoreCase = toBool(compactOp[3])
 		}
-		if ignoreCase {
-			return op.NewOpEndsOperationWithIgnoreCase(path, value, ignoreCase), nil
-		}
-		return op.NewOpEndsOperation(path, value), nil
+		return op.NewOpEndsOperationWithIgnoreCase(path, value, ignoreCase), nil
 
 	case internal.OpTypeType:
-		// Type test operation - currently fallback to test operation
 		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+			return nil, ErrTypeOperationRequiresType
 		}
-		return op.NewTest(path, compactOp[2]), nil
+		expectedType, ok := compactOp[2].(string)
+		if !ok {
+			return nil, ErrTypeOperationTypeNotString
+		}
+		return op.NewOpTypeOperation(path, expectedType), nil
 
 	case internal.OpTestTypeType:
-		// Test type operation - currently fallback to test operation
 		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+			return nil, ErrTestTypeOperationRequiresTypes
 		}
-		return op.NewTest(path, compactOp[2]), nil
+		types, err := toStringSlice(compactOp[2])
+		if err != nil {
+			return nil, ErrTestTypeOperationTypesNotArray
+		}
+		return op.NewOpTestTypeOperationMultiple(path, types), nil
 
 	case internal.OpTestStringType:
-		// Test string operation - currently fallback to test operation
 		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+			return nil, ErrTestStringOperationRequiresStr
 		}
-		return op.NewTest(path, compactOp[2]), nil
+		str, ok := compactOp[2].(string)
+		if !ok {
+			return nil, ErrTestStringOperationStrNotString
+		}
+		pos := float64(0)
+		if len(compactOp) >= 4 {
+			pos, _ = toFloat64(compactOp[3])
+		}
+		not := false
+		if len(compactOp) >= 5 {
+			not = toBool(compactOp[4])
+		}
+		return op.NewOpTestStringOperationFull(path, str, pos, not), nil
 
 	case internal.OpTestStringLenType:
-		// Test string length operation - currently fallback to test operation
 		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+			return nil, ErrTestStringLenOperationRequiresLen
 		}
-		return op.NewTest(path, compactOp[2]), nil
+		length, err := toFloat64(compactOp[2])
+		if err != nil {
+			return nil, ErrTestStringLenOperationLenNotNumber
+		}
+		not := false
+		if len(compactOp) >= 4 {
+			not = toBool(compactOp[3])
+		}
+		return op.NewOpTestStringLenOperationWithNot(path, length, not), nil
 
 	case internal.OpInType:
-		// In operation - currently fallback to test operation
 		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+			return nil, ErrInOperationRequiresValues
 		}
-		return op.NewTest(path, compactOp[2]), nil
+		values, ok := compactOp[2].([]interface{})
+		if !ok {
+			return nil, ErrInOperationValuesNotArray
+		}
+		return op.NewOpInOperation(path, values), nil
 
 	case internal.OpLessType:
-		// Less operation - currently fallback to test operation
 		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+			return nil, ErrLessOperationRequiresValue
 		}
-		return op.NewTest(path, compactOp[2]), nil
+		value, err := toFloat64(compactOp[2])
+		if err != nil {
+			return nil, ErrLessOperationValueNotNumber
+		}
+		return op.NewOpLessOperation(path, value), nil
 
 	case internal.OpMoreType:
-		// More operation - currently fallback to test operation
 		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+			return nil, ErrMoreOperationRequiresValue
 		}
-		return op.NewTest(path, compactOp[2]), nil
+		value, err := toFloat64(compactOp[2])
+		if err != nil {
+			return nil, ErrMoreOperationValueNotNumber
+		}
+		return op.NewOpMoreOperation(path, value), nil
 
 	case internal.OpMatchesType:
-		// Matches operation - currently fallback to test operation
 		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+			return nil, ErrMatchesOperationRequiresPattern
 		}
-		return op.NewTest(path, compactOp[2]), nil
+		pattern, ok := compactOp[2].(string)
+		if !ok {
+			return nil, ErrMatchesOperationPatternNotString
+		}
+		ignoreCase := false
+		if len(compactOp) >= 4 {
+			ignoreCase = toBool(compactOp[3])
+		}
+		return op.NewOpMatchesOperation(path, pattern, ignoreCase, false, nil), nil
 
 	case internal.OpAndType:
-		// And operation - currently fallback to test operation
 		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+			return nil, ErrAndOperationRequiresOps
 		}
-		return op.NewTest(path, compactOp[2]), nil
+		subOps, err := decodePredicateOpsAsInterface(compactOp[2], opts)
+		if err != nil {
+			return nil, err
+		}
+		return op.NewOpAndOperation(path, subOps), nil
 
 	case internal.OpOrType:
-		// Or operation - currently fallback to test operation
 		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+			return nil, ErrOrOperationRequiresOps
 		}
-		return op.NewTest(path, compactOp[2]), nil
+		subOps, err := decodePredicateOpsAsInterface(compactOp[2], opts)
+		if err != nil {
+			return nil, err
+		}
+		return op.NewOpOrOperation(path, subOps), nil
 
 	case internal.OpNotType:
-		// Not operation - currently fallback to test operation
 		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+			return nil, ErrNotOperationRequiresOps
 		}
-		return op.NewTest(path, compactOp[2]), nil
+		subOps, err := decodePredicateOpsAsInterface(compactOp[2], opts)
+		if err != nil {
+			return nil, err
+		}
+		return op.NewOpNotOperationMultiple(path, subOps), nil
 
 	case internal.OpStrInsType:
-		// String insert operation - currently fallback to test operation
-		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+		if len(compactOp) < 4 {
+			return nil, ErrStrInsOperationRequiresPosAndStr
 		}
-		return op.NewTest(path, compactOp[2]), nil
+		pos, err := toFloat64(compactOp[2])
+		if err != nil {
+			return nil, ErrStrInsOperationPosNotNumber
+		}
+		str, ok := compactOp[3].(string)
+		if !ok {
+			return nil, ErrStrInsOperationStrNotString
+		}
+		return op.NewOpStrInsOperation(path, pos, str), nil
 
 	case internal.OpStrDelType:
-		// String delete operation - currently fallback to test operation
-		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+		if len(compactOp) < 4 {
+			return nil, ErrStrDelOperationRequiresPosAndLen
 		}
-		return op.NewTest(path, compactOp[2]), nil
+		pos, err := toFloat64(compactOp[2])
+		if err != nil {
+			return nil, ErrStrDelOperationPosNotNumber
+		}
+		length, err := toFloat64(compactOp[3])
+		if err != nil {
+			return nil, ErrStrDelOperationLenNotNumber
+		}
+		return op.NewOpStrDelOperation(path, pos, length), nil
 
 	case internal.OpSplitType:
-		// Split operation - currently fallback to test operation
 		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+			return nil, ErrSplitOperationRequiresPos
 		}
-		return op.NewTest(path, compactOp[2]), nil
+		pos, err := toFloat64(compactOp[2])
+		if err != nil {
+			return nil, ErrSplitOperationPosNotNumber
+		}
+		var props interface{}
+		if len(compactOp) >= 4 {
+			props = compactOp[3]
+		}
+		return op.NewOpSplitOperation(path, pos, props), nil
 
 	case internal.OpMergeType:
-		// Merge operation - currently fallback to test operation
 		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+			return nil, ErrMergeOperationRequiresPos
 		}
-		return op.NewTest(path, compactOp[2]), nil
+		pos, err := toFloat64(compactOp[2])
+		if err != nil {
+			return nil, ErrMergeOperationPosNotNumber
+		}
+		var props map[string]interface{}
+		if len(compactOp) >= 4 {
+			if p, ok := compactOp[3].(map[string]interface{}); ok {
+				props = p
+			}
+		}
+		return op.NewOpMergeOperation(path, pos, props), nil
 
 	case internal.OpExtendType:
-		// Extend operation - currently fallback to test operation
 		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+			return nil, ErrExtendOperationRequiresProps
 		}
-		return op.NewTest(path, compactOp[2]), nil
+		props, ok := compactOp[2].(map[string]interface{})
+		if !ok {
+			return nil, ErrExtendOperationPropsNotObject
+		}
+		deleteNull := false
+		if len(compactOp) >= 4 {
+			deleteNull = toBool(compactOp[3])
+		}
+		return op.NewOpExtendOperation(path, props, deleteNull), nil
 
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrUnsupportedOperationType, opType)
 	}
+}
+
+// decodePredicateOpsAsInterface decodes an array of compact operations into []interface{} for And/Or/Not operations
+func decodePredicateOpsAsInterface(value interface{}, opts DecoderOptions) ([]interface{}, error) {
+	arr, ok := value.([]interface{})
+	if !ok {
+		return nil, ErrPredicateOpsNotArray
+	}
+
+	result := make([]interface{}, 0, len(arr))
+	for _, item := range arr {
+		compactOp, ok := item.([]interface{})
+		if !ok {
+			return nil, ErrPredicateOpNotArray
+		}
+		decoded, err := compactToOp(compactOp, opts)
+		if err != nil {
+			return nil, err
+		}
+		_, ok = decoded.(internal.PredicateOp)
+		if !ok {
+			return nil, ErrDecodedOpNotPredicate
+		}
+		result = append(result, decoded)
+	}
+	return result, nil
 }
 
 // getOpTypeFromOpcode determines the operation type from the opcode using lookup tables
@@ -397,4 +497,49 @@ func stringToPath(pathStr string) []string {
 		result[i] = fmt.Sprintf("%v", token)
 	}
 	return result
+}
+
+// toBool converts a value to bool
+func toBool(v interface{}) bool {
+	switch val := v.(type) {
+	case bool:
+		return val
+	case float64:
+		return val != 0
+	case int:
+		return val != 0
+	default:
+		return false
+	}
+}
+
+// toFloat64 converts a value to float64
+func toFloat64(v interface{}) (float64, error) {
+	switch val := v.(type) {
+	case float64:
+		return val, nil
+	case int:
+		return float64(val), nil
+	case int64:
+		return float64(val), nil
+	default:
+		return 0, ErrCannotConvertToFloat64
+	}
+}
+
+// toStringSlice converts a value to []string
+func toStringSlice(v interface{}) ([]string, error) {
+	arr, ok := v.([]interface{})
+	if !ok {
+		return nil, ErrExpectedArray
+	}
+	result := make([]string, len(arr))
+	for i, item := range arr {
+		str, ok := item.(string)
+		if !ok {
+			return nil, ErrExpectedStringInArray
+		}
+		result[i] = str
+	}
+	return result, nil
 }
