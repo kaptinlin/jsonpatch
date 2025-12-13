@@ -302,7 +302,9 @@ func validateOperationTestStringLen(operation Operation) error {
 	return nil
 }
 
-func validateOperationMatches(operation Operation) error {
+// requireStringValue validates that operation.Value is a non-nil string.
+// This eliminates code duplication across string predicate validators.
+func requireStringValue(operation Operation) error {
 	if operation.Value == nil {
 		return ErrExpectedValueToBeString
 	}
@@ -310,36 +312,34 @@ func validateOperationMatches(operation Operation) error {
 		return ErrExpectedValueToBeString
 	}
 	return nil
+}
+
+// requireNumberValue validates that operation.Value is a non-nil number.
+// This eliminates code duplication across numeric predicate validators.
+func requireNumberValue(operation Operation, err error) error {
+	if operation.Value == nil {
+		return err
+	}
+	if !isNumber(operation.Value) {
+		return err
+	}
+	return nil
+}
+
+func validateOperationMatches(operation Operation) error {
+	return requireStringValue(operation)
 }
 
 func validateOperationContains(operation Operation) error {
-	if operation.Value == nil {
-		return ErrExpectedValueToBeString
-	}
-	if _, isString := operation.Value.(string); !isString {
-		return ErrExpectedValueToBeString
-	}
-	return nil
+	return requireStringValue(operation)
 }
 
 func validateOperationEnds(operation Operation) error {
-	if operation.Value == nil {
-		return ErrExpectedValueToBeString
-	}
-	if _, isString := operation.Value.(string); !isString {
-		return ErrExpectedValueToBeString
-	}
-	return nil
+	return requireStringValue(operation)
 }
 
 func validateOperationStarts(operation Operation) error {
-	if operation.Value == nil {
-		return ErrExpectedValueToBeString
-	}
-	if _, isString := operation.Value.(string); !isString {
-		return ErrExpectedValueToBeString
-	}
-	return nil
+	return requireStringValue(operation)
 }
 
 func validateOperationIn(operation Operation) error {
@@ -353,23 +353,11 @@ func validateOperationIn(operation Operation) error {
 }
 
 func validateOperationMore(operation Operation) error {
-	if operation.Value == nil {
-		return ErrValueMustBeNumber
-	}
-	if !isNumber(operation.Value) {
-		return ErrValueMustBeNumber
-	}
-	return nil
+	return requireNumberValue(operation, ErrValueMustBeNumber)
 }
 
 func validateOperationLess(operation Operation) error {
-	if operation.Value == nil {
-		return ErrValueMustBeNumber
-	}
-	if !isNumber(operation.Value) {
-		return ErrValueMustBeNumber
-	}
-	return nil
+	return requireNumberValue(operation, ErrValueMustBeNumber)
 }
 
 func validateOperationType(operation Operation) error {

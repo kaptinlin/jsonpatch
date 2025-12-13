@@ -125,11 +125,7 @@ var (
 )
 
 func mustNewMatchesOperation(path []string, pattern string, ignoreCase bool) *op.MatchesOperation {
-	op, err := op.NewOpMatchesOperation(path, pattern, ignoreCase)
-	if err != nil {
-		panic(err)
-	}
-	return op
+	return op.NewOpMatchesOperation(path, pattern, ignoreCase, false, nil)
 }
 
 func TestRoundtrip(t *testing.T) {

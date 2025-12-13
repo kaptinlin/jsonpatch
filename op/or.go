@@ -1,8 +1,6 @@
 package op
 
-import (
-	"github.com/kaptinlin/jsonpatch/internal"
-)
+import "github.com/kaptinlin/jsonpatch/internal"
 
 // OrOperation represents an OR operation that combines multiple predicate operations.
 type OrOperation struct {

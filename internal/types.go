@@ -52,8 +52,8 @@ type Document interface {
 // Options holds configuration parameters for patch operations.
 // This is the unified configuration struct following Go best practices.
 type Options struct {
-	Mutate        bool                                               // Whether to modify the original document
-	CreateMatcher func(pattern string, ignoreCase bool) RegexMatcher // Optional regex matcher creator
+	Mutate        bool               // Whether to modify the original document
+	CreateMatcher CreateRegexMatcher // Optional regex matcher creator
 }
 
 // Option represents functional options for configuring patch operations.
@@ -70,7 +70,7 @@ func WithMutate(mutate bool) Option {
 
 // WithMatcher configures a custom regex matcher for pattern operations.
 // The createMatcher function should create a RegexMatcher from a pattern and ignoreCase flag.
-func WithMatcher(createMatcher func(pattern string, ignoreCase bool) RegexMatcher) Option {
+func WithMatcher(createMatcher CreateRegexMatcher) Option {
 	return func(opts *Options) {
 		opts.CreateMatcher = createMatcher
 	}
@@ -97,12 +97,18 @@ const (
 )
 
 // RegexMatcher is a function type that tests if a value matches a pattern.
+// This aligns with json-joy's RegexMatcher type.
 type RegexMatcher func(value string) bool
 
-// JSONPatchOptions contains options for JSON Patch operations.
-// This is kept for decoder compatibility.
+// CreateRegexMatcher is a function type that creates a RegexMatcher from a pattern.
+// This aligns with json-joy's CreateRegexMatcher type.
+// The function should return a matcher that always returns false if the pattern is invalid.
+type CreateRegexMatcher func(pattern string, ignoreCase bool) RegexMatcher
+
+// JSONPatchOptions contains options for JSON Patch decoding operations.
+// This aligns with json-joy's JsonPatchOptions interface.
 type JSONPatchOptions struct {
-	CreateMatcher func(pattern string, ignoreCase bool) RegexMatcher
+	CreateMatcher CreateRegexMatcher
 }
 
 // IsValidJSONPatchType checks if a type string is a valid JSON Patch type

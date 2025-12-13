@@ -128,7 +128,12 @@ const (
 type Types = internal.JSONPatchTypes
 
 // RegexMatcher is a function type that tests if a value matches a pattern.
+// This aligns with json-joy's RegexMatcher type.
 type RegexMatcher = internal.RegexMatcher
+
+// CreateRegexMatcher is a function type that creates a RegexMatcher from a pattern.
+// This aligns with json-joy's CreateRegexMatcher type.
+type CreateRegexMatcher = internal.CreateRegexMatcher
 
 // JSONPatchTypeString represents the JSON string type.
 const JSONPatchTypeString = internal.JSONPatchTypeString

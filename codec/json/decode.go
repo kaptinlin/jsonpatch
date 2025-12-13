@@ -460,16 +460,12 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		if ic, ok := operation["ignore_case"].(bool); ok {
 			ignoreCase = ic
 		}
-		// Check for not flag
 		notFlag := false
 		if n, ok := operation["not"].(bool); ok {
 			notFlag = n
 		}
-		matchesOp, err := op.NewOpMatchesOperationWithFlags(path, value, ignoreCase, notFlag)
-		if err != nil {
-			return nil, err
-		}
-		return matchesOp, nil
+		// Direct pass-through - no adapter needed since signatures now match
+		return op.NewOpMatchesOperation(path, value, ignoreCase, notFlag, options.CreateMatcher), nil
 	case "in":
 		value := operation["value"]
 		if values, ok := value.([]interface{}); ok {

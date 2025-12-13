@@ -1,8 +1,6 @@
 package op
 
-import (
-	"github.com/kaptinlin/jsonpatch/internal"
-)
+import "github.com/kaptinlin/jsonpatch/internal"
 
 // NotOperation represents a logical NOT operation that negates predicates.
 type NotOperation struct {

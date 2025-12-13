@@ -6,25 +6,23 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// CreateMatcherDefault creates a default regular expression matcher.
+// CreateMatcherDefault is the default regex matcher factory.
+// It creates a RegexMatcher function from a pattern and ignoreCase flag.
+// If the pattern is invalid, returns a matcher that always returns false.
+// This aligns with json-joy's createMatcherDefault.
 func CreateMatcherDefault(pattern string, ignoreCase bool) RegexMatcher {
 	flags := ""
 	if ignoreCase {
 		flags = "(?i)"
 	}
 
-	// Compile the regular expression with flags
 	regex, err := regexp.Compile(flags + pattern)
 	if err != nil {
 		// Return a matcher that always returns false if compilation fails
-		return func(_ string) bool {
-			return false
-		}
+		return func(_ string) bool { return false }
 	}
 
-	return func(value string) bool {
-		return regex.MatchString(value)
-	}
+	return regex.MatchString
 }
 
 // ValidateOp validates an operation using the Op interface.

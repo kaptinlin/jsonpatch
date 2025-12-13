@@ -1,8 +1,6 @@
 package op
 
-import (
-	"github.com/kaptinlin/jsonpatch/internal"
-)
+import "github.com/kaptinlin/jsonpatch/internal"
 
 // AndOperation represents an and operation that combines multiple predicate operations.
 type AndOperation struct {

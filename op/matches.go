@@ -10,49 +10,39 @@ import (
 // MatchesOperation represents a "matches" predicate operation that checks if a string matches a regex pattern.
 type MatchesOperation struct {
 	BaseOp
-	Pattern    string         `json:"value"`       // The regex pattern string
-	IgnoreCase bool           `json:"ignore_case"` // Case insensitive flag
-	NotFlag    bool           `json:"not"`         // Whether to negate the result
-	matcher    *regexp.Regexp // Compiled regex matcher
+	Pattern    string                `json:"value"`       // The regex pattern string
+	IgnoreCase bool                  `json:"ignore_case"` // Case insensitive flag
+	NotFlag    bool                  `json:"not"`         // Whether to negate the result
+	matcher    internal.RegexMatcher // Compiled regex matcher function
+}
+
+// createMatcherDefault is the default regex matcher factory using Go's regexp package.
+// It creates a RegexMatcher function from a pattern and ignoreCase flag.
+// If the pattern is invalid, returns a matcher that always returns false.
+// This aligns with json-joy's createMatcherDefault behavior.
+func createMatcherDefault(pattern string, ignoreCase bool) internal.RegexMatcher {
+	var regexPattern string
+	if ignoreCase {
+		regexPattern = "(?i)" + pattern
+	} else {
+		regexPattern = pattern
+	}
+
+	re, err := regexp.Compile(regexPattern)
+	if err != nil {
+		// Return a matcher that always returns false if compilation fails
+		return func(_ string) bool { return false }
+	}
+
+	return re.MatchString
 }
 
 // NewOpMatchesOperation creates a new matches operation.
-func NewOpMatchesOperation(path []string, pattern string, ignoreCase bool) (*MatchesOperation, error) {
-	// Compile the regex pattern
-	var regexPattern string
-	if ignoreCase {
-		regexPattern = "(?i)" + pattern
-	} else {
-		regexPattern = pattern
-	}
-
-	matcher, err := regexp.Compile(regexPattern)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrRegexPattern, err)
-	}
-
-	return &MatchesOperation{
-		BaseOp:     NewBaseOp(path),
-		Pattern:    pattern,
-		IgnoreCase: ignoreCase,
-		NotFlag:    false,
-		matcher:    matcher,
-	}, nil
-}
-
-// NewOpMatchesOperationWithFlags creates a new matches operation with full options.
-func NewOpMatchesOperationWithFlags(path []string, pattern string, ignoreCase bool, notFlag bool) (*MatchesOperation, error) {
-	// Compile the regex pattern
-	var regexPattern string
-	if ignoreCase {
-		regexPattern = "(?i)" + pattern
-	} else {
-		regexPattern = pattern
-	}
-
-	matcher, err := regexp.Compile(regexPattern)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrRegexPattern, err)
+// If createMatcher is nil, uses the default Go regexp implementation.
+// This aligns with json-joy's OpMatches constructor pattern.
+func NewOpMatchesOperation(path []string, pattern string, ignoreCase bool, notFlag bool, createMatcher internal.CreateRegexMatcher) *MatchesOperation {
+	if createMatcher == nil {
+		createMatcher = createMatcherDefault
 	}
 
 	return &MatchesOperation{
@@ -60,8 +50,8 @@ func NewOpMatchesOperationWithFlags(path []string, pattern string, ignoreCase bo
 		Pattern:    pattern,
 		IgnoreCase: ignoreCase,
 		NotFlag:    notFlag,
-		matcher:    matcher,
-	}, nil
+		matcher:    createMatcher(pattern, ignoreCase),
+	}
 }
 
 // Op returns the operation type.
@@ -94,7 +84,7 @@ func (o *MatchesOperation) Test(doc interface{}) (bool, error) {
 		return false, nil
 	}
 
-	matches := o.matcher.MatchString(str)
+	matches := o.matcher(str)
 
 	// Apply negation if needed
 	if o.NotFlag {
@@ -118,7 +108,7 @@ func (o *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, ErrNotString
 	}
 
-	matches := o.matcher.MatchString(str)
+	matches := o.matcher(str)
 
 	// Apply negation if needed
 	if o.NotFlag {

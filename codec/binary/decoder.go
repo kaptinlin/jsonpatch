@@ -144,7 +144,7 @@ func decodeOp(reader *msgp.Reader) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpMatchesOperation(path, pattern, ignoreCase)
+		return op.NewOpMatchesOperation(path, pattern, ignoreCase, false, nil), nil
 	case internal.OpTestStringCode:
 		str, err := reader.ReadString()
 		if err != nil {

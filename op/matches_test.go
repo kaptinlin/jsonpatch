@@ -73,8 +73,7 @@ func TestOpMatches_Basic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op, err := NewMatches(tt.path, tt.pattern, tt.ignoreCase)
-			assert.NoError(t, err)
+			op := NewMatches(tt.path, tt.pattern, tt.ignoreCase, false, nil)
 
 			result, err := op.Apply(tt.doc)
 
@@ -98,8 +97,7 @@ func TestOpMatches_Constructor(t *testing.T) {
 	pattern := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	ignoreCase := false
 
-	op, err := NewMatches(path, pattern, ignoreCase)
-	require.NoError(t, err)
+	op := NewMatches(path, pattern, ignoreCase, false, nil)
 
 	assert.Equal(t, path, op.Path())
 	assert.Equal(t, pattern, op.Pattern)
@@ -112,14 +110,20 @@ func TestOpMatches_InvalidPattern(t *testing.T) {
 	path := []string{"email"}
 	invalidPattern := `[invalid-regex`
 
-	_, err := NewMatches(path, invalidPattern, false)
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, ErrRegexPattern)
+	// With the new design, invalid patterns create a matcher that always returns false
+	// (aligned with json-joy's behavior)
+	op := NewMatches(path, invalidPattern, false, false, nil)
+
+	// The operation should be created successfully
+	assert.NotNil(t, op)
+
+	// But test should fail (return false) for any input
+	result, _ := op.Test(map[string]interface{}{"email": "test@example.com"})
+	assert.False(t, result)
 }
 
 func TestOpMatches_ToJSON(t *testing.T) {
-	op, err := NewMatches([]string{"email"}, `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, true)
-	require.NoError(t, err)
+	op := NewMatches([]string{"email"}, `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, true, false, nil)
 
 	json, err := op.ToJSON()
 	require.NoError(t, err)
@@ -131,16 +135,14 @@ func TestOpMatches_ToJSON(t *testing.T) {
 }
 
 func TestOpMatches_ToCompact(t *testing.T) {
-	op, err := NewMatches([]string{"name"}, "john", true)
-	require.NoError(t, err)
+	op := NewMatches([]string{"name"}, "john", true, false, nil)
 	compact, err := op.ToCompact()
 	assert.NoError(t, err)
 	assert.Equal(t, []interface{}{internal.OpMatchesCode, []string{"name"}, "john", true}, compact)
 }
 
 func TestOpMatches_ToCompact_WithoutIgnoreCase(t *testing.T) {
-	op, err := NewMatches([]string{"name"}, "john", false)
-	require.NoError(t, err)
+	op := NewMatches([]string{"name"}, "john", false, false, nil)
 	compact, err := op.ToCompact()
 	assert.NoError(t, err)
 	assert.Equal(t, []interface{}{internal.OpMatchesCode, []string{"name"}, "john", false}, compact)
