@@ -24,7 +24,7 @@ func BenchmarkEncode(b *testing.B) {
 	encoder := NewEncoder()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := encoder.EncodeSlice(benchmarkOps)
 		if err != nil {
 			b.Fatal(err)
@@ -42,7 +42,7 @@ func BenchmarkDecode(b *testing.B) {
 	decoder := NewDecoder()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := decoder.DecodeSlice(encoded)
 		if err != nil {
 			b.Fatal(err)
@@ -52,7 +52,7 @@ func BenchmarkDecode(b *testing.B) {
 
 func BenchmarkEncodeJSON(b *testing.B) {
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := EncodeJSON(benchmarkOps)
 		if err != nil {
 			b.Fatal(err)
@@ -67,7 +67,7 @@ func BenchmarkDecodeJSON(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := DecodeJSON(jsonData)
 		if err != nil {
 			b.Fatal(err)
@@ -77,7 +77,7 @@ func BenchmarkDecodeJSON(b *testing.B) {
 
 func BenchmarkRoundTrip(b *testing.B) {
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		encoded, err := Encode(benchmarkOps)
 		if err != nil {
 			b.Fatal(err)
@@ -96,7 +96,7 @@ func BenchmarkStringVsNumericOpcode(b *testing.B) {
 	b.Run("Numeric", func(b *testing.B) {
 		encoder := NewEncoder() // default uses numeric opcodes
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			_, err := encoder.EncodeSlice(singleOp)
 			if err != nil {
 				b.Fatal(err)
@@ -107,7 +107,7 @@ func BenchmarkStringVsNumericOpcode(b *testing.B) {
 	b.Run("String", func(b *testing.B) {
 		encoder := NewEncoder(WithStringOpcode(true))
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			_, err := encoder.EncodeSlice(singleOp)
 			if err != nil {
 				b.Fatal(err)

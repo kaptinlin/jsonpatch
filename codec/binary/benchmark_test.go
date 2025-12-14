@@ -35,7 +35,7 @@ func BenchmarkEncode(b *testing.B) {
 	codec := &Codec{}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := codec.Encode(benchmarkOps)
 		if err != nil {
 			b.Fatal(err)
@@ -51,7 +51,7 @@ func BenchmarkDecode(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := codec.Decode(encoded)
 		if err != nil {
 			b.Fatal(err)
@@ -63,7 +63,7 @@ func BenchmarkRoundTrip(b *testing.B) {
 	codec := &Codec{}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		encoded, err := codec.Encode(benchmarkOps)
 		if err != nil {
 			b.Fatal(err)
@@ -110,7 +110,7 @@ func BenchmarkSingleOperationTypes(b *testing.B) {
 		b.Run(tt.name, func(b *testing.B) {
 			ops := []internal.Op{tt.op}
 			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				encoded, err := codec.Encode(ops)
 				if err != nil {
 					b.Fatal(err)

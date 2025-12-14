@@ -38,7 +38,7 @@ func BenchmarkDecode(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := DecodeOperations(testOperations, options)
 		if err != nil {
 			b.Fatal(err)
@@ -54,7 +54,7 @@ func BenchmarkEncode(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := Encode(ops)
 		if err != nil {
 			b.Fatal(err)
@@ -69,7 +69,7 @@ func BenchmarkDecodeJSON(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := DecodeJSON(data, options)
 		if err != nil {
 			b.Fatal(err)
@@ -85,7 +85,7 @@ func BenchmarkEncodeJSON(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := EncodeJSON(ops)
 		if err != nil {
 			b.Fatal(err)
@@ -100,7 +100,7 @@ func BenchmarkRoundTrip(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		ops, err := DecodeJSON(data, options)
 		if err != nil {
 			b.Fatal(err)
@@ -202,7 +202,7 @@ func BenchmarkDecodeStructVsMap(b *testing.B) {
 	b.Run("Struct", func(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			_, err := DecodeOperations(testOperations, options)
 			if err != nil {
 				b.Fatal(err)
@@ -213,7 +213,7 @@ func BenchmarkDecodeStructVsMap(b *testing.B) {
 	b.Run("Map", func(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			_, err := Decode(testOperationMaps, options)
 			if err != nil {
 				b.Fatal(err)
@@ -229,7 +229,7 @@ func BenchmarkStructRoundTrip(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		// Decode struct-based operations
 		ops, err := DecodeOperations(testOperations, options)
 		if err != nil {

@@ -478,7 +478,7 @@ func BenchmarkTypeScriptParity(b *testing.B) {
 	testCases := getKnownWorkingTestCases()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, tc := range testCases {
 			if !tc.ShouldFail {
 				_, err := jsonpatch.ApplyPatch(tc.Doc, tc.Patch, jsonpatch.WithMutate(true))
