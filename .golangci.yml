@@ -27,13 +27,16 @@ linters:
     - noctx
     - nolintlint
     - promlinter
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - gosec
+          - noctx
+      - text: "var-naming.*avoid package names"
+        linters:
+          - revive
 
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - gosec
-        - noctx
-        - revive
