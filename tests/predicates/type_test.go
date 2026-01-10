@@ -3,27 +3,9 @@ package ops_test
 import (
 	"testing"
 
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/require"
+	"github.com/kaptinlin/jsonpatch/tests/testutils"
 )
-
-// applyOperationType applies a single operation to a document
-func applyOperationType(t *testing.T, doc interface{}, op internal.Operation) interface{} {
-	t.Helper()
-	patch := []internal.Operation{op}
-	result, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
-	require.NoError(t, err)
-	return result.Doc
-}
-
-// applyOperationWithErrorType applies an operation expecting it to fail
-func applyOperationWithErrorType(t *testing.T, doc interface{}, op internal.Operation) {
-	t.Helper()
-	patch := []internal.Operation{op}
-	_, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
-	require.Error(t, err)
-}
 
 func TestTypeOp(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
@@ -46,7 +28,7 @@ func TestTypeOp(t *testing.T) {
 					Path:  "",
 					Value: test.typ,
 				}
-				applyOperationType(t, test.value, op)
+				testutils.ApplyInternalOp(t, test.value, op)
 			}
 		})
 
@@ -69,7 +51,7 @@ func TestTypeOp(t *testing.T) {
 					Path:  "",
 					Value: test.typ,
 				}
-				applyOperationWithErrorType(t, test.value, op)
+				testutils.ApplyInternalOpWithError(t, test.value, op)
 			}
 		})
 	})
@@ -94,7 +76,7 @@ func TestTypeOp(t *testing.T) {
 					Path:  "/foo",
 					Value: test.typ,
 				}
-				applyOperationType(t, test.obj, op)
+				testutils.ApplyInternalOp(t, test.obj, op)
 			}
 		})
 
@@ -117,7 +99,7 @@ func TestTypeOp(t *testing.T) {
 					Path:  "/foo",
 					Value: test.typ,
 				}
-				applyOperationWithErrorType(t, test.obj, op)
+				testutils.ApplyInternalOpWithError(t, test.obj, op)
 			}
 		})
 	})
@@ -142,7 +124,7 @@ func TestTypeOp(t *testing.T) {
 					Path:  "/0",
 					Value: test.typ,
 				}
-				applyOperationType(t, test.arr, op)
+				testutils.ApplyInternalOp(t, test.arr, op)
 			}
 		})
 
@@ -165,7 +147,7 @@ func TestTypeOp(t *testing.T) {
 					Path:  "/0",
 					Value: test.typ,
 				}
-				applyOperationWithErrorType(t, test.arr, op)
+				testutils.ApplyInternalOpWithError(t, test.arr, op)
 			}
 		})
 	})

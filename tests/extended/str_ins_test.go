@@ -5,18 +5,10 @@ import (
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/kaptinlin/jsonpatch/tests/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-// applyOperationStrIns applies a single operation to a document
-func applyOperationStrIns(t *testing.T, doc interface{}, op internal.Operation) interface{} {
-	t.Helper()
-	patch := []internal.Operation{op}
-	result, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
-	require.NoError(t, err)
-	return result.Doc
-}
 
 func TestStrInsOp(t *testing.T) {
 	t.Run("inserts a string at the beginning", func(t *testing.T) {
@@ -26,7 +18,7 @@ func TestStrInsOp(t *testing.T) {
 			Pos:  0,
 			Str:  "Hello, ",
 		}
-		result := applyOperationStrIns(t, "world!", operation)
+		result := testutils.ApplyInternalOp(t, "world!", operation)
 		assert.Equal(t, "Hello, world!", result)
 	})
 
@@ -37,7 +29,7 @@ func TestStrInsOp(t *testing.T) {
 			Pos:  5,
 			Str:  ", world",
 		}
-		result := applyOperationStrIns(t, "Hello", operation)
+		result := testutils.ApplyInternalOp(t, "Hello", operation)
 		assert.Equal(t, "Hello, world", result)
 	})
 
@@ -48,7 +40,7 @@ func TestStrInsOp(t *testing.T) {
 			Pos:  5,
 			Str:  " beautiful",
 		}
-		result := applyOperationStrIns(t, "Hello world", operation)
+		result := testutils.ApplyInternalOp(t, "Hello world", operation)
 		assert.Equal(t, "Hello beautiful world", result)
 	})
 
@@ -83,7 +75,7 @@ func TestStrInsOp(t *testing.T) {
 				Pos:  0,
 				Str:  "hello",
 			}
-			result := applyOperationStrIns(t, "", operation)
+			result := testutils.ApplyInternalOp(t, "", operation)
 			assert.Equal(t, "hello", result)
 		})
 	})
@@ -96,7 +88,7 @@ func TestStrInsOp(t *testing.T) {
 				Pos:  0,
 				Str:  "Hello, ",
 			}
-			result := applyOperationStrIns(t, map[string]interface{}{"msg": "world!"}, operation)
+			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "world!"}, operation)
 			expected := map[string]interface{}{"msg": "Hello, world!"}
 			assert.Equal(t, expected, result)
 		})
@@ -108,7 +100,7 @@ func TestStrInsOp(t *testing.T) {
 				Pos:  5,
 				Str:  ", world",
 			}
-			result := applyOperationStrIns(t, map[string]interface{}{"msg": "Hello"}, operation)
+			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello"}, operation)
 			expected := map[string]interface{}{"msg": "Hello, world"}
 			assert.Equal(t, expected, result)
 		})
@@ -120,7 +112,7 @@ func TestStrInsOp(t *testing.T) {
 				Pos:  5,
 				Str:  " beautiful",
 			}
-			result := applyOperationStrIns(t, map[string]interface{}{"msg": "Hello world"}, operation)
+			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello world"}, operation)
 			expected := map[string]interface{}{"msg": "Hello beautiful world"}
 			assert.Equal(t, expected, result)
 		})
@@ -132,7 +124,7 @@ func TestStrInsOp(t *testing.T) {
 				Pos:  -1,
 				Str:  "!",
 			}
-			result := applyOperationStrIns(t, map[string]interface{}{"msg": "Hello"}, operation)
+			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello"}, operation)
 			expected := map[string]interface{}{"msg": "Hell!o"}
 			assert.Equal(t, expected, result)
 		})
@@ -146,7 +138,7 @@ func TestStrInsOp(t *testing.T) {
 				Pos:  0,
 				Str:  "Hello, ",
 			}
-			result := applyOperationStrIns(t, []interface{}{"world!"}, operation)
+			result := testutils.ApplyInternalOp(t, []interface{}{"world!"}, operation)
 			expected := []interface{}{"Hello, world!"}
 			assert.Equal(t, expected, result)
 		})
@@ -158,7 +150,7 @@ func TestStrInsOp(t *testing.T) {
 				Pos:  5,
 				Str:  ", world",
 			}
-			result := applyOperationStrIns(t, []interface{}{"Hello"}, operation)
+			result := testutils.ApplyInternalOp(t, []interface{}{"Hello"}, operation)
 			expected := []interface{}{"Hello, world"}
 			assert.Equal(t, expected, result)
 		})
@@ -170,7 +162,7 @@ func TestStrInsOp(t *testing.T) {
 				Pos:  5,
 				Str:  " beautiful",
 			}
-			result := applyOperationStrIns(t, []interface{}{"Hello world"}, operation)
+			result := testutils.ApplyInternalOp(t, []interface{}{"Hello world"}, operation)
 			expected := []interface{}{"Hello beautiful world"}
 			assert.Equal(t, expected, result)
 		})

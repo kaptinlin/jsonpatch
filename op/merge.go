@@ -2,7 +2,6 @@ package op
 
 import (
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/kaptinlin/jsonpatch/pkg/slate"
 )
 
 // MergeOperation represents an array merge operation.
@@ -129,8 +128,8 @@ func (op *MergeOperation) mergeElements(one, two interface{}) interface{} {
 	}
 
 	// Slate-like text node merging
-	if slate.IsTextNode(one) && slate.IsTextNode(two) {
-		merged := slate.MergeTextNodesFromMaps(one.(map[string]interface{}), two.(map[string]interface{}))
+	if isSlateTextNode(one) && isSlateTextNode(two) {
+		merged := mergeSlateTextNodes(one.(map[string]interface{}), two.(map[string]interface{}))
 		// Apply props if specified
 		if op.Props != nil {
 			for k, v := range op.Props {
@@ -141,8 +140,8 @@ func (op *MergeOperation) mergeElements(one, two interface{}) interface{} {
 	}
 
 	// Slate-like element node merging
-	if slate.IsElementNode(one) && slate.IsElementNode(two) {
-		merged := slate.MergeElementNodesFromMaps(one.(map[string]interface{}), two.(map[string]interface{}))
+	if isSlateElementNode(one) && isSlateElementNode(two) {
+		merged := mergeSlateElementNodes(one.(map[string]interface{}), two.(map[string]interface{}))
 		// Apply props if specified
 		if op.Props != nil {
 			for k, v := range op.Props {
@@ -189,3 +188,78 @@ var (
 	// NewMerge creates a new merge operation
 	NewMerge = NewOpMergeOperation
 )
+
+// Slate node helper functions (inlined from pkg/slate)
+
+// isSlateTextNode checks if a value is a Slate.js text node
+func isSlateTextNode(value interface{}) bool {
+	if nodeMap, ok := value.(map[string]interface{}); ok {
+		_, hasText := nodeMap["text"]
+		return hasText
+	}
+	return false
+}
+
+// isSlateElementNode checks if a value is a Slate.js element node
+func isSlateElementNode(value interface{}) bool {
+	if nodeMap, ok := value.(map[string]interface{}); ok {
+		if children, hasChildren := nodeMap["children"]; hasChildren {
+			_, isArray := children.([]interface{})
+			return isArray
+		}
+	}
+	return false
+}
+
+// mergeSlateTextNodes merges two Slate text nodes by concatenating their text
+func mergeSlateTextNodes(one, two map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+
+	// Copy properties from first node
+	for k, v := range one {
+		if k != "text" {
+			result[k] = v
+		}
+	}
+	// Copy properties from second node (overwrites first)
+	for k, v := range two {
+		if k != "text" {
+			result[k] = v
+		}
+	}
+
+	// Concatenate text
+	textOne, _ := one["text"].(string)
+	textTwo, _ := two["text"].(string)
+	result["text"] = textOne + textTwo
+
+	return result
+}
+
+// mergeSlateElementNodes merges two Slate element nodes by concatenating their children
+func mergeSlateElementNodes(one, two map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+
+	// Copy properties from first node
+	for k, v := range one {
+		if k != "children" {
+			result[k] = v
+		}
+	}
+	// Copy properties from second node (overwrites first)
+	for k, v := range two {
+		if k != "children" {
+			result[k] = v
+		}
+	}
+
+	// Concatenate children
+	childrenOne, _ := one["children"].([]interface{})
+	childrenTwo, _ := two["children"].([]interface{})
+	mergedChildren := make([]interface{}, 0, len(childrenOne)+len(childrenTwo))
+	mergedChildren = append(mergedChildren, childrenOne...)
+	mergedChildren = append(mergedChildren, childrenTwo...)
+	result["children"] = mergedChildren
+
+	return result
+}

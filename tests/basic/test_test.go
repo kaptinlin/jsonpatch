@@ -3,28 +3,10 @@ package ops_test
 import (
 	"testing"
 
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/kaptinlin/jsonpatch/tests/testutils"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
-
-// applyOperation applies a single operation to a document
-func applyOperation(t *testing.T, doc interface{}, op internal.Operation) interface{} {
-	t.Helper()
-	patch := []internal.Operation{op}
-	result, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
-	require.NoError(t, err)
-	return result.Doc
-}
-
-// applyOperationWithError applies an operation expecting it to fail
-func applyOperationWithError(t *testing.T, doc interface{}, op internal.Operation) {
-	t.Helper()
-	patch := []internal.Operation{op}
-	_, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
-	require.Error(t, err)
-}
 
 func TestTestOp(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
@@ -37,7 +19,7 @@ func TestTestOp(t *testing.T) {
 				Path:  "",
 				Value: map[string]interface{}{"hello": "world"},
 			}
-			result := applyOperation(t, obj, op)
+			result := testutils.ApplyInternalOp(t, obj, op)
 			assert.Equal(t, obj, result)
 		})
 
@@ -50,7 +32,7 @@ func TestTestOp(t *testing.T) {
 				Path:  "",
 				Value: 1,
 			}
-			applyOperationWithError(t, obj, op)
+			testutils.ApplyInternalOpWithError(t, obj, op)
 		})
 
 		t.Run("should test against root on json document of type array and return false", func(t *testing.T) {
@@ -64,7 +46,7 @@ func TestTestOp(t *testing.T) {
 				Path:  "",
 				Value: 1,
 			}
-			applyOperationWithError(t, obj, op)
+			testutils.ApplyInternalOpWithError(t, obj, op)
 		})
 
 		t.Run("should throw against root", func(t *testing.T) {
@@ -74,7 +56,7 @@ func TestTestOp(t *testing.T) {
 				Value: 2,
 				Not:   false,
 			}
-			applyOperationWithError(t, 1, op)
+			testutils.ApplyInternalOpWithError(t, 1, op)
 		})
 
 		t.Run("should throw when object key is different", func(t *testing.T) {
@@ -85,7 +67,7 @@ func TestTestOp(t *testing.T) {
 				Value: 2,
 				Not:   false,
 			}
-			applyOperationWithError(t, obj, op)
+			testutils.ApplyInternalOpWithError(t, obj, op)
 		})
 
 		t.Run("should not throw when object key is the same", func(t *testing.T) {
@@ -96,7 +78,7 @@ func TestTestOp(t *testing.T) {
 				Value: 1,
 				Not:   false,
 			}
-			applyOperation(t, obj, op)
+			testutils.ApplyInternalOp(t, obj, op)
 		})
 	})
 
@@ -108,7 +90,7 @@ func TestTestOp(t *testing.T) {
 				Value: 2,
 				Not:   true,
 			}
-			applyOperation(t, 1, op)
+			testutils.ApplyInternalOp(t, 1, op)
 		})
 
 		t.Run("should not throw when object key is different", func(t *testing.T) {
@@ -119,7 +101,7 @@ func TestTestOp(t *testing.T) {
 				Value: 2,
 				Not:   true,
 			}
-			applyOperation(t, obj, op)
+			testutils.ApplyInternalOp(t, obj, op)
 		})
 
 		t.Run("should throw when object key is the same", func(t *testing.T) {
@@ -130,7 +112,7 @@ func TestTestOp(t *testing.T) {
 				Value: 1,
 				Not:   true,
 			}
-			applyOperationWithError(t, obj, op)
+			testutils.ApplyInternalOpWithError(t, obj, op)
 		})
 	})
 }

@@ -3,19 +3,10 @@ package ops_test
 import (
 	"testing"
 
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/kaptinlin/jsonpatch/tests/testutils"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
-
-// applyOperationsExtend applies multiple operations to a document
-func applyOperationsExtend(t *testing.T, doc interface{}, ops []internal.Operation) interface{} {
-	t.Helper()
-	result, err := jsonpatch.ApplyPatch(doc, ops, internal.WithMutate(true))
-	require.NoError(t, err)
-	return result.Doc
-}
 
 func TestExtendOp(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
@@ -30,7 +21,7 @@ func TestExtendOp(t *testing.T) {
 					},
 				},
 			}
-			result := applyOperationsExtend(t, map[string]interface{}{"foo": "bar"}, operations)
+			result := testutils.ApplyInternalOps(t, map[string]interface{}{"foo": "bar"}, operations)
 			expected := map[string]interface{}{
 				"foo": "bar",
 				"a":   "b",
@@ -60,7 +51,7 @@ func TestExtendOp(t *testing.T) {
 					},
 				},
 			}
-			result := applyOperationsExtend(t, doc, operations)
+			result := testutils.ApplyInternalOps(t, doc, operations)
 			expected := map[string]interface{}{
 				"foo": []interface{}{
 					map[string]interface{}{
@@ -95,7 +86,7 @@ func TestExtendOp(t *testing.T) {
 					},
 				},
 			}
-			result := applyOperationsExtend(t, doc, operations)
+			result := testutils.ApplyInternalOps(t, doc, operations)
 			expected := map[string]interface{}{
 				"foo": []interface{}{
 					map[string]interface{}{
@@ -132,7 +123,7 @@ func TestExtendOp(t *testing.T) {
 					},
 				},
 			}
-			result := applyOperationsExtend(t, doc, operations)
+			result := testutils.ApplyInternalOps(t, doc, operations)
 			expected := map[string]interface{}{
 				"foo": []interface{}{
 					map[string]interface{}{
@@ -164,7 +155,7 @@ func TestExtendOp(t *testing.T) {
 					},
 				},
 			}
-			result := applyOperationsExtend(t, doc, operations)
+			result := testutils.ApplyInternalOps(t, doc, operations)
 			expected := map[string]interface{}{
 				"foo": map[string]interface{}{
 					"lol": map[string]interface{}{
@@ -195,7 +186,7 @@ func TestExtendOp(t *testing.T) {
 					},
 				},
 			}
-			result := applyOperationsExtend(t, doc, operations)
+			result := testutils.ApplyInternalOps(t, doc, operations)
 			expected := map[string]interface{}{
 				"foo": map[string]interface{}{
 					"lol": map[string]interface{}{
@@ -228,7 +219,7 @@ func TestExtendOp(t *testing.T) {
 					},
 				},
 			}
-			result := applyOperationsExtend(t, doc, operations)
+			result := testutils.ApplyInternalOps(t, doc, operations)
 			expected := map[string]interface{}{
 				"foo": map[string]interface{}{
 					"lol": map[string]interface{}{

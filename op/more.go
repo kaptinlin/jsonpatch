@@ -32,7 +32,7 @@ func (o *MoreOperation) Code() int {
 
 // Test evaluates the more predicate condition.
 func (o *MoreOperation) Test(doc interface{}) (bool, error) {
-	_, num, err := o.getAndValidateValue(doc)
+	_, num, err := getNumericValue(doc, o.Path())
 	if err != nil {
 		// For JSON Patch test operations, path not found or wrong type means test fails (returns false)
 		// This is correct JSON Patch semantics - returning nil error with false result
@@ -45,7 +45,7 @@ func (o *MoreOperation) Test(doc interface{}) (bool, error) {
 
 // Apply applies the more operation.
 func (o *MoreOperation) Apply(doc any) (internal.OpResult[any], error) {
-	val, num, err := o.getAndValidateValue(doc)
+	val, num, err := getNumericValue(doc, o.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -55,19 +55,6 @@ func (o *MoreOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: val}, nil
-}
-
-// getAndValidateValue retrieves and validates the numeric value at the path
-func (o *MoreOperation) getAndValidateValue(doc interface{}) (interface{}, float64, error) {
-	value, err := getValue(doc, o.Path())
-	if err != nil {
-		return nil, 0, ErrPathNotFound
-	}
-	actualValue, ok := ToFloat64(value)
-	if !ok {
-		return nil, 0, ErrNotNumber
-	}
-	return value, actualValue, nil
 }
 
 // ToJSON converts the operation to JSON representation.

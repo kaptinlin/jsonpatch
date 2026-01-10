@@ -3,27 +3,9 @@ package ops_test
 import (
 	"testing"
 
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/require"
+	"github.com/kaptinlin/jsonpatch/tests/testutils"
 )
-
-// applyOperation applies a single operation to a document
-func applyOperationContains(t *testing.T, doc interface{}, op internal.Operation) interface{} {
-	t.Helper()
-	patch := []internal.Operation{op}
-	result, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
-	require.NoError(t, err)
-	return result.Doc
-}
-
-// applyOperationWithErrorContains applies an operation expecting it to fail
-func applyOperationWithErrorContains(t *testing.T, doc interface{}, op internal.Operation) {
-	t.Helper()
-	patch := []internal.Operation{op}
-	_, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
-	require.Error(t, err)
-}
 
 func TestContainsOp(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
@@ -33,7 +15,7 @@ func TestContainsOp(t *testing.T) {
 				Path:  "",
 				Value: "oo b",
 			}
-			applyOperationContains(t, "foo bar", op)
+			testutils.ApplyInternalOp(t, "foo bar", op)
 		})
 
 		t.Run("succeeds when matches start of the string", func(t *testing.T) {
@@ -42,7 +24,7 @@ func TestContainsOp(t *testing.T) {
 				Path:  "",
 				Value: "foo",
 			}
-			applyOperationContains(t, "foo bar", op)
+			testutils.ApplyInternalOp(t, "foo bar", op)
 		})
 
 		t.Run("can ignore case", func(t *testing.T) {
@@ -52,7 +34,7 @@ func TestContainsOp(t *testing.T) {
 				Value:      "oo B",
 				IgnoreCase: true,
 			}
-			applyOperationContains(t, "foo bar", op)
+			testutils.ApplyInternalOp(t, "foo bar", op)
 		})
 
 		t.Run("throws when case does not match", func(t *testing.T) {
@@ -61,7 +43,7 @@ func TestContainsOp(t *testing.T) {
 				Path:  "",
 				Value: "oo B",
 			}
-			applyOperationWithErrorContains(t, "foo bar", op)
+			testutils.ApplyInternalOpWithError(t, "foo bar", op)
 		})
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
@@ -70,7 +52,7 @@ func TestContainsOp(t *testing.T) {
 				Path:  "",
 				Value: "oo 0",
 			}
-			applyOperationWithErrorContains(t, "foo bar", op)
+			testutils.ApplyInternalOpWithError(t, "foo bar", op)
 		})
 	})
 
@@ -82,7 +64,7 @@ func TestContainsOp(t *testing.T) {
 				Path:  "/foo",
 				Value: "oo b",
 			}
-			applyOperationContains(t, obj, op)
+			testutils.ApplyInternalOp(t, obj, op)
 		})
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
@@ -92,7 +74,7 @@ func TestContainsOp(t *testing.T) {
 				Path:  "/foo",
 				Value: "oo 0",
 			}
-			applyOperationWithErrorContains(t, obj, op)
+			testutils.ApplyInternalOpWithError(t, obj, op)
 		})
 	})
 
@@ -104,7 +86,7 @@ func TestContainsOp(t *testing.T) {
 				Path:  "/0",
 				Value: "oo b",
 			}
-			applyOperationContains(t, arr, op)
+			testutils.ApplyInternalOp(t, arr, op)
 		})
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
@@ -114,7 +96,7 @@ func TestContainsOp(t *testing.T) {
 				Path:  "/0",
 				Value: "oo 0",
 			}
-			applyOperationWithErrorContains(t, arr, op)
+			testutils.ApplyInternalOpWithError(t, arr, op)
 		})
 	})
 }

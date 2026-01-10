@@ -22,7 +22,7 @@ func NewOpLessOperation(path []string, value float64) *LessOperation {
 
 // Apply applies the less test operation to the document.
 func (op *LessOperation) Apply(doc any) (internal.OpResult[any], error) {
-	value, actualValue, err := op.getAndValidateValue(doc)
+	value, actualValue, err := getNumericValue(doc, op.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -31,19 +31,6 @@ func (op *LessOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, fmt.Errorf("%w: value %f is not less than %f", ErrComparisonFailed, actualValue, op.Value)
 	}
 	return internal.OpResult[any]{Doc: doc, Old: value}, nil
-}
-
-// getAndValidateValue retrieves and validates the numeric value at the path
-func (op *LessOperation) getAndValidateValue(doc any) (interface{}, float64, error) {
-	value, err := getValue(doc, op.Path())
-	if err != nil {
-		return nil, 0, ErrPathNotFound
-	}
-	actualValue, ok := ToFloat64(value)
-	if !ok {
-		return nil, 0, ErrNotNumber
-	}
-	return value, actualValue, nil
 }
 
 // Op returns the operation type.
@@ -91,7 +78,7 @@ func (op *LessOperation) Path() []string {
 
 // Test evaluates the less predicate condition.
 func (op *LessOperation) Test(doc any) (bool, error) {
-	_, actualValue, err := op.getAndValidateValue(doc)
+	_, actualValue, err := getNumericValue(doc, op.Path())
 	if err != nil {
 		// For JSON Patch test operations, path not found or wrong type means test fails (returns false)
 		// This is correct JSON Patch semantics - returning nil error with false result

@@ -3,6 +3,7 @@ package binary
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/op"
@@ -337,8 +338,9 @@ func encodeOp(writer *msgp.Writer, i internal.Op) error {
 			return err
 		}
 		return encodeValue(writer, o.Props)
+	default:
+		return fmt.Errorf("%w: %T", ErrUnsupportedOp, i)
 	}
-	return nil
 }
 
 func encodePath(writer *msgp.Writer, path []string) error {

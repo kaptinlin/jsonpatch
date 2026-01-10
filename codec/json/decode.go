@@ -176,24 +176,9 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 		if !ok {
 			return nil, ErrAndOpMissingApply
 		}
-		// Convert each sub-operation to a proper PredicateOp
-		predicateOps := make([]interface{}, 0, len(apply))
-		for _, subOp := range apply {
-			if subOpMap, ok := subOp.(map[string]interface{}); ok {
-				// Merge paths if needed
-				subPath := ""
-				if sp, ok := subOpMap["path"].(string); ok {
-					subPath = sp
-				}
-				mergedPath := mergePaths(toPath(pathStr), toPath(subPath))
-				subOpMap["path"] = formatPath(mergedPath)
-
-				predicateOp, err := OperationToPredicateOp(subOpMap, options)
-				if err != nil {
-					return nil, err
-				}
-				predicateOps = append(predicateOps, predicateOp)
-			}
+		predicateOps, err := decodeCompositePredicates(apply, toPath(pathStr), options)
+		if err != nil {
+			return nil, err
 		}
 		return op.NewOpAndOperation(path, predicateOps), nil
 	case "or":
@@ -201,24 +186,9 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 		if !ok {
 			return nil, ErrOrOpMissingApply
 		}
-		// Convert each sub-operation to a proper PredicateOp
-		predicateOps := make([]interface{}, 0, len(apply))
-		for _, subOp := range apply {
-			if subOpMap, ok := subOp.(map[string]interface{}); ok {
-				// Merge paths if needed
-				subPath := ""
-				if sp, ok := subOpMap["path"].(string); ok {
-					subPath = sp
-				}
-				mergedPath := mergePaths(toPath(pathStr), toPath(subPath))
-				subOpMap["path"] = formatPath(mergedPath)
-
-				predicateOp, err := OperationToPredicateOp(subOpMap, options)
-				if err != nil {
-					return nil, err
-				}
-				predicateOps = append(predicateOps, predicateOp)
-			}
+		predicateOps, err := decodeCompositePredicates(apply, toPath(pathStr), options)
+		if err != nil {
+			return nil, err
 		}
 		return op.NewOpOrOperation(path, predicateOps), nil
 	case "not":
@@ -229,24 +199,9 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 		if len(apply) == 0 {
 			return nil, ErrNotOpRequiresOperand
 		}
-		// Convert each sub-operation to a proper PredicateOp
-		predicateOps := make([]interface{}, 0, len(apply))
-		for _, subOp := range apply {
-			if subOpMap, ok := subOp.(map[string]interface{}); ok {
-				// Merge paths if needed
-				subPath := ""
-				if sp, ok := subOpMap["path"].(string); ok {
-					subPath = sp
-				}
-				mergedPath := mergePaths(toPath(pathStr), toPath(subPath))
-				subOpMap["path"] = formatPath(mergedPath)
-
-				predicateOp, err := OperationToPredicateOp(subOpMap, options)
-				if err != nil {
-					return nil, err
-				}
-				predicateOps = append(predicateOps, predicateOp)
-			}
+		predicateOps, err := decodeCompositePredicates(apply, toPath(pathStr), options)
+		if err != nil {
+			return nil, err
 		}
 		return op.NewOpNotOperationMultiple(path, predicateOps), nil
 	default:
@@ -380,55 +335,30 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		if !hasValue {
 			return nil, ErrContainsOpMissingValue
 		}
-
-		// Check for ignore_case flag (only relevant for string values)
-		ignoreCase := false
-		if ic, ok := operation["ignore_case"].(bool); ok {
-			ignoreCase = ic
-		}
-
 		// Convert value to string (contains only works with strings)
 		stringValue, ok := value.(string)
 		if !ok {
 			return nil, op.ErrContainsValueMustBeString
 		}
-		return op.NewOpContainsOperationWithIgnoreCase(path, stringValue, ignoreCase), nil
+		return op.NewOpContainsOperationWithIgnoreCase(path, stringValue, getBoolField(operation, "ignore_case")), nil
 	case "ends":
 		value, ok := operation["value"].(string)
 		if !ok {
 			return nil, ErrEndsOpMissingValue
 		}
-
-		// Check for ignore_case flag
-		ignoreCase := false
-		if ic, ok := operation["ignore_case"].(bool); ok {
-			ignoreCase = ic
-		}
-
-		return op.NewOpEndsOperationWithIgnoreCase(path, value, ignoreCase), nil
+		return op.NewOpEndsOperationWithIgnoreCase(path, value, getBoolField(operation, "ignore_case")), nil
 	case "starts":
 		value, ok := operation["value"].(string)
 		if !ok {
 			return nil, ErrStartsOpMissingValue
 		}
-
-		// Check for ignore_case flag
-		ignoreCase := false
-		if ic, ok := operation["ignore_case"].(bool); ok {
-			ignoreCase = ic
-		}
-
-		return op.NewOpStartsOperationWithIgnoreCase(path, value, ignoreCase), nil
+		return op.NewOpStartsOperationWithIgnoreCase(path, value, getBoolField(operation, "ignore_case")), nil
 	case "matches":
 		value, ok := operation["value"].(string)
 		if !ok {
 			return nil, ErrMatchesOpMissingValue
 		}
-		ignoreCase := false
-		if ic, ok := operation["ignore_case"].(bool); ok {
-			ignoreCase = ic
-		}
-		return op.NewOpMatchesOperation(path, value, ignoreCase, options.CreateMatcher), nil
+		return op.NewOpMatchesOperation(path, value, getBoolField(operation, "ignore_case"), options.CreateMatcher), nil
 	case "in":
 		value := operation["value"]
 		if values, ok := value.([]interface{}); ok {
@@ -452,24 +382,9 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		if !ok {
 			return nil, ErrAndOpMissingApply
 		}
-		// Convert each sub-operation to a proper PredicateOp
-		predicateOps := make([]interface{}, 0, len(apply))
-		for _, subOp := range apply {
-			if subOpMap, ok := subOp.(map[string]interface{}); ok {
-				// Merge paths if needed
-				subPath := ""
-				if sp, ok := subOpMap["path"].(string); ok {
-					subPath = sp
-				}
-				mergedPath := mergePaths(toPath(pathStr), toPath(subPath))
-				subOpMap["path"] = formatPath(mergedPath)
-
-				predicateOp, err := OperationToPredicateOp(subOpMap, options)
-				if err != nil {
-					return nil, err
-				}
-				predicateOps = append(predicateOps, predicateOp)
-			}
+		predicateOps, err := decodeCompositePredicates(apply, toPath(pathStr), options)
+		if err != nil {
+			return nil, err
 		}
 		return op.NewOpAndOperation(path, predicateOps), nil
 	case "or":
@@ -477,24 +392,9 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		if !ok {
 			return nil, ErrOrOpMissingApply
 		}
-		// Convert each sub-operation to a proper PredicateOp
-		predicateOps := make([]interface{}, 0, len(apply))
-		for _, subOp := range apply {
-			if subOpMap, ok := subOp.(map[string]interface{}); ok {
-				// Merge paths if needed
-				subPath := ""
-				if sp, ok := subOpMap["path"].(string); ok {
-					subPath = sp
-				}
-				mergedPath := mergePaths(toPath(pathStr), toPath(subPath))
-				subOpMap["path"] = formatPath(mergedPath)
-
-				predicateOp, err := OperationToPredicateOp(subOpMap, options)
-				if err != nil {
-					return nil, err
-				}
-				predicateOps = append(predicateOps, predicateOp)
-			}
+		predicateOps, err := decodeCompositePredicates(apply, toPath(pathStr), options)
+		if err != nil {
+			return nil, err
 		}
 		return op.NewOpOrOperation(path, predicateOps), nil
 	case "not":
@@ -527,6 +427,44 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 	default:
 		return nil, ErrCodecOpUnknown
 	}
+}
+
+// decodeCompositePredicates decodes an array of sub-operations for and/or/not operations.
+// It handles path merging and recursive predicate decoding.
+func decodeCompositePredicates(
+	apply []interface{},
+	basePath jsonpointer.Path,
+	options internal.JSONPatchOptions,
+) ([]interface{}, error) {
+	predicateOps := make([]interface{}, 0, len(apply))
+	for _, subOp := range apply {
+		subOpMap, ok := subOp.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		// Merge paths if needed
+		subPath := ""
+		if sp, ok := subOpMap["path"].(string); ok {
+			subPath = sp
+		}
+		mergedPath := mergePaths(basePath, toPath(subPath))
+		subOpMap["path"] = formatPath(mergedPath)
+
+		predicateOp, err := OperationToPredicateOp(subOpMap, options)
+		if err != nil {
+			return nil, err
+		}
+		predicateOps = append(predicateOps, predicateOp)
+	}
+	return predicateOps, nil
+}
+
+// getBoolField extracts a boolean field from an operation map with a default of false.
+func getBoolField(operation map[string]interface{}, field string) bool {
+	if v, ok := operation[field].(bool); ok {
+		return v
+	}
+	return false
 }
 
 // mergePaths merges two paths for composite operations.

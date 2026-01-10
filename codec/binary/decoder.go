@@ -92,7 +92,11 @@ func decodeOp(reader *msgp.Reader) (internal.Op, error) {
 		}
 		strTypes := make([]string, len(types))
 		for i, v := range types {
-			strTypes[i] = v.(string)
+			str, ok := v.(string)
+			if !ok {
+				return nil, fmt.Errorf("%w: expected string at index %d, got %T", ErrInvalidTestTypeFormat, i, v)
+			}
+			strTypes[i] = str
 		}
 		return op.NewOpTestTypeOperationMultiple(path, strTypes), nil
 	case internal.OpDefinedCode:
@@ -104,37 +108,61 @@ func decodeOp(reader *msgp.Reader) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpLessOperation(path, value.(float64)), nil
+		floatVal, ok := value.(float64)
+		if !ok {
+			return nil, fmt.Errorf("%w: less value must be a number, got %T", ErrInvalidValueType, value)
+		}
+		return op.NewOpLessOperation(path, floatVal), nil
 	case internal.OpMoreCode:
 		value, err := decodeValue(reader)
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpMoreOperation(path, value.(float64)), nil
+		floatVal, ok := value.(float64)
+		if !ok {
+			return nil, fmt.Errorf("%w: more value must be a number, got %T", ErrInvalidValueType, value)
+		}
+		return op.NewOpMoreOperation(path, floatVal), nil
 	case internal.OpContainsCode:
 		value, err := decodeValue(reader)
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpContainsOperation(path, value.(string)), nil
+		strVal, ok := value.(string)
+		if !ok {
+			return nil, fmt.Errorf("%w: contains value must be a string, got %T", ErrInvalidValueType, value)
+		}
+		return op.NewOpContainsOperation(path, strVal), nil
 	case internal.OpInCode:
 		values, err := decodeValue(reader)
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpInOperation(path, values.([]interface{})), nil
+		arrVal, ok := values.([]interface{})
+		if !ok {
+			return nil, fmt.Errorf("%w: in values must be an array, got %T", ErrInvalidValueType, values)
+		}
+		return op.NewOpInOperation(path, arrVal), nil
 	case internal.OpStartsCode:
 		value, err := decodeValue(reader)
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpStartsOperation(path, value.(string)), nil
+		strVal, ok := value.(string)
+		if !ok {
+			return nil, fmt.Errorf("%w: starts value must be a string, got %T", ErrInvalidValueType, value)
+		}
+		return op.NewOpStartsOperation(path, strVal), nil
 	case internal.OpEndsCode:
 		value, err := decodeValue(reader)
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpEndsOperation(path, value.(string)), nil
+		strVal, ok := value.(string)
+		if !ok {
+			return nil, fmt.Errorf("%w: ends value must be a string, got %T", ErrInvalidValueType, value)
+		}
+		return op.NewOpEndsOperation(path, strVal), nil
 	case internal.OpMatchesCode:
 		pattern, err := reader.ReadString()
 		if err != nil {
@@ -214,11 +242,15 @@ func decodeOp(reader *msgp.Reader) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
+		propsMap, ok := properties.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("%w: extend properties must be an object, got %T", ErrInvalidValueType, properties)
+		}
 		deleteNull, err := reader.ReadBool()
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpExtendOperation(path, properties.(map[string]interface{}), deleteNull), nil
+		return op.NewOpExtendOperation(path, propsMap, deleteNull), nil
 	case internal.OpMergeCode:
 		pos, err := reader.ReadFloat64()
 		if err != nil {
@@ -228,7 +260,11 @@ func decodeOp(reader *msgp.Reader) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOpMergeOperation(path, pos, props.(map[string]interface{})), nil
+		propsMap, ok := props.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("%w: merge properties must be an object, got %T", ErrInvalidValueType, props)
+		}
+		return op.NewOpMergeOperation(path, pos, propsMap), nil
 	default:
 		return nil, fmt.Errorf("%w: %d", ErrUnsupportedOp, code)
 	}

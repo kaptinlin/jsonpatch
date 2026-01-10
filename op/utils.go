@@ -115,6 +115,20 @@ func getValue(doc interface{}, path []string) (interface{}, error) {
 	return value, nil
 }
 
+// getNumericValue retrieves a numeric value from the document at the given path.
+// Returns the original value, the float64 conversion, and any error.
+func getNumericValue(doc any, path []string) (any, float64, error) {
+	value, err := getValue(doc, path)
+	if err != nil {
+		return nil, 0, ErrPathNotFound
+	}
+	numValue, ok := ToFloat64(value)
+	if !ok {
+		return nil, 0, ErrNotNumber
+	}
+	return value, numValue, nil
+}
+
 // deepEqual performs a deep equality check between two values.
 // Optimized to avoid expensive reflect.DeepEqual for common types.
 func deepEqual(a, b interface{}) bool {

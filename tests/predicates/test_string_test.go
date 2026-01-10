@@ -3,27 +3,9 @@ package ops_test
 import (
 	"testing"
 
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/require"
+	"github.com/kaptinlin/jsonpatch/tests/testutils"
 )
-
-// applyOperationTestString applies a single operation to a document
-func applyOperationTestString(t *testing.T, doc interface{}, op internal.Operation) interface{} {
-	t.Helper()
-	patch := []internal.Operation{op}
-	result, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
-	require.NoError(t, err)
-	return result.Doc
-}
-
-// applyOperationWithErrorTestString applies an operation expecting it to fail
-func applyOperationWithErrorTestString(t *testing.T, doc interface{}, op internal.Operation) {
-	t.Helper()
-	patch := []internal.Operation{op}
-	_, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
-	require.Error(t, err)
-}
 
 func TestTestString(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
@@ -34,7 +16,7 @@ func TestTestString(t *testing.T) {
 				Pos:  1,
 				Str:  "oo b",
 			}
-			applyOperationTestString(t, "foo bar", op)
+			testutils.ApplyInternalOp(t, "foo bar", op)
 		})
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
@@ -44,7 +26,7 @@ func TestTestString(t *testing.T) {
 				Pos:  3,
 				Str:  "oo",
 			}
-			applyOperationWithErrorTestString(t, "foo bar", op)
+			testutils.ApplyInternalOpWithError(t, "foo bar", op)
 
 			// This should succeed
 			op2 := internal.Operation{
@@ -53,7 +35,7 @@ func TestTestString(t *testing.T) {
 				Pos:  4,
 				Str:  "bar",
 			}
-			applyOperationTestString(t, "foo bar", op2)
+			testutils.ApplyInternalOp(t, "foo bar", op2)
 		})
 	})
 
@@ -66,7 +48,7 @@ func TestTestString(t *testing.T) {
 				Pos:  1,
 				Str:  "oo b",
 			}
-			applyOperationTestString(t, obj, op)
+			testutils.ApplyInternalOp(t, obj, op)
 		})
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
@@ -77,7 +59,7 @@ func TestTestString(t *testing.T) {
 				Pos:  3,
 				Str:  "oo",
 			}
-			applyOperationWithErrorTestString(t, obj, op)
+			testutils.ApplyInternalOpWithError(t, obj, op)
 		})
 	})
 
@@ -90,7 +72,7 @@ func TestTestString(t *testing.T) {
 				Pos:  1,
 				Str:  "oo b",
 			}
-			applyOperationTestString(t, obj, op)
+			testutils.ApplyInternalOp(t, obj, op)
 		})
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
@@ -101,7 +83,7 @@ func TestTestString(t *testing.T) {
 				Pos:  3,
 				Str:  "oo",
 			}
-			applyOperationWithErrorTestString(t, obj, op)
+			testutils.ApplyInternalOpWithError(t, obj, op)
 		})
 	})
 }

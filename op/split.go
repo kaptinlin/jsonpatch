@@ -2,7 +2,6 @@ package op
 
 import (
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/kaptinlin/jsonpatch/pkg/slate"
 )
 
 // SplitOperation represents a string split operation.
@@ -118,17 +117,17 @@ func (op *SplitOperation) splitValue(value interface{}) interface{} {
 		return []interface{}{v, v}
 	case map[string]interface{}:
 		// Check if it's a Slate-like text node
-		if slate.IsTextNode(v) {
+		if isSlateTextNode(v) {
 			propsMap, _ := op.Props.(map[string]interface{})
-			results := slate.SplitTextNodeFromMap(v, int(op.Pos), propsMap)
+			results := splitSlateTextNode(v, int(op.Pos), propsMap)
 			if results != nil {
 				return []interface{}{results[0], results[1]}
 			}
 		}
 		// Check if it's a Slate-like element node with children
-		if slate.IsElementNode(v) {
+		if isSlateElementNode(v) {
 			propsMap, _ := op.Props.(map[string]interface{})
-			results := slate.SplitElementNodeFromMap(v, int(op.Pos), propsMap)
+			results := splitSlateElementNode(v, int(op.Pos), propsMap)
 			if results != nil {
 				return []interface{}{results[0], results[1]}
 			}
@@ -228,3 +227,95 @@ var (
 	// NewSplit creates a new split operation
 	NewSplit = NewOpSplitOperation
 )
+
+// splitSlateTextNode splits a Slate text node at the specified position
+func splitSlateTextNode(nodeMap map[string]interface{}, pos int, props map[string]interface{}) []map[string]interface{} {
+	text, ok := nodeMap["text"].(string)
+	if !ok {
+		return nil
+	}
+
+	runes := []rune(text)
+
+	// Clamp position to valid bounds
+	if pos < 0 {
+		pos = 0
+	}
+	if pos > len(runes) {
+		pos = len(runes)
+	}
+
+	before := string(runes[:pos])
+	after := string(runes[pos:])
+
+	// Create two new nodes with inherited properties
+	beforeNode := make(map[string]interface{})
+	afterNode := make(map[string]interface{})
+
+	// Copy properties from original node
+	for k, v := range nodeMap {
+		if k != "text" {
+			beforeNode[k] = v
+			afterNode[k] = v
+		}
+	}
+
+	beforeNode["text"] = before
+	afterNode["text"] = after
+
+	// Apply extra properties if specified
+	for k, v := range props {
+		beforeNode[k] = v
+		afterNode[k] = v
+	}
+
+	return []map[string]interface{}{beforeNode, afterNode}
+}
+
+// splitSlateElementNode splits a Slate element node at the specified position in its children
+func splitSlateElementNode(nodeMap map[string]interface{}, pos int, props map[string]interface{}) []map[string]interface{} {
+	children, ok := nodeMap["children"].([]interface{})
+	if !ok {
+		return nil
+	}
+
+	// Clamp position to valid bounds
+	if pos < 0 {
+		pos = 0
+	}
+	if pos > len(children) {
+		pos = len(children)
+	}
+
+	beforeChildren := children[:pos]
+	afterChildren := children[pos:]
+
+	// Create two new nodes with inherited properties
+	beforeNode := make(map[string]interface{})
+	afterNode := make(map[string]interface{})
+
+	// Copy properties from original node
+	for k, v := range nodeMap {
+		if k != "children" {
+			beforeNode[k] = v
+			afterNode[k] = v
+		}
+	}
+
+	// Copy children slices to avoid mutation
+	beforeChildrenCopy := make([]interface{}, len(beforeChildren))
+	copy(beforeChildrenCopy, beforeChildren)
+	afterChildrenCopy := make([]interface{}, len(afterChildren))
+	copy(afterChildrenCopy, afterChildren)
+
+	beforeNode["children"] = beforeChildrenCopy
+	afterNode["children"] = afterChildrenCopy
+
+	// Apply extra properties if specified
+	for k, v := range props {
+		beforeNode[k] = v
+		afterNode[k] = v
+	}
+
+	return []map[string]interface{}{beforeNode, afterNode}
+}

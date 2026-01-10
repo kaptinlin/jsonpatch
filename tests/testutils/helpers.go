@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch"
+	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/require"
 )
 
@@ -44,6 +45,38 @@ func ApplyOperationsWithError(t *testing.T, doc interface{}, operations []jsonpa
 	_, err := jsonpatch.ApplyPatch(doc, operations, options)
 	require.Error(t, err)
 	return err
+}
+
+// ApplyInternalOp applies a single internal.Operation to a document
+func ApplyInternalOp(t *testing.T, doc interface{}, op internal.Operation) interface{} {
+	t.Helper()
+	patch := []internal.Operation{op}
+	result, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
+	require.NoError(t, err)
+	return result.Doc
+}
+
+// ApplyInternalOpWithError applies an internal.Operation expecting it to fail
+func ApplyInternalOpWithError(t *testing.T, doc interface{}, op internal.Operation) {
+	t.Helper()
+	patch := []internal.Operation{op}
+	_, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
+	require.Error(t, err)
+}
+
+// ApplyInternalOps applies multiple internal.Operations to a document
+func ApplyInternalOps(t *testing.T, doc interface{}, ops []internal.Operation) interface{} {
+	t.Helper()
+	result, err := jsonpatch.ApplyPatch(doc, ops, internal.WithMutate(true))
+	require.NoError(t, err)
+	return result.Doc
+}
+
+// ApplyInternalOpsWithError applies multiple internal.Operations expecting them to fail
+func ApplyInternalOpsWithError(t *testing.T, doc interface{}, ops []internal.Operation) {
+	t.Helper()
+	_, err := jsonpatch.ApplyPatch(doc, ops, internal.WithMutate(true))
+	require.Error(t, err)
 }
 
 // TestCase represents a single operation test case

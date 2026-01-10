@@ -3,19 +3,10 @@ package ops_test
 import (
 	"testing"
 
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/kaptinlin/jsonpatch/tests/testutils"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
-
-// applyOperationsFlip applies multiple operations to a document
-func applyOperationsFlip(t *testing.T, doc interface{}, ops []internal.Operation) interface{} {
-	t.Helper()
-	result, err := jsonpatch.ApplyPatch(doc, ops, internal.WithMutate(true))
-	require.NoError(t, err)
-	return result.Doc
-}
 
 func TestFlipOp(t *testing.T) {
 	t.Run("casts values and them flips them", func(t *testing.T) {
@@ -31,7 +22,7 @@ func TestFlipOp(t *testing.T) {
 			{Op: "flip", Path: "/val3"},
 			{Op: "flip", Path: "/val4"},
 		}
-		result := applyOperationsFlip(t, doc, operations)
+		result := testutils.ApplyInternalOps(t, doc, operations)
 		expected := map[string]interface{}{
 			"val1": false,
 			"val2": true,
@@ -47,7 +38,7 @@ func TestFlipOp(t *testing.T) {
 				Op:   "flip",
 				Path: "",
 			}
-			result := applyOperationsFlip(t, true, []internal.Operation{operation})
+			result := testutils.ApplyInternalOps(t, true, []internal.Operation{operation})
 			assert.Equal(t, false, result)
 		})
 
@@ -56,7 +47,7 @@ func TestFlipOp(t *testing.T) {
 				Op:   "flip",
 				Path: "",
 			}
-			result := applyOperationsFlip(t, false, []internal.Operation{operation})
+			result := testutils.ApplyInternalOps(t, false, []internal.Operation{operation})
 			assert.Equal(t, true, result)
 		})
 
@@ -65,7 +56,7 @@ func TestFlipOp(t *testing.T) {
 				Op:   "flip",
 				Path: "",
 			}
-			result := applyOperationsFlip(t, 123, []internal.Operation{operation})
+			result := testutils.ApplyInternalOps(t, 123, []internal.Operation{operation})
 			assert.Equal(t, false, result)
 		})
 
@@ -74,7 +65,7 @@ func TestFlipOp(t *testing.T) {
 				Op:   "flip",
 				Path: "",
 			}
-			result := applyOperationsFlip(t, 0, []internal.Operation{operation})
+			result := testutils.ApplyInternalOps(t, 0, []internal.Operation{operation})
 			assert.Equal(t, true, result)
 		})
 	})
@@ -85,7 +76,7 @@ func TestFlipOp(t *testing.T) {
 				Op:   "flip",
 				Path: "/foo",
 			}
-			result := applyOperationsFlip(t, map[string]interface{}{"foo": true}, []internal.Operation{operation})
+			result := testutils.ApplyInternalOps(t, map[string]interface{}{"foo": true}, []internal.Operation{operation})
 			expected := map[string]interface{}{"foo": false}
 			assert.Equal(t, expected, result)
 		})
@@ -95,7 +86,7 @@ func TestFlipOp(t *testing.T) {
 				Op:   "flip",
 				Path: "/foo",
 			}
-			result := applyOperationsFlip(t, map[string]interface{}{"foo": false}, []internal.Operation{operation})
+			result := testutils.ApplyInternalOps(t, map[string]interface{}{"foo": false}, []internal.Operation{operation})
 			expected := map[string]interface{}{"foo": true}
 			assert.Equal(t, expected, result)
 		})
@@ -109,7 +100,7 @@ func TestFlipOp(t *testing.T) {
 				"empty_array":  []interface{}{},
 				"empty_object": map[string]interface{}{},
 			}
-			result := applyOperationsFlip(t, doc, operations)
+			result := testutils.ApplyInternalOps(t, doc, operations)
 			expected := map[string]interface{}{
 				"empty_array":  false, // empty array is truthy -> false
 				"empty_object": false, // empty object is truthy -> false
@@ -122,7 +113,7 @@ func TestFlipOp(t *testing.T) {
 				Op:   "flip",
 				Path: "/newfield",
 			}
-			result := applyOperationsFlip(t, map[string]interface{}{}, []internal.Operation{operation})
+			result := testutils.ApplyInternalOps(t, map[string]interface{}{}, []internal.Operation{operation})
 			expected := map[string]interface{}{"newfield": true}
 			assert.Equal(t, expected, result)
 		})
@@ -140,7 +131,7 @@ func TestFlipOp(t *testing.T) {
 					Path: "/1",
 				},
 			}
-			result := applyOperationsFlip(t, []interface{}{true, false}, operations)
+			result := testutils.ApplyInternalOps(t, []interface{}{true, false}, operations)
 			expected := []interface{}{false, true}
 			assert.Equal(t, expected, result)
 		})

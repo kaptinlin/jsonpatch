@@ -5,18 +5,10 @@ import (
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/kaptinlin/jsonpatch/tests/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-// applyOperationStrDel applies a single operation to a document
-func applyOperationStrDel(t *testing.T, doc interface{}, op internal.Operation) interface{} {
-	t.Helper()
-	patch := []internal.Operation{op}
-	result, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
-	require.NoError(t, err)
-	return result.Doc
-}
 
 func TestStrDelOp(t *testing.T) {
 	t.Run("deletes characters from the beginning", func(t *testing.T) {
@@ -26,7 +18,7 @@ func TestStrDelOp(t *testing.T) {
 			Pos:  0,
 			Len:  7,
 		}
-		result := applyOperationStrDel(t, "Hello, world!", operation)
+		result := testutils.ApplyInternalOp(t, "Hello, world!", operation)
 		assert.Equal(t, "world!", result)
 	})
 
@@ -37,7 +29,7 @@ func TestStrDelOp(t *testing.T) {
 			Pos:  5,
 			Len:  8,
 		}
-		result := applyOperationStrDel(t, "Hello, world!", operation)
+		result := testutils.ApplyInternalOp(t, "Hello, world!", operation)
 		assert.Equal(t, "Hello", result)
 	})
 
@@ -48,7 +40,7 @@ func TestStrDelOp(t *testing.T) {
 			Pos:  5,
 			Len:  10,
 		}
-		result := applyOperationStrDel(t, "Hello beautiful world", operation)
+		result := testutils.ApplyInternalOp(t, "Hello beautiful world", operation)
 		assert.Equal(t, "Hello world", result)
 	})
 
@@ -83,7 +75,7 @@ func TestStrDelOp(t *testing.T) {
 				Pos:  0,
 				Len:  5,
 			}
-			result := applyOperationStrDel(t, "hello", operation)
+			result := testutils.ApplyInternalOp(t, "hello", operation)
 			assert.Equal(t, "", result)
 		})
 	})
@@ -96,7 +88,7 @@ func TestStrDelOp(t *testing.T) {
 				Pos:  0,
 				Len:  7,
 			}
-			result := applyOperationStrDel(t, map[string]interface{}{"msg": "Hello, world!"}, operation)
+			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello, world!"}, operation)
 			expected := map[string]interface{}{"msg": "world!"}
 			assert.Equal(t, expected, result)
 		})
@@ -108,7 +100,7 @@ func TestStrDelOp(t *testing.T) {
 				Pos:  5,
 				Len:  8,
 			}
-			result := applyOperationStrDel(t, map[string]interface{}{"msg": "Hello, world!"}, operation)
+			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello, world!"}, operation)
 			expected := map[string]interface{}{"msg": "Hello"}
 			assert.Equal(t, expected, result)
 		})
@@ -120,7 +112,7 @@ func TestStrDelOp(t *testing.T) {
 				Pos:  5,
 				Len:  10,
 			}
-			result := applyOperationStrDel(t, map[string]interface{}{"msg": "Hello beautiful world"}, operation)
+			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello beautiful world"}, operation)
 			expected := map[string]interface{}{"msg": "Hello world"}
 			assert.Equal(t, expected, result)
 		})
@@ -132,7 +124,7 @@ func TestStrDelOp(t *testing.T) {
 				Pos:  -1,
 				Len:  1,
 			}
-			result := applyOperationStrDel(t, map[string]interface{}{"msg": "Hello!"}, operation)
+			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello!"}, operation)
 			expected := map[string]interface{}{"msg": "Hello"}
 			assert.Equal(t, expected, result)
 		})
@@ -146,7 +138,7 @@ func TestStrDelOp(t *testing.T) {
 				Pos:  0,
 				Len:  7,
 			}
-			result := applyOperationStrDel(t, []interface{}{"Hello, world!"}, operation)
+			result := testutils.ApplyInternalOp(t, []interface{}{"Hello, world!"}, operation)
 			expected := []interface{}{"world!"}
 			assert.Equal(t, expected, result)
 		})
@@ -158,7 +150,7 @@ func TestStrDelOp(t *testing.T) {
 				Pos:  5,
 				Len:  8,
 			}
-			result := applyOperationStrDel(t, []interface{}{"Hello, world!"}, operation)
+			result := testutils.ApplyInternalOp(t, []interface{}{"Hello, world!"}, operation)
 			expected := []interface{}{"Hello"}
 			assert.Equal(t, expected, result)
 		})
@@ -170,7 +162,7 @@ func TestStrDelOp(t *testing.T) {
 				Pos:  5,
 				Len:  10,
 			}
-			result := applyOperationStrDel(t, []interface{}{"Hello beautiful world"}, operation)
+			result := testutils.ApplyInternalOp(t, []interface{}{"Hello beautiful world"}, operation)
 			expected := []interface{}{"Hello world"}
 			assert.Equal(t, expected, result)
 		})

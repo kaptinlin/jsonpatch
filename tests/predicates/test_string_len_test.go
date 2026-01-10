@@ -3,27 +3,9 @@ package ops_test
 import (
 	"testing"
 
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/require"
+	"github.com/kaptinlin/jsonpatch/tests/testutils"
 )
-
-// applyOperationTestStringLen applies a single operation to a document
-func applyOperationTestStringLen(t *testing.T, doc interface{}, op internal.Operation) interface{} {
-	t.Helper()
-	patch := []internal.Operation{op}
-	result, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
-	require.NoError(t, err)
-	return result.Doc
-}
-
-// applyOperationWithErrorTestStringLen applies an operation expecting it to fail
-func applyOperationWithErrorTestStringLen(t *testing.T, doc interface{}, op internal.Operation) {
-	t.Helper()
-	patch := []internal.Operation{op}
-	_, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
-	require.Error(t, err)
-}
 
 func TestTestStringLenOp(t *testing.T) {
 	t.Run("root", func(t *testing.T) {
@@ -34,7 +16,7 @@ func TestTestStringLenOp(t *testing.T) {
 					Path: "",
 					Len:  3,
 				}
-				applyOperationTestStringLen(t, "foo bar", op)
+				testutils.ApplyInternalOp(t, "foo bar", op)
 			})
 
 			t.Run("succeeds when target length is equal to requested length", func(t *testing.T) {
@@ -43,7 +25,7 @@ func TestTestStringLenOp(t *testing.T) {
 					Path: "",
 					Len:  2,
 				}
-				applyOperationTestStringLen(t, "xo", op)
+				testutils.ApplyInternalOp(t, "xo", op)
 			})
 
 			t.Run("throws when requested length is larger than target", func(t *testing.T) {
@@ -52,7 +34,7 @@ func TestTestStringLenOp(t *testing.T) {
 					Path: "",
 					Len:  9999,
 				}
-				applyOperationWithErrorTestStringLen(t, "asdf", op)
+				testutils.ApplyInternalOpWithError(t, "asdf", op)
 			})
 		})
 
@@ -64,7 +46,7 @@ func TestTestStringLenOp(t *testing.T) {
 					Len:  3, // "foo bar" has length 7, so >= 3 is true, with not=true it should fail
 					Not:  true,
 				}
-				applyOperationWithErrorTestStringLen(t, "foo bar", op)
+				testutils.ApplyInternalOpWithError(t, "foo bar", op)
 			})
 
 			t.Run("throws when target length is equal to requested length", func(t *testing.T) {
@@ -74,7 +56,7 @@ func TestTestStringLenOp(t *testing.T) {
 					Len:  2,
 					Not:  true,
 				}
-				applyOperationWithErrorTestStringLen(t, "xo", op)
+				testutils.ApplyInternalOpWithError(t, "xo", op)
 			})
 
 			t.Run("succeeds when requested length is larger than target", func(t *testing.T) {
@@ -84,7 +66,7 @@ func TestTestStringLenOp(t *testing.T) {
 					Len:  9999,
 					Not:  true,
 				}
-				applyOperationTestStringLen(t, "asdf", op)
+				testutils.ApplyInternalOp(t, "asdf", op)
 			})
 		})
 	})
@@ -98,14 +80,14 @@ func TestTestStringLenOp(t *testing.T) {
 					Path: "/a",
 					Len:  1,
 				}
-				applyOperationTestStringLen(t, obj, op)
+				testutils.ApplyInternalOp(t, obj, op)
 
 				op2 := internal.Operation{
 					Op:   "test_string_len",
 					Path: "/a",
 					Len:  0,
 				}
-				applyOperationTestStringLen(t, obj, op2)
+				testutils.ApplyInternalOp(t, obj, op2)
 			})
 
 			t.Run("throws when target is shorter than requested", func(t *testing.T) {
@@ -115,7 +97,7 @@ func TestTestStringLenOp(t *testing.T) {
 					Path: "/a",
 					Len:  99,
 				}
-				applyOperationWithErrorTestStringLen(t, obj, op)
+				testutils.ApplyInternalOpWithError(t, obj, op)
 
 				// This should succeed with not=true
 				op2 := internal.Operation{
@@ -124,7 +106,7 @@ func TestTestStringLenOp(t *testing.T) {
 					Len:  99,
 					Not:  true,
 				}
-				applyOperationTestStringLen(t, obj, op2)
+				testutils.ApplyInternalOp(t, obj, op2)
 			})
 		})
 	})
@@ -138,14 +120,14 @@ func TestTestStringLenOp(t *testing.T) {
 					Path: "/a/0",
 					Len:  1,
 				}
-				applyOperationTestStringLen(t, obj, op)
+				testutils.ApplyInternalOp(t, obj, op)
 
 				op2 := internal.Operation{
 					Op:   "test_string_len",
 					Path: "/a/0",
 					Len:  0,
 				}
-				applyOperationTestStringLen(t, obj, op2)
+				testutils.ApplyInternalOp(t, obj, op2)
 			})
 
 			t.Run("throws when target is shorter than requested", func(t *testing.T) {
@@ -155,7 +137,7 @@ func TestTestStringLenOp(t *testing.T) {
 					Path: "/a/0",
 					Len:  99,
 				}
-				applyOperationWithErrorTestStringLen(t, obj, op)
+				testutils.ApplyInternalOpWithError(t, obj, op)
 
 				// This should succeed with not=true
 				op2 := internal.Operation{
@@ -164,7 +146,7 @@ func TestTestStringLenOp(t *testing.T) {
 					Len:  99,
 					Not:  true,
 				}
-				applyOperationTestStringLen(t, obj, op2)
+				testutils.ApplyInternalOp(t, obj, op2)
 			})
 		})
 	})

@@ -32,7 +32,7 @@ make test
 # Run benchmarks
 make bench
 
-# Run linter (golangci-lint v2.4.0 required)
+# Run linter (golangci-lint v2.7.2 required)
 make lint
 
 # Format code
@@ -159,9 +159,9 @@ This ensures the result maintains the same type as the input document.
 - `flip` - Toggle boolean values
 - `inc` - Increment numeric values
 - `str_ins`/`str_del` - String insertion/deletion
-- `split` - Split strings into arrays
-- `merge` - Deep merge objects
-- `extend` - Extend arrays
+- `split` - Split values (strings, numbers, Slate nodes) at position
+- `merge` - Merge adjacent array elements (strings, numbers, Slate nodes)
+- `extend` - Extend objects with properties
 
 ### Second-Order Predicates
 - `and`, `or`, `not` - Logical combinations of predicates

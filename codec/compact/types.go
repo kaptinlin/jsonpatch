@@ -91,6 +91,3 @@ var (
 
 // Operation represents a compact format operation.
 type Operation = internal.CompactOperation
-
-// JSONPatchOptions contains options for JSON Patch operations.
-type JSONPatchOptions = internal.Options

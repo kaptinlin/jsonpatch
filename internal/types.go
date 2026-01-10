@@ -154,29 +154,13 @@ func GetJSONPatchType(value interface{}) JSONPatchTypes {
 		}
 		return JSONPatchTypeNumber
 	default:
-		// For other types, use simple checks
-		if isArrayType(value) {
-			return JSONPatchTypeArray
-		}
-		if isObjectType(value) {
+		// For other types, check if it's an object type
+		// Note: Array types are already handled above, so no need to check here
+		if _, ok := value.(map[string]interface{}); ok {
 			return JSONPatchTypeObject
 		}
 		return JSONPatchTypeNull
 	}
-}
-
-func isArrayType(value interface{}) bool {
-	switch value.(type) {
-	case []interface{}, []string, []int, []float64:
-		return true
-	default:
-		return false
-	}
-}
-
-func isObjectType(value interface{}) bool {
-	_, ok := value.(map[string]interface{})
-	return ok
 }
 
 // Operation type checking functions provide efficient type detection
