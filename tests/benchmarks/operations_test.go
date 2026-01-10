@@ -61,7 +61,7 @@ func BenchmarkBasicOperations(b *testing.B) {
 	for _, tc := range testCases {
 		b.Run(tc.name, func(b *testing.B) {
 			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				// Clone document for each iteration
 				docCopy := cloneDocument(tc.doc)
 				_, err := jsonpatch.ApplyPatch(docCopy, tc.ops, jsonpatch.WithMutate(true))
@@ -121,7 +121,7 @@ func BenchmarkExtendedOperations(b *testing.B) {
 	for _, tc := range testCases {
 		b.Run(tc.name, func(b *testing.B) {
 			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				// Clone document for each iteration
 				docCopy := cloneDocument(tc.doc)
 				_, err := jsonpatch.ApplyPatch(docCopy, tc.ops, jsonpatch.WithMutate(true))
@@ -187,7 +187,7 @@ func BenchmarkPredicateOperations(b *testing.B) {
 	for _, tc := range testCases {
 		b.Run(tc.name, func(b *testing.B) {
 			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				// Clone document for each iteration
 				docCopy := cloneDocument(tc.doc)
 				_, err := jsonpatch.ApplyPatch(docCopy, tc.ops, jsonpatch.WithMutate(true))
@@ -254,7 +254,7 @@ func BenchmarkSecondOrderPredicates(b *testing.B) {
 	for _, tc := range testCases {
 		b.Run(tc.name, func(b *testing.B) {
 			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				// Clone document for each iteration
 				docCopy := cloneDocument(tc.doc)
 				_, err := jsonpatch.ApplyPatch(docCopy, tc.ops, jsonpatch.WithMutate(true))
@@ -359,7 +359,7 @@ func BenchmarkComplexDocument(b *testing.B) {
 	for _, tc := range testCases {
 		b.Run(tc.name, func(b *testing.B) {
 			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				// Clone document for each iteration
 				docCopy := cloneDocument(complexDoc)
 				_, err := jsonpatch.ApplyPatch(docCopy, tc.ops, jsonpatch.WithMutate(true))
@@ -396,7 +396,7 @@ func BenchmarkMutateVsImmutable(b *testing.B) {
 
 	b.Run("mutable", func(b *testing.B) {
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			docCopy := cloneDocument(doc)
 			_, err := jsonpatch.ApplyPatch(docCopy, ops, jsonpatch.WithMutate(true))
 			if err != nil {
@@ -407,7 +407,7 @@ func BenchmarkMutateVsImmutable(b *testing.B) {
 
 	b.Run("immutable", func(b *testing.B) {
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			docCopy := cloneDocument(doc)
 			_, err := jsonpatch.ApplyPatch(docCopy, ops, jsonpatch.WithMutate(false))
 			if err != nil {

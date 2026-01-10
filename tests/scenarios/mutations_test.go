@@ -313,7 +313,7 @@ func isSameSliceObject(a, b []interface{}) bool {
 
 func createLargeDocument(size int) map[string]interface{} {
 	doc := make(map[string]interface{})
-	for i := 0; i < size; i++ {
+	for i := range size {
 		doc[fmt.Sprintf("field_%d", i)] = fmt.Sprintf("value_%d", i)
 	}
 	return doc
@@ -328,7 +328,7 @@ func BenchmarkMutateVsClone(b *testing.B) {
 	b.Run("Mutate=false", func(b *testing.B) {
 		options := jsonpatch.WithMutate(false)
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			doc := createLargeDocument(1000)
 			_, err := jsonpatch.ApplyPatch(doc, patch, options)
 			if err != nil {
@@ -340,7 +340,7 @@ func BenchmarkMutateVsClone(b *testing.B) {
 	b.Run("Mutate=true", func(b *testing.B) {
 		options := jsonpatch.WithMutate(true)
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			doc := createLargeDocument(1000)
 			_, err := jsonpatch.ApplyPatch(doc, patch, options)
 			if err != nil {

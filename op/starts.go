@@ -32,7 +32,6 @@ func NewOpStartsOperationWithIgnoreCase(path []string, prefix string, ignoreCase
 	}
 }
 
-
 // Op returns the operation type.
 func (op *StartsOperation) Op() internal.OpType {
 	return internal.OpStartsType

@@ -28,10 +28,11 @@ func main() {
 	fmt.Println(string(original))
 
 	// Build batch update patch
-	var patch []jsonpatch.Operation
+	// 3 servers * 2 operations (status + version) + 1 counter update = 7 operations
+	patch := make([]jsonpatch.Operation, 0, 7)
 
 	// Update all servers in batch
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		serverPath := fmt.Sprintf("/servers/%d", i)
 
 		// Update status

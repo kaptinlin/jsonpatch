@@ -33,7 +33,6 @@ func NewOpContainsOperationWithIgnoreCase(path []string, substring string, ignor
 	}
 }
 
-
 // Apply applies the contains test operation to the document.
 func (op *ContainsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, actualValue, testValue, testString, err := op.getAndPrepareStrings(doc)
