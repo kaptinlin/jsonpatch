@@ -12,7 +12,6 @@ type EndsOperation struct {
 	BaseOp
 	Value      string `json:"value"`       // Expected suffix
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case
-	NotFlag    bool   `json:"not"`         // Whether to negate the result
 }
 
 type OpEndsOperation = EndsOperation //nolint:revive // Backward compatibility alias
@@ -60,15 +59,10 @@ func (op *EndsOperation) Test(doc any) (bool, error) {
 		return false, nil
 	}
 
-	var result bool
 	if op.IgnoreCase {
-		result = strings.HasSuffix(strings.ToLower(str), strings.ToLower(op.Value))
-	} else {
-		result = strings.HasSuffix(str, op.Value)
+		return strings.HasSuffix(strings.ToLower(str), strings.ToLower(op.Value)), nil
 	}
-
-	// Apply negation if needed
-	return result != op.NotFlag, nil
+	return strings.HasSuffix(str, op.Value), nil
 }
 
 // Apply applies the ends test operation to the document.
@@ -85,13 +79,7 @@ func (op *EndsOperation) Apply(doc any) (internal.OpResult[any], error) {
 		hasSuffix = strings.HasSuffix(str, op.Value)
 	}
 
-	// Apply negation if needed
-	result := hasSuffix != op.NotFlag
-
-	if !result {
-		if op.NotFlag {
-			return internal.OpResult[any]{}, fmt.Errorf("%w: string %q ends with %q (negated test failed)", ErrStringMismatch, str, op.Value)
-		}
+	if !hasSuffix {
 		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not end with %q", ErrStringMismatch, str, op.Value)
 	}
 
@@ -125,9 +113,6 @@ func (op *EndsOperation) ToJSON() (internal.Operation, error) {
 	if op.IgnoreCase {
 		result.IgnoreCase = op.IgnoreCase
 	}
-	if op.NotFlag {
-		result.Not = op.NotFlag
-	}
 	return result, nil
 }
 
@@ -136,9 +121,10 @@ func (op *EndsOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpEndsCode, op.Path(), op.Value}, nil
 }
 
-// Not returns the negation flag for this operation.
+// Not returns false as ends operation does not support direct negation.
+// Use the second-order "not" predicate for negation.
 func (op *EndsOperation) Not() bool {
-	return op.NotFlag
+	return false
 }
 
 // Validate validates the ends operation.

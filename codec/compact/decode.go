@@ -322,7 +322,7 @@ func compactToOp(compactOp Op, opts DecoderOptions) (internal.Op, error) {
 		if len(compactOp) >= 4 {
 			ignoreCase = toBool(compactOp[3])
 		}
-		return op.NewOpMatchesOperation(path, pattern, ignoreCase, false, nil), nil
+		return op.NewOpMatchesOperation(path, pattern, ignoreCase, nil), nil
 
 	case internal.OpAndType:
 		if len(compactOp) < 3 {

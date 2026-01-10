@@ -12,7 +12,6 @@ type ContainsOperation struct {
 	BaseOp
 	Value      string `json:"value"`       // Substring to search for
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case when comparing
-	NotFlag    bool   `json:"not"`         // Whether to negate the result
 }
 
 type OpContainsOperation = ContainsOperation //nolint:revive // Backward compatibility alias
@@ -34,15 +33,6 @@ func NewOpContainsOperationWithIgnoreCase(path []string, substring string, ignor
 	}
 }
 
-// NewOpContainsOperationWithFlags creates a new OpContainsOperation operation with full options.
-func NewOpContainsOperationWithFlags(path []string, substring string, ignoreCase bool, notFlag bool) *ContainsOperation {
-	return &OpContainsOperation{
-		BaseOp:     NewBaseOp(path),
-		Value:      substring,
-		IgnoreCase: ignoreCase,
-		NotFlag:    notFlag,
-	}
-}
 
 // Apply applies the contains test operation to the document.
 func (op *ContainsOperation) Apply(doc any) (internal.OpResult[any], error) {
@@ -51,17 +41,7 @@ func (op *ContainsOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, err
 	}
 
-	contains := strings.Contains(testValue, testString)
-
-	// Apply negation if needed
-	if op.NotFlag {
-		contains = !contains
-	}
-
-	if !contains {
-		if op.NotFlag {
-			return internal.OpResult[any]{}, fmt.Errorf("%w: string %q contains %q", ErrStringMismatch, actualValue, op.Value)
-		}
+	if !strings.Contains(testValue, testString) {
 		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not contain %q", ErrStringMismatch, actualValue, op.Value)
 	}
 	return internal.OpResult[any]{Doc: doc, Old: value}, nil
@@ -77,14 +57,7 @@ func (op *ContainsOperation) Test(doc any) (bool, error) {
 		return false, nil
 	}
 
-	contains := strings.Contains(testValue, testString)
-
-	// Apply negation if needed
-	if op.NotFlag {
-		contains = !contains
-	}
-
-	return contains, nil
+	return strings.Contains(testValue, testString), nil
 }
 
 // getAndPrepareStrings retrieves the value, converts to string, and prepares test strings
@@ -112,9 +85,10 @@ func (op *ContainsOperation) getAndPrepareStrings(doc any) (interface{}, string,
 	return value, actualValue, testValue, testString, nil
 }
 
-// Not returns the negation flag.
+// Not returns false as contains operation does not support direct negation.
+// Use the second-order "not" predicate for negation.
 func (op *ContainsOperation) Not() bool {
-	return op.NotFlag
+	return false
 }
 
 // Op returns the operation type.
@@ -134,7 +108,6 @@ func (op *ContainsOperation) ToJSON() (internal.Operation, error) {
 		Path:       formatPath(op.Path()),
 		Value:      op.Value,
 		IgnoreCase: op.IgnoreCase,
-		Not:        op.NotFlag,
 	}, nil
 }
 

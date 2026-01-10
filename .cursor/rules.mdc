@@ -50,12 +50,12 @@ func buildPath(parts []string) string {
 ### Boolean Logic Simplification
 ```go
 // ✅ Use XOR for condition simplification
-func testCondition(isEqual, notFlag bool) bool {
-    return isEqual != notFlag  // Simple and efficient
+func testCondition(result, invert bool) bool {
+    return result != invert  // Simple and efficient
 }
 
 // ❌ Avoid complex branching for simple logic
-if notFlag { return !isEqual } else { return isEqual }
+if invert { return !result } else { return result }
 ```
 
 ### Type Specialization

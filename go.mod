@@ -7,7 +7,7 @@ require (
 	github.com/kaptinlin/deepclone v0.2.2
 	github.com/kaptinlin/jsonpointer v0.4.8
 	github.com/stretchr/testify v1.11.1
-	github.com/tinylib/msgp v1.6.1
+	github.com/tinylib/msgp v1.6.3
 )
 
 require (

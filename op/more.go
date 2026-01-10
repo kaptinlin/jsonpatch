@@ -9,25 +9,14 @@ import (
 // MoreOperation represents a "more" predicate operation that checks if a value is greater than a specified number.
 type MoreOperation struct {
 	BaseOp
-	Value   float64 `json:"value"` // The number to compare against
-	NotFlag bool    `json:"not"`   // Whether to negate the result
+	Value float64 `json:"value"` // The number to compare against
 }
 
 // NewOpMoreOperation creates a new more operation.
 func NewOpMoreOperation(path []string, value float64) *MoreOperation {
 	return &MoreOperation{
-		BaseOp:  NewBaseOp(path),
-		Value:   value,
-		NotFlag: false,
-	}
-}
-
-// NewOpMoreOperationWithFlags creates a new more operation with full options.
-func NewOpMoreOperationWithFlags(path []string, value float64, notFlag bool) *MoreOperation {
-	return &MoreOperation{
-		BaseOp:  NewBaseOp(path),
-		Value:   value,
-		NotFlag: notFlag,
+		BaseOp: NewBaseOp(path),
+		Value:  value,
 	}
 }
 
@@ -51,14 +40,7 @@ func (o *MoreOperation) Test(doc interface{}) (bool, error) {
 		return false, nil
 	}
 
-	greater := num > o.Value
-
-	// Apply negation if needed
-	if o.NotFlag {
-		greater = !greater
-	}
-
-	return greater, nil
+	return num > o.Value, nil
 }
 
 // Apply applies the more operation.
@@ -68,17 +50,7 @@ func (o *MoreOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, err
 	}
 
-	greater := num > o.Value
-
-	// Apply negation if needed
-	if o.NotFlag {
-		greater = !greater
-	}
-
-	if !greater {
-		if o.NotFlag {
-			return internal.OpResult[any]{}, fmt.Errorf("%w: value %f is greater than %f", ErrComparisonFailed, num, o.Value)
-		}
+	if num <= o.Value {
 		return internal.OpResult[any]{}, fmt.Errorf("%w: value %f is not greater than %f", ErrComparisonFailed, num, o.Value)
 	}
 
@@ -110,7 +82,6 @@ func (o *MoreOperation) ToJSON() (internal.Operation, error) {
 		Op:    string(internal.OpMoreType),
 		Path:  formatPath(o.Path()),
 		Value: value,
-		Not:   o.NotFlag,
 	}, nil
 }
 
@@ -119,9 +90,10 @@ func (o *MoreOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpMoreCode, o.Path(), o.Value}, nil
 }
 
-// Not returns the negation flag.
+// Not returns false as more operation does not support direct negation.
+// Use the second-order "not" predicate for negation.
 func (o *MoreOperation) Not() bool {
-	return o.NotFlag
+	return false
 }
 
 // Validate validates the more operation.

@@ -387,18 +387,12 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 			ignoreCase = ic
 		}
 
-		// Check for not flag
-		notFlag := false
-		if n, ok := operation["not"].(bool); ok {
-			notFlag = n
-		}
-
 		// Convert value to string (contains only works with strings)
 		stringValue, ok := value.(string)
 		if !ok {
 			return nil, op.ErrContainsValueMustBeString
 		}
-		return op.NewOpContainsOperationWithFlags(path, stringValue, ignoreCase, notFlag), nil
+		return op.NewOpContainsOperationWithIgnoreCase(path, stringValue, ignoreCase), nil
 	case "ends":
 		value, ok := operation["value"].(string)
 		if !ok {
@@ -411,20 +405,7 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 			ignoreCase = ic
 		}
 
-		// Check for not flag
-		notFlag := false
-		if n, ok := operation["not"].(bool); ok {
-			notFlag = n
-		}
-
-		// Create the operation with appropriate flags
-		endsOp := &op.EndsOperation{
-			BaseOp:     op.NewBaseOp(path),
-			Value:      value,
-			IgnoreCase: ignoreCase,
-			NotFlag:    notFlag,
-		}
-		return endsOp, nil
+		return op.NewOpEndsOperationWithIgnoreCase(path, value, ignoreCase), nil
 	case "starts":
 		value, ok := operation["value"].(string)
 		if !ok {
@@ -437,20 +418,7 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 			ignoreCase = ic
 		}
 
-		// Check for not flag
-		notFlag := false
-		if n, ok := operation["not"].(bool); ok {
-			notFlag = n
-		}
-
-		// Create the operation with appropriate flags
-		startsOp := &op.StartsOperation{
-			BaseOp:     op.NewBaseOp(path),
-			Value:      value,
-			IgnoreCase: ignoreCase,
-			NotFlag:    notFlag,
-		}
-		return startsOp, nil
+		return op.NewOpStartsOperationWithIgnoreCase(path, value, ignoreCase), nil
 	case "matches":
 		value, ok := operation["value"].(string)
 		if !ok {
@@ -460,12 +428,7 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		if ic, ok := operation["ignore_case"].(bool); ok {
 			ignoreCase = ic
 		}
-		notFlag := false
-		if n, ok := operation["not"].(bool); ok {
-			notFlag = n
-		}
-		// Direct pass-through - no adapter needed since signatures now match
-		return op.NewOpMatchesOperation(path, value, ignoreCase, notFlag, options.CreateMatcher), nil
+		return op.NewOpMatchesOperation(path, value, ignoreCase, options.CreateMatcher), nil
 	case "in":
 		value := operation["value"]
 		if values, ok := value.([]interface{}); ok {
@@ -483,12 +446,7 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		if !ok {
 			return nil, ErrMoreOpMissingValue
 		}
-		// Check for not flag
-		notFlag := false
-		if n, ok := operation["not"].(bool); ok {
-			notFlag = n
-		}
-		return op.NewOpMoreOperationWithFlags(path, value, notFlag), nil
+		return op.NewOpMoreOperation(path, value), nil
 	case "and":
 		apply, ok := operation["apply"].([]interface{})
 		if !ok {

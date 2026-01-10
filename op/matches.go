@@ -12,7 +12,6 @@ type MatchesOperation struct {
 	BaseOp
 	Pattern    string                `json:"value"`       // The regex pattern string
 	IgnoreCase bool                  `json:"ignore_case"` // Case insensitive flag
-	NotFlag    bool                  `json:"not"`         // Whether to negate the result
 	matcher    internal.RegexMatcher // Compiled regex matcher function
 }
 
@@ -40,7 +39,7 @@ func createMatcherDefault(pattern string, ignoreCase bool) internal.RegexMatcher
 // NewOpMatchesOperation creates a new matches operation.
 // If createMatcher is nil, uses the default Go regexp implementation.
 // This aligns with json-joy's OpMatches constructor pattern.
-func NewOpMatchesOperation(path []string, pattern string, ignoreCase bool, notFlag bool, createMatcher internal.CreateRegexMatcher) *MatchesOperation {
+func NewOpMatchesOperation(path []string, pattern string, ignoreCase bool, createMatcher internal.CreateRegexMatcher) *MatchesOperation {
 	if createMatcher == nil {
 		createMatcher = createMatcherDefault
 	}
@@ -49,7 +48,6 @@ func NewOpMatchesOperation(path []string, pattern string, ignoreCase bool, notFl
 		BaseOp:     NewBaseOp(path),
 		Pattern:    pattern,
 		IgnoreCase: ignoreCase,
-		NotFlag:    notFlag,
 		matcher:    createMatcher(pattern, ignoreCase),
 	}
 }
@@ -84,14 +82,7 @@ func (o *MatchesOperation) Test(doc interface{}) (bool, error) {
 		return false, nil
 	}
 
-	matches := o.matcher(str)
-
-	// Apply negation if needed
-	if o.NotFlag {
-		matches = !matches
-	}
-
-	return matches, nil
+	return o.matcher(str), nil
 }
 
 // Apply applies the matches operation.
@@ -108,17 +99,7 @@ func (o *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, ErrNotString
 	}
 
-	matches := o.matcher(str)
-
-	// Apply negation if needed
-	if o.NotFlag {
-		matches = !matches
-	}
-
-	if !matches {
-		if o.NotFlag {
-			return internal.OpResult[any]{}, fmt.Errorf("%w: string '%s' matches pattern", ErrStringMismatch, str)
-		}
+	if !o.matcher(str) {
 		return internal.OpResult[any]{}, fmt.Errorf("%w: string '%s' does not match pattern", ErrStringMismatch, str)
 	}
 
@@ -132,7 +113,6 @@ func (o *MatchesOperation) ToJSON() (internal.Operation, error) {
 		Path:       formatPath(o.Path()),
 		Value:      o.Pattern,
 		IgnoreCase: o.IgnoreCase,
-		Not:        o.NotFlag,
 	}
 
 	return result, nil
@@ -143,9 +123,10 @@ func (o *MatchesOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpMatchesCode, o.Path(), o.Pattern, o.IgnoreCase}, nil
 }
 
-// Not returns the negation flag.
+// Not returns false as matches operation does not support direct negation.
+// Use the second-order "not" predicate for negation.
 func (o *MatchesOperation) Not() bool {
-	return o.NotFlag
+	return false
 }
 
 // Validate validates the matches operation.

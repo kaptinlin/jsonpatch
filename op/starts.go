@@ -12,7 +12,6 @@ type StartsOperation struct {
 	BaseOp
 	Value      string `json:"value"`       // Expected prefix
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case
-	NotFlag    bool   `json:"not"`         // Whether to negate the result
 }
 
 // NewOpStartsOperation creates a new OpStartsOperation operation.
@@ -33,14 +32,6 @@ func NewOpStartsOperationWithIgnoreCase(path []string, prefix string, ignoreCase
 	}
 }
 
-// NewOpStartsOperationWithNot creates a new OpStartsOperation operation with negation.
-func NewOpStartsOperationWithNot(path []string, prefix string, not bool) *StartsOperation {
-	return &StartsOperation{
-		BaseOp:  NewBaseOp(path),
-		Value:   prefix,
-		NotFlag: not,
-	}
-}
 
 // Op returns the operation type.
 func (op *StartsOperation) Op() internal.OpType {
@@ -80,15 +71,10 @@ func (op *StartsOperation) Test(doc any) (bool, error) {
 		return false, nil // Return false if not string or byte slice
 	}
 
-	var result bool
 	if op.IgnoreCase {
-		result = strings.HasPrefix(strings.ToLower(str), strings.ToLower(op.Value))
-	} else {
-		result = strings.HasPrefix(str, op.Value)
+		return strings.HasPrefix(strings.ToLower(str), strings.ToLower(op.Value)), nil
 	}
-
-	// Apply negation if needed
-	return result != op.NotFlag, nil
+	return strings.HasPrefix(str, op.Value), nil
 }
 
 // Apply applies the starts test operation to the document.
@@ -118,13 +104,7 @@ func (op *StartsOperation) Apply(doc any) (internal.OpResult[any], error) {
 		hasPrefix = strings.HasPrefix(str, op.Value)
 	}
 
-	// Apply negation if needed
-	result := hasPrefix != op.NotFlag
-
-	if !result {
-		if op.NotFlag {
-			return internal.OpResult[any]{}, fmt.Errorf("%w: string %q starts with %q (negated test failed)", ErrStringMismatch, str, op.Value)
-		}
+	if !hasPrefix {
 		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not start with %q", ErrStringMismatch, str, op.Value)
 	}
 
@@ -141,9 +121,6 @@ func (op *StartsOperation) ToJSON() (internal.Operation, error) {
 	if op.IgnoreCase {
 		result.IgnoreCase = op.IgnoreCase
 	}
-	if op.NotFlag {
-		result.Not = op.NotFlag
-	}
 	return result, nil
 }
 
@@ -152,9 +129,10 @@ func (op *StartsOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpStartsCode, op.Path(), op.Value}, nil
 }
 
-// Not returns the negation flag for this operation.
+// Not returns false as starts operation does not support direct negation.
+// Use the second-order "not" predicate for negation.
 func (op *StartsOperation) Not() bool {
-	return op.NotFlag
+	return false
 }
 
 // Validate validates the starts operation.
