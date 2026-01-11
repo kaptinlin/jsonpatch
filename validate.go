@@ -39,11 +39,10 @@ var (
 	ErrValueMustBeArray     = errors.New("value must be an array")
 	ErrValueTooLong         = errors.New("value too long")
 	ErrInvalidNotModifier   = errors.New("invalid not modifier")
-	ErrMatchesNotAllowed    = errors.New("matches operation not allowed")
-	ErrMustBeArray          = errors.New("must be an array")
-	ErrEmptyPredicateList   = errors.New("predicate list is empty")
-	ErrEitherStrOrLen       = errors.New("either str or len must be set")
-	ErrPosGreaterThanZero   = errors.New("expected pos field to be greater than 0")
+	ErrMatchesNotAllowed  = errors.New("matches operation not allowed")
+	ErrMustBeArray        = errors.New("must be an array")
+	ErrEmptyPredicateList = errors.New("predicate list is empty")
+	ErrPosGreaterThanZero = errors.New("expected pos field to be greater than 0")
 
 	// Additional static errors for err113 compliance
 	ErrInOperationValueMustBeArray = errors.New("in operation value must be an array")

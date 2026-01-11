@@ -223,17 +223,8 @@ func (op *TestTypeOperation) Validate() error {
 		return ErrEmptyTypeList
 	}
 	// Validate that all types are known valid types
-	validTypes := map[string]bool{
-		"string":  true,
-		"number":  true,
-		"boolean": true,
-		"object":  true,
-		"array":   true,
-		"null":    true,
-		"integer": true, // Special type that's also valid
-	}
 	for _, t := range op.Types {
-		if !validTypes[t] {
+		if !IsValidJSONType(t) {
 			return ErrInvalidType
 		}
 	}

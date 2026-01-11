@@ -27,8 +27,6 @@ var (
 	ErrStrDelOpMissingFields = errors.New("str_del operation missing 'str' or 'len' field")
 	// ErrSplitOpMissingPos indicates split operation is missing 'pos' field
 	ErrSplitOpMissingPos = errors.New("split operation missing 'pos' field")
-	// ErrMergeOpMissingPos indicates merge operation is missing 'pos' field
-	ErrMergeOpMissingPos = errors.New("merge operation missing 'pos' field")
 
 	// ErrTypeOpMissingValue indicates type operation is missing string 'value' field
 	ErrTypeOpMissingValue = errors.New("type operation missing string 'value' field")

@@ -106,16 +106,7 @@ func (op *TypeOperation) Validate() error {
 		return ErrInvalidType
 	}
 	// Validate that the type is a known valid type
-	validTypes := map[string]bool{
-		"string":  true,
-		"number":  true,
-		"boolean": true,
-		"object":  true,
-		"array":   true,
-		"null":    true,
-		"integer": true, // Special type that's also valid
-	}
-	if !validTypes[op.TypeValue] {
+	if !IsValidJSONType(op.TypeValue) {
 		return ErrInvalidType
 	}
 	return nil

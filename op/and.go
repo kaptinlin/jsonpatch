@@ -30,13 +30,7 @@ func (o *AndOperation) Code() int {
 
 // Ops returns the predicate operations.
 func (o *AndOperation) Ops() []internal.PredicateOp {
-	ops := make([]internal.PredicateOp, 0, len(o.Operations))
-	for _, op := range o.Operations {
-		if predicateOp, ok := op.(internal.PredicateOp); ok {
-			ops = append(ops, predicateOp)
-		}
-	}
-	return ops
+	return extractPredicateOps(o.Operations)
 }
 
 // Test performs the AND operation.

@@ -67,15 +67,11 @@ func (op *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 	result := oldValue + op.Inc
 
-	if err := op.updateParent(parent, key, result); err != nil {
+	if err := updateParent(parent, key, result); err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: currentValue}, nil
-}
-
-func (op *IncOperation) updateParent(parent interface{}, key interface{}, value interface{}) error {
-	return updateParent(parent, key, value)
 }
 
 // ToJSON serializes the operation to JSON format.

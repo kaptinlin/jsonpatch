@@ -10,6 +10,46 @@ import (
 	"github.com/kaptinlin/jsonpointer"
 )
 
+// validJSONTypes defines the set of valid JSON type names.
+var validJSONTypes = map[string]bool{
+	"string":  true,
+	"number":  true,
+	"boolean": true,
+	"object":  true,
+	"array":   true,
+	"null":    true,
+	"integer": true,
+}
+
+// IsValidJSONType checks if a type name is a valid JSON type.
+func IsValidJSONType(typeName string) bool {
+	return validJSONTypes[typeName]
+}
+
+// extractString extracts a string from a value, handling string and []byte types.
+// Returns the string and true if successful, or empty string and false otherwise.
+func extractString(val interface{}) (string, bool) {
+	switch v := val.(type) {
+	case string:
+		return v, true
+	case []byte:
+		return string(v), true
+	default:
+		return "", false
+	}
+}
+
+// extractPredicateOps converts a slice of interface{} to []internal.PredicateOp.
+func extractPredicateOps(operations []interface{}) []internal.PredicateOp {
+	ops := make([]internal.PredicateOp, 0, len(operations))
+	for _, op := range operations {
+		if predicateOp, ok := op.(internal.PredicateOp); ok {
+			ops = append(ops, predicateOp)
+		}
+	}
+	return ops
+}
+
 // pathEquals checks if two paths are equal.
 func pathEquals(p1, p2 []string) bool {
 	if len(p1) != len(p2) {

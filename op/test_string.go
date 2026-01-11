@@ -84,13 +84,8 @@ func (op *TestStringOperation) Test(doc any) (bool, error) {
 	}
 
 	// Convert to string or from byte slice
-	var str string
-	switch v := val.(type) {
-	case string:
-		str = v
-	case []byte:
-		str = string(v)
-	default:
+	str, ok := extractString(val)
+	if !ok {
 		return false, nil // Return false if not string or byte slice
 	}
 

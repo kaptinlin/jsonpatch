@@ -125,13 +125,7 @@ func (o *NotOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Ops returns the operand operations.
 func (o *NotOperation) Ops() []internal.PredicateOp {
-	ops := make([]internal.PredicateOp, 0, len(o.Operations))
-	for _, op := range o.Operations {
-		if predicateOp, ok := op.(internal.PredicateOp); ok {
-			ops = append(ops, predicateOp)
-		}
-	}
-	return ops
+	return extractPredicateOps(o.Operations)
 }
 
 // Validate validates the NOT operation.

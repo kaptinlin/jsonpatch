@@ -92,3 +92,9 @@ func (op *LessOperation) Test(doc any) (bool, error) {
 func (op *LessOperation) Not() bool {
 	return false
 }
+
+// Short aliases for common use
+var (
+	// NewLess creates a new less operation
+	NewLess = NewOpLessOperation
+)
