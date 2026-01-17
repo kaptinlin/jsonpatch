@@ -61,4 +61,21 @@ var (
 
 	// ErrCodecOpUnknown indicates unknown operation
 	ErrCodecOpUnknown = errors.New("unknown operation")
+
+	// ErrInvalidPointer indicates an invalid JSON pointer
+	ErrInvalidPointer = errors.New("invalid pointer")
+	// ErrAddOpMissingValue indicates add operation is missing 'value' field
+	ErrAddOpMissingValue = errors.New("add operation missing 'value' field")
+	// ErrReplaceOpMissingValue indicates replace operation is missing 'value' field
+	ErrReplaceOpMissingValue = errors.New("replace operation missing 'value' field")
+	// ErrNotOpRequiresOperand indicates not operation requires at least one operand
+	ErrNotOpRequiresOperand = errors.New("not operation requires at least one operand")
+	// ErrMissingValueField indicates a missing value field
+	ErrMissingValueField = errors.New("missing value field")
+	// ErrEmptyTypeList indicates an empty type list
+	ErrEmptyTypeList = errors.New("empty type list")
+	// ErrInvalidType indicates an invalid type
+	ErrInvalidType = errors.New("invalid type")
+	// ErrNotOpRequiresValidOperand indicates not operation requires a valid predicate operand
+	ErrNotOpRequiresValidOperand = errors.New("not operation requires a valid predicate operand")
 )

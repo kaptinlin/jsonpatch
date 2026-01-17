@@ -10,46 +10,46 @@ import (
 // OpCode represents operation codes for compact format
 type OpCode int
 
-// Operation codes for compact format
+// Operation codes for compact format - derived from internal constants
 const (
-	// JSON Patch (RFC 6902) operations - match internal/constants.go
-	OpCodeAdd     OpCode = 0
-	OpCodeRemove  OpCode = 1
-	OpCodeReplace OpCode = 2
-	OpCodeCopy    OpCode = 3
-	OpCodeMove    OpCode = 4
-	OpCodeTest    OpCode = 5
+	// JSON Patch (RFC 6902) operations
+	OpCodeAdd     OpCode = OpCode(internal.OpAddCode)
+	OpCodeRemove  OpCode = OpCode(internal.OpRemoveCode)
+	OpCodeReplace OpCode = OpCode(internal.OpReplaceCode)
+	OpCodeCopy    OpCode = OpCode(internal.OpCopyCode)
+	OpCodeMove    OpCode = OpCode(internal.OpMoveCode)
+	OpCodeTest    OpCode = OpCode(internal.OpTestCode)
 
 	// String editing
-	OpCodeStrIns OpCode = 6
-	OpCodeStrDel OpCode = 7
+	OpCodeStrIns OpCode = OpCode(internal.OpStrInsCode)
+	OpCodeStrDel OpCode = OpCode(internal.OpStrDelCode)
 
 	// Extra
-	OpCodeFlip OpCode = 8
-	OpCodeInc  OpCode = 9
+	OpCodeFlip OpCode = OpCode(internal.OpFlipCode)
+	OpCodeInc  OpCode = OpCode(internal.OpIncCode)
 
 	// Slate.js
-	OpCodeSplit  OpCode = 10
-	OpCodeMerge  OpCode = 11
-	OpCodeExtend OpCode = 12
+	OpCodeSplit  OpCode = OpCode(internal.OpSplitCode)
+	OpCodeMerge  OpCode = OpCode(internal.OpMergeCode)
+	OpCodeExtend OpCode = OpCode(internal.OpExtendCode)
 
 	// JSON Predicate operations
-	OpCodeContains      OpCode = 30
-	OpCodeDefined       OpCode = 31
-	OpCodeEnds          OpCode = 32
-	OpCodeIn            OpCode = 33
-	OpCodeLess          OpCode = 34
-	OpCodeMatches       OpCode = 35
-	OpCodeMore          OpCode = 36
-	OpCodeStarts        OpCode = 37
-	OpCodeUndefined     OpCode = 38
-	OpCodeTestType      OpCode = 39
-	OpCodeTestString    OpCode = 40
-	OpCodeTestStringLen OpCode = 41
-	OpCodeType          OpCode = 42
-	OpCodeAnd           OpCode = 43
-	OpCodeNot           OpCode = 44
-	OpCodeOr            OpCode = 45
+	OpCodeContains      OpCode = OpCode(internal.OpContainsCode)
+	OpCodeDefined       OpCode = OpCode(internal.OpDefinedCode)
+	OpCodeEnds          OpCode = OpCode(internal.OpEndsCode)
+	OpCodeIn            OpCode = OpCode(internal.OpInCode)
+	OpCodeLess          OpCode = OpCode(internal.OpLessCode)
+	OpCodeMatches       OpCode = OpCode(internal.OpMatchesCode)
+	OpCodeMore          OpCode = OpCode(internal.OpMoreCode)
+	OpCodeStarts        OpCode = OpCode(internal.OpStartsCode)
+	OpCodeUndefined     OpCode = OpCode(internal.OpUndefinedCode)
+	OpCodeTestType      OpCode = OpCode(internal.OpTestTypeCode)
+	OpCodeTestString    OpCode = OpCode(internal.OpTestStringCode)
+	OpCodeTestStringLen OpCode = OpCode(internal.OpTestStringLenCode)
+	OpCodeType          OpCode = OpCode(internal.OpTypeCode)
+	OpCodeAnd           OpCode = OpCode(internal.OpAndCode)
+	OpCodeNot           OpCode = OpCode(internal.OpNotCode)
+	OpCodeOr            OpCode = OpCode(internal.OpOrCode)
 )
 
 // Note: String operation codes are defined in decode.go lookup table for better performance

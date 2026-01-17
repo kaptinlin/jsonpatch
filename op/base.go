@@ -30,22 +30,3 @@ func (b *BaseOp) From() []string {
 func (b *BaseOp) HasFrom() bool {
 	return len(b.from) > 0
 }
-
-// PredicateOpBase provides common functionality for predicate operations.
-type PredicateOpBase struct {
-	BaseOp
-	not bool
-}
-
-// NewPredicateOp creates a new PredicateOpBase.
-func NewPredicateOp(path []string, not bool) PredicateOpBase {
-	return PredicateOpBase{
-		BaseOp: NewBaseOp(path),
-		not:    not,
-	}
-}
-
-// Not returns the negation flag.
-func (p *PredicateOpBase) Not() bool {
-	return p.not
-}

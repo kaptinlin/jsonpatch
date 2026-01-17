@@ -52,6 +52,19 @@ const (
 	errOperationFailed = "operation %d failed: %w"
 )
 
+// convertOpResults converts []internal.OpResult[any] to []internal.OpResult[T].
+// This helper function avoids code duplication across handler functions.
+func convertOpResults[T internal.Document](resultOps []internal.OpResult[any], resultDoc T) []internal.OpResult[T] {
+	converted := make([]internal.OpResult[T], len(resultOps))
+	for i, op := range resultOps {
+		converted[i] = internal.OpResult[T]{
+			Doc: resultDoc,
+			Old: op.Old,
+		}
+	}
+	return converted
+}
+
 // ApplyPatch applies a JSON Patch to any supported document type.
 // It automatically detects the document type and applies the appropriate strategy.
 // Returns a PatchResult containing the patched document and operation results.
@@ -182,18 +195,9 @@ func handleJSONBytes[T internal.Document](doc T, patch []internal.Operation, opt
 		return nil, fmt.Errorf("%w: failed to convert result back to type %T", ErrConversionFailed, doc)
 	}
 
-	// Convert OpResult[any] to OpResult[T]
-	convertedOps := make([]internal.OpResult[T], len(resultOps))
-	for i, op := range resultOps {
-		convertedOps[i] = internal.OpResult[T]{
-			Doc: resultT, // Use the converted document
-			Old: op.Old,
-		}
-	}
-
 	return &internal.PatchResult[T]{
 		Doc: resultT,
-		Res: convertedOps,
+		Res: convertOpResults(resultOps, resultT),
 	}, nil
 }
 
@@ -298,18 +302,9 @@ func handleJSONString[T internal.Document](doc T, patch []internal.Operation, op
 		}
 	}
 
-	// Convert OpResult[any] to OpResult[T]
-	convertedOps := make([]internal.OpResult[T], len(resultOps))
-	for i, op := range resultOps {
-		convertedOps[i] = internal.OpResult[T]{
-			Doc: resultT, // Use the converted document
-			Old: op.Old,
-		}
-	}
-
 	return &internal.PatchResult[T]{
 		Doc: resultT,
-		Res: convertedOps,
+		Res: convertOpResults(resultOps, resultT),
 	}, nil
 }
 
@@ -331,18 +326,9 @@ func handlePrimitiveDocument[T internal.Document](doc T, patch []internal.Operat
 		return nil, fmt.Errorf("%w: failed to convert result back to type %T", ErrConversionFailed, doc)
 	}
 
-	// Convert OpResult[any] to OpResult[T]
-	convertedOps := make([]internal.OpResult[T], len(resultOps))
-	for i, op := range resultOps {
-		convertedOps[i] = internal.OpResult[T]{
-			Doc: resultT, // Use the converted document
-			Old: op.Old,
-		}
-	}
-
 	return &internal.PatchResult[T]{
 		Doc: resultT,
-		Res: convertedOps,
+		Res: convertOpResults(resultOps, resultT),
 	}, nil
 }
 
@@ -393,18 +379,9 @@ func handleMapDocument[T internal.Document](doc T, patch []internal.Operation, o
 		}
 	}
 
-	// Convert OpResult[any] to OpResult[T]
-	convertedOps := make([]internal.OpResult[T], len(resultOps))
-	for i, op := range resultOps {
-		convertedOps[i] = internal.OpResult[T]{
-			Doc: resultT, // Use the converted document
-			Old: op.Old,
-		}
-	}
-
 	return &internal.PatchResult[T]{
 		Doc: resultT,
-		Res: convertedOps,
+		Res: convertOpResults(resultOps, resultT),
 	}, nil
 }
 
@@ -440,18 +417,9 @@ func handleStructDocument[T internal.Document](doc T, patch []internal.Operation
 		return nil, fmt.Errorf("failed to unmarshal patched data to struct: %w", err)
 	}
 
-	// Convert OpResult[any] to OpResult[T]
-	convertedOps := make([]internal.OpResult[T], len(resultOps))
-	for i, op := range resultOps {
-		convertedOps[i] = internal.OpResult[T]{
-			Doc: resultStruct, // Use the converted struct
-			Old: op.Old,
-		}
-	}
-
 	return &internal.PatchResult[T]{
 		Doc: resultStruct,
-		Res: convertedOps,
+		Res: convertOpResults(resultOps, resultStruct),
 	}, nil
 }
 

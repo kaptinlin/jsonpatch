@@ -72,7 +72,7 @@ func addAtPath(doc interface{}, path []string, value interface{}) (interface{}, 
 				return nil, nil, err
 			}
 			if index < 0 || index > len(v) {
-				return nil, nil, ErrArrayIndexOutOfBounds
+				return nil, nil, ErrIndexOutOfRange
 			}
 
 			// Get the displaced element (if any)
@@ -99,7 +99,7 @@ func addAtPath(doc interface{}, path []string, value interface{}) (interface{}, 
 		child, exists := v[key]
 		if !exists {
 			// According to JSON Patch spec, missing objects are not created recursively
-			return nil, nil, ErrPathMissingRecursive
+			return nil, nil, ErrCannotReplace
 		}
 		newChild, oldValue, err := addAtPath(child, rest, value)
 		if err != nil {
@@ -113,7 +113,7 @@ func addAtPath(doc interface{}, path []string, value interface{}) (interface{}, 
 			return nil, nil, err
 		}
 		if index < 0 || index >= len(v) {
-			return nil, nil, ErrArrayIndexOutOfBounds
+			return nil, nil, ErrIndexOutOfRange
 		}
 		newChild, oldValue, err := addAtPath(v[index], rest, value)
 		if err != nil {

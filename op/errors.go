@@ -5,21 +5,19 @@ import "errors"
 // Sentinel errors for path and validation related operations
 var (
 	// Core path errors
-	ErrPathNotFound     = errors.New("path not found")
-	ErrPathDoesNotExist = errors.New("path does not exist")
-	ErrInvalidPath      = errors.New("invalid path")
-	ErrPathEmpty        = errors.New("path cannot be empty")
-	ErrFromPathEmpty    = errors.New("from path cannot be empty")
-	ErrPathsIdentical   = errors.New("cannot move into own children")
+	ErrPathNotFound   = errors.New("path not found")
+	ErrInvalidPath    = errors.New("invalid path")
+	ErrPathEmpty      = errors.New("path cannot be empty")
+	ErrFromPathEmpty  = errors.New("from path cannot be empty")
+	ErrPathsIdentical = errors.New("cannot move into own children")
 
 	// Array operation errors
-	ErrArrayIndexOutOfBounds = errors.New("array index out of bounds")
-	ErrIndexOutOfRange       = errors.New("index out of range")
-	ErrNotAnArray            = errors.New("not an array")
-	ErrArrayTooSmall         = errors.New("array must have at least 2 elements")
-	ErrPositionOutOfBounds   = errors.New("position out of bounds")
-	ErrPositionNegative      = errors.New("position cannot be negative")
-	ErrInvalidTarget         = errors.New("invalid target")
+	ErrIndexOutOfRange     = errors.New("index out of range")
+	ErrNotAnArray          = errors.New("not an array")
+	ErrArrayTooSmall       = errors.New("array must have at least 2 elements")
+	ErrPositionOutOfBounds = errors.New("position out of bounds")
+	ErrPositionNegative    = errors.New("position cannot be negative")
+	ErrInvalidTarget       = errors.New("invalid target")
 
 	// Type validation errors
 	ErrNotString                 = errors.New("value is not a string")
@@ -41,7 +39,6 @@ var (
 	ErrCannotReplace          = errors.New("NOT_FOUND")
 	ErrCannotAddToValue       = errors.New("cannot add to non-object/non-array value")
 	ErrCannotRemoveFromValue  = errors.New("cannot remove from non-object/non-array document")
-	ErrPathMissingRecursive   = errors.New("NOT_FOUND")
 	ErrCannotMoveIntoChildren = errors.New("cannot move into own children")
 	ErrPropertiesNil          = errors.New("properties cannot be nil")
 	ErrValuesArrayEmpty       = errors.New("'in' operation 'value' must be an array")
@@ -81,6 +78,7 @@ var (
 
 	// Value conversion errors
 	ErrCannotConvertNilToString = errors.New("cannot convert nil to string")
+	ErrCannotConvertToString    = errors.New("cannot convert value to string")
 
 	// Test operation errors
 	ErrTestOperationNumberStringMismatch = errors.New("number is not equal to string")

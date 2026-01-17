@@ -64,7 +64,7 @@ func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 				return internal.OpResult[any]{}, err
 			}
 			if index < 0 || index >= len(v) {
-				return internal.OpResult[any]{}, ErrArrayIndexOutOfBounds
+				return internal.OpResult[any]{}, ErrIndexOutOfRange
 			}
 			oldValue := v[index]
 			// Optimize: pre-allocate exact size and use copy

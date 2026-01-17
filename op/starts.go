@@ -49,20 +49,12 @@ func (op *StartsOperation) Path() []string {
 
 // Test evaluates the starts predicate condition.
 func (op *StartsOperation) Test(doc any) (bool, error) {
-	// Get target value
-	val, err := getValue(doc, op.Path())
+	_, str, err := op.getAndValidateString(doc)
 	if err != nil {
-		// Path access error means the path doesn't exist, treat as non-string
 		// For JSON Patch test operations, path not found or wrong type means test fails (returns false)
 		// This is correct JSON Patch semantics - returning nil error with false result
 		//nolint:nilerr // This is intentional behavior for test operations
 		return false, nil
-	}
-
-	// Convert to string or from byte slice
-	str, ok := extractString(val)
-	if !ok {
-		return false, nil // Return false if not string or byte slice
 	}
 
 	if op.IgnoreCase {
@@ -73,24 +65,11 @@ func (op *StartsOperation) Test(doc any) (bool, error) {
 
 // Apply applies the starts test operation to the document.
 func (op *StartsOperation) Apply(doc any) (internal.OpResult[any], error) {
-	// Get target value
-	val, err := getValue(doc, op.Path())
+	value, str, err := op.getAndValidateString(doc)
 	if err != nil {
-		return internal.OpResult[any]{}, ErrPathNotFound
+		return internal.OpResult[any]{}, err
 	}
 
-	// Check if value is a string or convert byte slice to string
-	var str string
-	switch v := val.(type) {
-	case string:
-		str = v
-	case []byte:
-		str = string(v)
-	default:
-		return internal.OpResult[any]{}, ErrNotString
-	}
-
-	// Check if string starts with the prefix
 	var hasPrefix bool
 	if op.IgnoreCase {
 		hasPrefix = strings.HasPrefix(strings.ToLower(str), strings.ToLower(op.Value))
@@ -102,7 +81,24 @@ func (op *StartsOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not start with %q", ErrStringMismatch, str, op.Value)
 	}
 
-	return internal.OpResult[any]{Doc: doc}, nil
+	return internal.OpResult[any]{Doc: doc, Old: value}, nil
+}
+
+// getAndValidateString retrieves and validates the string value at the path
+func (op *StartsOperation) getAndValidateString(doc any) (interface{}, string, error) {
+	// Get target value
+	val, err := getValue(doc, op.Path())
+	if err != nil {
+		return nil, "", ErrPathNotFound
+	}
+
+	// Convert to string
+	str, err := toString(val)
+	if err != nil {
+		return nil, "", ErrNotString
+	}
+
+	return val, str, nil
 }
 
 // ToJSON serializes the operation to JSON format.

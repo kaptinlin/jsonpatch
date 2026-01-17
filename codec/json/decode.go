@@ -3,7 +3,6 @@
 package json
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/go-json-experiment/json"
@@ -13,17 +12,7 @@ import (
 	"github.com/kaptinlin/jsonpointer"
 )
 
-// Decode operation errors - define clearly and concisely
-var (
-	ErrInvalidPointer            = errors.New("invalid pointer")
-	ErrAddOpMissingValue         = errors.New("add operation missing 'value' field")
-	ErrReplaceOpMissingValue     = errors.New("replace operation missing 'value' field")
-	ErrNotOpRequiresOperand      = errors.New("not operation requires at least one operand")
-	ErrMissingValueField         = errors.New("missing value field")
-	ErrEmptyTypeList             = errors.New("empty type list")
-	ErrInvalidType               = errors.New("invalid type")
-	ErrNotOpRequiresValidOperand = errors.New("not operation requires a valid predicate operand")
-)
+// Note: All errors are now defined in errors.go for consistency
 
 // toPath converts string path to jsonpointer.Path.
 func toPath(pathStr string) jsonpointer.Path {
@@ -171,27 +160,9 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 			deleteNull = dn
 		}
 		return op.NewOpExtendOperation(path, props, deleteNull), nil
-	case "and":
-		apply, ok := operation["apply"].([]interface{})
-		if !ok {
-			return nil, ErrAndOpMissingApply
-		}
-		predicateOps, err := decodeCompositePredicates(apply, toPath(pathStr), options)
-		if err != nil {
-			return nil, err
-		}
-		return op.NewOpAndOperation(path, predicateOps), nil
-	case "or":
-		apply, ok := operation["apply"].([]interface{})
-		if !ok {
-			return nil, ErrOrOpMissingApply
-		}
-		predicateOps, err := decodeCompositePredicates(apply, toPath(pathStr), options)
-		if err != nil {
-			return nil, err
-		}
-		return op.NewOpOrOperation(path, predicateOps), nil
 	case "not":
+		// Note: "not" case uses NewOpNotOperationMultiple for multiple operands support
+		// The "and" and "or" cases are handled by OperationToPredicateOp to avoid duplication
 		apply, ok := operation["apply"].([]interface{})
 		if !ok {
 			return nil, ErrNotOpMissingApply
@@ -205,6 +176,7 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 		}
 		return op.NewOpNotOperationMultiple(path, predicateOps), nil
 	default:
+		// Handle "and", "or", and all predicate operations
 		return OperationToPredicateOp(operation, options)
 	}
 }

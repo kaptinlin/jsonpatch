@@ -117,19 +117,22 @@ func (op *TestStringLenOperation) Test(doc any) (bool, error) {
 	// Get the value at the path
 	value, err := getValue(doc, op.Path())
 	if err != nil {
-		return false, ErrPathNotFound
+		// For JSON Patch test operations, path not found means test fails (returns false)
+		// This is correct JSON Patch semantics - returning nil error with false result
+		//nolint:nilerr // This is intentional behavior for test operations
+		return false, nil
 	}
 
 	// Convert value to string
-	actualValue, err := toString(value)
-	if err != nil {
-		return false, ErrNotString
+	str, ok := extractString(value)
+	if !ok {
+		return false, nil // Return false if not string or byte slice
 	}
 
 	// High-performance type conversion (single, boundary conversion)
 	length := int(op.Length) // Already validated as safe integer
 	// Check if the string length matches (>= comparison like TypeScript version)
-	lengthMatches := len(actualValue) >= length
+	lengthMatches := len(str) >= length
 	// Use XOR pattern: NotFlag XOR condition - if they're different, the test passes
 	return op.NotFlag != lengthMatches, nil
 }

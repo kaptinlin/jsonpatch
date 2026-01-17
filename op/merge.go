@@ -95,7 +95,7 @@ func (op *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	return internal.OpResult[any]{Doc: doc, Old: []interface{}{one, two}}, nil
 }
 
-// mergeElements merges two elements based on their internal.
+// mergeElements merges two elements based on their type.
 func (op *MergeOperation) mergeElements(one, two interface{}) interface{} {
 	// String concatenation
 	if strOne, ok := one.(string); ok {

@@ -381,28 +381,7 @@ func setValueAtPathWithMode(doc interface{}, path []string, value interface{}, i
 					// This is modifying the root array, but we can't change doc directly
 					return ErrCannotModifyRootArray
 				}
-				// Get grandparent and update the parent
-				grandParentPath := path[:len(path)-2]
-				grandParentKey := path[len(path)-2]
-				if len(grandParentPath) == 0 {
-					// Parent is in root
-					docMap, ok := doc.(map[string]interface{})
-					if !ok {
-						return ErrCannotUpdateParent
-					}
-					docMap[grandParentKey] = newSlice
-					return nil
-				}
-				grandParent, err := getValue(doc, grandParentPath)
-				if err != nil {
-					return err
-				}
-				grandParentMap, ok := grandParent.(map[string]interface{})
-				if !ok {
-					return ErrCannotUpdateGrandparent
-				}
-				grandParentMap[grandParentKey] = newSlice
-				return nil
+				return updateGrandparent(doc, path, newSlice)
 			}
 			// Set mode: replace if within bounds, append if at end
 			if index < len(slice) {
@@ -419,32 +398,39 @@ func setValueAtPathWithMode(doc interface{}, path []string, value interface{}, i
 				// This is modifying the root array, but we can't change doc directly
 				return ErrCannotModifyRootArray
 			}
-			// Get grandparent and update the parent
-			grandParentPath := path[:len(path)-2]
-			grandParentKey := path[len(path)-2]
-			if len(grandParentPath) == 0 {
-				// Parent is in root
-				docMap, ok := doc.(map[string]interface{})
-				if !ok {
-					return ErrCannotUpdateParent
-				}
-				docMap[grandParentKey] = newSlice
-				return nil
-			}
-			grandParent, err := getValue(doc, grandParentPath)
-			if err != nil {
-				return err
-			}
-			grandParentMap, ok := grandParent.(map[string]interface{})
-			if !ok {
-				return ErrCannotUpdateGrandparent
-			}
-			grandParentMap[grandParentKey] = newSlice
-			return nil
+			return updateGrandparent(doc, path, newSlice)
 		}
 	}
 
 	return updateParent(parent, key, value)
+}
+
+// updateGrandparent updates a grandparent container with a new value for the given key.
+// It handles both root-level parents and nested grandparents.
+func updateGrandparent(doc interface{}, path []string, newSlice []interface{}) error {
+	grandParentPath := path[:len(path)-2]
+	grandParentKey := path[len(path)-2]
+
+	if len(grandParentPath) == 0 {
+		// Parent is in root
+		docMap, ok := doc.(map[string]interface{})
+		if !ok {
+			return ErrCannotUpdateParent
+		}
+		docMap[grandParentKey] = newSlice
+		return nil
+	}
+
+	grandParent, err := getValue(doc, grandParentPath)
+	if err != nil {
+		return err
+	}
+	grandParentMap, ok := grandParent.(map[string]interface{})
+	if !ok {
+		return ErrCannotUpdateGrandparent
+	}
+	grandParentMap[grandParentKey] = newSlice
+	return nil
 }
 
 // updateParent updates the parent container with a new value
@@ -615,18 +601,18 @@ func toString(value interface{}) (string, error) {
 			if rt.Elem().Kind() == reflect.Uint8 {
 				return string(reflect.ValueOf(v).Bytes()), nil
 			}
-			return "", ErrCannotConvertNilToString
+			return "", ErrCannotConvertToString
 		case reflect.Invalid:
 			return "", ErrCannotConvertNilToString
 		case reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
 			reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128:
-			return "", ErrCannotConvertNilToString
+			return "", ErrCannotConvertToString
 		case reflect.Array, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map,
 			reflect.Ptr, reflect.Struct, reflect.UnsafePointer:
-			return "", ErrCannotConvertNilToString
+			return "", ErrCannotConvertToString
 		default:
-			return "", ErrCannotConvertNilToString
+			return "", ErrCannotConvertToString
 		}
 	}
 }
