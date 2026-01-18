@@ -28,11 +28,6 @@ func (op *IncOperation) Code() int {
 	return internal.OpIncCode
 }
 
-// Path returns the operation path.
-func (op *IncOperation) Path() []string {
-	return op.path
-}
-
 // Apply applies the increment operation to the document.
 func (op *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if len(op.path) == 0 {

@@ -77,23 +77,12 @@ func (o *MoreOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpMoreCode, o.Path(), o.Value}, nil
 }
 
-// Not returns false as more operation does not support direct negation.
-// Use the second-order "not" predicate for negation.
-func (o *MoreOperation) Not() bool {
-	return false
-}
-
 // Validate validates the more operation.
 func (o *MoreOperation) Validate() error {
 	if len(o.Path()) == 0 {
 		return ErrPathEmpty
 	}
 	return nil
-}
-
-// Path returns the path for the more operation.
-func (o *MoreOperation) Path() []string {
-	return o.path
 }
 
 // Short aliases for common use

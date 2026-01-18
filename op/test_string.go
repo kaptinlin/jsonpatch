@@ -68,11 +68,6 @@ func (op *TestStringOperation) Code() int {
 	return internal.OpTestStringCode
 }
 
-// Path returns the operation path.
-func (op *TestStringOperation) Path() []string {
-	return op.path
-}
-
 // Test evaluates the test string predicate condition.
 func (op *TestStringOperation) Test(doc any) (bool, error) {
 	val, err := getValue(doc, op.Path())

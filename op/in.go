@@ -31,11 +31,6 @@ func (op *InOperation) Code() int {
 	return internal.OpInCode
 }
 
-// Path returns the operation path.
-func (op *InOperation) Path() []string {
-	return op.path
-}
-
 // Test evaluates the in predicate condition.
 func (op *InOperation) Test(doc any) (bool, error) {
 	_, found, err := op.getValueAndCheckInArray(doc)
@@ -103,11 +98,6 @@ func (op *InOperation) Validate() error {
 		return ErrValuesArrayEmpty
 	}
 	return nil
-}
-
-// Not returns false since this is not a NOT operation.
-func (op *InOperation) Not() bool {
-	return false
 }
 
 // Short aliases for common use

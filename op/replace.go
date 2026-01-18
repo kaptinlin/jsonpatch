@@ -40,11 +40,6 @@ func (o *ReplaceOperation) Code() int {
 	return internal.OpReplaceCode
 }
 
-// Path returns the operation path.
-func (o *ReplaceOperation) Path() []string {
-	return o.path
-}
-
 // Apply applies the replace operation to the document.
 func (o *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Clone the new value to prevent external mutations

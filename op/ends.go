@@ -14,8 +14,6 @@ type EndsOperation struct {
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case
 }
 
-type OpEndsOperation = EndsOperation //nolint:revive // Backward compatibility alias
-
 // NewOpEndsOperation creates a new OpEndsOperation operation.
 func NewOpEndsOperation(path []string, suffix string) *EndsOperation {
 	return &EndsOperation{
@@ -42,11 +40,6 @@ func (op *EndsOperation) Op() internal.OpType {
 // Code returns the operation code.
 func (op *EndsOperation) Code() int {
 	return internal.OpEndsCode
-}
-
-// Path returns the operation path.
-func (op *EndsOperation) Path() []string {
-	return op.path
 }
 
 // Test evaluates the ends predicate condition.
@@ -119,12 +112,6 @@ func (op *EndsOperation) ToJSON() (internal.Operation, error) {
 // ToCompact serializes the operation to compact format.
 func (op *EndsOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpEndsCode, op.Path(), op.Value}, nil
-}
-
-// Not returns false as ends operation does not support direct negation.
-// Use the second-order "not" predicate for negation.
-func (op *EndsOperation) Not() bool {
-	return false
 }
 
 // Validate validates the ends operation.

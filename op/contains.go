@@ -14,11 +14,9 @@ type ContainsOperation struct {
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case when comparing
 }
 
-type OpContainsOperation = ContainsOperation //nolint:revive // Backward compatibility alias
-
 // NewOpContainsOperation creates a new OpContainsOperation operation.
 func NewOpContainsOperation(path []string, substring string) *ContainsOperation {
-	return &OpContainsOperation{
+	return &ContainsOperation{
 		BaseOp: NewBaseOp(path),
 		Value:  substring,
 	}
@@ -26,7 +24,7 @@ func NewOpContainsOperation(path []string, substring string) *ContainsOperation 
 
 // NewOpContainsOperationWithIgnoreCase creates a new OpContainsOperation operation with ignore case option.
 func NewOpContainsOperationWithIgnoreCase(path []string, substring string, ignoreCase bool) *ContainsOperation {
-	return &OpContainsOperation{
+	return &ContainsOperation{
 		BaseOp:     NewBaseOp(path),
 		Value:      substring,
 		IgnoreCase: ignoreCase,
@@ -84,12 +82,6 @@ func (op *ContainsOperation) getAndPrepareStrings(doc any) (interface{}, string,
 	return value, actualValue, testValue, testString, nil
 }
 
-// Not returns false as contains operation does not support direct negation.
-// Use the second-order "not" predicate for negation.
-func (op *ContainsOperation) Not() bool {
-	return false
-}
-
 // Op returns the operation type.
 func (op *ContainsOperation) Op() internal.OpType {
 	return internal.OpContainsType
@@ -121,11 +113,6 @@ func (op *ContainsOperation) Validate() error {
 		return ErrPathEmpty
 	}
 	return nil
-}
-
-// Path returns the path for the contains operation.
-func (op *ContainsOperation) Path() []string {
-	return op.path
 }
 
 // Short aliases for common use

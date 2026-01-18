@@ -71,11 +71,6 @@ func (op *LessOperation) Validate() error {
 	return nil
 }
 
-// Path returns the path for the less operation.
-func (op *LessOperation) Path() []string {
-	return op.path
-}
-
 // Test evaluates the less predicate condition.
 func (op *LessOperation) Test(doc any) (bool, error) {
 	_, actualValue, err := getNumericValue(doc, op.Path())
@@ -86,11 +81,6 @@ func (op *LessOperation) Test(doc any) (bool, error) {
 		return false, nil
 	}
 	return actualValue < op.Value, nil
-}
-
-// Not returns false since this is not a NOT operation.
-func (op *LessOperation) Not() bool {
-	return false
 }
 
 // Short aliases for common use

@@ -9,8 +9,6 @@ type DefinedOperation struct {
 	BaseOp
 }
 
-type OpDefinedOperation = DefinedOperation //nolint:revive // Backward compatibility alias
-
 // NewOpDefinedOperation creates a new OpDefinedOperation operation.
 func NewOpDefinedOperation(path []string) *DefinedOperation {
 	return &DefinedOperation{
@@ -40,11 +38,6 @@ func (o *DefinedOperation) Test(doc interface{}) (bool, error) {
 	return o.checkPathExists(doc), nil
 }
 
-// Not returns false (defined operation doesn't support not modifier).
-func (o *DefinedOperation) Not() bool {
-	return false
-}
-
 // Apply applies the defined operation.
 func (o *DefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Use the same logic as Test but avoid double call
@@ -71,11 +64,6 @@ func (o *DefinedOperation) ToCompact() (internal.CompactOperation, error) {
 func (o *DefinedOperation) Validate() error {
 	// Empty path (root) is valid for defined operation
 	return nil
-}
-
-// Path returns the path for the defined operation.
-func (o *DefinedOperation) Path() []string {
-	return o.path
 }
 
 // Short aliases for common use

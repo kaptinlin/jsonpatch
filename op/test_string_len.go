@@ -41,11 +41,6 @@ func (op *TestStringLenOperation) Code() int {
 	return internal.OpTestStringLenCode
 }
 
-// Path returns the operation path.
-func (op *TestStringLenOperation) Path() []string {
-	return op.path
-}
-
 // Apply applies the test string length operation to the document.
 func (op *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get the value at the path

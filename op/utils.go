@@ -10,22 +10,6 @@ import (
 	"github.com/kaptinlin/jsonpointer"
 )
 
-// validJSONTypes defines the set of valid JSON type names.
-var validJSONTypes = map[string]bool{
-	"string":  true,
-	"number":  true,
-	"boolean": true,
-	"object":  true,
-	"array":   true,
-	"null":    true,
-	"integer": true,
-}
-
-// IsValidJSONType checks if a type name is a valid JSON type.
-func IsValidJSONType(typeName string) bool {
-	return validJSONTypes[typeName]
-}
-
 // extractString extracts a string from a value, handling string and []byte types.
 // Returns the string and true if successful, or empty string and false otherwise.
 func extractString(val interface{}) (string, bool) {
@@ -89,57 +73,6 @@ func formatPath(path []string) string {
 	}
 
 	return builder.String()
-}
-
-// IsPredicateOp checks if an operation type is a predicate operation.
-func IsPredicateOp(opType internal.OpType) bool {
-	switch opType {
-	case internal.OpTestType, internal.OpDefinedType, internal.OpUndefinedType, internal.OpTestTypeType,
-		internal.OpTestStringType, internal.OpTestStringLenType, internal.OpContainsType, internal.OpEndsType,
-		internal.OpStartsType, internal.OpInType, internal.OpLessType, internal.OpMoreType, internal.OpMatchesType,
-		internal.OpAndType, internal.OpOrType, internal.OpNotType:
-		return true
-	case internal.OpAddType, internal.OpRemoveType, internal.OpReplaceType, internal.OpMoveType, internal.OpCopyType,
-		internal.OpTypeType, internal.OpFlipType, internal.OpIncType, internal.OpStrInsType, internal.OpStrDelType,
-		internal.OpSplitType, internal.OpMergeType, internal.OpExtendType:
-		return false
-	default:
-		return false
-	}
-}
-
-// IsMutationOp checks if an operation type is a mutation operation.
-func IsMutationOp(opType internal.OpType) bool {
-	switch opType {
-	case internal.OpAddType, internal.OpRemoveType, internal.OpReplaceType, internal.OpMoveType, internal.OpCopyType,
-		internal.OpIncType, internal.OpFlipType, internal.OpStrInsType, internal.OpStrDelType, internal.OpSplitType,
-		internal.OpMergeType, internal.OpExtendType:
-		return true
-	case internal.OpTestType, internal.OpContainsType, internal.OpDefinedType, internal.OpUndefinedType,
-		internal.OpTypeType, internal.OpTestTypeType, internal.OpTestStringType, internal.OpTestStringLenType,
-		internal.OpEndsType, internal.OpStartsType, internal.OpInType, internal.OpLessType, internal.OpMoreType,
-		internal.OpMatchesType, internal.OpAndType, internal.OpOrType, internal.OpNotType:
-		return false
-	default:
-		return false
-	}
-}
-
-// IsSecondOrderPredicateOp checks if an operation type is a second-order predicate operation.
-func IsSecondOrderPredicateOp(opType internal.OpType) bool {
-	switch opType {
-	case internal.OpAndType, internal.OpOrType, internal.OpNotType:
-		return true
-	case internal.OpAddType, internal.OpRemoveType, internal.OpReplaceType, internal.OpMoveType, internal.OpCopyType,
-		internal.OpTestType, internal.OpContainsType, internal.OpDefinedType, internal.OpUndefinedType,
-		internal.OpTypeType, internal.OpTestTypeType, internal.OpTestStringType, internal.OpTestStringLenType,
-		internal.OpEndsType, internal.OpStartsType, internal.OpInType, internal.OpLessType, internal.OpMoreType,
-		internal.OpMatchesType, internal.OpFlipType, internal.OpIncType, internal.OpStrInsType, internal.OpStrDelType,
-		internal.OpSplitType, internal.OpMergeType, internal.OpExtendType:
-		return false
-	default:
-		return false
-	}
 }
 
 // getValue retrieves a value from a document using a path.

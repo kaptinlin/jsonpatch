@@ -34,11 +34,6 @@ func (op *SplitOperation) Code() int {
 	return internal.OpSplitCode
 }
 
-// Path returns the operation path.
-func (op *SplitOperation) Path() []string {
-	return op.path
-}
-
 // Apply applies the split operation following TypeScript reference.
 func (op *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get the target value

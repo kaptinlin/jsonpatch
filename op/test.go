@@ -61,11 +61,6 @@ func (o *TestOperation) Not() bool {
 	return o.NotFlag
 }
 
-// Path returns the operation path.
-func (o *TestOperation) Path() []string {
-	return o.path
-}
-
 // Apply applies the test operation.
 func (o *TestOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, err := getValue(doc, o.path)

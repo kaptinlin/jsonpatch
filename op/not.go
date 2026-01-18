@@ -38,11 +38,6 @@ func (o *NotOperation) Code() int {
 	return internal.OpNotCode
 }
 
-// Path returns the operation path.
-func (o *NotOperation) Path() []string {
-	return o.path
-}
-
 // Test evaluates the NOT predicate condition.
 func (o *NotOperation) Test(doc any) (bool, error) {
 	// NOT operation: returns true if ALL operands are false

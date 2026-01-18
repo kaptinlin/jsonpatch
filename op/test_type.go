@@ -40,11 +40,6 @@ func (op *TestTypeOperation) Code() int {
 	return internal.OpTestTypeCode
 }
 
-// Path returns the operation path.
-func (op *TestTypeOperation) Path() []string {
-	return op.path
-}
-
 // getValueAndCheckType retrieves the value and checks if it matches any expected type
 func (op *TestTypeOperation) getValueAndCheckType(doc any) (interface{}, string, bool, error) {
 	// Get target value
@@ -88,11 +83,6 @@ func (op *TestTypeOperation) Test(doc any) (bool, error) {
 		return false, nil
 	}
 	return typeMatches, nil
-}
-
-// Not returns false (test_type operation doesn't support not modifier).
-func (op *TestTypeOperation) Not() bool {
-	return false
 }
 
 // Apply applies the test type operation to the document.
@@ -224,7 +214,7 @@ func (op *TestTypeOperation) Validate() error {
 	}
 	// Validate that all types are known valid types
 	for _, t := range op.Types {
-		if !IsValidJSONType(t) {
+		if !internal.IsValidJSONPatchType(t) {
 			return ErrInvalidType
 		}
 	}

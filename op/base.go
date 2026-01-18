@@ -30,3 +30,8 @@ func (b *BaseOp) From() []string {
 func (b *BaseOp) HasFrom() bool {
 	return len(b.from) > 0
 }
+
+// Not returns false by default. Operations that support negation override this.
+func (b *BaseOp) Not() bool {
+	return false
+}

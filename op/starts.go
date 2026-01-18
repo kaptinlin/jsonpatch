@@ -42,11 +42,6 @@ func (op *StartsOperation) Code() int {
 	return internal.OpStartsCode
 }
 
-// Path returns the operation path.
-func (op *StartsOperation) Path() []string {
-	return op.path
-}
-
 // Test evaluates the starts predicate condition.
 func (op *StartsOperation) Test(doc any) (bool, error) {
 	_, str, err := op.getAndValidateString(doc)
@@ -117,12 +112,6 @@ func (op *StartsOperation) ToJSON() (internal.Operation, error) {
 // ToCompact serializes the operation to compact format.
 func (op *StartsOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpStartsCode, op.Path(), op.Value}, nil
-}
-
-// Not returns false as starts operation does not support direct negation.
-// Use the second-order "not" predicate for negation.
-func (op *StartsOperation) Not() bool {
-	return false
 }
 
 // Validate validates the starts operation.

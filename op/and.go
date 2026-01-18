@@ -8,8 +8,6 @@ type AndOperation struct {
 	Operations []interface{} `json:"apply"` // Array of operations to apply
 }
 
-type OpAndOperation = AndOperation //nolint:revive // Backward compatibility alias
-
 // NewOpAndOperation creates a new AndOperation operation.
 func NewOpAndOperation(path []string, ops []interface{}) *AndOperation {
 	return &AndOperation{
@@ -123,16 +121,6 @@ func (o *AndOperation) Validate() error {
 		}
 	}
 	return nil
-}
-
-// Path returns the path for the AND operation.
-func (o *AndOperation) Path() []string {
-	return o.path
-}
-
-// Not returns false since this is not a NOT operation.
-func (o *AndOperation) Not() bool {
-	return false
 }
 
 // Short aliases for common use

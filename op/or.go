@@ -126,16 +126,6 @@ func (o *OrOperation) Validate() error {
 	return nil
 }
 
-// Path returns the path for the OR operation.
-func (o *OrOperation) Path() []string {
-	return o.path
-}
-
-// Not returns false since this is not a NOT operation.
-func (o *OrOperation) Not() bool {
-	return false
-}
-
 // Short aliases for common use
 var (
 	// NewOr creates a new or operation

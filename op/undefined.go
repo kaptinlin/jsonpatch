@@ -38,11 +38,6 @@ func (o *UndefinedOperation) Test(doc interface{}) (bool, error) {
 	return o.checkPathUndefined(doc), nil
 }
 
-// Not returns false (undefined operation doesn't support not modifier).
-func (o *UndefinedOperation) Not() bool {
-	return false
-}
-
 // Apply applies the undefined operation.
 func (o *UndefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if !o.checkPathUndefined(doc) {
@@ -70,11 +65,6 @@ func (o *UndefinedOperation) Validate() error {
 		return ErrPathEmpty
 	}
 	return nil
-}
-
-// Path returns the path for the undefined operation.
-func (o *UndefinedOperation) Path() []string {
-	return o.path
 }
 
 // Short aliases for common use

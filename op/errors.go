@@ -64,17 +64,12 @@ var (
 	ErrInvalidPredicateInAnd = errors.New("invalid predicate in and operation")
 	ErrInvalidPredicateInNot = errors.New("invalid predicate in not operation")
 	ErrInvalidPredicateInOr  = errors.New("invalid predicate in or operation")
-	ErrAndNoOperands         = errors.New("and operation requires at least one operand")
 	ErrNotNoOperands         = errors.New("not operation requires operands")
-	ErrOrNoOperands          = errors.New("or operation requires at least one operand")
 
 	// Operation modification errors
-	ErrCannotModifyRootArray     = errors.New("cannot modify root array directly")
-	ErrCannotUpdateParent        = errors.New("cannot update parent")
-	ErrCannotUpdateGrandparent   = errors.New("cannot update grandparent")
-	ErrCannotAppendInPlace       = errors.New("cannot append to slice in place - caller must handle")
-	ErrSliceDeletionNotSupported = errors.New("slice deletion not supported in place - caller must handle")
-	ErrKeyDoesNotExist           = errors.New("key does not exist")
+	ErrCannotModifyRootArray   = errors.New("cannot modify root array directly")
+	ErrCannotUpdateParent      = errors.New("cannot update parent")
+	ErrCannotUpdateGrandparent = errors.New("cannot update grandparent")
 
 	// Value conversion errors
 	ErrCannotConvertNilToString = errors.New("cannot convert nil to string")

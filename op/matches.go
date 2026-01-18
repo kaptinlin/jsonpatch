@@ -123,12 +123,6 @@ func (o *MatchesOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpMatchesCode, o.Path(), o.Pattern, o.IgnoreCase}, nil
 }
 
-// Not returns false as matches operation does not support direct negation.
-// Use the second-order "not" predicate for negation.
-func (o *MatchesOperation) Not() bool {
-	return false
-}
-
 // Validate validates the matches operation.
 func (o *MatchesOperation) Validate() error {
 	if len(o.Path()) == 0 {
@@ -138,11 +132,6 @@ func (o *MatchesOperation) Validate() error {
 		return ErrPatternEmpty
 	}
 	return nil
-}
-
-// Path returns the path for the matches operation.
-func (o *MatchesOperation) Path() []string {
-	return o.path
 }
 
 // Short aliases for common use

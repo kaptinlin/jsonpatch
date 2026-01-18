@@ -30,11 +30,6 @@ func (op *TypeOperation) Code() int {
 	return internal.OpTypeCode
 }
 
-// Path returns the operation path.
-func (op *TypeOperation) Path() []string {
-	return op.path
-}
-
 // Test evaluates the type predicate condition.
 func (op *TypeOperation) Test(doc any) (bool, error) {
 	val, err := getValue(doc, op.Path())
@@ -50,11 +45,6 @@ func (op *TypeOperation) Test(doc any) (bool, error) {
 
 	// Check if the type matches
 	return actualType == op.TypeValue, nil
-}
-
-// Not returns false (type operation doesn't support not modifier).
-func (op *TypeOperation) Not() bool {
-	return false
 }
 
 // Apply applies the type operation to the document.
@@ -106,7 +96,7 @@ func (op *TypeOperation) Validate() error {
 		return ErrInvalidType
 	}
 	// Validate that the type is a known valid type
-	if !IsValidJSONType(op.TypeValue) {
+	if !internal.IsValidJSONPatchType(op.TypeValue) {
 		return ErrInvalidType
 	}
 	return nil

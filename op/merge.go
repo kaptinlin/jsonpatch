@@ -34,11 +34,6 @@ func (op *MergeOperation) Code() int {
 	return internal.OpMergeCode
 }
 
-// Path returns the operation path.
-func (op *MergeOperation) Path() []string {
-	return op.path
-}
-
 // Apply applies the merge operation following TypeScript reference.
 func (op *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// TypeScript reference: merge works on arrays directly using pos parameter
