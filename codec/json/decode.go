@@ -48,6 +48,20 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 	path := pathToStringSlice(toPath(pathStr))
 
 	switch opType {
+	case "add", "remove", "replace", "move", "copy":
+		return parseCoreOp(opType, path, operation)
+	case "flip", "inc", "str_ins", "str_del", "split", "merge", "extend":
+		return parseExtendedOp(opType, path, operation)
+	case "not":
+		return parseNotOp(path, pathStr, operation, options)
+	default:
+		// Handle "test", "and", "or", and all predicate operations
+		return OperationToPredicateOp(operation, options)
+	}
+}
+
+func parseCoreOp(opType string, path []string, operation map[string]interface{}) (internal.Op, error) {
+	switch opType {
 	case "add":
 		_, hasValue := operation["value"]
 		if !hasValue {
@@ -83,6 +97,13 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 			return nil, ErrCopyOpMissingFrom
 		}
 		return op.NewCopy(path, pathToStringSlice(toPath(fromStr))), nil
+	default:
+		return nil, ErrCodecOpUnknown
+	}
+}
+
+func parseExtendedOp(opType string, path []string, operation map[string]interface{}) (internal.Op, error) {
+	switch opType {
 	case "flip":
 		return op.NewOpFlipOperation(path), nil
 	case "inc":
@@ -160,25 +181,26 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 			deleteNull = dn
 		}
 		return op.NewOpExtendOperation(path, props, deleteNull), nil
-	case "not":
-		// Note: "not" case uses NewOpNotOperationMultiple for multiple operands support
-		// The "and" and "or" cases are handled by OperationToPredicateOp to avoid duplication
-		apply, ok := operation["apply"].([]interface{})
-		if !ok {
-			return nil, ErrNotOpMissingApply
-		}
-		if len(apply) == 0 {
-			return nil, ErrNotOpRequiresOperand
-		}
-		predicateOps, err := decodeCompositePredicates(apply, toPath(pathStr), options)
-		if err != nil {
-			return nil, err
-		}
-		return op.NewOpNotOperationMultiple(path, predicateOps), nil
 	default:
-		// Handle "and", "or", and all predicate operations
-		return OperationToPredicateOp(operation, options)
+		return nil, ErrCodecOpUnknown
 	}
+}
+
+func parseNotOp(path []string, pathStr string, operation map[string]interface{}, options internal.JSONPatchOptions) (internal.Op, error) {
+	// Note: "not" case uses NewOpNotOperationMultiple for multiple operands support
+	// The "and" and "or" cases are handled by OperationToPredicateOp to avoid duplication
+	apply, ok := operation["apply"].([]interface{})
+	if !ok {
+		return nil, ErrNotOpMissingApply
+	}
+	if len(apply) == 0 {
+		return nil, ErrNotOpRequiresOperand
+	}
+	predicateOps, err := decodeCompositePredicates(apply, toPath(pathStr), options)
+	if err != nil {
+		return nil, err
+	}
+	return op.NewOpNotOperationMultiple(path, predicateOps), nil
 }
 
 // OperationToPredicateOp converts JSON operation to PredicateOp instance.

@@ -144,20 +144,8 @@ func deepEqual(a, b interface{}) bool {
 	}
 
 	// Fast path: try direct comparison for comparable types
-	// Use defer+recover to handle uncomparable types gracefully
-	equal := false
-	canCompare := true
-	func() {
-		defer func() {
-			if recover() != nil {
-				canCompare = false
-			}
-		}()
-		equal = (a == b)
-	}()
-
-	if canCompare {
-		return equal
+	if reflect.TypeOf(a).Comparable() && reflect.TypeOf(b).Comparable() {
+		return a == b
 	}
 
 	// Slow path: complex types (maps, slices, structs)

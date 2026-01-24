@@ -55,75 +55,83 @@ func (o *AddOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // addAtPath recursively inserts value at the given path, returns new doc and old value if replaced.
 func addAtPath(doc interface{}, path []string, value interface{}) (interface{}, interface{}, error) {
-	if len(path) == 1 {
-		key := path[0]
-		switch v := doc.(type) {
-		case map[string]interface{}:
-			oldValue := v[key]
-			v[key] = value
-			return doc, oldValue, nil
-		case []interface{}:
-			if key == "-" {
-				v = append(v, value)
-				return v, nil, nil
-			}
-			index, err := parseArrayIndex(key)
-			if err != nil {
-				return nil, nil, err
-			}
-			if index < 0 || index > len(v) {
-				return nil, nil, ErrIndexOutOfRange
-			}
-
-			// Get the displaced element (if any)
-			var displacedElement interface{}
-			if index < len(v) {
-				displacedElement = v[index]
-			}
-
-			// Optimize: pre-allocate correct size and use copy to avoid double allocation
-			newV := make([]interface{}, len(v)+1)
-			copy(newV, v[:index])
-			newV[index] = value
-			copy(newV[index+1:], v[index:])
-			return newV, displacedElement, nil
-		default:
-			return nil, nil, ErrCannotAddToValue
-		}
-	}
-	// Recursive case
-	key := path[0]
-	rest := path[1:]
 	switch v := doc.(type) {
 	case map[string]interface{}:
-		child, exists := v[key]
-		if !exists {
-			// According to JSON Patch spec, missing objects are not created recursively
-			return nil, nil, ErrCannotReplace
-		}
-		newChild, oldValue, err := addAtPath(child, rest, value)
-		if err != nil {
-			return nil, nil, err
-		}
-		v[key] = newChild
-		return doc, oldValue, nil
+		return addToMap(v, path, value)
 	case []interface{}:
+		return addToSlice(v, path, value)
+	default:
+		return nil, nil, ErrCannotAddToValue
+	}
+}
+
+func addToMap(doc map[string]interface{}, path []string, value interface{}) (interface{}, interface{}, error) {
+	key := path[0]
+
+	if len(path) == 1 {
+		oldValue := doc[key]
+		doc[key] = value
+		return doc, oldValue, nil
+	}
+
+	// Recursive case
+	child, exists := doc[key]
+	if !exists {
+		// According to JSON Patch spec, missing objects are not created recursively
+		return nil, nil, ErrCannotReplace
+	}
+	newChild, oldValue, err := addAtPath(child, path[1:], value)
+	if err != nil {
+		return nil, nil, err
+	}
+	doc[key] = newChild
+	return doc, oldValue, nil
+}
+
+func addToSlice(doc []interface{}, path []string, value interface{}) (interface{}, interface{}, error) {
+	key := path[0]
+
+	if len(path) == 1 {
+		if key == "-" {
+			doc = append(doc, value)
+			return doc, nil, nil
+		}
 		index, err := parseArrayIndex(key)
 		if err != nil {
 			return nil, nil, err
 		}
-		if index < 0 || index >= len(v) {
+		if index < 0 || index > len(doc) {
 			return nil, nil, ErrIndexOutOfRange
 		}
-		newChild, oldValue, err := addAtPath(v[index], rest, value)
-		if err != nil {
-			return nil, nil, err
+
+		// Get the displaced element (if any)
+		var displacedElement interface{}
+		if index < len(doc) {
+			displacedElement = doc[index]
 		}
-		v[index] = newChild
-		return v, oldValue, nil
-	default:
-		return nil, nil, ErrCannotAddToValue
+
+		// Optimize: pre-allocate correct size and use copy to avoid double allocation
+		newV := make([]interface{}, len(doc)+1)
+		copy(newV, doc[:index])
+		newV[index] = value
+		copy(newV[index+1:], doc[index:])
+		return newV, displacedElement, nil
 	}
+
+	// Recursive case
+	index, err := parseArrayIndex(key)
+	if err != nil {
+		return nil, nil, err
+	}
+	if index < 0 || index >= len(doc) {
+		return nil, nil, ErrIndexOutOfRange
+	}
+	newChild, oldValue, err := addAtPath(doc[index], path[1:], value)
+	if err != nil {
+		return nil, nil, err
+	}
+	doc[index] = newChild
+	return doc, oldValue, nil
 }
 
 // ToJSON serializes the operation to JSON format.
