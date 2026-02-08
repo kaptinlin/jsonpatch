@@ -6,13 +6,13 @@ import (
 	"github.com/kaptinlin/jsonpointer"
 )
 
-// Encode encodes operations into compact format using default options
+// Encode encodes operations into compact format using default options.
 func Encode(ops []internal.Op, opts ...EncoderOption) ([]Op, error) {
 	encoder := NewEncoder(opts...)
 	return encoder.EncodeSlice(ops)
 }
 
-// EncodeJSON encodes operations into compact format JSON bytes
+// EncodeJSON encodes operations into compact format JSON bytes.
 func EncodeJSON(ops []internal.Op, opts ...EncoderOption) ([]byte, error) {
 	compactOps, err := Encode(ops, opts...)
 	if err != nil {
@@ -21,7 +21,7 @@ func EncodeJSON(ops []internal.Op, opts ...EncoderOption) ([]byte, error) {
 	return json.Marshal(compactOps)
 }
 
-// opToCompact converts a single operation to compact format
+// opToCompact converts a single operation to compact format.
 func opToCompact(op internal.Op, options EncoderOptions) (Op, error) {
 	// Get the standard compact format from the operation
 	compactOp, err := op.ToCompact()
@@ -55,7 +55,7 @@ func opToCompact(op internal.Op, options EncoderOptions) (Op, error) {
 	return result, nil
 }
 
-// pathToString converts a JSON pointer path to string representation
+// pathToString converts a JSON pointer path to string representation.
 func pathToString(path []string) string {
 	if len(path) == 0 {
 		return ""

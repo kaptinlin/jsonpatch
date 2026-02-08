@@ -7,10 +7,10 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// OpCode represents operation codes for compact format
+// OpCode represents operation codes for compact format.
 type OpCode int
 
-// Operation codes for compact format - derived from internal constants
+// Operation codes for compact format - derived from internal constants.
 const (
 	// JSON Patch (RFC 6902) operations
 	OpCodeAdd     OpCode = OpCode(internal.OpAddCode)
@@ -54,40 +54,40 @@ const (
 
 // Note: String operation codes are defined in decode.go lookup table for better performance
 
-// Op represents a compact format operation as an array
-type Op []interface{}
+// Op represents a compact format operation as an array.
+type Op []any
 
-// EncoderOptions configures the compact encoder behavior
+// EncoderOptions configures the compact encoder behavior.
 type EncoderOptions struct {
-	// StringOpcode determines whether to use string opcodes instead of numeric ones
+	// StringOpcode determines whether to use string opcodes instead of numeric ones.
 	StringOpcode bool
 }
 
-// DecoderOptions configures the compact decoder behavior
+// DecoderOptions configures the compact decoder behavior.
 type DecoderOptions struct {
-	// Reserved for future options
+	// Reserved for future options.
 }
 
-// EncoderOption is a functional option for configuring the encoder
+// EncoderOption is a functional option for configuring the encoder.
 type EncoderOption func(*EncoderOptions)
 
-// DecoderOption is a functional option for configuring the decoder
+// DecoderOption is a functional option for configuring the decoder.
 type DecoderOption func(*DecoderOptions)
 
-// WithStringOpcode configures the encoder to use string opcodes
+// WithStringOpcode configures the encoder to use string opcodes.
 func WithStringOpcode(useString bool) EncoderOption {
 	return func(opts *EncoderOptions) {
 		opts.StringOpcode = useString
 	}
 }
 
-// Default options
-var (
-	DefaultEncoderOptions = EncoderOptions{
-		StringOpcode: false,
-	}
-	DefaultDecoderOptions = DecoderOptions{}
-)
+// defaultEncoderOptions are the default encoder settings.
+var defaultEncoderOptions = EncoderOptions{
+	StringOpcode: false,
+}
+
+// defaultDecoderOptions are the default decoder settings.
+var defaultDecoderOptions DecoderOptions
 
 // Operation represents a compact format operation.
 type Operation = internal.CompactOperation

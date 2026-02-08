@@ -9,7 +9,7 @@ import (
 	"github.com/kaptinlin/jsonpointer"
 )
 
-// Pre-built mapping tables for better performance and maintainability
+// Pre-built mapping tables for better performance and maintainability.
 var (
 	numericToOpType = map[int]internal.OpType{
 		0:  internal.OpAddType,
@@ -76,13 +76,13 @@ var (
 	}
 )
 
-// Decode decodes compact format operations using default options
+// Decode decodes compact format operations using default options.
 func Decode(compactOps []Op, opts ...DecoderOption) ([]internal.Op, error) {
 	decoder := NewDecoder(opts...)
 	return decoder.DecodeSlice(compactOps)
 }
 
-// DecodeJSON decodes compact format JSON bytes into operations
+// DecodeJSON decodes compact format JSON bytes into operations.
 func DecodeJSON(data []byte, opts ...DecoderOption) ([]internal.Op, error) {
 	var compactOps []Op
 	if err := json.Unmarshal(data, &compactOps); err != nil {
@@ -91,7 +91,7 @@ func DecodeJSON(data []byte, opts ...DecoderOption) ([]internal.Op, error) {
 	return Decode(compactOps, opts...)
 }
 
-// compactToOp converts a compact operation to an operation instance
+// compactToOp converts a compact operation to an operation instance.
 func compactToOp(compactOp Op, opts DecoderOptions) (internal.Op, error) {
 	if len(compactOp) < 2 {
 		return nil, ErrCompactOperationMinLength
@@ -284,7 +284,7 @@ func compactToOp(compactOp Op, opts DecoderOptions) (internal.Op, error) {
 		if len(compactOp) < 3 {
 			return nil, ErrInOperationRequiresValues
 		}
-		values, ok := compactOp[2].([]interface{})
+		values, ok := compactOp[2].([]any)
 		if !ok {
 			return nil, ErrInOperationValuesNotArray
 		}
@@ -390,7 +390,7 @@ func compactToOp(compactOp Op, opts DecoderOptions) (internal.Op, error) {
 		if err != nil {
 			return nil, ErrSplitOperationPosNotNumber
 		}
-		var props interface{}
+		var props any
 		if len(compactOp) >= 4 {
 			props = compactOp[3]
 		}
@@ -404,9 +404,9 @@ func compactToOp(compactOp Op, opts DecoderOptions) (internal.Op, error) {
 		if err != nil {
 			return nil, ErrMergeOperationPosNotNumber
 		}
-		var props map[string]interface{}
+		var props map[string]any
 		if len(compactOp) >= 4 {
-			if p, ok := compactOp[3].(map[string]interface{}); ok {
+			if p, ok := compactOp[3].(map[string]any); ok {
 				props = p
 			}
 		}
@@ -416,7 +416,7 @@ func compactToOp(compactOp Op, opts DecoderOptions) (internal.Op, error) {
 		if len(compactOp) < 3 {
 			return nil, ErrExtendOperationRequiresProps
 		}
-		props, ok := compactOp[2].(map[string]interface{})
+		props, ok := compactOp[2].(map[string]any)
 		if !ok {
 			return nil, ErrExtendOperationPropsNotObject
 		}
@@ -431,16 +431,16 @@ func compactToOp(compactOp Op, opts DecoderOptions) (internal.Op, error) {
 	}
 }
 
-// decodePredicateOpsAsInterface decodes an array of compact operations into []interface{} for And/Or/Not operations
-func decodePredicateOpsAsInterface(value interface{}, opts DecoderOptions) ([]interface{}, error) {
-	arr, ok := value.([]interface{})
+// decodePredicateOpsAsInterface decodes an array of compact operations into []any for And/Or/Not operations.
+func decodePredicateOpsAsInterface(value any, opts DecoderOptions) ([]any, error) {
+	arr, ok := value.([]any)
 	if !ok {
 		return nil, ErrPredicateOpsNotArray
 	}
 
-	result := make([]interface{}, 0, len(arr))
+	result := make([]any, 0, len(arr))
 	for _, item := range arr {
-		compactOp, ok := item.([]interface{})
+		compactOp, ok := item.([]any)
 		if !ok {
 			return nil, ErrPredicateOpNotArray
 		}
@@ -457,8 +457,8 @@ func decodePredicateOpsAsInterface(value interface{}, opts DecoderOptions) ([]in
 	return result, nil
 }
 
-// getOpTypeFromOpcode determines the operation type from the opcode using lookup tables
-func getOpTypeFromOpcode(opcode interface{}) (internal.OpType, error) {
+// getOpTypeFromOpcode determines the operation type from the opcode using lookup tables.
+func getOpTypeFromOpcode(opcode any) (internal.OpType, error) {
 	// Try string opcode first (most common for user input)
 	if codeStr, ok := opcode.(string); ok {
 		if opType, exists := stringToOpType[codeStr]; exists {
@@ -486,21 +486,16 @@ func getOpTypeFromOpcode(opcode interface{}) (internal.OpType, error) {
 	return "", fmt.Errorf("%w: %d", ErrUnknownNumericOpcode, code)
 }
 
-// stringToPath converts a JSON pointer string to path slice
+// stringToPath converts a JSON pointer string to a path slice.
 func stringToPath(pathStr string) []string {
 	if pathStr == "" {
 		return []string{}
 	}
-	path := jsonpointer.Parse(pathStr)
-	result := make([]string, len(path))
-	for i, token := range path {
-		result[i] = fmt.Sprintf("%v", token)
-	}
-	return result
+	return []string(jsonpointer.Parse(pathStr))
 }
 
-// toBool converts a value to bool
-func toBool(v interface{}) bool {
+// toBool converts a value to bool.
+func toBool(v any) bool {
 	switch val := v.(type) {
 	case bool:
 		return val
@@ -513,8 +508,8 @@ func toBool(v interface{}) bool {
 	}
 }
 
-// toFloat64 converts a value to float64
-func toFloat64(v interface{}) (float64, error) {
+// toFloat64 converts a value to float64.
+func toFloat64(v any) (float64, error) {
 	switch val := v.(type) {
 	case float64:
 		return val, nil
@@ -527,9 +522,9 @@ func toFloat64(v interface{}) (float64, error) {
 	}
 }
 
-// toStringSlice converts a value to []string
-func toStringSlice(v interface{}) ([]string, error) {
-	arr, ok := v.([]interface{})
+// toStringSlice converts a value to []string.
+func toStringSlice(v any) ([]string, error) {
+	arr, ok := v.([]any)
 	if !ok {
 		return nil, ErrExpectedArray
 	}
