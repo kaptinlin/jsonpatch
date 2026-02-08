@@ -10,13 +10,6 @@ type Decoder struct {
 	options internal.JSONPatchOptions
 }
 
-// Options represents configuration options for JSON codec operations.
-// Provides configurable regex matcher creation for matches operations.
-type Options struct {
-	// CreateMatcher creates a regex matcher function for pattern matching operations
-	CreateMatcher func(pattern string, ignoreCase bool) func(string) bool
-}
-
 // NewDecoder creates a new Decoder with the given options.
 func NewDecoder(options internal.JSONPatchOptions) *Decoder {
 	return &Decoder{

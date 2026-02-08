@@ -7,11 +7,8 @@ import (
 )
 
 // Operation represents a JSON Patch operation in JSON format.
-// This unified structure supports all standard and extended operation internal.
+// This unified structure supports all standard and extended operation types.
 type Operation = internal.Operation
-
-// CompactOperation represents a compact format operation.
-type CompactOperation = internal.CompactOperation
 
 // PatchOptions contains options for JSON Patch operations.
 type PatchOptions = internal.JSONPatchOptions

@@ -3,8 +3,6 @@
 package json
 
 import (
-	"fmt"
-
 	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch/internal"
@@ -12,40 +10,32 @@ import (
 	"github.com/kaptinlin/jsonpointer"
 )
 
-// Note: All errors are now defined in errors.go for consistency
-
-// toPath converts string path to jsonpointer.Path.
-func toPath(pathStr string) jsonpointer.Path {
-	return jsonpointer.Parse(pathStr)
-}
-
-// pathToStringSlice converts jsonpointer.Path to []string for op constructors.
-func pathToStringSlice(path jsonpointer.Path) []string {
-	result := make([]string, len(path))
-	for i, token := range path {
-		result[i] = fmt.Sprintf("%v", token)
-	}
-	return result
-}
-
-// OperationToOp converts JSON operation to Op instance.
-func OperationToOp(operation map[string]interface{}, options internal.JSONPatchOptions) (internal.Op, error) {
+// parseOpHeader extracts and validates the common "op" and "path" fields
+// from an operation map. Returns the op type, raw path string, and parsed path tokens.
+func parseOpHeader(operation map[string]interface{}) (opType, pathStr string, path []string, err error) {
 	opType, ok := operation["op"].(string)
 	if !ok {
-		return nil, ErrOpMissingOpField
+		return "", "", nil, ErrOpMissingOpField
 	}
 
-	pathStr, ok := operation["path"].(string)
+	pathStr, ok = operation["path"].(string)
 	if !ok {
-		return nil, ErrOpMissingPathField
+		return "", "", nil, ErrOpMissingPathField
 	}
 
-	// Validate JSON pointer format
 	if err := jsonpointer.Validate(pathStr); err != nil {
-		return nil, ErrInvalidPointer
+		return "", "", nil, ErrInvalidPointer
 	}
 
-	path := pathToStringSlice(toPath(pathStr))
+	return opType, pathStr, jsonpointer.Parse(pathStr), nil
+}
+
+// OperationToOp converts a JSON operation map to an Op instance.
+func OperationToOp(operation map[string]interface{}, options internal.JSONPatchOptions) (internal.Op, error) {
+	opType, pathStr, path, err := parseOpHeader(operation)
+	if err != nil {
+		return nil, err
+	}
 
 	switch opType {
 	case "add", "remove", "replace", "move", "copy":
@@ -55,33 +45,27 @@ func OperationToOp(operation map[string]interface{}, options internal.JSONPatchO
 	case "not":
 		return parseNotOp(path, pathStr, operation, options)
 	default:
-		// Handle "test", "and", "or", and all predicate operations
-		return OperationToPredicateOp(operation, options)
+		return parsePredicateOp(opType, path, pathStr, operation, options)
 	}
 }
 
 func parseCoreOp(opType string, path []string, operation map[string]interface{}) (internal.Op, error) {
 	switch opType {
 	case "add":
-		_, hasValue := operation["value"]
-		if !hasValue {
+		if _, ok := operation["value"]; !ok {
 			return nil, ErrAddOpMissingValue
 		}
 		return op.NewAdd(path, operation["value"]), nil
 	case "remove":
-		// Check for oldValue field
-		if oldValue, hasOldValue := operation["oldValue"]; hasOldValue {
+		if oldValue, ok := operation["oldValue"]; ok {
 			return op.NewRemoveWithOldValue(path, oldValue), nil
 		}
 		return op.NewRemove(path), nil
 	case "replace":
-		_, hasValue := operation["value"]
-		if !hasValue {
+		if _, ok := operation["value"]; !ok {
 			return nil, ErrReplaceOpMissingValue
 		}
-
-		// Check for oldValue field
-		if oldValue, hasOldValue := operation["oldValue"]; hasOldValue {
+		if oldValue, ok := operation["oldValue"]; ok {
 			return op.NewReplaceWithOldValue(path, operation["value"], oldValue), nil
 		}
 		return op.NewReplace(path, operation["value"]), nil
@@ -90,13 +74,13 @@ func parseCoreOp(opType string, path []string, operation map[string]interface{})
 		if !ok {
 			return nil, ErrMoveOpMissingFrom
 		}
-		return op.NewMove(path, pathToStringSlice(toPath(fromStr))), nil
+		return op.NewMove(path, jsonpointer.Parse(fromStr)), nil
 	case "copy":
 		fromStr, ok := operation["from"].(string)
 		if !ok {
 			return nil, ErrCopyOpMissingFrom
 		}
-		return op.NewCopy(path, pathToStringSlice(toPath(fromStr))), nil
+		return op.NewCopy(path, jsonpointer.Parse(fromStr)), nil
 	default:
 		return nil, ErrCodecOpUnknown
 	}
@@ -139,7 +123,6 @@ func parseExtendedOp(opType string, path []string, operation map[string]interfac
 		if !ok {
 			return nil, ErrStrDelOpMissingPos
 		}
-
 		// str_del can have either str or len parameter
 		if str, ok := operation["str"].(string); ok && str != "" {
 			return op.NewOpStrDelOperationWithStr(path, pos, str), nil
@@ -157,16 +140,13 @@ func parseExtendedOp(opType string, path []string, operation map[string]interfac
 		if !ok {
 			return nil, ErrSplitOpMissingPos
 		}
-		props := operation["props"]
-		return op.NewOpSplitOperation(path, pos, props), nil
+		return op.NewOpSplitOperation(path, pos, operation["props"]), nil
 	case "merge":
-		var props map[string]interface{}
+		props := make(map[string]interface{})
 		if p, ok := operation["props"].(map[string]interface{}); ok {
 			props = p
-		} else {
-			props = make(map[string]interface{}) // Default to empty map
 		}
-		pos := float64(0) // Default position
+		pos := float64(0)
 		if posVal, ok := op.ToFloat64(operation["pos"]); ok {
 			pos = posVal
 		}
@@ -176,10 +156,7 @@ func parseExtendedOp(opType string, path []string, operation map[string]interfac
 		if !ok {
 			return nil, ErrValueNotObject
 		}
-		deleteNull := false
-		if dn, ok := operation["deleteNull"].(bool); ok {
-			deleteNull = dn
-		}
+		deleteNull, _ := operation["deleteNull"].(bool)
 		return op.NewOpExtendOperation(path, props, deleteNull), nil
 	default:
 		return nil, ErrCodecOpUnknown
@@ -187,8 +164,6 @@ func parseExtendedOp(opType string, path []string, operation map[string]interfac
 }
 
 func parseNotOp(path []string, pathStr string, operation map[string]interface{}, options internal.JSONPatchOptions) (internal.Op, error) {
-	// Note: "not" case uses NewOpNotOperationMultiple for multiple operands support
-	// The "and" and "or" cases are handled by OperationToPredicateOp to avoid duplication
 	apply, ok := operation["apply"].([]interface{})
 	if !ok {
 		return nil, ErrNotOpMissingApply
@@ -196,41 +171,24 @@ func parseNotOp(path []string, pathStr string, operation map[string]interface{},
 	if len(apply) == 0 {
 		return nil, ErrNotOpRequiresOperand
 	}
-	predicateOps, err := decodeCompositePredicates(apply, toPath(pathStr), options)
+	predicateOps, err := decodeCompositePredicates(apply, jsonpointer.Parse(pathStr), options)
 	if err != nil {
 		return nil, err
 	}
 	return op.NewOpNotOperationMultiple(path, predicateOps), nil
 }
 
-// OperationToPredicateOp converts JSON operation to PredicateOp instance.
-func OperationToPredicateOp(operation map[string]interface{}, options internal.JSONPatchOptions) (internal.Op, error) {
-	opType, ok := operation["op"].(string)
-	if !ok {
-		return nil, ErrOpMissingOpField
-	}
-
-	pathStr, ok := operation["path"].(string)
-	if !ok {
-		return nil, ErrOpMissingPathField
-	}
-
-	// Validate JSON pointer format
-	if err := jsonpointer.Validate(pathStr); err != nil {
-		return nil, ErrInvalidPointer
-	}
-
-	path := pathToStringSlice(toPath(pathStr))
-
+// parsePredicateOp converts a JSON operation map to a predicate Op instance.
+// It handles test, defined, undefined, type checks, string tests, comparisons,
+// and composite operations (and, or, not).
+func parsePredicateOp(opType string, path []string, pathStr string, operation map[string]interface{}, options internal.JSONPatchOptions) (internal.Op, error) {
 	switch opType {
 	case "test":
-		// Check if value field exists (it's required for test operations)
 		value, hasValue := operation["value"]
 		if !hasValue {
 			return nil, ErrMissingValueField
 		}
 		testOp := op.NewTest(path, value)
-		// Check for "not" field
 		if notVal, ok := operation["not"].(bool); ok && notVal {
 			testOp.NotFlag = true
 		}
@@ -246,90 +204,16 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		}
 		return op.NewOpTypeOperation(path, value), nil
 	case "test_type":
-		// Handle both single type string and array of types
-		// First check for "type" field (standard), then fall back to "value" field (compatibility)
-		typeField := operation["type"]
-		if typeField == nil {
-			// Check for value field as fallback for compatibility
-			typeField = operation["value"]
-		}
-
-		if typeStr, ok := typeField.(string); ok {
-			// Validate single type
-			if err := validateSingleTestType(typeStr); err != nil {
-				return nil, err
-			}
-			return op.NewOpTestTypeOperation(path, typeStr), nil
-		} else if typeSlice, ok := typeField.([]interface{}); ok {
-			if len(typeSlice) == 0 {
-				return nil, ErrEmptyTypeList
-			}
-			// Convert to []string and validate all types
-			typeStrings := make([]string, len(typeSlice))
-			for i, t := range typeSlice {
-				typeStr, isString := t.(string)
-				if !isString {
-					return nil, ErrInvalidType
-				}
-				if err := validateSingleTestType(typeStr); err != nil {
-					return nil, err
-				}
-				typeStrings[i] = typeStr
-			}
-			return op.NewOpTestTypeOperationMultiple(path, typeStrings), nil
-		} else if typeStringSlice, ok := typeField.([]string); ok {
-			if len(typeStringSlice) == 0 {
-				return nil, ErrEmptyTypeList
-			}
-			// Validate all types in the array
-			for _, typeStr := range typeStringSlice {
-				if err := validateSingleTestType(typeStr); err != nil {
-					return nil, err
-				}
-			}
-			return op.NewOpTestTypeOperationMultiple(path, typeStringSlice), nil
-		}
-		return nil, ErrTestTypeOpMissingType
+		return parseTestType(path, operation)
 	case "test_string":
-		str, hasStr := operation["str"].(string)
-		if !hasStr {
-			return nil, ErrTestStringOpMissingStr
-		}
-		pos := float64(0)
-		if posVal, ok := op.ToFloat64(operation["pos"]); ok {
-			pos = posVal
-		}
-		notFlag, _ := operation["not"].(bool)
-		ignoreCase, _ := operation["ignore_case"].(bool)
-
-		// Use the most specific constructor based on what fields are set
-		if pos != 0 || notFlag || ignoreCase {
-			return op.NewOpTestStringOperationWithIgnoreCase(path, str, pos, notFlag, ignoreCase), nil
-		}
-		return op.NewOpTestStringOperation(path, str), nil
+		return parseTestString(path, operation)
 	case "test_string_len":
-		lenVal, ok := op.ToFloat64(operation["len"])
-		if !ok {
-			return nil, ErrTestStringLenOpMissingLen
-		}
-
-		// Check for not flag
-		not := false
-		if n, ok := operation["not"].(bool); ok {
-			not = n
-		}
-
-		if not {
-			return op.NewOpTestStringLenOperationWithNot(path, lenVal, not), nil
-		}
-		return op.NewOpTestStringLenOperation(path, lenVal), nil
+		return parseTestStringLen(path, operation)
 	case "contains":
-		// Contains operation can have any value type (string for string contains, any for array contains)
 		value, hasValue := operation["value"]
 		if !hasValue {
 			return nil, ErrContainsOpMissingValue
 		}
-		// Convert value to string (contains only works with strings)
 		stringValue, ok := value.(string)
 		if !ok {
 			return nil, op.ErrContainsValueMustBeString
@@ -376,7 +260,7 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		if !ok {
 			return nil, ErrAndOpMissingApply
 		}
-		predicateOps, err := decodeCompositePredicates(apply, toPath(pathStr), options)
+		predicateOps, err := decodeCompositePredicates(apply, jsonpointer.Parse(pathStr), options)
 		if err != nil {
 			return nil, err
 		}
@@ -386,41 +270,131 @@ func OperationToPredicateOp(operation map[string]interface{}, options internal.J
 		if !ok {
 			return nil, ErrOrOpMissingApply
 		}
-		predicateOps, err := decodeCompositePredicates(apply, toPath(pathStr), options)
+		predicateOps, err := decodeCompositePredicates(apply, jsonpointer.Parse(pathStr), options)
 		if err != nil {
 			return nil, err
 		}
 		return op.NewOpOrOperation(path, predicateOps), nil
 	case "not":
-		apply, ok := operation["apply"].([]interface{})
-		if !ok {
-			return nil, ErrNotOpMissingApply
-		}
-		if len(apply) == 0 {
-			return nil, ErrNotOpRequiresOperand
-		}
-		// For not operation, we need to create a single predicate op
-		if applyMap, ok := apply[0].(map[string]interface{}); ok {
-			// Merge paths
-			subPath := ""
-			if sp, ok := applyMap["path"].(string); ok {
-				subPath = sp
-			}
-			mergedPath := mergePaths(toPath(pathStr), toPath(subPath))
-			applyMap["path"] = formatPath(mergedPath)
-
-			operand, err := OperationToPredicateOp(applyMap, options)
-			if err != nil {
-				return nil, err
-			}
-			if predicateOp, ok := operand.(internal.PredicateOp); ok {
-				return op.NewOpNotOperation(predicateOp), nil
-			}
-		}
-		return nil, ErrNotOpRequiresValidOperand
+		return parsePredicateNot(pathStr, operation, options)
 	default:
 		return nil, ErrCodecOpUnknown
 	}
+}
+
+func parseTestType(path []string, operation map[string]interface{}) (internal.Op, error) {
+	// First check for "type" field (standard), then fall back to "value" field (compatibility)
+	typeField := operation["type"]
+	if typeField == nil {
+		typeField = operation["value"]
+	}
+
+	switch v := typeField.(type) {
+	case string:
+		if !internal.IsValidJSONPatchType(v) {
+			return nil, ErrInvalidType
+		}
+		return op.NewOpTestTypeOperation(path, v), nil
+	case []interface{}:
+		if len(v) == 0 {
+			return nil, ErrEmptyTypeList
+		}
+		typeStrings := make([]string, len(v))
+		for i, t := range v {
+			typeStr, ok := t.(string)
+			if !ok {
+				return nil, ErrInvalidType
+			}
+			if !internal.IsValidJSONPatchType(typeStr) {
+				return nil, ErrInvalidType
+			}
+			typeStrings[i] = typeStr
+		}
+		return op.NewOpTestTypeOperationMultiple(path, typeStrings), nil
+	case []string:
+		if len(v) == 0 {
+			return nil, ErrEmptyTypeList
+		}
+		for _, typeStr := range v {
+			if !internal.IsValidJSONPatchType(typeStr) {
+				return nil, ErrInvalidType
+			}
+		}
+		return op.NewOpTestTypeOperationMultiple(path, v), nil
+	default:
+		return nil, ErrTestTypeOpMissingType
+	}
+}
+
+func parseTestString(path []string, operation map[string]interface{}) (internal.Op, error) {
+	str, ok := operation["str"].(string)
+	if !ok {
+		return nil, ErrTestStringOpMissingStr
+	}
+	pos := float64(0)
+	if posVal, ok := op.ToFloat64(operation["pos"]); ok {
+		pos = posVal
+	}
+	notFlag, _ := operation["not"].(bool)
+	ignoreCase, _ := operation["ignore_case"].(bool)
+
+	if pos != 0 || notFlag || ignoreCase {
+		return op.NewOpTestStringOperationWithIgnoreCase(path, str, pos, notFlag, ignoreCase), nil
+	}
+	return op.NewOpTestStringOperation(path, str), nil
+}
+
+func parseTestStringLen(path []string, operation map[string]interface{}) (internal.Op, error) {
+	lenVal, ok := op.ToFloat64(operation["len"])
+	if !ok {
+		return nil, ErrTestStringLenOpMissingLen
+	}
+	not, _ := operation["not"].(bool)
+	if not {
+		return op.NewOpTestStringLenOperationWithNot(path, lenVal, not), nil
+	}
+	return op.NewOpTestStringLenOperation(path, lenVal), nil
+}
+
+func parsePredicateNot(pathStr string, operation map[string]interface{}, options internal.JSONPatchOptions) (internal.Op, error) {
+	apply, ok := operation["apply"].([]interface{})
+	if !ok {
+		return nil, ErrNotOpMissingApply
+	}
+	if len(apply) == 0 {
+		return nil, ErrNotOpRequiresOperand
+	}
+	applyMap, ok := apply[0].(map[string]interface{})
+	if !ok {
+		return nil, ErrNotOpRequiresValidOperand
+	}
+	// Merge paths
+	subPath := ""
+	if sp, ok := applyMap["path"].(string); ok {
+		subPath = sp
+	}
+	mergedPath := mergePaths(jsonpointer.Parse(pathStr), jsonpointer.Parse(subPath))
+	applyMap["path"] = jsonpointer.Format(mergedPath...)
+
+	operand, err := OperationToPredicateOp(applyMap, options)
+	if err != nil {
+		return nil, err
+	}
+	predicateOp, ok := operand.(internal.PredicateOp)
+	if !ok {
+		return nil, ErrNotOpRequiresValidOperand
+	}
+	return op.NewOpNotOperation(predicateOp), nil
+}
+
+// OperationToPredicateOp converts a JSON operation map to a PredicateOp instance.
+// This is the entry point for predicate operations that need full header parsing.
+func OperationToPredicateOp(operation map[string]interface{}, options internal.JSONPatchOptions) (internal.Op, error) {
+	opType, pathStr, path, err := parseOpHeader(operation)
+	if err != nil {
+		return nil, err
+	}
+	return parsePredicateOp(opType, path, pathStr, operation, options)
 }
 
 // decodeCompositePredicates decodes an array of sub-operations for and/or/not operations.
@@ -436,13 +410,12 @@ func decodeCompositePredicates(
 		if !ok {
 			continue
 		}
-		// Merge paths if needed
 		subPath := ""
 		if sp, ok := subOpMap["path"].(string); ok {
 			subPath = sp
 		}
-		mergedPath := mergePaths(basePath, toPath(subPath))
-		subOpMap["path"] = formatPath(mergedPath)
+		mergedPath := mergePaths(basePath, jsonpointer.Parse(subPath))
+		subOpMap["path"] = jsonpointer.Format(mergedPath...)
 
 		predicateOp, err := OperationToPredicateOp(subOpMap, options)
 		if err != nil {
@@ -455,51 +428,127 @@ func decodeCompositePredicates(
 
 // getBoolField extracts a boolean field from an operation map with a default of false.
 func getBoolField(operation map[string]interface{}, field string) bool {
-	if v, ok := operation[field].(bool); ok {
-		return v
-	}
-	return false
+	v, _ := operation[field].(bool)
+	return v
 }
 
 // mergePaths merges two paths for composite operations.
-// If subPath is absolute (starts from root), it takes precedence over basePath.
-// If subPath is empty, use basePath.
-// Otherwise, combine them.
+// If subPath is empty, use basePath. If paths are identical, use subPath.
+// Otherwise, concatenate them.
 func mergePaths(basePath, subPath jsonpointer.Path) jsonpointer.Path {
-	// If subPath is empty, use basePath
 	if len(subPath) == 0 {
 		return basePath
 	}
 
-	// If both paths are the same, don't merge - just use one
+	// If both paths are identical, don't duplicate
 	if len(basePath) == len(subPath) {
 		same := true
 		for i := range basePath {
-			if fmt.Sprintf("%v", basePath[i]) != fmt.Sprintf("%v", subPath[i]) {
+			if basePath[i] != subPath[i] {
 				same = false
 				break
 			}
 		}
 		if same {
-			return subPath // Use child path
+			return subPath
 		}
 	}
 
-	// Normal merging for different paths
 	result := make(jsonpointer.Path, 0, len(basePath)+len(subPath))
 	result = append(result, basePath...)
 	result = append(result, subPath...)
 	return result
 }
 
-// formatPath converts path back to string format for JSON operations.
-func formatPath(path jsonpointer.Path) string {
-	// Convert jsonpointer.Path to []string first
-	pathSlice := make([]string, len(path))
-	for i, token := range path {
-		pathSlice[i] = fmt.Sprintf("%v", token)
+// operationToMap converts an internal.Operation struct to a map for decoding.
+func operationToMap(o internal.Operation) map[string]interface{} {
+	m := make(map[string]interface{}, 8)
+
+	m["op"] = o.Op
+	m["path"] = o.Path
+
+	// Value field - include for operations that require it (even nil is valid)
+	if o.Value != nil || o.Op == "add" || o.Op == "replace" || o.Op == "test" {
+		m["value"] = o.Value
 	}
-	return jsonpointer.Format(pathSlice...)
+	if o.From != "" {
+		m["from"] = o.From
+	}
+
+	// Numeric fields without omitempty: 0 is a valid value
+	m["inc"] = o.Inc
+	m["pos"] = float64(o.Pos)
+	m["str"] = o.Str
+	m["len"] = float64(o.Len)
+
+	if o.Not {
+		m["not"] = o.Not
+	}
+	if o.Type != nil {
+		if o.Op == "test_type" {
+			m["type"] = o.Type
+		} else if typeStr, ok := o.Type.(string); ok && typeStr != "" {
+			m["type"] = typeStr
+		}
+	}
+	if o.IgnoreCase {
+		m["ignore_case"] = o.IgnoreCase
+	}
+	if len(o.Apply) > 0 {
+		nestedOps := make([]interface{}, len(o.Apply))
+		for j, nested := range o.Apply {
+			nestedOps[j] = nestedOperationToMap(nested)
+		}
+		m["apply"] = nestedOps
+	}
+	if len(o.Props) > 0 {
+		m["props"] = o.Props
+	}
+	if o.DeleteNull {
+		m["deleteNull"] = o.DeleteNull
+	}
+	if o.OldValue != nil {
+		m["oldValue"] = o.OldValue
+	}
+
+	return m
+}
+
+// nestedOperationToMap converts a nested Operation to a map.
+// Nested operations use conditional inclusion for pos/str/len fields.
+func nestedOperationToMap(o internal.Operation) map[string]interface{} {
+	m := make(map[string]interface{}, 8)
+
+	m["op"] = o.Op
+	m["path"] = o.Path
+
+	if o.Value != nil {
+		m["value"] = o.Value
+	}
+	if o.From != "" {
+		m["from"] = o.From
+	}
+	m["inc"] = o.Inc
+	if o.Pos != 0 {
+		m["pos"] = float64(o.Pos)
+	}
+	if o.Str != "" {
+		m["str"] = o.Str
+	}
+	if o.Len != 0 {
+		m["len"] = float64(o.Len)
+	}
+	if o.Not {
+		m["not"] = o.Not
+	}
+	if o.Type != "" {
+		m["type"] = o.Type
+	}
+	if o.IgnoreCase {
+		m["ignore_case"] = o.IgnoreCase
+	}
+
+	return m
 }
 
 // Decode converts JSON operations to Op instances.
@@ -515,104 +564,12 @@ func Decode(operations []map[string]interface{}, options internal.JSONPatchOptio
 	return ops, nil
 }
 
-// DecodeOperations converts Operation structs to Op instances using json/v2
+// DecodeOperations converts Operation structs to Op instances.
 func DecodeOperations(operations []internal.Operation, options internal.JSONPatchOptions) ([]internal.Op, error) {
-	// Convert Operation structs to maps manually to handle special float values
 	operationMaps := make([]map[string]interface{}, len(operations))
-
-	for i, op := range operations {
-		opMap := make(map[string]interface{})
-
-		// Always include op and path
-		opMap["op"] = op.Op
-		opMap["path"] = op.Path
-
-		// Handle Value field - include for operations that require it
-		// For add/replace operations, even nil is a valid value
-		if op.Value != nil || op.Op == "add" || op.Op == "replace" || op.Op == "test" {
-			opMap["value"] = op.Value
-		}
-		if op.From != "" {
-			opMap["from"] = op.From
-		}
-
-		// Handle Inc field specially to support NaN/Inf values
-		// Inc has no omitempty tag, so we include it for all operations
-		opMap["inc"] = op.Inc
-
-		// Handle Pos field specially - include for all operations since 0 is a valid position
-		// This matches the struct tag change where we removed omitempty from Pos
-		opMap["pos"] = float64(op.Pos)
-		// Always include str field for test_string operations, even if empty
-		opMap["str"] = op.Str
-		// Handle Len field specially - include for all operations since 0 is a valid length
-		// This matches the struct tag change where we removed omitempty from Len
-		opMap["len"] = float64(op.Len)
-		if op.Not {
-			opMap["not"] = op.Not
-		}
-		// Handle Type field - could be string or interface{} for test_type operations
-		if op.Type != nil {
-			// For test_type operations, prefer Type field over Value field
-			if op.Op == "test_type" {
-				opMap["type"] = op.Type
-			} else if typeStr, ok := op.Type.(string); ok && typeStr != "" {
-				opMap["type"] = typeStr
-			}
-		}
-		if op.IgnoreCase {
-			opMap["ignore_case"] = op.IgnoreCase
-		}
-		if len(op.Apply) > 0 {
-			// Convert nested operations recursively
-			nestedOps := make([]interface{}, len(op.Apply))
-			for j, nestedOp := range op.Apply {
-				nestedOpMap := make(map[string]interface{})
-				nestedOpMap["op"] = nestedOp.Op
-				nestedOpMap["path"] = nestedOp.Path
-				if nestedOp.Value != nil {
-					nestedOpMap["value"] = nestedOp.Value
-				}
-				if nestedOp.From != "" {
-					nestedOpMap["from"] = nestedOp.From
-				}
-				nestedOpMap["inc"] = nestedOp.Inc
-				if nestedOp.Pos != 0 {
-					nestedOpMap["pos"] = float64(nestedOp.Pos)
-				}
-				if nestedOp.Str != "" {
-					nestedOpMap["str"] = nestedOp.Str
-				}
-				if nestedOp.Len != 0 {
-					nestedOpMap["len"] = float64(nestedOp.Len)
-				}
-				if nestedOp.Not {
-					nestedOpMap["not"] = nestedOp.Not
-				}
-				if nestedOp.Type != "" {
-					nestedOpMap["type"] = nestedOp.Type
-				}
-				if nestedOp.IgnoreCase {
-					nestedOpMap["ignore_case"] = nestedOp.IgnoreCase
-				}
-				nestedOps[j] = nestedOpMap
-			}
-			opMap["apply"] = nestedOps
-		}
-		if len(op.Props) > 0 {
-			opMap["props"] = op.Props
-		}
-		if op.DeleteNull {
-			opMap["deleteNull"] = op.DeleteNull
-		}
-		if op.OldValue != nil {
-			opMap["oldValue"] = op.OldValue
-		}
-
-		operationMaps[i] = opMap
+	for i, o := range operations {
+		operationMaps[i] = operationToMap(o)
 	}
-
-	// Use existing map-based decoder
 	return Decode(operationMaps, options)
 }
 
@@ -623,21 +580,4 @@ func DecodeJSON(data []byte, options internal.JSONPatchOptions) ([]internal.Op, 
 		return nil, err
 	}
 	return Decode(operations, options)
-}
-
-// validateSingleTestType validates a single type string for test_type operations
-func validateSingleTestType(typeStr string) error {
-	validTypes := map[string]bool{
-		"string":  true,
-		"number":  true,
-		"boolean": true,
-		"object":  true,
-		"integer": true,
-		"array":   true,
-		"null":    true,
-	}
-	if !validTypes[typeStr] {
-		return ErrInvalidType
-	}
-	return nil
 }
