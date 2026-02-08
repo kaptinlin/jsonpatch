@@ -26,14 +26,13 @@ type Operation struct {
 	OldValue   any            `json:"oldValue,omitempty"`
 }
 
-// CompactOperation represents a compact format operation
-// actually []interface{}, but with clearer semantics
-type CompactOperation = []interface{}
+// CompactOperation represents a compact format operation as an array with clearer semantics.
+type CompactOperation = []any
 
-// OpResult represents the result of a single operation with generic type support
+// OpResult represents the result of a single operation with generic type support.
 type OpResult[T Document] struct {
-	Doc T           `json:"doc"`
-	Old interface{} `json:"old,omitempty"`
+	Doc T   `json:"doc"`
+	Old any `json:"old,omitempty"`
 }
 
 // PatchResult represents the result of applying a JSON Patch with generic type support.
@@ -123,8 +122,8 @@ func IsValidJSONPatchType(typeStr string) bool {
 	}
 }
 
-// GetJSONPatchType returns the JSON Patch type for a given value
-func GetJSONPatchType(value interface{}) JSONPatchTypes {
+// GetJSONPatchType returns the JSON Patch type for a given value.
+func GetJSONPatchType(value any) JSONPatchTypes {
 	if value == nil {
 		return JSONPatchTypeNull
 	}
@@ -134,31 +133,24 @@ func GetJSONPatchType(value interface{}) JSONPatchTypes {
 		return JSONPatchTypeString
 	case bool:
 		return JSONPatchTypeBoolean
-	case []interface{}, []string, []int, []float64:
+	case []any, []string, []int, []float64:
 		return JSONPatchTypeArray
-	case map[string]interface{}:
+	case map[string]any:
 		return JSONPatchTypeObject
-	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+	case int, int8, int16, int32, int64,
+		uint, uint8, uint16, uint32, uint64:
 		return JSONPatchTypeInteger
-	case float32, float64:
-		// Check if it's actually an integer
-		switch f := v.(type) {
-		case float32:
-			if f == float32(int32(f)) {
-				return JSONPatchTypeInteger
-			}
-		case float64:
-			if f == float64(int64(f)) {
-				return JSONPatchTypeInteger
-			}
+	case float32:
+		if v == float32(int32(v)) {
+			return JSONPatchTypeInteger
+		}
+		return JSONPatchTypeNumber
+	case float64:
+		if v == float64(int64(v)) {
+			return JSONPatchTypeInteger
 		}
 		return JSONPatchTypeNumber
 	default:
-		// For other types, check if it's an object type
-		// Note: Array types are already handled above, so no need to check here
-		if _, ok := value.(map[string]interface{}); ok {
-			return JSONPatchTypeObject
-		}
 		return JSONPatchTypeNull
 	}
 }
