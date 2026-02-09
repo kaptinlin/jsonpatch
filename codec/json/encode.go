@@ -5,24 +5,24 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// Encode converts operations to JSON format.
+// Encode converts Op instances to Operation structs.
 func Encode(ops []internal.Op) ([]internal.Operation, error) {
-	operations := make([]internal.Operation, len(ops))
+	result := make([]internal.Operation, len(ops))
 	for i, o := range ops {
-		jsonOp, err := o.ToJSON()
+		encoded, err := o.ToJSON()
 		if err != nil {
 			return nil, err
 		}
-		operations[i] = jsonOp
+		result[i] = encoded
 	}
-	return operations, nil
+	return result, nil
 }
 
-// EncodeJSON converts operations to JSON bytes.
+// EncodeJSON converts Op instances to JSON bytes.
 func EncodeJSON(ops []internal.Op) ([]byte, error) {
-	operations, err := Encode(ops)
+	result, err := Encode(ops)
 	if err != nil {
 		return nil, err
 	}
-	return json.Marshal(operations)
+	return json.Marshal(result)
 }
