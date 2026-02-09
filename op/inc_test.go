@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOpInc_Apply(t *testing.T) {
+func TestInc_Apply(t *testing.T) {
 	tests := []struct {
 		name     string
 		path     []string
@@ -100,11 +100,11 @@ func TestOpInc_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewInc(tt.path, tt.inc)
+			incOp := NewInc(tt.path, tt.inc)
 			docCopy, err := DeepClone(tt.doc)
 			require.NoError(t, err)
 
-			result, err := op.Apply(docCopy)
+			result, err := incOp.Apply(docCopy)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -118,22 +118,22 @@ func TestOpInc_Apply(t *testing.T) {
 	}
 }
 
-func TestOpInc_Constructor(t *testing.T) {
+func TestInc_Constructor(t *testing.T) {
 	path := []string{"user", "score"}
 	inc := 3.5
-	op := NewInc(path, inc)
-	assert.Equal(t, path, op.path)
-	assert.Equal(t, inc, op.Inc)
-	assert.Equal(t, internal.OpIncType, op.Op())
-	assert.Equal(t, internal.OpIncCode, op.Code())
+	incOp := NewInc(path, inc)
+	assert.Equal(t, path, incOp.path)
+	assert.Equal(t, inc, incOp.Inc)
+	assert.Equal(t, internal.OpIncType, incOp.Op())
+	assert.Equal(t, internal.OpIncCode, incOp.Code())
 }
 
-func TestOpInc_ToJSON(t *testing.T) {
-	op := NewInc([]string{"count"}, 5.5)
-	jsonOp, err := op.ToJSON()
+func TestInc_ToJSON(t *testing.T) {
+	incOp := NewInc([]string{"count"}, 5.5)
+	got, err := incOp.ToJSON()
 	require.NoError(t, err)
 
-	assert.Equal(t, "inc", jsonOp.Op)
-	assert.Equal(t, "/count", jsonOp.Path)
-	assert.Equal(t, 5.5, jsonOp.Inc)
+	assert.Equal(t, "inc", got.Op)
+	assert.Equal(t, "/count", got.Path)
+	assert.Equal(t, 5.5, got.Inc)
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOpMerge_Apply(t *testing.T) {
+func TestMerge_Apply(t *testing.T) {
 	tests := []struct {
 		name     string
 		path     []string
@@ -21,16 +21,16 @@ func TestOpMerge_Apply(t *testing.T) {
 	}{
 		{
 			name:     "merge strings",
-			path:     []string{"lines"}, // Path to array element, not array itself
+			path:     []string{"lines"},
 			doc:      map[string]any{"lines": []any{"hello", " world", "!"}},
-			pos:      1.0, // Merge position in the array (element 1 with element 0)
+			pos:      1.0,
 			props:    nil,
 			expected: map[string]any{"lines": []any{"hello world", "!"}},
 			oldValue: []any{"hello", " world"},
 		},
 		{
 			name:     "merge at end",
-			path:     []string{"lines"}, // Path to array element
+			path:     []string{"lines"},
 			doc:      map[string]any{"lines": []any{"hello", " world"}},
 			pos:      1.0,
 			props:    nil,
@@ -57,7 +57,7 @@ func TestOpMerge_Apply(t *testing.T) {
 		},
 		{
 			name:     "merge in nested",
-			path:     []string{"user", "tags"}, // Path to array
+			path:     []string{"user", "tags"},
 			doc:      map[string]any{"user": map[string]any{"tags": []any{"go", "lang", "dev"}}},
 			pos:      1.0,
 			props:    nil,
@@ -146,11 +146,11 @@ func TestOpMerge_Apply(t *testing.T) {
 			if tt.props != nil {
 				props = tt.props.(map[string]any)
 			}
-			op := NewMerge(tt.path, tt.pos, props)
+			mergeOp := NewMerge(tt.path, tt.pos, props)
 			docCopy, err := DeepClone(tt.doc)
 			require.NoError(t, err)
 
-			result, err := op.Apply(docCopy)
+			result, err := mergeOp.Apply(docCopy)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -164,14 +164,14 @@ func TestOpMerge_Apply(t *testing.T) {
 	}
 }
 
-func TestOpMerge_Constructor(t *testing.T) {
+func TestMerge_Constructor(t *testing.T) {
 	path := []string{"user", "tags"}
 	pos := 1.0
 	props := map[string]any{"type": "merge"}
-	op := NewMerge(path, pos, props)
-	assert.Equal(t, path, op.Path())
-	assert.Equal(t, pos, op.Pos)
-	assert.Equal(t, props, op.Props)
-	assert.Equal(t, internal.OpMergeType, op.Op())
-	assert.Equal(t, internal.OpMergeCode, op.Code())
+	mergeOp := NewMerge(path, pos, props)
+	assert.Equal(t, path, mergeOp.Path())
+	assert.Equal(t, pos, mergeOp.Pos)
+	assert.Equal(t, props, mergeOp.Props)
+	assert.Equal(t, internal.OpMergeType, mergeOp.Op())
+	assert.Equal(t, internal.OpMergeCode, mergeOp.Code())
 }

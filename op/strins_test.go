@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOpStrIns_Apply(t *testing.T) {
+func TestStrIns_Apply(t *testing.T) {
 	tests := []struct {
 		name     string
 		path     []string
@@ -128,11 +128,11 @@ func TestOpStrIns_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewStrIns(tt.path, tt.pos, tt.str)
+			strInsOp := NewStrIns(tt.path, tt.pos, tt.str)
 			docCopy, err := DeepClone(tt.doc)
 			require.NoError(t, err)
 
-			result, err := op.Apply(docCopy)
+			result, err := strInsOp.Apply(docCopy)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -146,14 +146,14 @@ func TestOpStrIns_Apply(t *testing.T) {
 	}
 }
 
-func TestOpStrIns_Constructor(t *testing.T) {
+func TestStrIns_Constructor(t *testing.T) {
 	path := []string{"user", "bio"}
 	pos := 2.0
 	str := "abc"
-	op := NewStrIns(path, pos, str)
-	assert.Equal(t, path, op.Path())
-	assert.Equal(t, pos, op.Pos)
-	assert.Equal(t, str, op.Str)
-	assert.Equal(t, internal.OpStrInsType, op.Op())
-	assert.Equal(t, internal.OpStrInsCode, op.Code())
+	strInsOp := NewStrIns(path, pos, str)
+	assert.Equal(t, path, strInsOp.Path())
+	assert.Equal(t, pos, strInsOp.Pos)
+	assert.Equal(t, str, strInsOp.Str)
+	assert.Equal(t, internal.OpStrInsType, strInsOp.Op())
+	assert.Equal(t, internal.OpStrInsCode, strInsOp.Code())
 }

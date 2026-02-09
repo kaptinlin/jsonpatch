@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestOpIn_Apply(t *testing.T) {
+func TestIn_Apply(t *testing.T) {
 	tests := []struct {
 		name          string
 		doc           any
@@ -17,42 +17,42 @@ func TestOpIn_Apply(t *testing.T) {
 		expectedError error
 	}{
 		{
-			name:        "test value in array success",
+			name:        "value in array success",
 			doc:         map[string]any{"status": "active"},
 			path:        []string{"status"},
 			values:      []any{"active", "inactive", "pending"},
 			expectError: false,
 		},
 		{
-			name:        "test value not in array",
+			name:        "value not in array",
 			doc:         map[string]any{"status": "deleted"},
 			path:        []string{"status"},
 			values:      []any{"active", "inactive", "pending"},
 			expectError: true,
 		},
 		{
-			name:        "test number in array",
+			name:        "number in array",
 			doc:         map[string]any{"priority": 1},
 			path:        []string{"priority"},
 			values:      []any{1, 2, 3},
 			expectError: false,
 		},
 		{
-			name:        "test boolean in array",
+			name:        "boolean in array",
 			doc:         map[string]any{"enabled": true},
 			path:        []string{"enabled"},
 			values:      []any{true, false},
 			expectError: false,
 		},
 		{
-			name:        "test null value in array",
+			name:        "null value in array",
 			doc:         map[string]any{"value": nil},
 			path:        []string{"value"},
 			values:      []any{nil, "test"},
 			expectError: false,
 		},
 		{
-			name:          "test path not found",
+			name:          "path not found",
 			doc:           map[string]any{"status": "active"},
 			path:          []string{"nonexistent"},
 			values:        []any{"active", "inactive"},
@@ -60,7 +60,7 @@ func TestOpIn_Apply(t *testing.T) {
 			expectedError: ErrPathNotFound,
 		},
 		{
-			name: "test nested path success",
+			name: "nested path success",
 			doc: map[string]any{
 				"user": map[string]any{
 					"role": "admin",
@@ -71,7 +71,7 @@ func TestOpIn_Apply(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name: "test array index success",
+			name: "array index success",
 			doc: map[string]any{
 				"items": []any{"apple", "banana", "cherry"},
 			},
@@ -83,15 +83,14 @@ func TestOpIn_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewIn(tt.path, tt.values)
-			result, err := op.Apply(tt.doc)
+			inOp := NewIn(tt.path, tt.values)
+			result, err := inOp.Apply(tt.doc)
 
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.expectedError != nil {
 					assert.ErrorIs(t, err, tt.expectedError)
 				}
-				// Check that result is empty when error occurs
 				assert.Equal(t, internal.OpResult[any]{}, result)
 			} else {
 				assert.NoError(t, err)

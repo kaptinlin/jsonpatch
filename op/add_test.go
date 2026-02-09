@@ -9,77 +9,66 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOpAdd_Basic(t *testing.T) {
-	// Test adding to object
+func TestAdd_Basic(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 	}
 
-	op := NewAdd([]string{"baz"}, "qux")
+	addOp := NewAdd([]string{"baz"}, "qux")
 
-	result, err := op.Apply(doc)
+	result, err := addOp.Apply(doc)
 	require.NoError(t, err, "Add operation should succeed")
 
-	// Check that the operation works directly on the document (mutate behavior)
 	assert.Equal(t, "bar", doc["foo"], "Original document should preserve existing fields")
 	assert.Equal(t, "qux", doc["baz"], "Original document should now have new field (mutate behavior)")
 
-	// Check the result points to the same document
 	resultDoc := result.Doc.(map[string]any)
 	assert.Equal(t, "bar", resultDoc["foo"], "Result should preserve existing fields")
 	assert.Equal(t, "qux", resultDoc["baz"], "Result should contain new field")
 	assert.Nil(t, result.Old, "Old value should be nil for new field")
 
-	// Verify it's the same object (mutate behavior)
+	// Mutate behavior: result should point to the same underlying object
 	assert.True(t, reflect.ValueOf(doc).Pointer() == reflect.ValueOf(resultDoc).Pointer(), "Result should point to the same document object")
 }
 
-func TestOpAdd_ReplaceExisting(t *testing.T) {
-	// Test replacing existing field
+func TestAdd_ReplaceExisting(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 	}
 
-	op := NewAdd([]string{"foo"}, "new_value")
+	addOp := NewAdd([]string{"foo"}, "new_value")
 
-	result, err := op.Apply(doc)
+	result, err := addOp.Apply(doc)
 	require.NoError(t, err, "Add operation should succeed")
 
-	// Check the result
 	resultDoc := result.Doc.(map[string]any)
 	assert.Equal(t, "new_value", resultDoc["foo"], "Result should contain new value")
 	assert.Equal(t, "bar", result.Old, "Old value should be preserved")
 }
 
-func TestOpAdd_InterfaceMethods(t *testing.T) {
-	op := NewAdd([]string{"foo"}, "bar")
+func TestAdd_InterfaceMethods(t *testing.T) {
+	addOp := NewAdd([]string{"foo"}, "bar")
 
-	// Test Op() method
-	assert.Equal(t, internal.OpAddType, op.Op(), "Op() should return correct operation type")
-
-	// Test Code() method
-	assert.Equal(t, internal.OpAddCode, op.Code(), "Code() should return correct operation code")
-
-	// Test Path() method
-	assert.Equal(t, []string{"foo"}, op.Path(), "Path() should return correct path")
+	assert.Equal(t, internal.OpAddType, addOp.Op(), "Op() should return correct operation type")
+	assert.Equal(t, internal.OpAddCode, addOp.Code(), "Code() should return correct operation code")
+	assert.Equal(t, []string{"foo"}, addOp.Path(), "Path() should return correct path")
 }
 
-func TestOpAdd_ToJSON(t *testing.T) {
-	op := NewAdd([]string{"foo", "bar"}, "baz")
+func TestAdd_ToJSON(t *testing.T) {
+	addOp := NewAdd([]string{"foo", "bar"}, "baz")
 
-	json, err := op.ToJSON()
+	got, err := addOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
 
-	assert.Equal(t, "add", json.Op, "JSON should contain correct op type")
-	assert.Equal(t, "/foo/bar", json.Path, "JSON should contain correct formatted path")
-	assert.Equal(t, "baz", json.Value, "JSON should contain correct value")
+	assert.Equal(t, "add", got.Op, "JSON should contain correct op type")
+	assert.Equal(t, "/foo/bar", got.Path, "JSON should contain correct formatted path")
+	assert.Equal(t, "baz", got.Value, "JSON should contain correct value")
 }
 
-func TestOpAdd_ToCompact(t *testing.T) {
-	op := NewAdd([]string{"foo"}, "bar")
+func TestAdd_ToCompact(t *testing.T) {
+	addOp := NewAdd([]string{"foo"}, "bar")
 
-	// Test verbose format
-	compact, err := op.ToCompact()
+	compact, err := addOp.ToCompact()
 	require.NoError(t, err, "ToCompact should not fail for valid operation")
 	require.Len(t, compact, 3, "Compact format should have 3 elements")
 	assert.Equal(t, internal.OpAddCode, compact[0], "First element should be operation code")
@@ -87,28 +76,26 @@ func TestOpAdd_ToCompact(t *testing.T) {
 	assert.Equal(t, "bar", compact[2], "Third element should be value")
 }
 
-func TestOpAdd_Validate(t *testing.T) {
-	// Test valid operation
-	op := NewAdd([]string{"foo"}, "bar")
-	err := op.Validate()
+func TestAdd_Validate(t *testing.T) {
+	addOp := NewAdd([]string{"foo"}, "bar")
+	err := addOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
-	// Test invalid operation (empty path)
-	op = NewAdd([]string{}, "bar")
-	err = op.Validate()
+	addOp = NewAdd([]string{}, "bar")
+	err = addOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.ErrorIs(t, err, ErrPathEmpty)
 }
 
-func TestOpAdd_Constructor(t *testing.T) {
+func TestAdd_Constructor(t *testing.T) {
 	path := []string{"foo", "bar"}
 	value := "baz"
 
-	op := NewAdd(path, value)
+	addOp := NewAdd(path, value)
 
-	assert.Equal(t, path, op.Path(), "Constructor should set correct path")
-	// Note: we can't directly access the value field, but we can test it through ToJSON
-	json, err := op.ToJSON()
+	assert.Equal(t, path, addOp.Path(), "Constructor should set correct path")
+	// Verify value indirectly through ToJSON since the value field is unexported
+	got, err := addOp.ToJSON()
 	require.NoError(t, err)
-	assert.Equal(t, value, json.Value, "Constructor should set correct value")
+	assert.Equal(t, value, got.Value, "Constructor should set correct value")
 }

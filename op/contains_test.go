@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestOpContains_Apply(t *testing.T) {
+func TestContains_Apply(t *testing.T) {
 	tests := []struct {
 		name          string
 		doc           any
@@ -17,56 +17,56 @@ func TestOpContains_Apply(t *testing.T) {
 		expectedError error
 	}{
 		{
-			name:        "test contains substring success",
+			name:        "substring success",
 			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			substring:   "World",
 			expectError: false,
 		},
 		{
-			name:        "test contains at beginning",
+			name:        "at beginning",
 			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			substring:   "Hello",
 			expectError: false,
 		},
 		{
-			name:        "test contains at end",
+			name:        "at end",
 			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			substring:   "World!",
 			expectError: false,
 		},
 		{
-			name:        "test contains empty string",
+			name:        "empty string",
 			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			substring:   "",
 			expectError: false,
 		},
 		{
-			name:        "test contains exact match",
+			name:        "exact match",
 			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			substring:   "Hello, World!",
 			expectError: false,
 		},
 		{
-			name:        "test contains case sensitive",
+			name:        "case sensitive",
 			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			substring:   "hello",
 			expectError: true,
 		},
 		{
-			name:        "test contains substring not found",
+			name:        "substring not found",
 			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			substring:   "Python",
 			expectError: true,
 		},
 		{
-			name:          "test non-string value",
+			name:          "non-string value",
 			doc:           map[string]any{"age": 25},
 			path:          []string{"age"},
 			substring:     "25",
@@ -74,7 +74,7 @@ func TestOpContains_Apply(t *testing.T) {
 			expectedError: ErrNotString,
 		},
 		{
-			name:          "test null value",
+			name:          "null value",
 			doc:           map[string]any{"value": nil},
 			path:          []string{"value"},
 			substring:     "test",
@@ -82,7 +82,7 @@ func TestOpContains_Apply(t *testing.T) {
 			expectedError: ErrNotString,
 		},
 		{
-			name:          "test path not found",
+			name:          "path not found",
 			doc:           map[string]any{"text": "Hello, World!"},
 			path:          []string{"nonexistent"},
 			substring:     "Hello",
@@ -90,7 +90,7 @@ func TestOpContains_Apply(t *testing.T) {
 			expectedError: ErrPathNotFound,
 		},
 		{
-			name: "test nested path success",
+			name: "nested path success",
 			doc: map[string]any{
 				"user": map[string]any{
 					"profile": map[string]any{
@@ -103,7 +103,7 @@ func TestOpContains_Apply(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name: "test array index success",
+			name: "array index success",
 			doc: map[string]any{
 				"items": []any{"item1", "item2", "item3"},
 			},
@@ -112,7 +112,7 @@ func TestOpContains_Apply(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:        "test byte slice as string",
+			name:        "byte slice as string",
 			doc:         map[string]any{"data": []byte("hello world")},
 			path:        []string{"data"},
 			substring:   "world",
@@ -122,8 +122,8 @@ func TestOpContains_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewContains(tt.path, tt.substring)
-			result, err := op.Apply(tt.doc)
+			containsOp := NewContains(tt.path, tt.substring)
+			result, err := containsOp.Apply(tt.doc)
 
 			if tt.expectError {
 				assert.Error(t, err)

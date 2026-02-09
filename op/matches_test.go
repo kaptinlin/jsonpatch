@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOpMatches_Basic(t *testing.T) {
+func TestMatches_Basic(t *testing.T) {
 	tests := []struct {
 		name          string
 		doc           any
@@ -19,7 +19,7 @@ func TestOpMatches_Basic(t *testing.T) {
 		expectedError error
 	}{
 		{
-			name:        "test simple pattern match",
+			name:        "simple pattern match",
 			doc:         map[string]any{"text": "hello123"},
 			path:        []string{"text"},
 			pattern:     "hello\\d+",
@@ -27,7 +27,7 @@ func TestOpMatches_Basic(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:        "test pattern no match",
+			name:        "pattern no match",
 			doc:         map[string]any{"text": "hello"},
 			path:        []string{"text"},
 			pattern:     "\\d+",
@@ -35,7 +35,7 @@ func TestOpMatches_Basic(t *testing.T) {
 			expectError: true,
 		},
 		{
-			name:        "test case sensitive match",
+			name:        "case sensitive match",
 			doc:         map[string]any{"text": "Hello"},
 			path:        []string{"text"},
 			pattern:     "hello",
@@ -43,7 +43,7 @@ func TestOpMatches_Basic(t *testing.T) {
 			expectError: true,
 		},
 		{
-			name:        "test case insensitive match",
+			name:        "case insensitive match",
 			doc:         map[string]any{"text": "Hello"},
 			path:        []string{"text"},
 			pattern:     "hello",
@@ -51,7 +51,7 @@ func TestOpMatches_Basic(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:          "test non string value",
+			name:          "non string value",
 			doc:           map[string]any{"number": 123},
 			path:          []string{"number"},
 			pattern:       "\\d+",
@@ -60,7 +60,7 @@ func TestOpMatches_Basic(t *testing.T) {
 			expectedError: ErrNotString,
 		},
 		{
-			name:          "test missing path",
+			name:          "missing path",
 			doc:           map[string]any{"text": "hello"},
 			path:          []string{"missing"},
 			pattern:       "hello",
@@ -72,9 +72,9 @@ func TestOpMatches_Basic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewMatches(tt.path, tt.pattern, tt.ignoreCase, nil)
+			matchesOp := NewMatches(tt.path, tt.pattern, tt.ignoreCase, nil)
 
-			result, err := op.Apply(tt.doc)
+			result, err := matchesOp.Apply(tt.doc)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -91,58 +91,55 @@ func TestOpMatches_Basic(t *testing.T) {
 	}
 }
 
-func TestOpMatches_Constructor(t *testing.T) {
+func TestMatches_Constructor(t *testing.T) {
 	path := []string{"email"}
 	pattern := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	ignoreCase := false
 
-	op := NewMatches(path, pattern, ignoreCase, nil)
+	matchesOp := NewMatches(path, pattern, ignoreCase, nil)
 
-	assert.Equal(t, path, op.Path())
-	assert.Equal(t, pattern, op.Pattern)
-	assert.Equal(t, ignoreCase, op.IgnoreCase)
-	assert.Equal(t, internal.OpMatchesType, op.Op())
-	assert.Equal(t, internal.OpMatchesCode, op.Code())
+	assert.Equal(t, path, matchesOp.Path())
+	assert.Equal(t, pattern, matchesOp.Pattern)
+	assert.Equal(t, ignoreCase, matchesOp.IgnoreCase)
+	assert.Equal(t, internal.OpMatchesType, matchesOp.Op())
+	assert.Equal(t, internal.OpMatchesCode, matchesOp.Code())
 }
 
-func TestOpMatches_InvalidPattern(t *testing.T) {
+func TestMatches_InvalidPattern(t *testing.T) {
 	path := []string{"email"}
 	invalidPattern := `[invalid-regex`
 
-	// With the new design, invalid patterns create a matcher that always returns false
+	// Invalid patterns create a matcher that always returns false
 	// (aligned with json-joy's behavior)
-	op := NewMatches(path, invalidPattern, false, nil)
+	matchesOp := NewMatches(path, invalidPattern, false, nil)
+	assert.NotNil(t, matchesOp)
 
-	// The operation should be created successfully
-	assert.NotNil(t, op)
-
-	// But test should fail (return false) for any input
-	result, _ := op.Test(map[string]any{"email": "test@example.com"})
+	result, _ := matchesOp.Test(map[string]any{"email": "test@example.com"})
 	assert.False(t, result)
 }
 
-func TestOpMatches_ToJSON(t *testing.T) {
-	op := NewMatches([]string{"email"}, `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, true, nil)
+func TestMatches_ToJSON(t *testing.T) {
+	matchesOp := NewMatches([]string{"email"}, `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, true, nil)
 
-	json, err := op.ToJSON()
+	got, err := matchesOp.ToJSON()
 	require.NoError(t, err)
 
-	assert.Equal(t, string(internal.OpMatchesType), json.Op)
-	assert.Equal(t, "/email", json.Path)
-	assert.Equal(t, `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, json.Value)
-	assert.Equal(t, true, json.IgnoreCase)
+	assert.Equal(t, string(internal.OpMatchesType), got.Op)
+	assert.Equal(t, "/email", got.Path)
+	assert.Equal(t, `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, got.Value)
+	assert.Equal(t, true, got.IgnoreCase)
 }
 
-func TestOpMatches_ToCompact(t *testing.T) {
-	op := NewMatches([]string{"name"}, "john", true, nil)
-	compact, err := op.ToCompact()
+func TestMatches_ToCompact(t *testing.T) {
+	matchesOp := NewMatches([]string{"name"}, "john", true, nil)
+	compact, err := matchesOp.ToCompact()
 	assert.NoError(t, err)
 	assert.Equal(t, []any{internal.OpMatchesCode, []string{"name"}, "john", true}, compact)
 }
 
-func TestOpMatches_ToCompact_WithoutIgnoreCase(t *testing.T) {
-	op := NewMatches([]string{"name"}, "john", false, nil)
-	compact, err := op.ToCompact()
+func TestMatches_ToCompact_WithoutIgnoreCase(t *testing.T) {
+	matchesOp := NewMatches([]string{"name"}, "john", false, nil)
+	compact, err := matchesOp.ToCompact()
 	assert.NoError(t, err)
 	assert.Equal(t, []any{internal.OpMatchesCode, []string{"name"}, "john", false}, compact)
 }

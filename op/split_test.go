@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOpSplit_Apply(t *testing.T) {
+func TestSplit_Apply(t *testing.T) {
 	tests := []struct {
 		name     string
 		path     []string
@@ -139,11 +139,11 @@ func TestOpSplit_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewSplit(tt.path, tt.pos, tt.props)
+			splitOp := NewSplit(tt.path, tt.pos, tt.props)
 			docCopy, err := DeepClone(tt.doc)
 			require.NoError(t, err)
 
-			result, err := op.Apply(docCopy)
+			result, err := splitOp.Apply(docCopy)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -157,20 +157,19 @@ func TestOpSplit_Apply(t *testing.T) {
 	}
 }
 
-func TestOpSplit_Constructor(t *testing.T) {
+func TestSplit_Constructor(t *testing.T) {
 	path := []string{"user", "bio"}
 	pos := 2.0
 	props := map[string]any{"type": "split"}
-	op := NewSplit(path, pos, props)
-	assert.Equal(t, path, op.Path())
-	assert.Equal(t, pos, op.Pos)
-	assert.Equal(t, props, op.Props)
-	assert.Equal(t, internal.OpSplitType, op.Op())
-	assert.Equal(t, internal.OpSplitCode, op.Code())
+	splitOp := NewSplit(path, pos, props)
+	assert.Equal(t, path, splitOp.Path())
+	assert.Equal(t, pos, splitOp.Pos)
+	assert.Equal(t, props, splitOp.Props)
+	assert.Equal(t, internal.OpSplitType, splitOp.Op())
+	assert.Equal(t, internal.OpSplitCode, splitOp.Code())
 }
 
-func TestOpSplit_TypeScript_Compatibility(t *testing.T) {
-	// Test cases based on TypeScript reference implementation
+func TestSplit_TypeScript_Compatibility(t *testing.T) {
 	tests := []struct {
 		name     string
 		doc      any
@@ -180,7 +179,7 @@ func TestOpSplit_TypeScript_Compatibility(t *testing.T) {
 		expected any
 	}{
 		{
-			name:     "split string without props",
+			name:     "string without props",
 			doc:      map[string]any{"text": "hello"},
 			path:     []string{"text"},
 			pos:      2,
@@ -188,7 +187,7 @@ func TestOpSplit_TypeScript_Compatibility(t *testing.T) {
 			expected: map[string]any{"text": []any{"he", "llo"}},
 		},
 		{
-			name:  "split string with props",
+			name:  "string with props",
 			doc:   map[string]any{"text": "hello"},
 			path:  []string{"text"},
 			pos:   2,
@@ -199,7 +198,7 @@ func TestOpSplit_TypeScript_Compatibility(t *testing.T) {
 			}},
 		},
 		{
-			name:     "split number",
+			name:     "number",
 			doc:      map[string]any{"num": 10},
 			path:     []string{"num"},
 			pos:      3,
@@ -207,7 +206,7 @@ func TestOpSplit_TypeScript_Compatibility(t *testing.T) {
 			expected: map[string]any{"num": []any{3.0, 7.0}},
 		},
 		{
-			name:     "split root array element",
+			name:     "root array element",
 			doc:      []any{"hello world"},
 			path:     []string{"0"},
 			pos:      5,

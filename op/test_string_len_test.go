@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestOpTestStringLen_Apply(t *testing.T) {
+func TestTestStringLen_Apply(t *testing.T) {
 	tests := []struct {
 		name           string
 		doc            any
@@ -17,35 +17,35 @@ func TestOpTestStringLen_Apply(t *testing.T) {
 		expectedError  error
 	}{
 		{
-			name:           "test string length match success",
+			name:           "string length match success",
 			doc:            map[string]any{"name": "John"},
 			path:           []string{"name"},
 			expectedLength: 4.0,
 			expectError:    false,
 		},
 		{
-			name:           "test empty string length",
+			name:           "empty string length",
 			doc:            map[string]any{"description": ""},
 			path:           []string{"description"},
 			expectedLength: 0.0,
 			expectError:    false,
 		},
 		{
-			name:           "test long string length",
+			name:           "long string length",
 			doc:            map[string]any{"text": "Hello, World! 123"},
 			path:           []string{"text"},
 			expectedLength: 17.0,
 			expectError:    false,
 		},
 		{
-			name:           "test unicode string length",
+			name:           "unicode string length",
 			doc:            map[string]any{"text": "你好世界"},
 			path:           []string{"text"},
 			expectedLength: 12.0, // 4 Chinese characters = 12 bytes in UTF-8
 			expectError:    false,
 		},
 		{
-			name:           "test string length mismatch",
+			name:           "string length mismatch",
 			doc:            map[string]any{"name": "John"},
 			path:           []string{"name"},
 			expectedLength: 5.0,
@@ -53,7 +53,7 @@ func TestOpTestStringLen_Apply(t *testing.T) {
 			expectedError:  ErrStringLengthMismatch,
 		},
 		{
-			name:           "test non-string value",
+			name:           "non-string value",
 			doc:            map[string]any{"age": 25},
 			path:           []string{"age"},
 			expectedLength: 2.0,
@@ -61,7 +61,7 @@ func TestOpTestStringLen_Apply(t *testing.T) {
 			expectedError:  ErrNotString,
 		},
 		{
-			name:           "test null value",
+			name:           "null value",
 			doc:            map[string]any{"value": nil},
 			path:           []string{"value"},
 			expectedLength: 0.0,
@@ -69,7 +69,7 @@ func TestOpTestStringLen_Apply(t *testing.T) {
 			expectedError:  ErrNotString,
 		},
 		{
-			name:           "test path not found",
+			name:           "path not found",
 			doc:            map[string]any{"name": "John"},
 			path:           []string{"nonexistent"},
 			expectedLength: 4.0,
@@ -77,7 +77,7 @@ func TestOpTestStringLen_Apply(t *testing.T) {
 			expectedError:  ErrPathNotFound,
 		},
 		{
-			name: "test nested path success",
+			name: "nested path success",
 			doc: map[string]any{
 				"user": map[string]any{
 					"profile": map[string]any{
@@ -90,7 +90,7 @@ func TestOpTestStringLen_Apply(t *testing.T) {
 			expectError:    false,
 		},
 		{
-			name: "test array index success",
+			name: "array index success",
 			doc: map[string]any{
 				"items": []any{"item1", "item2", "item3"},
 			},
@@ -99,7 +99,7 @@ func TestOpTestStringLen_Apply(t *testing.T) {
 			expectError:    false,
 		},
 		{
-			name:           "test byte slice as string",
+			name:           "byte slice as string",
 			doc:            map[string]any{"data": []byte("hello")},
 			path:           []string{"data"},
 			expectedLength: 5.0,
@@ -109,15 +109,14 @@ func TestOpTestStringLen_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewTestStringLen(tt.path, tt.expectedLength)
-			result, err := op.Apply(tt.doc)
+			strLenOp := NewTestStringLen(tt.path, tt.expectedLength)
+			result, err := strLenOp.Apply(tt.doc)
 
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.expectedError != nil {
 					assert.ErrorIs(t, err, tt.expectedError)
 				}
-				// Check that result is empty when error occurs
 				assert.Equal(t, internal.OpResult[any]{}, result)
 			} else {
 				assert.NoError(t, err)

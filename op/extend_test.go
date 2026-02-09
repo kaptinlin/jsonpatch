@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOpExtend_Apply(t *testing.T) {
+func TestExtend_Apply(t *testing.T) {
 	tests := []struct {
 		name       string
 		path       []string
@@ -110,11 +110,11 @@ func TestOpExtend_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewExtend(tt.path, tt.props.(map[string]any), tt.deleteNull)
+			extendOp := NewExtend(tt.path, tt.props.(map[string]any), tt.deleteNull)
 			docCopy, err := DeepClone(tt.doc)
 			require.NoError(t, err)
 
-			result, err := op.Apply(docCopy)
+			result, err := extendOp.Apply(docCopy)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -128,14 +128,14 @@ func TestOpExtend_Apply(t *testing.T) {
 	}
 }
 
-func TestOpExtend_Constructor(t *testing.T) {
+func TestExtend_Constructor(t *testing.T) {
 	path := []string{"user", "profile"}
 	props := map[string]any{"age": 30, "city": "NYC"}
 	deleteNull := true
-	op := NewExtend(path, props, deleteNull)
-	assert.Equal(t, path, op.Path())
-	assert.Equal(t, props, op.Properties)
-	assert.Equal(t, deleteNull, op.DeleteNull)
-	assert.Equal(t, internal.OpExtendType, op.Op())
-	assert.Equal(t, internal.OpExtendCode, op.Code())
+	extendOp := NewExtend(path, props, deleteNull)
+	assert.Equal(t, path, extendOp.Path())
+	assert.Equal(t, props, extendOp.Properties)
+	assert.Equal(t, deleteNull, extendOp.DeleteNull)
+	assert.Equal(t, internal.OpExtendType, extendOp.Op())
+	assert.Equal(t, internal.OpExtendCode, extendOp.Code())
 }

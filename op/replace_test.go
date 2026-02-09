@@ -8,8 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOpReplace_Basic(t *testing.T) {
-	// Create a test document
+func TestReplace_Basic(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
@@ -18,20 +17,17 @@ func TestOpReplace_Basic(t *testing.T) {
 		},
 	}
 
-	// Test replacing a simple field
 	replaceOp := NewReplace([]string{"foo"}, "new_value")
 	result, err := replaceOp.Apply(doc)
-	require.NoError(t, err, "Replace should succeed for existing field")
+	require.NoError(t, err)
 
-	// Check that the field was replaced
 	modifiedDoc := result.Doc.(map[string]any)
-	assert.Equal(t, "bar", result.Old, "Old value should be returned")
-	assert.Equal(t, "new_value", modifiedDoc["foo"], "Field should be replaced")
-	assert.Equal(t, 123, modifiedDoc["baz"], "Other fields should remain unchanged")
+	assert.Equal(t, "bar", result.Old)
+	assert.Equal(t, "new_value", modifiedDoc["foo"])
+	assert.Equal(t, 123, modifiedDoc["baz"])
 }
 
-func TestOpReplace_Nested(t *testing.T) {
-	// Create a test document with nested structure
+func TestReplace_Nested(t *testing.T) {
 	doc := map[string]any{
 		"foo": map[string]any{
 			"bar": "baz",
@@ -39,114 +35,96 @@ func TestOpReplace_Nested(t *testing.T) {
 		},
 	}
 
-	// Test replacing a nested field
 	replaceOp := NewReplace([]string{"foo", "bar"}, "new_nested_value")
 	result, err := replaceOp.Apply(doc)
-	require.NoError(t, err, "Replace should succeed for existing nested field")
+	require.NoError(t, err)
 
-	// Check that the nested field was replaced
 	modifiedDoc := result.Doc.(map[string]any)
 	foo := modifiedDoc["foo"].(map[string]any)
-	assert.Equal(t, "baz", result.Old, "Old value should be returned")
-	assert.Equal(t, "new_nested_value", foo["bar"], "Nested field should be replaced")
-	assert.Equal(t, 123, foo["qux"], "Other nested fields should remain unchanged")
+	assert.Equal(t, "baz", result.Old)
+	assert.Equal(t, "new_nested_value", foo["bar"])
+	assert.Equal(t, 123, foo["qux"])
 }
 
-func TestOpReplace_Array(t *testing.T) {
-	// Create a test document with array
+func TestReplace_Array(t *testing.T) {
 	doc := []any{
 		"first",
 		"second",
 		"third",
 	}
 
-	// Test replacing an array element
 	replaceOp := NewReplace([]string{"1"}, "new_second")
 	result, err := replaceOp.Apply(doc)
-	require.NoError(t, err, "Replace should succeed for existing array element")
+	require.NoError(t, err)
 
-	// Check that the element was replaced
 	modifiedArray := result.Doc.([]any)
-	assert.Equal(t, "second", result.Old, "Old value should be returned")
-	assert.Equal(t, "new_second", modifiedArray[1], "Array element should be replaced")
-	assert.Equal(t, "first", modifiedArray[0], "Other elements should remain unchanged")
-	assert.Equal(t, "third", modifiedArray[2], "Other elements should remain unchanged")
+	assert.Equal(t, "second", result.Old)
+	assert.Equal(t, "new_second", modifiedArray[1])
+	assert.Equal(t, "first", modifiedArray[0])
+	assert.Equal(t, "third", modifiedArray[2])
 }
 
-func TestOpReplace_NonExistent(t *testing.T) {
-	// Create a test document
+func TestReplace_NonExistent(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 	}
 
-	// Test replacing a non-existent field
 	replaceOp := NewReplace([]string{"qux"}, "new_value")
 	_, err := replaceOp.Apply(doc)
-	assert.Error(t, err, "Replace should fail for non-existent field")
+	assert.Error(t, err)
 	assert.ErrorIs(t, err, ErrPathNotFound)
 }
 
-func TestOpReplace_EmptyPath(t *testing.T) {
-	// Create a test document
+func TestReplace_EmptyPath(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 	}
 
-	// Test replacing with empty path
 	replaceOp := NewReplace([]string{}, "new_value")
 	result, err := replaceOp.Apply(doc)
-	require.NoError(t, err, "Replace should succeed for empty path (root replacement)")
-	assert.Equal(t, "new_value", result.Doc, "Document should be replaced entirely")
-	assert.Equal(t, doc, result.Old, "Old value should be the entire document")
+	require.NoError(t, err)
+	assert.Equal(t, "new_value", result.Doc)
+	assert.Equal(t, doc, result.Old)
 }
 
-func TestOpReplace_InterfaceMethods(t *testing.T) {
+func TestReplace_InterfaceMethods(t *testing.T) {
 	replaceOp := NewReplace([]string{"test"}, "value")
 
-	// Test Op() method
-	assert.Equal(t, internal.OpReplaceType, replaceOp.Op(), "Op() should return correct operation type")
-
-	// Test Code() method
-	assert.Equal(t, internal.OpReplaceCode, replaceOp.Code(), "Code() should return correct operation code")
-
-	// Test Path() method
-	assert.Equal(t, []string{"test"}, replaceOp.Path(), "Path() should return correct path")
-
-	// Test Value() method
-	assert.Equal(t, "value", replaceOp.Value, "Value() should return correct value")
+	assert.Equal(t, internal.OpReplaceType, replaceOp.Op())
+	assert.Equal(t, internal.OpReplaceCode, replaceOp.Code())
+	assert.Equal(t, []string{"test"}, replaceOp.Path())
+	assert.Equal(t, "value", replaceOp.Value)
 }
 
-func TestOpReplace_ToJSON(t *testing.T) {
+func TestReplace_ToJSON(t *testing.T) {
 	replaceOp := NewReplace([]string{"test"}, "value")
 
-	json, err := replaceOp.ToJSON()
-	require.NoError(t, err, "ToJSON should not fail for valid operation")
+	got, err := replaceOp.ToJSON()
+	require.NoError(t, err)
 
-	assert.Equal(t, "replace", json.Op, "JSON should contain correct op type")
-	assert.Equal(t, "/test", json.Path, "JSON should contain correct formatted path")
-	assert.Equal(t, "value", json.Value, "JSON should contain correct value")
+	assert.Equal(t, "replace", got.Op)
+	assert.Equal(t, "/test", got.Path)
+	assert.Equal(t, "value", got.Value)
 }
 
-func TestOpReplace_ToCompact(t *testing.T) {
+func TestReplace_ToCompact(t *testing.T) {
 	replaceOp := NewReplace([]string{"test"}, "value")
 
 	compact, err := replaceOp.ToCompact()
-	require.NoError(t, err, "ToCompact should not fail for valid operation")
-	require.Len(t, compact, 3, "Compact format should have 3 elements")
-	assert.Equal(t, internal.OpReplaceCode, compact[0], "First element should be operation code")
-	assert.Equal(t, []string{"test"}, compact[1], "Second element should be path")
-	assert.Equal(t, "value", compact[2], "Third element should be value")
+	require.NoError(t, err)
+	require.Len(t, compact, 3)
+	assert.Equal(t, internal.OpReplaceCode, compact[0])
+	assert.Equal(t, []string{"test"}, compact[1])
+	assert.Equal(t, "value", compact[2])
 }
 
-func TestOpReplace_Validate(t *testing.T) {
-	// Test valid operation
+func TestReplace_Validate(t *testing.T) {
 	replaceOp := NewReplace([]string{"test"}, "value")
 	err := replaceOp.Validate()
-	assert.NoError(t, err, "Valid operation should not fail validation")
+	assert.NoError(t, err)
 
-	// Test invalid operation (empty path)
 	replaceOp = NewReplace([]string{}, "value")
 	err = replaceOp.Validate()
-	assert.Error(t, err, "Invalid operation should fail validation")
+	assert.Error(t, err)
 	assert.ErrorIs(t, err, ErrPathEmpty)
 }

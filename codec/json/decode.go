@@ -12,8 +12,6 @@ import (
 	"github.com/kaptinlin/jsonpointer"
 )
 
-// --- Public API ---
-
 // Decode converts JSON operations to Op instances.
 func Decode(operations []map[string]any, options internal.JSONPatchOptions) ([]internal.Op, error) {
 	ops := make([]internal.Op, 0, len(operations))
@@ -45,8 +43,6 @@ func DecodeJSON(data []byte, options internal.JSONPatchOptions) ([]internal.Op, 
 	return Decode(operations, options)
 }
 
-// --- Header parsing ---
-
 // parseOpHeader extracts and validates the common "op" and "path" fields
 // from an operation map.
 func parseOpHeader(operation map[string]any) (opType, pathStr string, path []string, err error) {
@@ -66,8 +62,6 @@ func parseOpHeader(operation map[string]any) (opType, pathStr string, path []str
 
 	return opType, pathStr, jsonpointer.Parse(pathStr), nil
 }
-
-// --- Operation dispatching ---
 
 // OperationToOp converts a JSON operation map to an Op instance.
 func OperationToOp(operation map[string]any, options internal.JSONPatchOptions) (internal.Op, error) {
@@ -96,8 +90,6 @@ func OperationToPredicateOp(operation map[string]any, options internal.JSONPatch
 	}
 	return parsePredicateOp(opType, path, pathStr, operation, options)
 }
-
-// --- Core operations (RFC 6902) ---
 
 // parseCoreOp decodes standard JSON Patch (RFC 6902) operations.
 func parseCoreOp(opType string, path []string, operation map[string]any) (internal.Op, error) {
@@ -141,8 +133,6 @@ func parseCoreOp(opType string, path []string, operation map[string]any) (intern
 		return nil, ErrCodecOpUnknown
 	}
 }
-
-// --- Extended operations ---
 
 // parseExtendedOp decodes extended operations (flip, inc, str_ins, str_del, split, merge, extend).
 func parseExtendedOp(opType string, path []string, operation map[string]any) (internal.Op, error) {
@@ -205,11 +195,11 @@ func parseExtendedOp(opType string, path []string, operation map[string]any) (in
 		return op.NewSplit(path, pos, operation["props"]), nil
 
 	case "merge":
-		props := make(map[string]any)
+		var props map[string]any
 		if p, ok := operation["props"].(map[string]any); ok {
 			props = p
 		}
-		pos := float64(0)
+		var pos float64
 		if posVal, ok := op.ToFloat64(operation["pos"]); ok {
 			pos = posVal
 		}
@@ -227,8 +217,6 @@ func parseExtendedOp(opType string, path []string, operation map[string]any) (in
 		return nil, ErrCodecOpUnknown
 	}
 }
-
-// --- Predicate operations ---
 
 // parsePredicateOp decodes JSON Predicate operations including test, type checks,
 // string tests, comparisons, and composite operations (and, or, not).
@@ -350,8 +338,6 @@ func parsePredicateOp(opType string, path []string, pathStr string, operation ma
 	}
 }
 
-// --- Predicate sub-parsers ---
-
 // parseTestType decodes a test_type operation supporting both single and multiple types.
 func parseTestType(path []string, operation map[string]any) (internal.Op, error) {
 	// Check "type" field first (standard), then fall back to "value" field (compatibility).
@@ -403,7 +389,7 @@ func parseTestString(path []string, operation map[string]any) (internal.Op, erro
 	if !ok {
 		return nil, ErrTestStringOpMissingStr
 	}
-	pos := float64(0)
+	var pos float64
 	if posVal, ok := op.ToFloat64(operation["pos"]); ok {
 		pos = posVal
 	}
@@ -428,8 +414,6 @@ func parseTestStringLen(path []string, operation map[string]any) (internal.Op, e
 	}
 	return op.NewTestStringLen(path, lenVal), nil
 }
-
-// --- Composite operations (and, or, not) ---
 
 // parseNotOp decodes a top-level not operation with multiple predicates.
 func parseNotOp(path []string, pathStr string, operation map[string]any, options internal.JSONPatchOptions) (internal.Op, error) {
@@ -504,8 +488,6 @@ func decodeCompositePredicates(apply []any, basePath jsonpointer.Path, options i
 	return predicateOps, nil
 }
 
-// --- Helper functions ---
-
 // boolField extracts a boolean field from an operation map with a default of false.
 func boolField(operation map[string]any, field string) bool {
 	v, _ := operation[field].(bool)
@@ -528,8 +510,6 @@ func mergePaths(basePath, subPath jsonpointer.Path) jsonpointer.Path {
 	result = append(result, subPath...)
 	return result
 }
-
-// --- Map conversion ---
 
 // toMap converts an internal.Operation struct to a map for decoding.
 func toMap(o internal.Operation) map[string]any {

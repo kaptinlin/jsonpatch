@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOpStrDel_Apply(t *testing.T) {
+func TestStrDel_Apply(t *testing.T) {
 	tests := []struct {
 		name     string
 		path     []string
@@ -146,11 +146,11 @@ func TestOpStrDel_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewStrDel(tt.path, tt.pos, tt.length)
+			strDelOp := NewStrDel(tt.path, tt.pos, tt.length)
 			docCopy, err := DeepClone(tt.doc)
 			require.NoError(t, err)
 
-			result, err := op.Apply(docCopy)
+			result, err := strDelOp.Apply(docCopy)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -164,14 +164,14 @@ func TestOpStrDel_Apply(t *testing.T) {
 	}
 }
 
-func TestOpStrDel_Constructor(t *testing.T) {
+func TestStrDel_Constructor(t *testing.T) {
 	path := []string{"user", "bio"}
 	pos := 2.0
 	length := 3.0
-	op := NewStrDel(path, pos, length)
-	assert.Equal(t, path, op.Path())
-	assert.Equal(t, pos, op.Pos)
-	assert.Equal(t, length, op.Len)
-	assert.Equal(t, internal.OpStrDelType, op.Op())
-	assert.Equal(t, internal.OpStrDelCode, op.Code())
+	strDelOp := NewStrDel(path, pos, length)
+	assert.Equal(t, path, strDelOp.Path())
+	assert.Equal(t, pos, strDelOp.Pos)
+	assert.Equal(t, length, strDelOp.Len)
+	assert.Equal(t, internal.OpStrDelType, strDelOp.Op())
+	assert.Equal(t, internal.OpStrDelCode, strDelOp.Code())
 }

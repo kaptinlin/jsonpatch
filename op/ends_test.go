@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestOpEnds_Apply(t *testing.T) {
+func TestEnds_Apply(t *testing.T) {
 	tests := []struct {
 		name          string
 		doc           any
@@ -17,42 +17,42 @@ func TestOpEnds_Apply(t *testing.T) {
 		expectedError error
 	}{
 		{
-			name:        "test ends with suffix success",
+			name:        "suffix success",
 			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			suffix:      "World!",
 			expectError: false,
 		},
 		{
-			name:        "test ends with exact match",
+			name:        "exact match",
 			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			suffix:      "Hello, World!",
 			expectError: false,
 		},
 		{
-			name:        "test ends with empty string",
+			name:        "empty string",
 			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			suffix:      "",
 			expectError: false,
 		},
 		{
-			name:        "test ends case sensitive",
+			name:        "case sensitive",
 			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			suffix:      "world!",
 			expectError: true,
 		},
 		{
-			name:        "test ends suffix not found",
+			name:        "suffix not found",
 			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			suffix:      "Hello",
 			expectError: true,
 		},
 		{
-			name:          "test non-string value",
+			name:          "non-string value",
 			doc:           map[string]any{"age": 25},
 			path:          []string{"age"},
 			suffix:        "5",
@@ -60,7 +60,7 @@ func TestOpEnds_Apply(t *testing.T) {
 			expectedError: ErrNotString,
 		},
 		{
-			name:          "test null value",
+			name:          "null value",
 			doc:           map[string]any{"value": nil},
 			path:          []string{"value"},
 			suffix:        "test",
@@ -68,7 +68,7 @@ func TestOpEnds_Apply(t *testing.T) {
 			expectedError: ErrNotString,
 		},
 		{
-			name:          "test path not found",
+			name:          "path not found",
 			doc:           map[string]any{"text": "Hello, World!"},
 			path:          []string{"nonexistent"},
 			suffix:        "World!",
@@ -76,7 +76,7 @@ func TestOpEnds_Apply(t *testing.T) {
 			expectedError: ErrPathNotFound,
 		},
 		{
-			name: "test nested path success",
+			name: "nested path success",
 			doc: map[string]any{
 				"user": map[string]any{
 					"profile": map[string]any{
@@ -89,7 +89,7 @@ func TestOpEnds_Apply(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name: "test array index success",
+			name: "array index success",
 			doc: map[string]any{
 				"items": []any{"item1", "item2", "item3"},
 			},
@@ -101,15 +101,14 @@ func TestOpEnds_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewEnds(tt.path, tt.suffix)
-			result, err := op.Apply(tt.doc)
+			endsOp := NewEnds(tt.path, tt.suffix)
+			result, err := endsOp.Apply(tt.doc)
 
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.expectedError != nil {
 					assert.ErrorIs(t, err, tt.expectedError)
 				}
-				// Check that result is empty when error occurs
 				assert.Equal(t, internal.OpResult[any]{}, result)
 			} else {
 				assert.NoError(t, err)

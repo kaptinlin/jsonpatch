@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOpFlip_Apply(t *testing.T) {
+func TestFlip_Apply(t *testing.T) {
 	tests := []struct {
 		name     string
 		path     []string
@@ -18,105 +18,105 @@ func TestOpFlip_Apply(t *testing.T) {
 		wantErr  bool
 	}{
 		{
-			name:     "flip boolean true to false",
+			name:     "boolean true to false",
 			path:     []string{"flag"},
 			doc:      map[string]any{"flag": true},
 			expected: map[string]any{"flag": false},
 			oldValue: true,
 		},
 		{
-			name:     "flip boolean false to true",
+			name:     "boolean false to true",
 			path:     []string{"flag"},
 			doc:      map[string]any{"flag": false},
 			expected: map[string]any{"flag": true},
 			oldValue: false,
 		},
 		{
-			name:     "flip number 0 to true",
+			name:     "number 0 to true",
 			path:     []string{"count"},
 			doc:      map[string]any{"count": 0},
 			expected: map[string]any{"count": true},
 			oldValue: 0,
 		},
 		{
-			name:     "flip number 5 to false",
+			name:     "number 5 to false",
 			path:     []string{"count"},
 			doc:      map[string]any{"count": 5},
 			expected: map[string]any{"count": false},
 			oldValue: 5,
 		},
 		{
-			name:     "flip empty string to true",
+			name:     "empty string to true",
 			path:     []string{"text"},
 			doc:      map[string]any{"text": ""},
 			expected: map[string]any{"text": true},
 			oldValue: "",
 		},
 		{
-			name:     "flip non-empty string to false",
+			name:     "non-empty string to false",
 			path:     []string{"text"},
 			doc:      map[string]any{"text": "hello"},
 			expected: map[string]any{"text": false},
 			oldValue: "hello",
 		},
 		{
-			name:     "flip nil to true",
+			name:     "nil to true",
 			path:     []string{"value"},
 			doc:      map[string]any{"value": nil},
 			expected: map[string]any{"value": true},
 			oldValue: nil,
 		},
 		{
-			name:     "flip empty array to false",
+			name:     "empty array to false",
 			path:     []string{"items"},
 			doc:      map[string]any{"items": []any{}},
 			expected: map[string]any{"items": false},
 			oldValue: []any{},
 		},
 		{
-			name:     "flip non-empty array to false",
+			name:     "non-empty array to false",
 			path:     []string{"items"},
 			doc:      map[string]any{"items": []any{1, 2, 3}},
 			expected: map[string]any{"items": false},
 			oldValue: []any{1, 2, 3},
 		},
 		{
-			name:     "flip empty map to false",
+			name:     "empty map to false",
 			path:     []string{"config"},
 			doc:      map[string]any{"config": map[string]any{}},
 			expected: map[string]any{"config": false},
 			oldValue: map[string]any{},
 		},
 		{
-			name:     "flip non-empty map to false",
+			name:     "non-empty map to false",
 			path:     []string{"config"},
 			doc:      map[string]any{"config": map[string]any{"key": "value"}},
 			expected: map[string]any{"config": false},
 			oldValue: map[string]any{"key": "value"},
 		},
 		{
-			name:     "flip nested path",
+			name:     "nested path",
 			path:     []string{"user", "active"},
 			doc:      map[string]any{"user": map[string]any{"active": true}},
 			expected: map[string]any{"user": map[string]any{"active": false}},
 			oldValue: true,
 		},
 		{
-			name:     "flip array element",
+			name:     "array element",
 			path:     []string{"flags", "0"},
 			doc:      map[string]any{"flags": []any{true, false, true}},
 			expected: map[string]any{"flags": []any{false, false, true}},
 			oldValue: true,
 		},
 		{
-			name:     "flip root level boolean",
+			name:     "root level boolean",
 			path:     []string{},
 			doc:      true,
 			expected: false,
 			oldValue: true,
 		},
 		{
-			name:     "flip root level number",
+			name:     "root level number",
 			path:     []string{},
 			doc:      42,
 			expected: false,
@@ -139,13 +139,12 @@ func TestOpFlip_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewFlip(tt.path)
+			flipOp := NewFlip(tt.path)
 
-			// Deep clone the document to avoid modifying the original
 			docCopy, err := DeepClone(tt.doc)
 			require.NoError(t, err)
 
-			result, err := op.Apply(docCopy)
+			result, err := flipOp.Apply(docCopy)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -159,16 +158,16 @@ func TestOpFlip_Apply(t *testing.T) {
 	}
 }
 
-func TestOpFlip_Constructor(t *testing.T) {
+func TestFlip_Constructor(t *testing.T) {
 	path := []string{"user", "active"}
-	op := NewFlip(path)
+	flipOp := NewFlip(path)
 
-	assert.Equal(t, path, op.Path())
-	assert.Equal(t, internal.OpFlipType, op.Op())
-	assert.Equal(t, internal.OpFlipCode, op.Code())
+	assert.Equal(t, path, flipOp.Path())
+	assert.Equal(t, internal.OpFlipType, flipOp.Op())
+	assert.Equal(t, internal.OpFlipCode, flipOp.Code())
 }
 
-func TestOpFlip_ComplexTypes(t *testing.T) {
+func TestFlip_ComplexTypes(t *testing.T) {
 	tests := []struct {
 		name     string
 		value    any
@@ -186,13 +185,12 @@ func TestOpFlip_ComplexTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewFlip([]string{"value"})
+			flipOp := NewFlip([]string{"value"})
 			doc := map[string]any{"value": tt.value}
 
-			result, err := op.Apply(doc)
+			result, err := flipOp.Apply(doc)
 			require.NoError(t, err)
 
-			// Check that the result is the expected boolean
 			resultDoc := result.Doc.(map[string]any)
 			assert.Equal(t, tt.expected, resultDoc["value"])
 		})

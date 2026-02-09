@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestOpTestType_Apply(t *testing.T) {
+func TestTestType_Apply(t *testing.T) {
 	tests := []struct {
 		name          string
 		doc           any
@@ -17,49 +17,49 @@ func TestOpTestType_Apply(t *testing.T) {
 		expectedError error
 	}{
 		{
-			name:         "test string type success",
+			name:         "string type success",
 			doc:          map[string]any{"name": "John"},
 			path:         []string{"name"},
 			expectedType: "string",
 			expectError:  false,
 		},
 		{
-			name:         "test number type success",
+			name:         "number type success",
 			doc:          map[string]any{"age": 25.0},
 			path:         []string{"age"},
 			expectedType: "number",
 			expectError:  false,
 		},
 		{
-			name:         "test boolean type success",
+			name:         "boolean type success",
 			doc:          map[string]any{"active": true},
 			path:         []string{"active"},
 			expectedType: "boolean",
 			expectError:  false,
 		},
 		{
-			name:         "test array type success",
+			name:         "array type success",
 			doc:          map[string]any{"tags": []any{"tag1", "tag2"}},
 			path:         []string{"tags"},
 			expectedType: "array",
 			expectError:  false,
 		},
 		{
-			name:         "test object type success",
+			name:         "object type success",
 			doc:          map[string]any{"address": map[string]any{"city": "NYC"}},
 			path:         []string{"address"},
 			expectedType: "object",
 			expectError:  false,
 		},
 		{
-			name:         "test null type success",
+			name:         "null type success",
 			doc:          map[string]any{"value": nil},
 			path:         []string{"value"},
 			expectedType: "null",
 			expectError:  false,
 		},
 		{
-			name:          "test type mismatch",
+			name:          "type mismatch",
 			doc:           map[string]any{"name": "John"},
 			path:          []string{"name"},
 			expectedType:  "number",
@@ -67,7 +67,7 @@ func TestOpTestType_Apply(t *testing.T) {
 			expectedError: ErrTypeMismatch,
 		},
 		{
-			name:          "test path not found",
+			name:          "path not found",
 			doc:           map[string]any{"name": "John"},
 			path:          []string{"nonexistent"},
 			expectedType:  "string",
@@ -75,7 +75,7 @@ func TestOpTestType_Apply(t *testing.T) {
 			expectedError: ErrPathNotFound,
 		},
 		{
-			name: "test nested path success",
+			name: "nested path success",
 			doc: map[string]any{
 				"user": map[string]any{
 					"profile": map[string]any{
@@ -88,7 +88,7 @@ func TestOpTestType_Apply(t *testing.T) {
 			expectError:  false,
 		},
 		{
-			name: "test array index success",
+			name: "array index success",
 			doc: map[string]any{
 				"items": []any{"item1", "item2", "item3"},
 			},
@@ -97,7 +97,7 @@ func TestOpTestType_Apply(t *testing.T) {
 			expectError:  false,
 		},
 		{
-			name:         "test integer as number",
+			name:         "integer as number",
 			doc:          map[string]any{"count": 42},
 			path:         []string{"count"},
 			expectedType: "number",
@@ -107,15 +107,14 @@ func TestOpTestType_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := NewTestType(tt.path, tt.expectedType)
-			result, err := op.Apply(tt.doc)
+			typeOp := NewTestType(tt.path, tt.expectedType)
+			result, err := typeOp.Apply(tt.doc)
 
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.expectedError != nil {
 					assert.ErrorIs(t, err, tt.expectedError)
 				}
-				// Check that result is empty when error occurs
 				assert.Equal(t, internal.OpResult[any]{}, result)
 			} else {
 				assert.NoError(t, err)

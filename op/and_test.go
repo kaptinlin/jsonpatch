@@ -8,18 +8,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOpAnd_Basic(t *testing.T) {
-	// Create a test document
+func TestAnd_Basic(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
 	}
 
-	// Create two test operations that should both pass
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
-	// Create AND operation
 	andOp := NewAnd([]string{}, []any{test1, test2})
 
 	ok, err := andOp.Test(doc)
@@ -27,18 +24,15 @@ func TestOpAnd_Basic(t *testing.T) {
 	assert.True(t, ok, "AND should pass when all operations pass")
 }
 
-func TestOpAnd_OneFails(t *testing.T) {
-	// Create a test document
+func TestAnd_OneFails(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
 	}
 
-	// Create two test operations, one should pass, one should fail
-	test1 := NewTest([]string{"foo"}, "bar") // should pass
-	test2 := NewTest([]string{"baz"}, 456)   // should fail
+	test1 := NewTest([]string{"foo"}, "bar")
+	test2 := NewTest([]string{"baz"}, 456)
 
-	// Create AND operation
 	andOp := NewAnd([]string{}, []any{test1, test2})
 
 	ok, err := andOp.Test(doc)
@@ -46,8 +40,7 @@ func TestOpAnd_OneFails(t *testing.T) {
 	assert.False(t, ok, "AND should fail when any operation fails")
 }
 
-func TestOpAnd_Empty(t *testing.T) {
-	// Create AND operation with no sub-operations
+func TestAnd_Empty(t *testing.T) {
 	andOp := NewAnd([]string{}, []any{})
 
 	doc := map[string]any{"foo": "bar"}
@@ -56,18 +49,15 @@ func TestOpAnd_Empty(t *testing.T) {
 	assert.True(t, ok, "Empty AND should return true (vacuous truth)")
 }
 
-func TestOpAnd_Apply(t *testing.T) {
-	// Create a test document
+func TestAnd_Apply(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
 	}
 
-	// Create two test operations that should both pass
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
-	// Create AND operation
 	andOp := NewAnd([]string{}, []any{test1, test2})
 
 	result, err := andOp.Apply(doc)
@@ -75,18 +65,15 @@ func TestOpAnd_Apply(t *testing.T) {
 	assert.Equal(t, doc, result.Doc, "Apply should return the original document")
 }
 
-func TestOpAnd_Apply_Fails(t *testing.T) {
-	// Create a test document
+func TestAnd_Apply_Fails(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
 	}
 
-	// Create two test operations, one should fail
-	test1 := NewTest([]string{"foo"}, "bar") // should pass
-	test2 := NewTest([]string{"baz"}, 456)   // should fail
+	test1 := NewTest([]string{"foo"}, "bar")
+	test2 := NewTest([]string{"baz"}, 456)
 
-	// Create AND operation
 	andOp := NewAnd([]string{}, []any{test1, test2})
 
 	_, err := andOp.Apply(doc)
@@ -94,45 +81,37 @@ func TestOpAnd_Apply_Fails(t *testing.T) {
 	assert.ErrorIs(t, err, ErrAndTestFailed)
 }
 
-func TestOpAnd_InterfaceMethods(t *testing.T) {
+func TestAnd_InterfaceMethods(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
 	andOp := NewAnd([]string{"test"}, []any{test1, test2})
 
-	// Test Op() method
 	assert.Equal(t, internal.OpAndType, andOp.Op(), "Op() should return correct operation type")
-
-	// Test Code() method
 	assert.Equal(t, internal.OpAndCode, andOp.Code(), "Code() should return correct operation code")
-
-	// Test Path() method
 	assert.Equal(t, []string{"test"}, andOp.Path(), "Path() should return correct path")
 
-	// Test Ops() method
 	ops := andOp.Ops()
 	assert.Len(t, ops, 2, "Ops() should return correct number of operations")
 	assert.Equal(t, test1, ops[0], "First operation should match")
 	assert.Equal(t, test2, ops[1], "Second operation should match")
 }
 
-func TestOpAnd_ToJSON(t *testing.T) {
+func TestAnd_ToJSON(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
 	andOp := NewAnd([]string{"test"}, []any{test1, test2})
 
-	json, err := andOp.ToJSON()
+	got, err := andOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
 
-	assert.Equal(t, "and", json.Op, "JSON should contain correct op type")
-	assert.Equal(t, "/test", json.Path, "JSON should contain correct formatted path")
-
-	// Check apply array
-	assert.Len(t, json.Apply, 2, "JSON should contain correct number of operations")
+	assert.Equal(t, "and", got.Op, "JSON should contain correct op type")
+	assert.Equal(t, "/test", got.Path, "JSON should contain correct formatted path")
+	assert.Len(t, got.Apply, 2, "JSON should contain correct number of operations")
 }
 
-func TestOpAnd_ToCompact(t *testing.T) {
+func TestAnd_ToCompact(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
@@ -146,8 +125,7 @@ func TestOpAnd_ToCompact(t *testing.T) {
 	assert.IsType(t, []any{}, compact[2], "Third element should be ops array")
 }
 
-func TestOpAnd_Validate(t *testing.T) {
-	// Test valid operation
+func TestAnd_Validate(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
@@ -155,7 +133,7 @@ func TestOpAnd_Validate(t *testing.T) {
 	err := andOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
-	// Test valid empty operations (vacuous truth allows this)
+	// Vacuous truth allows empty operations
 	andOp = NewAnd([]string{"test"}, []any{})
 	err = andOp.Validate()
 	assert.NoError(t, err, "Empty operations are valid (vacuous truth)")

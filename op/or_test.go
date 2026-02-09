@@ -8,18 +8,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOpOr_Basic(t *testing.T) {
-	// Create a test document
+func TestOr_Basic(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
 	}
 
-	// Create two test operations, one should pass, one should fail
-	test1 := NewTest([]string{"foo"}, "bar") // should pass
-	test2 := NewTest([]string{"baz"}, 456)   // should fail
+	test1 := NewTest([]string{"foo"}, "bar")
+	test2 := NewTest([]string{"baz"}, 456)
 
-	// Create OR operation
 	orOp := NewOr([]string{}, []any{test1, test2})
 
 	ok, err := orOp.Test(doc)
@@ -27,18 +24,15 @@ func TestOpOr_Basic(t *testing.T) {
 	assert.True(t, ok, "OR should pass when any operation passes")
 }
 
-func TestOpOr_AllFail(t *testing.T) {
-	// Create a test document
+func TestOr_AllFail(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
 	}
 
-	// Create two test operations that should both fail
-	test1 := NewTest([]string{"foo"}, "qux") // should fail
-	test2 := NewTest([]string{"baz"}, 456)   // should fail
+	test1 := NewTest([]string{"foo"}, "qux")
+	test2 := NewTest([]string{"baz"}, 456)
 
-	// Create OR operation
 	orOp := NewOr([]string{}, []any{test1, test2})
 
 	ok, err := orOp.Test(doc)
@@ -46,8 +40,7 @@ func TestOpOr_AllFail(t *testing.T) {
 	assert.False(t, ok, "OR should fail when all operations fail")
 }
 
-func TestOpOr_Empty(t *testing.T) {
-	// Create OR operation with no sub-operations
+func TestOr_Empty(t *testing.T) {
 	orOp := NewOr([]string{}, []any{})
 
 	doc := map[string]any{"foo": "bar"}
@@ -56,18 +49,15 @@ func TestOpOr_Empty(t *testing.T) {
 	assert.False(t, ok, "Empty OR should return false")
 }
 
-func TestOpOr_Apply(t *testing.T) {
-	// Create a test document
+func TestOr_Apply(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
 	}
 
-	// Create two test operations, one should pass
-	test1 := NewTest([]string{"foo"}, "bar") // should pass
-	test2 := NewTest([]string{"baz"}, 456)   // should fail
+	test1 := NewTest([]string{"foo"}, "bar")
+	test2 := NewTest([]string{"baz"}, 456)
 
-	// Create OR operation
 	orOp := NewOr([]string{}, []any{test1, test2})
 
 	result, err := orOp.Apply(doc)
@@ -75,18 +65,15 @@ func TestOpOr_Apply(t *testing.T) {
 	assert.True(t, deepEqual(result.Doc, doc), "Apply should return the original document")
 }
 
-func TestOpOr_Apply_Fails(t *testing.T) {
-	// Create a test document
+func TestOr_Apply_Fails(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
 	}
 
-	// Create two test operations that should both fail
-	test1 := NewTest([]string{"foo"}, "qux") // should fail
-	test2 := NewTest([]string{"baz"}, 456)   // should fail
+	test1 := NewTest([]string{"foo"}, "qux")
+	test2 := NewTest([]string{"baz"}, 456)
 
-	// Create OR operation
 	orOp := NewOr([]string{}, []any{test1, test2})
 
 	_, err := orOp.Apply(doc)
@@ -94,44 +81,38 @@ func TestOpOr_Apply_Fails(t *testing.T) {
 	assert.ErrorIs(t, err, ErrOrTestFailed)
 }
 
-func TestOpOr_InterfaceMethods(t *testing.T) {
+func TestOr_InterfaceMethods(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
 	orOp := NewOr([]string{"test"}, []any{test1, test2})
 
-	// Test Op() method
 	assert.Equal(t, internal.OpOrType, orOp.Op(), "Op() should return correct operation type")
-
-	// Test Code() method
 	assert.Equal(t, internal.OpOrCode, orOp.Code(), "Code() should return correct operation code")
-
-	// Test Path() method
 	assert.Equal(t, []string{"test"}, orOp.Path(), "Path() should return correct path")
 
-	// Test Ops() method
 	ops := orOp.Ops()
 	assert.Len(t, ops, 2, "Ops() should return correct number of operations")
 	assert.Equal(t, test1, ops[0], "First operation should match")
 	assert.Equal(t, test2, ops[1], "Second operation should match")
 }
 
-func TestOpOr_ToJSON(t *testing.T) {
+func TestOr_ToJSON(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
 	orOp := NewOr([]string{"test"}, []any{test1, test2})
 
-	jsonOp, err := orOp.ToJSON()
+	got, err := orOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
 
-	assert.Equal(t, "or", jsonOp.Op, "JSON should contain correct op type")
-	assert.Equal(t, "/test", jsonOp.Path, "JSON should contain correct formatted path")
-	require.NotNil(t, jsonOp.Apply, "JSON should contain apply array")
-	assert.Len(t, jsonOp.Apply, 2, "JSON should contain correct number of operations")
+	assert.Equal(t, "or", got.Op, "JSON should contain correct op type")
+	assert.Equal(t, "/test", got.Path, "JSON should contain correct formatted path")
+	require.NotNil(t, got.Apply, "JSON should contain apply array")
+	assert.Len(t, got.Apply, 2, "JSON should contain correct number of operations")
 }
 
-func TestOpOr_ToCompact(t *testing.T) {
+func TestOr_ToCompact(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
@@ -145,8 +126,7 @@ func TestOpOr_ToCompact(t *testing.T) {
 	assert.IsType(t, []any{}, compact[2], "Third element should be ops array")
 }
 
-func TestOpOr_Validate(t *testing.T) {
-	// Test valid operation
+func TestOr_Validate(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
@@ -154,7 +134,7 @@ func TestOpOr_Validate(t *testing.T) {
 	err := orOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
-	// Test valid empty operations (empty OR is valid, just returns false)
+	// Empty OR is valid, just returns false
 	orOp = NewOr([]string{"test"}, []any{})
 	err = orOp.Validate()
 	assert.NoError(t, err, "Empty operations are valid (though they return false)")

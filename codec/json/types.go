@@ -1,8 +1,6 @@
 package json
 
-import (
-	"github.com/kaptinlin/jsonpatch/internal"
-)
+import "github.com/kaptinlin/jsonpatch/internal"
 
 // Operation is a JSON Patch operation in JSON format.
 type Operation = internal.Operation

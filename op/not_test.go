@@ -8,16 +8,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOpNot_Basic(t *testing.T) {
-	// Create a test document
+func TestNot_Basic(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 	}
 
-	// Create a test operation that should pass
-	testOp := NewTest([]string{"foo"}, "bar") // should pass
-
-	// Create NOT operation
+	testOp := NewTest([]string{"foo"}, "bar")
 	notOp := NewNot(testOp)
 
 	ok, err := notOp.Test(doc)
@@ -25,16 +21,12 @@ func TestOpNot_Basic(t *testing.T) {
 	assert.False(t, ok, "NOT should return false when wrapped operation passes")
 }
 
-func TestOpNot_Negation(t *testing.T) {
-	// Create a test document
+func TestNot_Negation(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 	}
 
-	// Create a test operation that should fail
-	testOp := NewTest([]string{"foo"}, "qux") // should fail
-
-	// Create NOT operation
+	testOp := NewTest([]string{"foo"}, "qux")
 	notOp := NewNot(testOp)
 
 	ok, err := notOp.Test(doc)
@@ -42,16 +34,12 @@ func TestOpNot_Negation(t *testing.T) {
 	assert.True(t, ok, "NOT should return true when wrapped operation fails")
 }
 
-func TestOpNot_Apply(t *testing.T) {
-	// Create a test document
+func TestNot_Apply(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 	}
 
-	// Create a test operation that should fail
-	testOp := NewTest([]string{"foo"}, "qux") // should fail
-
-	// Create NOT operation
+	testOp := NewTest([]string{"foo"}, "qux")
 	notOp := NewNot(testOp)
 
 	result, err := notOp.Apply(doc)
@@ -59,16 +47,12 @@ func TestOpNot_Apply(t *testing.T) {
 	assert.Equal(t, doc, result.Doc, "Apply should return the original document")
 }
 
-func TestOpNot_Apply_Fails(t *testing.T) {
-	// Create a test document
+func TestNot_Apply_Fails(t *testing.T) {
 	doc := map[string]any{
 		"foo": "bar",
 	}
 
-	// Create a test operation that should pass
-	testOp := NewTest([]string{"foo"}, "bar") // should pass
-
-	// Create NOT operation
+	testOp := NewTest([]string{"foo"}, "bar")
 	notOp := NewNot(testOp)
 
 	_, err := notOp.Apply(doc)
@@ -76,39 +60,32 @@ func TestOpNot_Apply_Fails(t *testing.T) {
 	assert.ErrorIs(t, err, ErrNotTestFailed)
 }
 
-func TestOpNot_InterfaceMethods(t *testing.T) {
+func TestNot_InterfaceMethods(t *testing.T) {
 	testOp := NewTest([]string{"foo"}, "bar")
-
 	notOp := NewNot(testOp)
 
-	// Test Op() method
 	assert.Equal(t, internal.OpNotType, notOp.Op(), "Op() should return correct operation type")
-
-	// Test Code() method
 	assert.Equal(t, internal.OpNotCode, notOp.Code(), "Code() should return correct operation code")
-
-	// Test Path() method
 	assert.Equal(t, []string{"foo"}, notOp.Path(), "Path() should return correct path")
 
-	// Test Ops() method
 	ops := notOp.Ops()
 	assert.Len(t, ops, 1, "Ops() should return correct number of operations")
 	assert.Equal(t, testOp, ops[0], "Operation should match")
 }
 
-func TestOpNot_ToJSON(t *testing.T) {
+func TestNot_ToJSON(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	notOp := NewNot(test1)
 
-	json, err := notOp.ToJSON()
+	got, err := notOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
 
-	assert.Equal(t, "not", json.Op, "JSON should contain correct op type")
-	assert.Equal(t, "/foo", json.Path, "JSON should contain correct formatted path")
-	assert.NotNil(t, json.Apply, "JSON should contain apply field")
+	assert.Equal(t, "not", got.Op, "JSON should contain correct op type")
+	assert.Equal(t, "/foo", got.Path, "JSON should contain correct formatted path")
+	assert.NotNil(t, got.Apply, "JSON should contain apply field")
 }
 
-func TestOpNot_ToCompact(t *testing.T) {
+func TestNot_ToCompact(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	notOp := NewNot(test1)
 
@@ -121,15 +98,13 @@ func TestOpNot_ToCompact(t *testing.T) {
 	assert.NotNil(t, compact[2], "Third element should be the compact operand")
 }
 
-func TestOpNot_Validate(t *testing.T) {
-	// Test valid operation
+func TestNot_Validate(t *testing.T) {
 	testOp := NewTest([]string{"foo"}, "bar")
 
 	notOp := NewNot(testOp)
 	err := notOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
-	// Test invalid operation (empty operations)
 	notOp = &NotOperation{BaseOp: NewBaseOp([]string{"test"}), Operations: []any{}}
 	err = notOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")

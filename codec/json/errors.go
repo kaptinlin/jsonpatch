@@ -2,8 +2,7 @@ package json
 
 import "errors"
 
-// --- Base operation errors ---
-
+// Base operation errors.
 var (
 	// ErrOpMissingOpField indicates operation is missing 'op' field.
 	ErrOpMissingOpField = errors.New("operation missing 'op' field")
@@ -15,8 +14,7 @@ var (
 	ErrCodecOpUnknown = errors.New("unknown operation")
 )
 
-// --- Core operation errors ---
-
+// Core operation errors.
 var (
 	// ErrAddOpMissingValue indicates add operation is missing 'value' field.
 	ErrAddOpMissingValue = errors.New("add operation missing 'value' field")
@@ -30,8 +28,7 @@ var (
 	ErrCopyOpMissingFrom = errors.New("copy operation missing 'from' field")
 )
 
-// --- Extended operation errors ---
-
+// Extended operation errors.
 var (
 	// ErrIncOpMissingInc indicates inc operation is missing 'inc' field.
 	ErrIncOpMissingInc = errors.New("inc operation missing 'inc' field")
@@ -51,8 +48,7 @@ var (
 	ErrValueNotObject = errors.New("value is not an object")
 )
 
-// --- Predicate operation errors ---
-
+// Predicate operation errors.
 var (
 	// ErrTypeOpMissingValue indicates type operation is missing string 'value' field.
 	ErrTypeOpMissingValue = errors.New("type operation missing string 'value' field")
@@ -80,8 +76,7 @@ var (
 	ErrEmptyTypeList = errors.New("empty type list")
 )
 
-// --- Composite operation errors ---
-
+// Composite operation errors.
 var (
 	// ErrAndOpMissingApply indicates and operation is missing 'apply' field.
 	ErrAndOpMissingApply = errors.New("and operation missing 'apply' field")
