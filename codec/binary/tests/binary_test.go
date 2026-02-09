@@ -43,39 +43,39 @@ var (
 		},
 		{
 			name:  "TestTypeOperationMultiple",
-			patch: []internal.Op{op.NewOpTestTypeOperationMultiple([]string{"a", "b", "e"}, []string{"string", "number"})},
+			patch: []internal.Op{op.NewTestTypeMultiple([]string{"a", "b", "e"}, []string{"string", "number"})},
 		},
 		{
 			name:  "DefinedOperation",
-			patch: []internal.Op{op.NewOpDefinedOperation([]string{"a", "b", "e"})},
+			patch: []internal.Op{op.NewDefined([]string{"a", "b", "e"})},
 		},
 		{
 			name:  "UndefinedOperation",
-			patch: []internal.Op{op.NewOpUndefinedOperation([]string{"a", "b", "f"})},
+			patch: []internal.Op{op.NewUndefined([]string{"a", "b", "f"})},
 		},
 		{
 			name:  "LessOperation",
-			patch: []internal.Op{op.NewOpLessOperation([]string{"a", "num"}, 100)},
+			patch: []internal.Op{op.NewLess([]string{"a", "num"}, 100)},
 		},
 		{
 			name:  "MoreOperation",
-			patch: []internal.Op{op.NewOpMoreOperation([]string{"a", "num"}, 5)},
+			patch: []internal.Op{op.NewMore([]string{"a", "num"}, 5)},
 		},
 		{
 			name:  "ContainsOperation",
-			patch: []internal.Op{op.NewOpContainsOperation([]string{"a", "str"}, "world")},
+			patch: []internal.Op{op.NewContains([]string{"a", "str"}, "world")},
 		},
 		{
 			name:  "InOperation",
-			patch: []internal.Op{op.NewOpInOperation([]string{"a", "b", "e"}, []interface{}{"foo", "bar", "baz"})},
+			patch: []internal.Op{op.NewIn([]string{"a", "b", "e"}, []any{"foo", "bar", "baz"})},
 		},
 		{
 			name:  "StartsOperation",
-			patch: []internal.Op{op.NewOpStartsOperation([]string{"a", "str"}, "hello")},
+			patch: []internal.Op{op.NewStarts([]string{"a", "str"}, "hello")},
 		},
 		{
 			name:  "EndsOperation",
-			patch: []internal.Op{op.NewOpEndsOperation([]string{"a", "str"}, "world")},
+			patch: []internal.Op{op.NewEnds([]string{"a", "str"}, "world")},
 		},
 		{
 			name:  "MatchesOperation",
@@ -83,49 +83,49 @@ var (
 		},
 		{
 			name:  "TestStringOperationWithPos",
-			patch: []internal.Op{op.NewOpTestStringOperationWithPos([]string{"a", "str"}, "lo", 3)},
+			patch: []internal.Op{op.NewTestStringWithPos([]string{"a", "str"}, "lo", 3)},
 		},
 		{
 			name:  "TestStringLenOperationWithNot",
-			patch: []internal.Op{op.NewOpTestStringLenOperationWithNot([]string{"a", "str"}, 12, false)},
+			patch: []internal.Op{op.NewTestStringLenWithNot([]string{"a", "str"}, 12, false)},
 		},
 		{
 			name:  "TypeOperation",
-			patch: []internal.Op{op.NewOpTypeOperation([]string{"a", "val"}, "number")},
+			patch: []internal.Op{op.NewType([]string{"a", "val"}, "number")},
 		},
 		{
 			name:  "FlipOperation",
-			patch: []internal.Op{op.NewOpFlipOperation([]string{"a", "bool"})},
+			patch: []internal.Op{op.NewFlip([]string{"a", "bool"})},
 		},
 		{
 			name:  "IncOperation",
-			patch: []internal.Op{op.NewOpIncOperation([]string{"a", "num"}, 10)},
+			patch: []internal.Op{op.NewInc([]string{"a", "num"}, 10)},
 		},
 		{
 			name:  "StrInsOperation",
-			patch: []internal.Op{op.NewOpStrInsOperation([]string{"a", "str"}, 6, " beautiful")},
+			patch: []internal.Op{op.NewStrIns([]string{"a", "str"}, 6, " beautiful")},
 		},
 		{
 			name:  "StrDelOperation",
-			patch: []internal.Op{op.NewOpStrDelOperation([]string{"a", "str"}, 0, 5)},
+			patch: []internal.Op{op.NewStrDel([]string{"a", "str"}, 0, 5)},
 		},
 		{
 			name:  "SplitOperation",
-			patch: []internal.Op{op.NewOpSplitOperation([]string{"a", "str"}, 5, nil)},
+			patch: []internal.Op{op.NewSplit([]string{"a", "str"}, 5, nil)},
 		},
 		{
 			name:  "ExtendOperation",
-			patch: []internal.Op{op.NewOpExtendOperation([]string{"a", "obj"}, map[string]interface{}{"q": 4, "r": 5}, false)},
+			patch: []internal.Op{op.NewExtend([]string{"a", "obj"}, map[string]any{"q": 4, "r": 5}, false)},
 		},
 		{
 			name:  "MergeOperation",
-			patch: []internal.Op{op.NewOpMergeOperation([]string{"a", "arr"}, 1, map[string]interface{}{"merged": true})},
+			patch: []internal.Op{op.NewMerge([]string{"a", "arr"}, 1, map[string]any{"merged": true})},
 		},
 	}
 )
 
 func mustNewMatchesOperation(path []string, pattern string, ignoreCase bool) *op.MatchesOperation {
-	return op.NewOpMatchesOperation(path, pattern, ignoreCase, nil)
+	return op.NewMatches(path, pattern, ignoreCase, nil)
 }
 
 func TestRoundtrip(t *testing.T) {
@@ -248,7 +248,7 @@ func areNumericEqual(a, b float64) bool {
 	return a == b
 }
 
-func areMapsEqual(a, b map[string]interface{}) bool {
+func areMapsEqual(a, b map[string]any) bool {
 	if len(a) != len(b) {
 		return false
 	}
@@ -264,7 +264,7 @@ func areMapsEqual(a, b map[string]interface{}) bool {
 	return true
 }
 
-func areValuesEqual(a, b interface{}) bool {
+func areValuesEqual(a, b any) bool {
 	if reflect.TypeOf(a) != reflect.TypeOf(b) {
 		// Attempt numeric conversion if types are different but numeric
 		aFloat, aIsNum := op.ToFloat64(a)
@@ -275,8 +275,8 @@ func areValuesEqual(a, b interface{}) bool {
 	}
 
 	switch aVal := a.(type) {
-	case []interface{}:
-		bVal, ok := b.([]interface{})
+	case []any:
+		bVal, ok := b.([]any)
 		if !ok || len(aVal) != len(bVal) {
 			return false
 		}
@@ -286,18 +286,18 @@ func areValuesEqual(a, b interface{}) bool {
 			}
 		}
 		return true
-	case map[string]interface{}:
-		bVal, ok := b.(map[string]interface{})
+	case map[string]any:
+		bVal, ok := b.(map[string]any)
 		if !ok || len(aVal) != len(bVal) {
 			return false
 		}
 		return areMapsEqual(aVal, bVal)
-	case map[interface{}]interface{}:
-		// Handle comparison with map[string]interface{}
-		bVal, ok := b.(map[string]interface{})
+	case map[any]any:
+		// Handle comparison with map[string]any
+		bVal, ok := b.(map[string]any)
 		if !ok {
-			// If b is also map[interface{}]interface{}, convert both to map[string]interface{}
-			if bVal, ok := b.(map[interface{}]interface{}); ok {
+			// If b is also map[any]any, convert both to map[string]any
+			if bVal, ok := b.(map[any]any); ok {
 				return areMapsEqual(convertMapToS(aVal), convertMapToS(bVal))
 			}
 			return false
@@ -308,8 +308,8 @@ func areValuesEqual(a, b interface{}) bool {
 	}
 }
 
-func convertMapToS(m map[interface{}]interface{}) map[string]interface{} {
-	res := make(map[string]interface{})
+func convertMapToS(m map[any]any) map[string]any {
+	res := make(map[string]any)
 	for k, v := range m {
 		if strKey, ok := k.(string); ok {
 			res[strKey] = v

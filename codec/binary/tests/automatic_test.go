@@ -44,7 +44,7 @@ func TestAutomaticRoundtrip(t *testing.T) {
 
 		t.Run(name, func(t *testing.T) {
 			// Step 1: JSON -> Op (json codec)
-			jsonOps, err := jsoncodec.Decode([]map[string]interface{}{opMap}, options)
+			jsonOps, err := jsoncodec.Decode([]map[string]any{opMap}, options)
 			require.NoError(t, err, "json Decode should not error")
 
 			// Step 2: Op -> Binary bytes
