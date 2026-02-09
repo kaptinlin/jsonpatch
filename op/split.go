@@ -11,12 +11,12 @@ import (
 // Only supports string type fields.
 type SplitOperation struct {
 	BaseOp
-	Pos   float64     `json:"pos"`   // Split position
-	Props interface{} `json:"props"` // Properties to apply after split
+	Pos   float64 `json:"pos"`   // Split position
+	Props any     `json:"props"` // Properties to apply after split
 }
 
 // NewSplit creates a new split operation.
-func NewSplit(path []string, pos float64, props interface{}) *SplitOperation {
+func NewSplit(path []string, pos float64, props any) *SplitOperation {
 	return &SplitOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
@@ -25,59 +25,59 @@ func NewSplit(path []string, pos float64, props interface{}) *SplitOperation {
 }
 
 // Op returns the operation type.
-func (op *SplitOperation) Op() internal.OpType {
+func (o *SplitOperation) Op() internal.OpType {
 	return internal.OpSplitType
 }
 
 // Code returns the operation code.
-func (op *SplitOperation) Code() int {
+func (o *SplitOperation) Code() int {
 	return internal.OpSplitCode
 }
 
 // Apply applies the split operation following TypeScript reference.
-func (op *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get the target value
-	var target interface{}
+	var target any
 	var err error
 
-	if len(op.Path()) == 0 {
+	if len(o.Path()) == 0 {
 		target = doc
 	} else {
-		target, err = getValue(doc, op.Path())
+		target, err = getValue(doc, o.Path())
 		if err != nil {
 			return internal.OpResult[any]{}, err
 		}
 	}
 
 	// Split the value following TypeScript logic
-	parts := op.splitValue(target)
+	parts := o.splitValue(target)
 
 	// Following TypeScript reference behavior
-	if len(op.Path()) == 0 {
+	if len(o.Path()) == 0 {
 		// Root level split - return the split result as new document
 		return internal.OpResult[any]{Doc: parts, Old: target}, nil
 	}
 
 	// For array elements, follow TypeScript pattern: replace element and insert new one
-	parent, key, err := navigateToParent(doc, op.Path())
+	parent, key, err := navigateToParent(doc, o.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
-	if slice, ok := parent.([]interface{}); ok {
+	if slice, ok := parent.([]any); ok {
 		if index, ok := key.(int); ok {
 			// TypeScript: ref.obj[ref.key] = tuple[0]; ref.obj.splice(ref.key + 1, 0, tuple[1]);
-			splitResult := parts.([]interface{})
+			splitResult := parts.([]any)
 
 			// Create new array with split
-			newSlice := make([]interface{}, len(slice)+1)
+			newSlice := make([]any, len(slice)+1)
 			copy(newSlice[:index], slice[:index])
 			newSlice[index] = splitResult[0]
 			newSlice[index+1] = splitResult[1]
 			copy(newSlice[index+2:], slice[index+1:])
 
 			// Update parent
-			parentPath := op.Path()[:len(op.Path())-1]
+			parentPath := o.Path()[:len(o.Path())-1]
 			if len(parentPath) == 0 {
 				// Root array - return new array
 				return internal.OpResult[any]{Doc: newSlice, Old: target}, nil
@@ -89,7 +89,7 @@ func (op *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 		}
 	} else {
 		// For objects, replace the value with split result
-		err = setValueAtPath(doc, op.Path(), parts)
+		err = setValueAtPath(doc, o.Path(), parts)
 		if err != nil {
 			return internal.OpResult[any]{}, err
 		}
@@ -99,54 +99,51 @@ func (op *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // splitValue splits a value based on its type
-func (op *SplitOperation) splitValue(value interface{}) interface{} {
+func (o *SplitOperation) splitValue(value any) any {
 	switch v := value.(type) {
 	case string:
-		return op.splitString(v)
+		return o.splitString(v)
 	case float64:
-		return op.splitNumber(v)
+		return o.splitNumber(v)
 	case int:
-		return op.splitNumber(float64(v))
+		return o.splitNumber(float64(v))
 	case bool:
 		// For boolean, return a tuple of the same value
-		return []interface{}{v, v}
-	case map[string]interface{}:
+		return []any{v, v}
+	case map[string]any:
 		// Check if it's a Slate-like text node
 		if isSlateTextNode(v) {
-			propsMap, _ := op.Props.(map[string]interface{})
-			results := splitSlateTextNode(v, int(op.Pos), propsMap)
+			propsMap, _ := o.Props.(map[string]any)
+			results := splitSlateTextNode(v, int(o.Pos), propsMap)
 			if results != nil {
-				return []interface{}{results[0], results[1]}
+				return []any{results[0], results[1]}
 			}
 		}
 		// Check if it's a Slate-like element node with children
 		if isSlateElementNode(v) {
-			propsMap, _ := op.Props.(map[string]interface{})
-			results := splitSlateElementNode(v, int(op.Pos), propsMap)
+			propsMap, _ := o.Props.(map[string]any)
+			results := splitSlateElementNode(v, int(o.Pos), propsMap)
 			if results != nil {
-				return []interface{}{results[0], results[1]}
+				return []any{results[0], results[1]}
 			}
 		}
 		// For other objects, return a tuple of the same value
-		return []interface{}{v, v}
+		return []any{v, v}
 	default:
 		// For unknown types, return a tuple of the same value
-		return []interface{}{value, value}
+		return []any{value, value}
 	}
 }
 
 // splitString splits a string at the specified position
-func (op *SplitOperation) splitString(s string) []interface{} {
+func (o *SplitOperation) splitString(s string) []any {
 	runes := []rune(s)
 	// High-performance type conversion (single, boundary conversion)
-	pos := int(op.Pos) // Already validated as safe integer
+	pos := int(o.Pos) // Already validated as safe integer
 
 	// Handle negative positions (count from end)
 	if pos < 0 {
-		pos = len(runes) + pos
-		if pos < 0 {
-			pos = 0
-		}
+		pos = max(len(runes)+pos, 0)
 	}
 
 	// Handle positions beyond string length
@@ -158,10 +155,10 @@ func (op *SplitOperation) splitString(s string) []interface{} {
 	after := string(runes[pos:])
 
 	// If props are specified, wrap in text nodes
-	if op.Props != nil {
-		if propsMap, ok := op.Props.(map[string]interface{}); ok {
-			beforeNode := map[string]interface{}{"text": before}
-			afterNode := map[string]interface{}{"text": after}
+	if o.Props != nil {
+		if propsMap, ok := o.Props.(map[string]any); ok {
+			beforeNode := map[string]any{"text": before}
+			afterNode := map[string]any{"text": after}
 
 			// Copy props to both nodes
 			for k, v := range propsMap {
@@ -169,36 +166,36 @@ func (op *SplitOperation) splitString(s string) []interface{} {
 				afterNode[k] = v
 			}
 
-			return []interface{}{beforeNode, afterNode}
+			return []any{beforeNode, afterNode}
 		}
 	}
 
-	return []interface{}{before, after}
+	return []any{before, after}
 }
 
 // splitNumber splits a number at the specified position
-func (op *SplitOperation) splitNumber(n float64) []interface{} {
-	pos := op.Pos // Already validated as safe number
+func (o *SplitOperation) splitNumber(n float64) []any {
+	pos := o.Pos // Already validated as safe number
 	if pos > n {
 		pos = n
 	}
 	if pos < 0 {
 		pos = 0
 	}
-	return []interface{}{pos, n - pos}
+	return []any{pos, n - pos}
 }
 
 // Old Slate-specific split methods removed - now using pkg/slate functions
 
 // ToJSON serializes the operation to JSON format.
-func (op *SplitOperation) ToJSON() (internal.Operation, error) {
+func (o *SplitOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		Op:   string(internal.OpSplitType),
-		Path: formatPath(op.Path()),
-		Pos:  int(op.Pos),
+		Path: formatPath(o.Path()),
+		Pos:  int(o.Pos),
 	}
-	if op.Props != nil {
-		if props, ok := op.Props.(map[string]any); ok {
+	if o.Props != nil {
+		if props, ok := o.Props.(map[string]any); ok {
 			result.Props = props
 		}
 	}
@@ -206,19 +203,19 @@ func (op *SplitOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *SplitOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpSplitCode, op.Path(), op.Pos, op.Props}, nil
+func (o *SplitOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpSplitCode, o.Path(), o.Pos, o.Props}, nil
 }
 
 // Validate validates the split operation.
-func (op *SplitOperation) Validate() error {
+func (o *SplitOperation) Validate() error {
 	// Empty path is valid for split operation (root level)
 	// Position bounds are checked in Apply method
 	return nil
 }
 
 // splitSlateTextNode splits a Slate text node at the specified position
-func splitSlateTextNode(nodeMap map[string]interface{}, pos int, props map[string]interface{}) []map[string]interface{} {
+func splitSlateTextNode(nodeMap map[string]any, pos int, props map[string]any) []map[string]any {
 	text, ok := nodeMap["text"].(string)
 	if !ok {
 		return nil
@@ -238,8 +235,8 @@ func splitSlateTextNode(nodeMap map[string]interface{}, pos int, props map[strin
 	after := string(runes[pos:])
 
 	// Create two new nodes with inherited properties
-	beforeNode := make(map[string]interface{})
-	afterNode := make(map[string]interface{})
+	beforeNode := make(map[string]any)
+	afterNode := make(map[string]any)
 
 	// Copy properties from original node
 	for k, v := range nodeMap {
@@ -258,12 +255,12 @@ func splitSlateTextNode(nodeMap map[string]interface{}, pos int, props map[strin
 		afterNode[k] = v
 	}
 
-	return []map[string]interface{}{beforeNode, afterNode}
+	return []map[string]any{beforeNode, afterNode}
 }
 
 // splitSlateElementNode splits a Slate element node at the specified position in its children
-func splitSlateElementNode(nodeMap map[string]interface{}, pos int, props map[string]interface{}) []map[string]interface{} {
-	children, ok := nodeMap["children"].([]interface{})
+func splitSlateElementNode(nodeMap map[string]any, pos int, props map[string]any) []map[string]any {
+	children, ok := nodeMap["children"].([]any)
 	if !ok {
 		return nil
 	}
@@ -280,8 +277,8 @@ func splitSlateElementNode(nodeMap map[string]interface{}, pos int, props map[st
 	afterChildren := children[pos:]
 
 	// Create two new nodes with inherited properties
-	beforeNode := make(map[string]interface{})
-	afterNode := make(map[string]interface{})
+	beforeNode := make(map[string]any)
+	afterNode := make(map[string]any)
 
 	// Copy properties from original node
 	for k, v := range nodeMap {
@@ -292,9 +289,9 @@ func splitSlateElementNode(nodeMap map[string]interface{}, pos int, props map[st
 	}
 
 	// Copy children slices to avoid mutation
-	beforeChildrenCopy := make([]interface{}, len(beforeChildren))
+	beforeChildrenCopy := make([]any, len(beforeChildren))
 	copy(beforeChildrenCopy, beforeChildren)
-	afterChildrenCopy := make([]interface{}, len(afterChildren))
+	afterChildrenCopy := make([]any, len(afterChildren))
 	copy(afterChildrenCopy, afterChildren)
 
 	beforeNode["children"] = beforeChildrenCopy
@@ -306,5 +303,5 @@ func splitSlateElementNode(nodeMap map[string]interface{}, pos int, props map[st
 		afterNode[k] = v
 	}
 
-	return []map[string]interface{}{beforeNode, afterNode}
+	return []map[string]any{beforeNode, afterNode}
 }

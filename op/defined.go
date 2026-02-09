@@ -27,13 +27,13 @@ func (o *DefinedOperation) Code() int {
 }
 
 // checkPathExists is a helper function that checks if a path exists
-func (o *DefinedOperation) checkPathExists(doc interface{}) bool {
+func (o *DefinedOperation) checkPathExists(doc any) bool {
 	_, err := getValue(doc, o.path)
 	return err == nil
 }
 
 // Test performs the defined operation.
-func (o *DefinedOperation) Test(doc interface{}) (bool, error) {
+func (o *DefinedOperation) Test(doc any) (bool, error) {
 	// Direct return without intermediate variables
 	return o.checkPathExists(doc), nil
 }

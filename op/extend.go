@@ -1,6 +1,8 @@
 package op
 
 import (
+	"maps"
+
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
@@ -11,12 +13,12 @@ import (
 // Only supports object type fields.
 type ExtendOperation struct {
 	BaseOp
-	Properties map[string]interface{} `json:"props"`      // Properties to add
-	DeleteNull bool                   `json:"deleteNull"` // Whether to delete null properties
+	Properties map[string]any `json:"props"`      // Properties to add
+	DeleteNull bool           `json:"deleteNull"` // Whether to delete null properties
 }
 
 // NewExtend creates a new object extend operation.
-func NewExtend(path []string, properties map[string]interface{}, deleteNull bool) *ExtendOperation {
+func NewExtend(path []string, properties map[string]any, deleteNull bool) *ExtendOperation {
 	return &ExtendOperation{
 		BaseOp:     NewBaseOp(path),
 		Properties: properties,
@@ -25,54 +27,51 @@ func NewExtend(path []string, properties map[string]interface{}, deleteNull bool
 }
 
 // Op returns the operation type.
-func (op *ExtendOperation) Op() internal.OpType {
+func (o *ExtendOperation) Op() internal.OpType {
 	return internal.OpExtendType
 }
 
 // Code returns the operation code.
-func (op *ExtendOperation) Code() int {
+func (o *ExtendOperation) Code() int {
 	return internal.OpExtendCode
 }
 
 // Apply applies the object extend operation.
-func (op *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level extend specially
-	if len(op.Path()) == 0 {
+	if len(o.Path()) == 0 {
 		// Target is the root document
-		targetObj, ok := doc.(map[string]interface{})
+		targetObj, ok := doc.(map[string]any)
 		if !ok {
 			return internal.OpResult[any]{}, ErrNotObject
 		}
 
 		// Create a copy and extend it
-		original := make(map[string]interface{})
-		for k, v := range targetObj {
-			original[k] = v
-		}
+		original := maps.Clone(targetObj)
 
 		// Use objExtend to properly handle the extension with deleteNull
-		extendedObj := objExtend(targetObj, op.Properties, op.DeleteNull)
+		extendedObj := objExtend(targetObj, o.Properties, o.DeleteNull)
 
 		return internal.OpResult[any]{Doc: extendedObj, Old: original}, nil
 	}
 
 	// Get the target object
-	target, err := getValue(doc, op.Path())
+	target, err := getValue(doc, o.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
 	// Check if target is an object
-	targetObj, ok := target.(map[string]interface{})
+	targetObj, ok := target.(map[string]any)
 	if !ok {
 		return internal.OpResult[any]{}, ErrNotObject
 	}
 
 	// Use objExtend to properly handle the extension with deleteNull
-	extendedObj := objExtend(targetObj, op.Properties, op.DeleteNull)
+	extendedObj := objExtend(targetObj, o.Properties, o.DeleteNull)
 
 	// Set the extended object back
-	err = setValueAtPath(doc, op.Path(), extendedObj)
+	err = setValueAtPath(doc, o.Path(), extendedObj)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -81,24 +80,24 @@ func (op *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *ExtendOperation) ToJSON() (internal.Operation, error) {
+func (o *ExtendOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:         string(internal.OpExtendType),
-		Path:       formatPath(op.Path()),
-		Props:      op.Properties,
-		DeleteNull: op.DeleteNull,
+		Path:       formatPath(o.Path()),
+		Props:      o.Properties,
+		DeleteNull: o.DeleteNull,
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *ExtendOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpExtendCode, op.Path(), op.Properties}, nil
+func (o *ExtendOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpExtendCode, o.Path(), o.Properties}, nil
 }
 
 // Validate validates the extend operation.
-func (op *ExtendOperation) Validate() error {
+func (o *ExtendOperation) Validate() error {
 	// Empty path is valid for extend operation (root level)
-	if op.Properties == nil {
+	if o.Properties == nil {
 		return ErrPropertiesNil
 	}
 	return nil
@@ -106,12 +105,9 @@ func (op *ExtendOperation) Validate() error {
 
 // objExtend extends object obj with properties from props.
 // If deleteNull is true, properties with null values are deleted.
-func objExtend(obj map[string]interface{}, props map[string]interface{}, deleteNull bool) map[string]interface{} {
+func objExtend(obj map[string]any, props map[string]any, deleteNull bool) map[string]any {
 	// Create a copy of the original object
-	result := make(map[string]interface{})
-	for k, v := range obj {
-		result[k] = v
-	}
+	result := maps.Clone(obj)
 
 	// Add/update properties from props
 	for k, v := range props {
@@ -129,4 +125,3 @@ func objExtend(obj map[string]interface{}, props map[string]interface{}, deleteN
 
 	return result
 }
-

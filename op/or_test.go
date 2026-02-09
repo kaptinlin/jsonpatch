@@ -10,7 +10,7 @@ import (
 
 func TestOpOr_Basic(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
 	}
@@ -20,7 +20,7 @@ func TestOpOr_Basic(t *testing.T) {
 	test2 := NewTest([]string{"baz"}, 456)   // should fail
 
 	// Create OR operation
-	orOp := NewOr([]string{}, []interface{}{test1, test2})
+	orOp := NewOr([]string{}, []any{test1, test2})
 
 	ok, err := orOp.Test(doc)
 	require.NoError(t, err, "OR test should not fail")
@@ -29,7 +29,7 @@ func TestOpOr_Basic(t *testing.T) {
 
 func TestOpOr_AllFail(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
 	}
@@ -39,7 +39,7 @@ func TestOpOr_AllFail(t *testing.T) {
 	test2 := NewTest([]string{"baz"}, 456)   // should fail
 
 	// Create OR operation
-	orOp := NewOr([]string{}, []interface{}{test1, test2})
+	orOp := NewOr([]string{}, []any{test1, test2})
 
 	ok, err := orOp.Test(doc)
 	require.NoError(t, err, "OR test should not fail")
@@ -48,9 +48,9 @@ func TestOpOr_AllFail(t *testing.T) {
 
 func TestOpOr_Empty(t *testing.T) {
 	// Create OR operation with no sub-operations
-	orOp := NewOr([]string{}, []interface{}{})
+	orOp := NewOr([]string{}, []any{})
 
-	doc := map[string]interface{}{"foo": "bar"}
+	doc := map[string]any{"foo": "bar"}
 	ok, err := orOp.Test(doc)
 	require.NoError(t, err, "OR test should not fail")
 	assert.False(t, ok, "Empty OR should return false")
@@ -58,7 +58,7 @@ func TestOpOr_Empty(t *testing.T) {
 
 func TestOpOr_Apply(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
 	}
@@ -68,7 +68,7 @@ func TestOpOr_Apply(t *testing.T) {
 	test2 := NewTest([]string{"baz"}, 456)   // should fail
 
 	// Create OR operation
-	orOp := NewOr([]string{}, []interface{}{test1, test2})
+	orOp := NewOr([]string{}, []any{test1, test2})
 
 	result, err := orOp.Apply(doc)
 	require.NoError(t, err, "OR apply should succeed when any operation passes")
@@ -77,7 +77,7 @@ func TestOpOr_Apply(t *testing.T) {
 
 func TestOpOr_Apply_Fails(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
 	}
@@ -87,7 +87,7 @@ func TestOpOr_Apply_Fails(t *testing.T) {
 	test2 := NewTest([]string{"baz"}, 456)   // should fail
 
 	// Create OR operation
-	orOp := NewOr([]string{}, []interface{}{test1, test2})
+	orOp := NewOr([]string{}, []any{test1, test2})
 
 	_, err := orOp.Apply(doc)
 	assert.Error(t, err, "OR apply should fail when all operations fail")
@@ -98,7 +98,7 @@ func TestOpOr_InterfaceMethods(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
-	orOp := NewOr([]string{"test"}, []interface{}{test1, test2})
+	orOp := NewOr([]string{"test"}, []any{test1, test2})
 
 	// Test Op() method
 	assert.Equal(t, internal.OpOrType, orOp.Op(), "Op() should return correct operation type")
@@ -120,7 +120,7 @@ func TestOpOr_ToJSON(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
-	orOp := NewOr([]string{"test"}, []interface{}{test1, test2})
+	orOp := NewOr([]string{"test"}, []any{test1, test2})
 
 	json, err := orOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
@@ -139,7 +139,7 @@ func TestOpOr_ToCompact(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
-	orOp := NewOr([]string{"test"}, []interface{}{test1, test2})
+	orOp := NewOr([]string{"test"}, []any{test1, test2})
 
 	compact, err := orOp.ToCompact()
 	require.NoError(t, err, "ToCompact should not fail for valid operation")
@@ -147,7 +147,7 @@ func TestOpOr_ToCompact(t *testing.T) {
 
 	assert.Equal(t, internal.OpOrCode, compactArr[0], "First element should be operation code")
 	assert.Equal(t, []string{"test"}, compactArr[1], "Second element should be path")
-	assert.IsType(t, []interface{}{}, compactArr[2], "Third element should be ops array")
+	assert.IsType(t, []any{}, compactArr[2], "Third element should be ops array")
 }
 
 func TestOpOr_Validate(t *testing.T) {
@@ -155,12 +155,12 @@ func TestOpOr_Validate(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
-	orOp := NewOr([]string{"test"}, []interface{}{test1, test2})
+	orOp := NewOr([]string{"test"}, []any{test1, test2})
 	err := orOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
 	// Test valid empty operations (empty OR is valid, just returns false)
-	orOp = NewOr([]string{"test"}, []interface{}{})
+	orOp = NewOr([]string{"test"}, []any{})
 	err = orOp.Validate()
 	assert.NoError(t, err, "Empty operations are valid (though they return false)")
 }

@@ -11,7 +11,7 @@ import (
 func TestOpTestString_Apply(t *testing.T) {
 	tests := []struct {
 		name          string
-		doc           interface{}
+		doc           any
 		path          []string
 		pos           float64
 		expectedValue string
@@ -20,7 +20,7 @@ func TestOpTestString_Apply(t *testing.T) {
 	}{
 		{
 			name:          "test string match success",
-			doc:           map[string]interface{}{"name": "John"},
+			doc:           map[string]any{"name": "John"},
 			path:          []string{"name"},
 			pos:           0.0,
 			expectedValue: "John",
@@ -28,7 +28,7 @@ func TestOpTestString_Apply(t *testing.T) {
 		},
 		{
 			name:          "test empty string success",
-			doc:           map[string]interface{}{"description": ""},
+			doc:           map[string]any{"description": ""},
 			path:          []string{"description"},
 			pos:           0.0,
 			expectedValue: "",
@@ -36,7 +36,7 @@ func TestOpTestString_Apply(t *testing.T) {
 		},
 		{
 			name:          "test string with special characters",
-			doc:           map[string]interface{}{"text": "Hello, World! 123"},
+			doc:           map[string]any{"text": "Hello, World! 123"},
 			path:          []string{"text"},
 			pos:           7.0,
 			expectedValue: "World",
@@ -44,7 +44,7 @@ func TestOpTestString_Apply(t *testing.T) {
 		},
 		{
 			name:          "test string mismatch",
-			doc:           map[string]interface{}{"name": "John"},
+			doc:           map[string]any{"name": "John"},
 			path:          []string{"name"},
 			pos:           0.0,
 			expectedValue: "Jane",
@@ -53,7 +53,7 @@ func TestOpTestString_Apply(t *testing.T) {
 		},
 		{
 			name:          "test non-string value",
-			doc:           map[string]interface{}{"age": 25},
+			doc:           map[string]any{"age": 25},
 			path:          []string{"age"},
 			pos:           0.0,
 			expectedValue: "25",
@@ -62,7 +62,7 @@ func TestOpTestString_Apply(t *testing.T) {
 		},
 		{
 			name:          "test null value",
-			doc:           map[string]interface{}{"value": nil},
+			doc:           map[string]any{"value": nil},
 			path:          []string{"value"},
 			pos:           0.0,
 			expectedValue: "",
@@ -71,7 +71,7 @@ func TestOpTestString_Apply(t *testing.T) {
 		},
 		{
 			name:          "test path not found",
-			doc:           map[string]interface{}{"name": "John"},
+			doc:           map[string]any{"name": "John"},
 			path:          []string{"nonexistent"},
 			pos:           0.0,
 			expectedValue: "John",
@@ -80,9 +80,9 @@ func TestOpTestString_Apply(t *testing.T) {
 		},
 		{
 			name: "test nested path success",
-			doc: map[string]interface{}{
-				"user": map[string]interface{}{
-					"profile": map[string]interface{}{
+			doc: map[string]any{
+				"user": map[string]any{
+					"profile": map[string]any{
 						"email": "john@example.com",
 					},
 				},
@@ -94,8 +94,8 @@ func TestOpTestString_Apply(t *testing.T) {
 		},
 		{
 			name: "test array index success",
-			doc: map[string]interface{}{
-				"items": []interface{}{"item1", "item2", "item3"},
+			doc: map[string]any{
+				"items": []any{"item1", "item2", "item3"},
 			},
 			path:          []string{"items", "1"},
 			pos:           0.0,
@@ -104,7 +104,7 @@ func TestOpTestString_Apply(t *testing.T) {
 		},
 		{
 			name:          "test byte slice as string",
-			doc:           map[string]interface{}{"data": []byte("hello")},
+			doc:           map[string]any{"data": []byte("hello")},
 			path:          []string{"data"},
 			pos:           1.0,
 			expectedValue: "ell",
@@ -136,7 +136,7 @@ func TestOpTestString_Apply(t *testing.T) {
 func TestToString(t *testing.T) {
 	tests := []struct {
 		name     string
-		value    interface{}
+		value    any
 		expected string
 		hasError bool
 	}{

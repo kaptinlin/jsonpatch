@@ -12,65 +12,65 @@ func TestOpStrIns_Apply(t *testing.T) {
 	tests := []struct {
 		name     string
 		path     []string
-		doc      interface{}
+		doc      any
 		pos      float64
 		str      string
-		expected interface{}
-		oldValue interface{}
+		expected any
+		oldValue any
 		wantErr  bool
 	}{
 		{
 			name:     "insert in middle",
 			path:     []string{"text"},
-			doc:      map[string]interface{}{"text": "hello world"},
+			doc:      map[string]any{"text": "hello world"},
 			pos:      5.0,
 			str:      ", brave new",
-			expected: map[string]interface{}{"text": "hello, brave new world"},
+			expected: map[string]any{"text": "hello, brave new world"},
 			oldValue: "hello world",
 		},
 		{
 			name:     "insert at start",
 			path:     []string{"text"},
-			doc:      map[string]interface{}{"text": "world"},
+			doc:      map[string]any{"text": "world"},
 			pos:      0.0,
 			str:      "hello ",
-			expected: map[string]interface{}{"text": "hello world"},
+			expected: map[string]any{"text": "hello world"},
 			oldValue: "world",
 		},
 		{
 			name:     "insert at end",
 			path:     []string{"text"},
-			doc:      map[string]interface{}{"text": "hello"},
+			doc:      map[string]any{"text": "hello"},
 			pos:      5.0,
 			str:      " world",
-			expected: map[string]interface{}{"text": "hello world"},
+			expected: map[string]any{"text": "hello world"},
 			oldValue: "hello",
 		},
 		{
 			name:     "insert unicode",
 			path:     []string{"text"},
-			doc:      map[string]interface{}{"text": "你好世界"},
+			doc:      map[string]any{"text": "你好世界"},
 			pos:      2.0,
 			str:      "，美丽的",
-			expected: map[string]interface{}{"text": "你好，美丽的世界"},
+			expected: map[string]any{"text": "你好，美丽的世界"},
 			oldValue: "你好世界",
 		},
 		{
 			name:     "insert in nested",
 			path:     []string{"user", "bio"},
-			doc:      map[string]interface{}{"user": map[string]interface{}{"bio": "Go dev"}},
+			doc:      map[string]any{"user": map[string]any{"bio": "Go dev"}},
 			pos:      2.0,
 			str:      "lang ",
-			expected: map[string]interface{}{"user": map[string]interface{}{"bio": "Golang  dev"}},
+			expected: map[string]any{"user": map[string]any{"bio": "Golang  dev"}},
 			oldValue: "Go dev",
 		},
 		{
 			name:     "insert in array element",
 			path:     []string{"lines", "1"},
-			doc:      map[string]interface{}{"lines": []interface{}{"foo", "bar", "baz"}},
+			doc:      map[string]any{"lines": []any{"foo", "bar", "baz"}},
 			pos:      1.0,
 			str:      "-insert-",
-			expected: map[string]interface{}{"lines": []interface{}{"foo", "b-insert-ar", "baz"}},
+			expected: map[string]any{"lines": []any{"foo", "b-insert-ar", "baz"}},
 			oldValue: "bar",
 		},
 		{
@@ -85,7 +85,7 @@ func TestOpStrIns_Apply(t *testing.T) {
 		{
 			name:    "path not found",
 			path:    []string{"notfound"},
-			doc:     map[string]interface{}{"text": "abc"},
+			doc:     map[string]any{"text": "abc"},
 			pos:     1.0,
 			str:     "-",
 			wantErr: true,
@@ -93,7 +93,7 @@ func TestOpStrIns_Apply(t *testing.T) {
 		{
 			name:    "not a string",
 			path:    []string{"num"},
-			doc:     map[string]interface{}{"num": 123},
+			doc:     map[string]any{"num": 123},
 			pos:     1.0,
 			str:     "-",
 			wantErr: true,
@@ -109,19 +109,19 @@ func TestOpStrIns_Apply(t *testing.T) {
 		{
 			name:     "insert position out of range",
 			path:     []string{"text"},
-			doc:      map[string]interface{}{"text": "abc"},
+			doc:      map[string]any{"text": "abc"},
 			pos:      10.0,
 			str:      "X",
-			expected: map[string]interface{}{"text": "abcX"},
+			expected: map[string]any{"text": "abcX"},
 			oldValue: "abc",
 		},
 		{
 			name:     "insert negative position",
 			path:     []string{"text"},
-			doc:      map[string]interface{}{"text": "abc"},
+			doc:      map[string]any{"text": "abc"},
 			pos:      -1.0,
 			str:      "X",
-			expected: map[string]interface{}{"text": "abXc"},
+			expected: map[string]any{"text": "abXc"},
 			oldValue: "abc",
 		},
 	}

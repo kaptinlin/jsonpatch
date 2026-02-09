@@ -12,7 +12,7 @@ import (
 
 // extractString extracts a string from a value, handling string and []byte types.
 // Returns the string and true if successful, or empty string and false otherwise.
-func extractString(val interface{}) (string, bool) {
+func extractString(val any) (string, bool) {
 	switch v := val.(type) {
 	case string:
 		return v, true
@@ -23,8 +23,8 @@ func extractString(val interface{}) (string, bool) {
 	}
 }
 
-// extractPredicateOps converts a slice of interface{} to []internal.PredicateOp.
-func extractPredicateOps(operations []interface{}) []internal.PredicateOp {
+// extractPredicateOps converts a slice of any to []internal.PredicateOp.
+func extractPredicateOps(operations []any) []internal.PredicateOp {
 	ops := make([]internal.PredicateOp, 0, len(operations))
 	for _, op := range operations {
 		if predicateOp, ok := op.(internal.PredicateOp); ok {
@@ -76,7 +76,7 @@ func formatPath(path []string) string {
 }
 
 // getValue retrieves a value from a document using a path.
-func getValue(doc interface{}, path []string) (interface{}, error) {
+func getValue(doc any, path []string) (any, error) {
 	if len(path) == 0 {
 		return doc, nil
 	}
@@ -104,7 +104,7 @@ func getNumericValue(doc any, path []string) (any, float64, error) {
 
 // deepEqual performs a deep equality check between two values.
 // Optimized to avoid expensive reflect.DeepEqual for common types.
-func deepEqual(a, b interface{}) bool {
+func deepEqual(a, b any) bool {
 	// Fast path: both nil
 	if a == nil && b == nil {
 		return true
@@ -155,7 +155,7 @@ func deepEqual(a, b interface{}) bool {
 // toNumericValue converts a value to float64 if it's an actual numeric type
 // (not a string that could be parsed as a number).
 // Returns the float64 value and true if successful, 0 and false otherwise.
-func toNumericValue(val interface{}) (float64, bool) {
+func toNumericValue(val any) (float64, bool) {
 	switch v := val.(type) {
 	case float64:
 		return v, true
@@ -187,7 +187,7 @@ func toNumericValue(val interface{}) (float64, bool) {
 }
 
 // DeepClone performs a deep clone of a value.
-func DeepClone(value interface{}) (interface{}, error) {
+func DeepClone(value any) (any, error) {
 	cloned := deepclone.Clone(value)
 	return cloned, nil
 }
@@ -202,7 +202,7 @@ func parseArrayIndex(token string) (int, error) {
 }
 
 // navigateToParent navigates to the parent of the target path and returns the parent, key, and any error
-func navigateToParent(doc interface{}, path []string) (interface{}, interface{}, error) {
+func navigateToParent(doc any, path []string) (any, any, error) {
 	if len(path) == 0 {
 		return nil, nil, ErrPathNotFound
 	}
@@ -211,7 +211,7 @@ func navigateToParent(doc interface{}, path []string) (interface{}, interface{},
 	key := path[len(path)-1]
 
 	// Navigate to parent
-	var parent interface{}
+	var parent any
 	if len(parentPath) == 0 {
 		parent = doc
 	} else {
@@ -224,9 +224,9 @@ func navigateToParent(doc interface{}, path []string) (interface{}, interface{},
 
 	// Convert key to appropriate type
 	switch parent.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		return parent, key, nil
-	case []interface{}:
+	case []any:
 		// Try to parse as integer for array index
 		if index, err := parseArrayIndex(key); err == nil {
 			return parent, index, nil
@@ -238,14 +238,14 @@ func navigateToParent(doc interface{}, path []string) (interface{}, interface{},
 }
 
 // getValueFromParent retrieves a value from a parent container using a key
-func getValueFromParent(parent interface{}, key interface{}) interface{} {
+func getValueFromParent(parent any, key any) any {
 	switch p := parent.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		if k, ok := key.(string); ok {
 			return p[k]
 		}
 		return nil
-	case []interface{}:
+	case []any:
 		if k, ok := key.(int); ok {
 			if k >= 0 && k < len(p) {
 				return p[k]
@@ -258,17 +258,17 @@ func getValueFromParent(parent interface{}, key interface{}) interface{} {
 }
 
 // setValueAtPath sets a value at a specific path in the document
-func setValueAtPath(doc interface{}, path []string, value interface{}) error {
+func setValueAtPath(doc any, path []string, value any) error {
 	return setValueAtPathWithMode(doc, path, value, false)
 }
 
 // insertValueAtPath inserts a value at a specific path in the document (for arrays, it inserts rather than replaces)
-func insertValueAtPath(doc interface{}, path []string, value interface{}) error {
+func insertValueAtPath(doc any, path []string, value any) error {
 	return setValueAtPathWithMode(doc, path, value, true)
 }
 
 // setValueAtPathWithMode sets or inserts a value at a specific path in the document
-func setValueAtPathWithMode(doc interface{}, path []string, value interface{}, insertMode bool) error {
+func setValueAtPathWithMode(doc any, path []string, value any, insertMode bool) error {
 	if len(path) == 0 {
 		// Root level set - this should be handled by the caller
 		return ErrPathNotFound
@@ -280,18 +280,18 @@ func setValueAtPathWithMode(doc interface{}, path []string, value interface{}, i
 	}
 
 	// Handle array operations specially
-	if slice, ok := parent.([]interface{}); ok {
+	if slice, ok := parent.([]any); ok {
 		if index, ok := key.(int); ok && index >= 0 && index <= len(slice) {
 			if insertMode {
 				// Insert mode: always insert/append
-				var newSlice []interface{}
+				var newSlice []any
 				if index == len(slice) {
 					// Append to end
 					newSlice = append(newSlice, slice...)
 					newSlice = append(newSlice, value)
 				} else {
 					// Insert at index - move elements to make room
-					newSlice = make([]interface{}, len(slice)+1)
+					newSlice = make([]any, len(slice)+1)
 					copy(newSlice[:index], slice[:index])
 					newSlice[index] = value
 					copy(newSlice[index+1:], slice[index:])
@@ -310,7 +310,7 @@ func setValueAtPathWithMode(doc interface{}, path []string, value interface{}, i
 				return updateParent(parent, key, value)
 			}
 			// This is append at end
-			newSlice := make([]interface{}, len(slice)+1)
+			newSlice := make([]any, len(slice)+1)
 			copy(newSlice, slice)
 			newSlice[len(slice)] = value
 
@@ -328,13 +328,13 @@ func setValueAtPathWithMode(doc interface{}, path []string, value interface{}, i
 
 // updateGrandparent updates a grandparent container with a new value for the given key.
 // It handles both root-level parents and nested grandparents.
-func updateGrandparent(doc interface{}, path []string, newSlice []interface{}) error {
+func updateGrandparent(doc any, path []string, newSlice []any) error {
 	grandParentPath := path[:len(path)-2]
 	grandParentKey := path[len(path)-2]
 
 	if len(grandParentPath) == 0 {
 		// Parent is in root
-		docMap, ok := doc.(map[string]interface{})
+		docMap, ok := doc.(map[string]any)
 		if !ok {
 			return ErrCannotUpdateParent
 		}
@@ -346,7 +346,7 @@ func updateGrandparent(doc interface{}, path []string, newSlice []interface{}) e
 	if err != nil {
 		return err
 	}
-	grandParentMap, ok := grandParent.(map[string]interface{})
+	grandParentMap, ok := grandParent.(map[string]any)
 	if !ok {
 		return ErrCannotUpdateGrandparent
 	}
@@ -355,15 +355,15 @@ func updateGrandparent(doc interface{}, path []string, newSlice []interface{}) e
 }
 
 // updateParent updates the parent container with a new value
-func updateParent(parent interface{}, key interface{}, value interface{}) error {
+func updateParent(parent any, key any, value any) error {
 	switch p := parent.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		if k, ok := key.(string); ok {
 			p[k] = value
 			return nil
 		}
 		return ErrInvalidKeyTypeMap
-	case []interface{}:
+	case []any:
 		if k, ok := key.(int); ok {
 			if k >= 0 && k < len(p) {
 				p[k] = value
@@ -382,7 +382,7 @@ func updateParent(parent interface{}, key interface{}, value interface{}) error 
 }
 
 // pathExists checks if a path exists in the document
-func pathExists(doc interface{}, path []string) bool {
+func pathExists(doc any, path []string) bool {
 	if len(path) == 0 {
 		return true
 	}
@@ -394,7 +394,7 @@ func pathExists(doc interface{}, path []string) bool {
 // ToFloat64 converts a value to float64, handling various numeric types, booleans, and strings.
 // This matches JavaScript's Number() behavior for type coercion.
 // Optimized for common numeric types with fast paths.
-func ToFloat64(val interface{}) (float64, bool) {
+func ToFloat64(val any) (float64, bool) {
 	// Handle nil (null in JSON) - JavaScript Number(null) returns 0
 	if val == nil {
 		return 0, true
@@ -501,39 +501,30 @@ func isSimpleNumeric(s string) bool {
 	return hasDigit
 }
 
-// toString converts a value to string, handling various internal.
-func toString(value interface{}) (string, error) {
+// toString converts a value to string, handling string and []byte types.
+func toString(value any) (string, error) {
 	if value == nil {
 		return "", ErrCannotConvertNilToString
 	}
-
 	switch v := value.(type) {
 	case string:
 		return v, nil
 	case []byte:
 		return string(v), nil
 	default:
-		// For other types, try to convert using reflection
-		rt := reflect.TypeOf(v)
-		switch rt.Kind() {
-		case reflect.String:
-			return reflect.ValueOf(v).String(), nil
-		case reflect.Slice:
-			if rt.Elem().Kind() == reflect.Uint8 {
-				return string(reflect.ValueOf(v).Bytes()), nil
-			}
-			return "", ErrCannotConvertToString
-		case reflect.Invalid:
-			return "", ErrCannotConvertNilToString
-		case reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
-			reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128:
-			return "", ErrCannotConvertToString
-		case reflect.Array, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map,
-			reflect.Ptr, reflect.Struct, reflect.UnsafePointer:
-			return "", ErrCannotConvertToString
-		default:
-			return "", ErrCannotConvertToString
-		}
+		return "", ErrCannotConvertToString
 	}
+}
+
+// getAndValidateString retrieves and validates the string value at the path.
+func getAndValidateString(doc any, path []string) (any, string, error) {
+	val, err := getValue(doc, path)
+	if err != nil {
+		return nil, "", ErrPathNotFound
+	}
+	str, err := toString(val)
+	if err != nil {
+		return nil, "", ErrNotString
+	}
+	return val, str, nil
 }

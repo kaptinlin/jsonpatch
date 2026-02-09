@@ -32,19 +32,19 @@ func NewTestStringLenWithNot(path []string, expectedLength float64, not bool) *T
 }
 
 // Op returns the operation type.
-func (op *TestStringLenOperation) Op() internal.OpType {
+func (o *TestStringLenOperation) Op() internal.OpType {
 	return internal.OpTestStringLenType
 }
 
 // Code returns the operation code.
-func (op *TestStringLenOperation) Code() int {
+func (o *TestStringLenOperation) Code() int {
 	return internal.OpTestStringLenCode
 }
 
 // Apply applies the test string length operation to the document.
-func (op *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get the value at the path
-	value, err := getValue(doc, op.Path())
+	value, err := getValue(doc, o.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, ErrPathNotFound
 	}
@@ -56,14 +56,14 @@ func (op *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error)
 	}
 
 	// High-performance type conversion (single, boundary conversion)
-	length := int(op.Length) // Already validated as safe integer
+	length := int(o.Length) // Already validated as safe integer
 	// Check if the string length matches (>= comparison like TypeScript version)
 	// Use XOR pattern: NotFlag XOR condition - if they're different, the test passes
 	lengthMatches := len(actualValue) >= length
-	shouldPass := lengthMatches != op.NotFlag
+	shouldPass := lengthMatches != o.NotFlag
 	if !shouldPass {
 		// Test failed
-		if op.NotFlag {
+		if o.NotFlag {
 			// When Not is true and test fails, it means the length DID match when we expected it not to
 			return internal.OpResult[any]{}, fmt.Errorf("%w: string length %d matched condition (>= %d) when NOT expected", ErrStringLengthMismatch, len(actualValue), length)
 		}
@@ -79,38 +79,38 @@ func (op *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error)
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *TestStringLenOperation) ToJSON() (internal.Operation, error) {
+func (o *TestStringLenOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		Op:   string(internal.OpTestStringLenType),
-		Path: formatPath(op.Path()),
-		Len:  int(op.Length),
+		Path: formatPath(o.Path()),
+		Len:  int(o.Length),
 	}
-	if op.NotFlag {
-		result.Not = op.NotFlag
+	if o.NotFlag {
+		result.Not = o.NotFlag
 	}
 	return result, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *TestStringLenOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpTestStringLenCode, op.Path(), op.Length}, nil
+func (o *TestStringLenOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpTestStringLenCode, o.Path(), o.Length}, nil
 }
 
 // Validate validates the test string length operation.
-func (op *TestStringLenOperation) Validate() error {
-	if len(op.Path()) == 0 {
+func (o *TestStringLenOperation) Validate() error {
+	if len(o.Path()) == 0 {
 		return ErrPathEmpty
 	}
-	if op.Length < 0 {
+	if o.Length < 0 {
 		return ErrLengthNegative
 	}
 	return nil
 }
 
 // Test tests the string length condition on the document.
-func (op *TestStringLenOperation) Test(doc any) (bool, error) {
+func (o *TestStringLenOperation) Test(doc any) (bool, error) {
 	// Get the value at the path
-	value, err := getValue(doc, op.Path())
+	value, err := getValue(doc, o.Path())
 	if err != nil {
 		// For JSON Patch test operations, path not found means test fails (returns false)
 		// This is correct JSON Patch semantics - returning nil error with false result
@@ -125,15 +125,15 @@ func (op *TestStringLenOperation) Test(doc any) (bool, error) {
 	}
 
 	// High-performance type conversion (single, boundary conversion)
-	length := int(op.Length) // Already validated as safe integer
+	length := int(o.Length) // Already validated as safe integer
 	// Check if the string length matches (>= comparison like TypeScript version)
 	lengthMatches := len(str) >= length
 	// Use XOR pattern: NotFlag XOR condition - if they're different, the test passes
-	return op.NotFlag != lengthMatches, nil
+	return o.NotFlag != lengthMatches, nil
 }
 
 // Not returns whether this is a negation predicate.
-func (op *TestStringLenOperation) Not() bool {
-	return op.NotFlag
+func (o *TestStringLenOperation) Not() bool {
+	return o.NotFlag
 }
 

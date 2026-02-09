@@ -41,7 +41,7 @@ func (o *CopyOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	// Optimize: avoid unnecessary deep copy for simple types
-	var clonedValue interface{}
+	var clonedValue any
 	switch v := value.(type) {
 	case string, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, bool, nil:
 		clonedValue = v // Simple types are assigned directly
@@ -60,7 +60,7 @@ func (o *CopyOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	// Optimize: inline old value retrieval, reducing function calls
-	var oldValue interface{}
+	var oldValue any
 	// Directly try to get value, more efficient than checking existence first
 	if old, err := getValue(doc, o.Path()); err == nil {
 		oldValue = old

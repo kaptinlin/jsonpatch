@@ -10,9 +10,9 @@ import (
 
 func TestOpUndefined_Basic(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
-		"baz": map[string]interface{}{
+		"baz": map[string]any{
 			"qux": 123,
 		},
 	}
@@ -38,7 +38,7 @@ func TestOpUndefined_Basic(t *testing.T) {
 
 func TestOpUndefined_Not(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 	}
 
@@ -57,7 +57,7 @@ func TestOpUndefined_Not(t *testing.T) {
 
 func TestOpUndefined_Apply(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 	}
 

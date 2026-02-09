@@ -10,7 +10,7 @@ import (
 
 func TestOpNot_Basic(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 	}
 
@@ -27,7 +27,7 @@ func TestOpNot_Basic(t *testing.T) {
 
 func TestOpNot_Negation(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 	}
 
@@ -44,7 +44,7 @@ func TestOpNot_Negation(t *testing.T) {
 
 func TestOpNot_Apply(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 	}
 
@@ -61,7 +61,7 @@ func TestOpNot_Apply(t *testing.T) {
 
 func TestOpNot_Apply_Fails(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 	}
 
@@ -130,7 +130,7 @@ func TestOpNot_Validate(t *testing.T) {
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
 	// Test invalid operation (empty operations)
-	notOp = &NotOperation{BaseOp: NewBaseOp([]string{"test"}), Operations: []interface{}{}}
+	notOp = &NotOperation{BaseOp: NewBaseOp([]string{"test"}), Operations: []any{}}
 	err = notOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.ErrorIs(t, err, ErrNotNoOperands)

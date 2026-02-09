@@ -31,7 +31,7 @@ func (o *MoreOperation) Code() int {
 }
 
 // Test evaluates the more predicate condition.
-func (o *MoreOperation) Test(doc interface{}) (bool, error) {
+func (o *MoreOperation) Test(doc any) (bool, error) {
 	_, num, err := getNumericValue(doc, o.Path())
 	if err != nil {
 		// For JSON Patch test operations, path not found or wrong type means test fails (returns false)
@@ -60,7 +60,7 @@ func (o *MoreOperation) Apply(doc any) (internal.OpResult[any], error) {
 // ToJSON converts the operation to JSON representation.
 func (o *MoreOperation) ToJSON() (internal.Operation, error) {
 	// Convert float64 to int if it's a whole number
-	var value interface{} = o.Value
+	var value any = o.Value
 	if o.Value == float64(int(o.Value)) {
 		value = int(o.Value)
 	}

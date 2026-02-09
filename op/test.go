@@ -9,12 +9,12 @@ import (
 // TestOperation represents a test operation that checks if a value equals a specified value.
 type TestOperation struct {
 	BaseOp
-	Value   interface{} `json:"value"`         // Expected value
+	Value   any `json:"value"`         // Expected value
 	NotFlag bool        `json:"not,omitempty"` // Whether to negate the test
 }
 
 // NewTest creates a new test operation.
-func NewTest(path []string, value interface{}) *TestOperation {
+func NewTest(path []string, value any) *TestOperation {
 	return &TestOperation{
 		BaseOp:  NewBaseOp(path),
 		Value:   value,
@@ -23,7 +23,7 @@ func NewTest(path []string, value interface{}) *TestOperation {
 }
 
 // NewTestWithNot creates a new test operation with not flag.
-func NewTestWithNot(path []string, value interface{}, not bool) *TestOperation {
+func NewTestWithNot(path []string, value any, not bool) *TestOperation {
 	return &TestOperation{
 		BaseOp:  NewBaseOp(path),
 		Value:   value,
@@ -42,7 +42,7 @@ func (o *TestOperation) Code() int {
 }
 
 // Test performs the test operation.
-func (o *TestOperation) Test(doc interface{}) (bool, error) {
+func (o *TestOperation) Test(doc any) (bool, error) {
 	// Get target value
 	target, err := getValue(doc, o.Path())
 	if err != nil {

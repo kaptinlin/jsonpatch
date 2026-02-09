@@ -12,65 +12,65 @@ func TestOpSplit_Apply(t *testing.T) {
 	tests := []struct {
 		name     string
 		path     []string
-		doc      interface{}
+		doc      any
 		pos      float64
-		props    interface{}
-		expected interface{}
-		oldValue interface{}
+		props    any
+		expected any
+		oldValue any
 		wantErr  bool
 	}{
 		{
 			name:     "split in middle",
 			path:     []string{"text"},
-			doc:      map[string]interface{}{"text": "hello world"},
+			doc:      map[string]any{"text": "hello world"},
 			pos:      5.0,
 			props:    nil,
-			expected: map[string]interface{}{"text": []interface{}{"hello", " world"}},
+			expected: map[string]any{"text": []any{"hello", " world"}},
 			oldValue: "hello world",
 		},
 		{
 			name:     "split at start",
 			path:     []string{"text"},
-			doc:      map[string]interface{}{"text": "world"},
+			doc:      map[string]any{"text": "world"},
 			pos:      0.0,
 			props:    nil,
-			expected: map[string]interface{}{"text": []interface{}{"", "world"}},
+			expected: map[string]any{"text": []any{"", "world"}},
 			oldValue: "world",
 		},
 		{
 			name:     "split at end",
 			path:     []string{"text"},
-			doc:      map[string]interface{}{"text": "hello"},
+			doc:      map[string]any{"text": "hello"},
 			pos:      5.0,
 			props:    nil,
-			expected: map[string]interface{}{"text": []interface{}{"hello", ""}},
+			expected: map[string]any{"text": []any{"hello", ""}},
 			oldValue: "hello",
 		},
 		{
 			name:     "split unicode",
 			path:     []string{"text"},
-			doc:      map[string]interface{}{"text": "你好世界"},
+			doc:      map[string]any{"text": "你好世界"},
 			pos:      2.0,
 			props:    nil,
-			expected: map[string]interface{}{"text": []interface{}{"你好", "世界"}},
+			expected: map[string]any{"text": []any{"你好", "世界"}},
 			oldValue: "你好世界",
 		},
 		{
 			name:     "split in nested",
 			path:     []string{"user", "bio"},
-			doc:      map[string]interface{}{"user": map[string]interface{}{"bio": "Go developer"}},
+			doc:      map[string]any{"user": map[string]any{"bio": "Go developer"}},
 			pos:      2.0,
 			props:    nil,
-			expected: map[string]interface{}{"user": map[string]interface{}{"bio": []interface{}{"Go", " developer"}}},
+			expected: map[string]any{"user": map[string]any{"bio": []any{"Go", " developer"}}},
 			oldValue: "Go developer",
 		},
 		{
 			name:     "split in array element",
 			path:     []string{"lines", "1"},
-			doc:      map[string]interface{}{"lines": []interface{}{"foo", "hello world", "baz"}},
+			doc:      map[string]any{"lines": []any{"foo", "hello world", "baz"}},
 			pos:      5.0,
 			props:    nil,
-			expected: map[string]interface{}{"lines": []interface{}{"foo", "hello", " world", "baz"}},
+			expected: map[string]any{"lines": []any{"foo", "hello", " world", "baz"}},
 			oldValue: "hello world",
 		},
 		{
@@ -79,22 +79,22 @@ func TestOpSplit_Apply(t *testing.T) {
 			doc:      "abc",
 			pos:      1.0,
 			props:    nil,
-			expected: []interface{}{"a", "bc"},
+			expected: []any{"a", "bc"},
 			oldValue: "abc",
 		},
 		{
 			name:     "split with props",
 			path:     []string{"text"},
-			doc:      map[string]interface{}{"text": "hello world"},
+			doc:      map[string]any{"text": "hello world"},
 			pos:      5.0,
-			props:    map[string]interface{}{"type": "split"},
-			expected: map[string]interface{}{"text": []interface{}{map[string]interface{}{"text": "hello", "type": "split"}, map[string]interface{}{"text": " world", "type": "split"}}},
+			props:    map[string]any{"type": "split"},
+			expected: map[string]any{"text": []any{map[string]any{"text": "hello", "type": "split"}, map[string]any{"text": " world", "type": "split"}}},
 			oldValue: "hello world",
 		},
 		{
 			name:    "path not found",
 			path:    []string{"notfound"},
-			doc:     map[string]interface{}{"text": "abc"},
+			doc:     map[string]any{"text": "abc"},
 			pos:     1.0,
 			props:   nil,
 			wantErr: true,
@@ -102,10 +102,10 @@ func TestOpSplit_Apply(t *testing.T) {
 		{
 			name:     "not a string",
 			path:     []string{"num"},
-			doc:      map[string]interface{}{"num": 123},
+			doc:      map[string]any{"num": 123},
 			pos:      1.0,
 			props:    nil,
-			expected: map[string]interface{}{"num": []interface{}{float64(1), float64(122)}},
+			expected: map[string]any{"num": []any{float64(1), float64(122)}},
 			oldValue: 123,
 		},
 		{
@@ -114,25 +114,25 @@ func TestOpSplit_Apply(t *testing.T) {
 			doc:      123,
 			pos:      1.0,
 			props:    nil,
-			expected: []interface{}{float64(1), float64(122)},
+			expected: []any{float64(1), float64(122)},
 			oldValue: 123,
 		},
 		{
 			name:     "split position out of range",
 			path:     []string{"text"},
-			doc:      map[string]interface{}{"text": "abc"},
+			doc:      map[string]any{"text": "abc"},
 			pos:      10.0,
 			props:    nil,
-			expected: map[string]interface{}{"text": []interface{}{"abc", ""}},
+			expected: map[string]any{"text": []any{"abc", ""}},
 			oldValue: "abc",
 		},
 		{
 			name:     "split negative position",
 			path:     []string{"text"},
-			doc:      map[string]interface{}{"text": "abc"},
+			doc:      map[string]any{"text": "abc"},
 			pos:      -1.0,
 			props:    nil,
-			expected: map[string]interface{}{"text": []interface{}{"ab", "c"}},
+			expected: map[string]any{"text": []any{"ab", "c"}},
 			oldValue: "abc",
 		},
 	}
@@ -170,7 +170,7 @@ func TestOpSplit_Code(t *testing.T) {
 func TestOpSplit_NewOpSplit(t *testing.T) {
 	path := []string{"user", "bio"}
 	pos := 2.0
-	props := map[string]interface{}{"type": "split"}
+	props := map[string]any{"type": "split"}
 	op := NewSplit(path, pos, props)
 	assert.Equal(t, path, op.Path())
 	assert.Equal(t, pos, op.Pos)
@@ -183,46 +183,46 @@ func TestOpSplit_TypeScript_Compatibility(t *testing.T) {
 	// Test cases based on TypeScript reference implementation
 	tests := []struct {
 		name     string
-		doc      interface{}
+		doc      any
 		path     []string
 		pos      float64
-		props    interface{}
-		expected interface{}
+		props    any
+		expected any
 	}{
 		{
 			name:     "split string without props",
-			doc:      map[string]interface{}{"text": "hello"},
+			doc:      map[string]any{"text": "hello"},
 			path:     []string{"text"},
 			pos:      2,
 			props:    nil,
-			expected: map[string]interface{}{"text": []interface{}{"he", "llo"}},
+			expected: map[string]any{"text": []any{"he", "llo"}},
 		},
 		{
 			name:  "split string with props",
-			doc:   map[string]interface{}{"text": "hello"},
+			doc:   map[string]any{"text": "hello"},
 			path:  []string{"text"},
 			pos:   2,
-			props: map[string]interface{}{"bold": true},
-			expected: map[string]interface{}{"text": []interface{}{
-				map[string]interface{}{"text": "he", "bold": true},
-				map[string]interface{}{"text": "llo", "bold": true},
+			props: map[string]any{"bold": true},
+			expected: map[string]any{"text": []any{
+				map[string]any{"text": "he", "bold": true},
+				map[string]any{"text": "llo", "bold": true},
 			}},
 		},
 		{
 			name:     "split number",
-			doc:      map[string]interface{}{"num": 10},
+			doc:      map[string]any{"num": 10},
 			path:     []string{"num"},
 			pos:      3,
 			props:    nil,
-			expected: map[string]interface{}{"num": []interface{}{3.0, 7.0}},
+			expected: map[string]any{"num": []any{3.0, 7.0}},
 		},
 		{
 			name:     "split root array element",
-			doc:      []interface{}{"hello world"},
+			doc:      []any{"hello world"},
 			path:     []string{"0"},
 			pos:      5,
 			props:    nil,
-			expected: []interface{}{"hello", " world"},
+			expected: []any{"hello", " world"},
 		},
 	}
 

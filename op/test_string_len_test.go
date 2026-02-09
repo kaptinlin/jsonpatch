@@ -11,7 +11,7 @@ import (
 func TestOpTestStringLen_Apply(t *testing.T) {
 	tests := []struct {
 		name           string
-		doc            interface{}
+		doc            any
 		path           []string
 		expectedLength float64
 		expectError    bool
@@ -19,35 +19,35 @@ func TestOpTestStringLen_Apply(t *testing.T) {
 	}{
 		{
 			name:           "test string length match success",
-			doc:            map[string]interface{}{"name": "John"},
+			doc:            map[string]any{"name": "John"},
 			path:           []string{"name"},
 			expectedLength: 4.0,
 			expectError:    false,
 		},
 		{
 			name:           "test empty string length",
-			doc:            map[string]interface{}{"description": ""},
+			doc:            map[string]any{"description": ""},
 			path:           []string{"description"},
 			expectedLength: 0.0,
 			expectError:    false,
 		},
 		{
 			name:           "test long string length",
-			doc:            map[string]interface{}{"text": "Hello, World! 123"},
+			doc:            map[string]any{"text": "Hello, World! 123"},
 			path:           []string{"text"},
 			expectedLength: 17.0,
 			expectError:    false,
 		},
 		{
 			name:           "test unicode string length",
-			doc:            map[string]interface{}{"text": "你好世界"},
+			doc:            map[string]any{"text": "你好世界"},
 			path:           []string{"text"},
 			expectedLength: 12.0, // 4 Chinese characters = 12 bytes in UTF-8
 			expectError:    false,
 		},
 		{
 			name:           "test string length mismatch",
-			doc:            map[string]interface{}{"name": "John"},
+			doc:            map[string]any{"name": "John"},
 			path:           []string{"name"},
 			expectedLength: 5.0,
 			expectError:    true,
@@ -55,7 +55,7 @@ func TestOpTestStringLen_Apply(t *testing.T) {
 		},
 		{
 			name:           "test non-string value",
-			doc:            map[string]interface{}{"age": 25},
+			doc:            map[string]any{"age": 25},
 			path:           []string{"age"},
 			expectedLength: 2.0,
 			expectError:    true,
@@ -63,7 +63,7 @@ func TestOpTestStringLen_Apply(t *testing.T) {
 		},
 		{
 			name:           "test null value",
-			doc:            map[string]interface{}{"value": nil},
+			doc:            map[string]any{"value": nil},
 			path:           []string{"value"},
 			expectedLength: 0.0,
 			expectError:    true,
@@ -71,7 +71,7 @@ func TestOpTestStringLen_Apply(t *testing.T) {
 		},
 		{
 			name:           "test path not found",
-			doc:            map[string]interface{}{"name": "John"},
+			doc:            map[string]any{"name": "John"},
 			path:           []string{"nonexistent"},
 			expectedLength: 4.0,
 			expectError:    true,
@@ -79,9 +79,9 @@ func TestOpTestStringLen_Apply(t *testing.T) {
 		},
 		{
 			name: "test nested path success",
-			doc: map[string]interface{}{
-				"user": map[string]interface{}{
-					"profile": map[string]interface{}{
+			doc: map[string]any{
+				"user": map[string]any{
+					"profile": map[string]any{
 						"email": "john@example.com",
 					},
 				},
@@ -92,8 +92,8 @@ func TestOpTestStringLen_Apply(t *testing.T) {
 		},
 		{
 			name: "test array index success",
-			doc: map[string]interface{}{
-				"items": []interface{}{"item1", "item2", "item3"},
+			doc: map[string]any{
+				"items": []any{"item1", "item2", "item3"},
 			},
 			path:           []string{"items", "1"},
 			expectedLength: 5.0,
@@ -101,7 +101,7 @@ func TestOpTestStringLen_Apply(t *testing.T) {
 		},
 		{
 			name:           "test byte slice as string",
-			doc:            map[string]interface{}{"data": []byte("hello")},
+			doc:            map[string]any{"data": []byte("hello")},
 			path:           []string{"data"},
 			expectedLength: 5.0,
 			expectError:    false,

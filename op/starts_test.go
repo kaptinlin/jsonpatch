@@ -11,7 +11,7 @@ import (
 func TestOpStarts_Apply(t *testing.T) {
 	tests := []struct {
 		name          string
-		doc           interface{}
+		doc           any
 		path          []string
 		prefix        string
 		expectError   bool
@@ -19,42 +19,42 @@ func TestOpStarts_Apply(t *testing.T) {
 	}{
 		{
 			name:        "test starts with prefix success",
-			doc:         map[string]interface{}{"text": "Hello, World!"},
+			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			prefix:      "Hello",
 			expectError: false,
 		},
 		{
 			name:        "test starts with exact match",
-			doc:         map[string]interface{}{"text": "Hello, World!"},
+			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			prefix:      "Hello, World!",
 			expectError: false,
 		},
 		{
 			name:        "test starts with empty string",
-			doc:         map[string]interface{}{"text": "Hello, World!"},
+			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			prefix:      "",
 			expectError: false,
 		},
 		{
 			name:        "test starts case sensitive",
-			doc:         map[string]interface{}{"text": "Hello, World!"},
+			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			prefix:      "hello",
 			expectError: true,
 		},
 		{
 			name:        "test starts prefix not found",
-			doc:         map[string]interface{}{"text": "Hello, World!"},
+			doc:         map[string]any{"text": "Hello, World!"},
 			path:        []string{"text"},
 			prefix:      "World",
 			expectError: true,
 		},
 		{
 			name:          "test non-string value",
-			doc:           map[string]interface{}{"age": 25},
+			doc:           map[string]any{"age": 25},
 			path:          []string{"age"},
 			prefix:        "2",
 			expectError:   true,
@@ -62,7 +62,7 @@ func TestOpStarts_Apply(t *testing.T) {
 		},
 		{
 			name:          "test null value",
-			doc:           map[string]interface{}{"value": nil},
+			doc:           map[string]any{"value": nil},
 			path:          []string{"value"},
 			prefix:        "test",
 			expectError:   true,
@@ -70,7 +70,7 @@ func TestOpStarts_Apply(t *testing.T) {
 		},
 		{
 			name:          "test path not found",
-			doc:           map[string]interface{}{"text": "Hello, World!"},
+			doc:           map[string]any{"text": "Hello, World!"},
 			path:          []string{"nonexistent"},
 			prefix:        "Hello",
 			expectError:   true,
@@ -78,9 +78,9 @@ func TestOpStarts_Apply(t *testing.T) {
 		},
 		{
 			name: "test nested path success",
-			doc: map[string]interface{}{
-				"user": map[string]interface{}{
-					"profile": map[string]interface{}{
+			doc: map[string]any{
+				"user": map[string]any{
+					"profile": map[string]any{
 						"email": "john@example.com",
 					},
 				},
@@ -91,8 +91,8 @@ func TestOpStarts_Apply(t *testing.T) {
 		},
 		{
 			name: "test array index success",
-			doc: map[string]interface{}{
-				"items": []interface{}{"item1", "item2", "item3"},
+			doc: map[string]any{
+				"items": []any{"item1", "item2", "item3"},
 			},
 			path:        []string{"items", "1"},
 			prefix:      "item",
@@ -100,7 +100,7 @@ func TestOpStarts_Apply(t *testing.T) {
 		},
 		{
 			name:        "test byte slice as string",
-			doc:         map[string]interface{}{"data": []byte("hello world")},
+			doc:         map[string]any{"data": []byte("hello world")},
 			path:        []string{"data"},
 			prefix:      "hello",
 			expectError: false,

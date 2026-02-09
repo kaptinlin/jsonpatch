@@ -10,9 +10,9 @@ import (
 
 func TestOpDefined_Basic(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
-		"baz": map[string]interface{}{
+		"baz": map[string]any{
 			"qux": 123,
 		},
 	}
@@ -38,7 +38,7 @@ func TestOpDefined_Basic(t *testing.T) {
 
 func TestOpDefined_Apply(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 	}
 

@@ -12,50 +12,50 @@ func TestOpInc_Apply(t *testing.T) {
 	tests := []struct {
 		name     string
 		path     []string
-		doc      interface{}
+		doc      any
 		inc      float64
-		expected interface{}
-		oldValue interface{}
+		expected any
+		oldValue any
 		wantErr  bool
 	}{
 		{
 			name:     "inc int field",
 			path:     []string{"count"},
-			doc:      map[string]interface{}{"count": 1},
+			doc:      map[string]any{"count": 1},
 			inc:      2,
-			expected: map[string]interface{}{"count": 3.0},
+			expected: map[string]any{"count": 3.0},
 			oldValue: 1,
 		},
 		{
 			name:     "inc float field",
 			path:     []string{"score"},
-			doc:      map[string]interface{}{"score": 1.5},
+			doc:      map[string]any{"score": 1.5},
 			inc:      0.5,
-			expected: map[string]interface{}{"score": 2.0},
+			expected: map[string]any{"score": 2.0},
 			oldValue: 1.5,
 		},
 		{
 			name:     "dec int field",
 			path:     []string{"count"},
-			doc:      map[string]interface{}{"count": 5},
+			doc:      map[string]any{"count": 5},
 			inc:      -3,
-			expected: map[string]interface{}{"count": 2.0},
+			expected: map[string]any{"count": 2.0},
 			oldValue: 5,
 		},
 		{
 			name:     "inc nested field",
 			path:     []string{"user", "age"},
-			doc:      map[string]interface{}{"user": map[string]interface{}{"age": 20}},
+			doc:      map[string]any{"user": map[string]any{"age": 20}},
 			inc:      1,
-			expected: map[string]interface{}{"user": map[string]interface{}{"age": 21.0}},
+			expected: map[string]any{"user": map[string]any{"age": 21.0}},
 			oldValue: 20,
 		},
 		{
 			name:     "inc array element",
 			path:     []string{"nums", "1"},
-			doc:      map[string]interface{}{"nums": []interface{}{1, 2, 3}},
+			doc:      map[string]any{"nums": []any{1, 2, 3}},
 			inc:      10,
-			expected: map[string]interface{}{"nums": []interface{}{1, 12.0, 3}},
+			expected: map[string]any{"nums": []any{1, 12.0, 3}},
 			oldValue: 2,
 		},
 		{
@@ -77,15 +77,15 @@ func TestOpInc_Apply(t *testing.T) {
 		{
 			name:     "path not found creates value",
 			path:     []string{"notfound"},
-			doc:      map[string]interface{}{"count": 1},
+			doc:      map[string]any{"count": 1},
 			inc:      5,
-			expected: map[string]interface{}{"count": 1, "notfound": 5.0},
+			expected: map[string]any{"count": 1, "notfound": 5.0},
 			oldValue: nil,
 		},
 		{
 			name:    "not a number",
 			path:    []string{"str"},
-			doc:     map[string]interface{}{"str": "abc"},
+			doc:     map[string]any{"str": "abc"},
 			inc:     1,
 			wantErr: true,
 		},

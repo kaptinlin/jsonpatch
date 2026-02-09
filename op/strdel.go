@@ -40,17 +40,17 @@ func NewStrDelWithStr(path []string, pos float64, str string) *StrDelOperation {
 }
 
 // Op returns the operation type.
-func (op *StrDelOperation) Op() internal.OpType {
+func (o *StrDelOperation) Op() internal.OpType {
 	return internal.OpStrDelType
 }
 
 // Code returns the operation code.
-func (op *StrDelOperation) Code() int {
+func (o *StrDelOperation) Code() int {
 	return internal.OpStrDelCode
 }
 
 // getTargetString extracts and validates the target string from a value
-func (op *StrDelOperation) getTargetString(target any) (string, error) {
+func (o *StrDelOperation) getTargetString(target any) (string, error) {
 	if str, ok := target.(string); ok {
 		return str, nil
 	}
@@ -58,35 +58,35 @@ func (op *StrDelOperation) getTargetString(target any) (string, error) {
 }
 
 // Apply applies the string delete operation.
-func (op *StrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *StrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level specially
-	if len(op.Path()) == 0 {
-		targetStr, err := op.getTargetString(doc)
+	if len(o.Path()) == 0 {
+		targetStr, err := o.getTargetString(doc)
 		if err != nil {
 			return internal.OpResult[any]{}, err
 		}
 
 		// Apply string deletion with optimized implementation
-		result := op.applyStrDel(targetStr)
+		result := o.applyStrDel(targetStr)
 		return internal.OpResult[any]{Doc: result, Old: doc}, nil
 	}
 
 	// Get the target value for non-root paths
-	target, err := getValue(doc, op.Path())
+	target, err := getValue(doc, o.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
-	targetStr, err := op.getTargetString(target)
+	targetStr, err := o.getTargetString(target)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
 	// Apply string deletion with optimized implementation
-	result := op.applyStrDel(targetStr)
+	result := o.applyStrDel(targetStr)
 
 	// Set the result back
-	err = setValueAtPath(doc, op.Path(), result)
+	err = setValueAtPath(doc, o.Path(), result)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -95,13 +95,13 @@ func (op *StrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // applyStrDel applies string deletion with optimized string building
-func (op *StrDelOperation) applyStrDel(val string) string {
+func (o *StrDelOperation) applyStrDel(val string) string {
 	// Convert to runes once for proper Unicode handling
 	runes := []rune(val)
 	length := len(runes)
 
 	// Handle position: negative positions count from end
-	pos := int(op.Pos)
+	pos := int(o.Pos)
 	if pos < 0 {
 		// Negative position counts from end
 		pos = length + pos
@@ -116,10 +116,10 @@ func (op *StrDelOperation) applyStrDel(val string) string {
 
 	// Determine deletion length: str takes precedence over len
 	var deletionLength int
-	if op.Str != "" {
-		deletionLength = len([]rune(op.Str))
+	if o.Str != "" {
+		deletionLength = len([]rune(o.Str))
 	} else {
-		deletionLength = int(op.Len) // Already validated as safe integer
+		deletionLength = int(o.Len) // Already validated as safe integer
 	}
 
 	// Handle negative length by treating it as 0 (no deletion)
@@ -128,10 +128,7 @@ func (op *StrDelOperation) applyStrDel(val string) string {
 	}
 
 	// Calculate end position with bounds checking
-	end := pos + deletionLength
-	if end > length {
-		end = length
-	}
+	end := min(pos+deletionLength, length)
 
 	// If no actual deletion needed, return original
 	if pos >= length || pos == end {
@@ -155,31 +152,31 @@ func (op *StrDelOperation) applyStrDel(val string) string {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *StrDelOperation) ToJSON() (internal.Operation, error) {
+func (o *StrDelOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		Op:   string(internal.OpStrDelType),
-		Path: formatPath(op.Path()),
-		Pos:  int(op.Pos),
+		Path: formatPath(o.Path()),
+		Pos:  int(o.Pos),
 	}
 
 	// If we have a specific string to delete, use "str" field
-	if op.Str != "" {
-		result.Str = op.Str
+	if o.Str != "" {
+		result.Str = o.Str
 	} else {
 		// Otherwise use "len" field
-		result.Len = int(op.Len)
+		result.Len = int(o.Len)
 	}
 
 	return result, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *StrDelOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpStrDelCode, op.Path(), op.Pos, op.Len}, nil
+func (o *StrDelOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpStrDelCode, o.Path(), o.Pos, o.Len}, nil
 }
 
 // Validate validates the string delete operation.
-func (op *StrDelOperation) Validate() error {
+func (o *StrDelOperation) Validate() error {
 	// Empty path is valid for str_del operation (root level)
 	// Position and length bounds are checked in Apply method
 	return nil

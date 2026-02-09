@@ -9,11 +9,11 @@ import (
 // AddOperation represents an add operation that adds a value at a specified path.
 type AddOperation struct {
 	BaseOp
-	Value interface{} `json:"value"` // Value to add
+	Value any `json:"value"` // Value to add
 }
 
 // NewAdd creates a new AddOperation operation.
-func NewAdd(path []string, value interface{}) *AddOperation {
+func NewAdd(path []string, value any) *AddOperation {
 	return &AddOperation{
 		BaseOp: NewBaseOp(path),
 		Value:  value,
@@ -54,18 +54,18 @@ func (o *AddOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // addAtPath recursively inserts value at the given path, returns new doc and old value if replaced.
-func addAtPath(doc interface{}, path []string, value interface{}) (interface{}, interface{}, error) {
+func addAtPath(doc any, path []string, value any) (any, any, error) {
 	switch v := doc.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		return addToMap(v, path, value)
-	case []interface{}:
+	case []any:
 		return addToSlice(v, path, value)
 	default:
 		return nil, nil, ErrCannotAddToValue
 	}
 }
 
-func addToMap(doc map[string]interface{}, path []string, value interface{}) (interface{}, interface{}, error) {
+func addToMap(doc map[string]any, path []string, value any) (any, any, error) {
 	key := path[0]
 
 	if len(path) == 1 {
@@ -88,7 +88,7 @@ func addToMap(doc map[string]interface{}, path []string, value interface{}) (int
 	return doc, oldValue, nil
 }
 
-func addToSlice(doc []interface{}, path []string, value interface{}) (interface{}, interface{}, error) {
+func addToSlice(doc []any, path []string, value any) (any, any, error) {
 	key := path[0]
 
 	if len(path) == 1 {
@@ -105,13 +105,13 @@ func addToSlice(doc []interface{}, path []string, value interface{}) (interface{
 		}
 
 		// Get the displaced element (if any)
-		var displacedElement interface{}
+		var displacedElement any
 		if index < len(doc) {
 			displacedElement = doc[index]
 		}
 
 		// Optimize: pre-allocate correct size and use copy to avoid double allocation
-		newV := make([]interface{}, len(doc)+1)
+		newV := make([]any, len(doc)+1)
 		copy(newV, doc[:index])
 		newV[index] = value
 		copy(newV[index+1:], doc[index:])

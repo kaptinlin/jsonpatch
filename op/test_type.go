@@ -41,7 +41,7 @@ func (op *TestTypeOperation) Code() int {
 }
 
 // getValueAndCheckType retrieves the value and checks if it matches any expected type
-func (op *TestTypeOperation) getValueAndCheckType(doc any) (interface{}, string, bool, error) {
+func (op *TestTypeOperation) getValueAndCheckType(doc any) (any, string, bool, error) {
 	// Get target value
 	val, err := getValue(doc, op.Path())
 	if err != nil {
@@ -102,19 +102,19 @@ func (op *TestTypeOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // getTypeName returns the JSON type name of a value.
 // All integer types are reported as "number" for backward compatibility.
-func getTypeName(value interface{}) string {
+func getTypeName(value any) string {
 	return getTypeNameInternal(value, false)
 }
 
 // getTypeNameWithIntegerSupport returns the JSON type name of a value,
 // distinguishing integers from floats (returns "integer" for whole numbers).
-func getTypeNameWithIntegerSupport(value interface{}) string {
+func getTypeNameWithIntegerSupport(value any) string {
 	return getTypeNameInternal(value, true)
 }
 
 // getTypeNameInternal is the shared implementation for type name detection.
 // When distinguishInteger is true, integer types return "integer" instead of "number".
-func getTypeNameInternal(value interface{}, distinguishInteger bool) string {
+func getTypeNameInternal(value any, distinguishInteger bool) string {
 	if value == nil {
 		return "null"
 	}
@@ -136,9 +136,9 @@ func getTypeNameInternal(value interface{}, distinguishInteger bool) string {
 		return "number"
 	case string:
 		return "string"
-	case []interface{}:
+	case []any:
 		return "array"
-	case map[string]interface{}:
+	case map[string]any:
 		return "object"
 	default:
 		return getTypeNameViaReflection(v, distinguishInteger)
@@ -146,7 +146,7 @@ func getTypeNameInternal(value interface{}, distinguishInteger bool) string {
 }
 
 // getTypeNameViaReflection handles type detection for non-standard types using reflection.
-func getTypeNameViaReflection(v interface{}, distinguishInteger bool) string {
+func getTypeNameViaReflection(v any, distinguishInteger bool) string {
 	rt := reflect.TypeOf(v)
 	switch rt.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
@@ -166,7 +166,7 @@ func getTypeNameViaReflection(v interface{}, distinguishInteger bool) string {
 		return "array"
 	case reflect.Map, reflect.Struct:
 		return "object"
-	case reflect.Ptr, reflect.Interface:
+	case reflect.Pointer, reflect.Interface:
 		if rt.Elem() != nil {
 			return getTypeNameInternal(reflect.ValueOf(v).Elem().Interface(), distinguishInteger)
 		}

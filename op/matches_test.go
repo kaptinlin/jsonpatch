@@ -12,7 +12,7 @@ import (
 func TestOpMatches_Basic(t *testing.T) {
 	tests := []struct {
 		name          string
-		doc           interface{}
+		doc           any
 		path          []string
 		pattern       string
 		ignoreCase    bool
@@ -21,7 +21,7 @@ func TestOpMatches_Basic(t *testing.T) {
 	}{
 		{
 			name:        "test simple pattern match",
-			doc:         map[string]interface{}{"text": "hello123"},
+			doc:         map[string]any{"text": "hello123"},
 			path:        []string{"text"},
 			pattern:     "hello\\d+",
 			ignoreCase:  false,
@@ -29,7 +29,7 @@ func TestOpMatches_Basic(t *testing.T) {
 		},
 		{
 			name:        "test pattern no match",
-			doc:         map[string]interface{}{"text": "hello"},
+			doc:         map[string]any{"text": "hello"},
 			path:        []string{"text"},
 			pattern:     "\\d+",
 			ignoreCase:  false,
@@ -37,7 +37,7 @@ func TestOpMatches_Basic(t *testing.T) {
 		},
 		{
 			name:        "test case sensitive match",
-			doc:         map[string]interface{}{"text": "Hello"},
+			doc:         map[string]any{"text": "Hello"},
 			path:        []string{"text"},
 			pattern:     "hello",
 			ignoreCase:  false,
@@ -45,7 +45,7 @@ func TestOpMatches_Basic(t *testing.T) {
 		},
 		{
 			name:        "test case insensitive match",
-			doc:         map[string]interface{}{"text": "Hello"},
+			doc:         map[string]any{"text": "Hello"},
 			path:        []string{"text"},
 			pattern:     "hello",
 			ignoreCase:  true,
@@ -53,7 +53,7 @@ func TestOpMatches_Basic(t *testing.T) {
 		},
 		{
 			name:          "test non string value",
-			doc:           map[string]interface{}{"number": 123},
+			doc:           map[string]any{"number": 123},
 			path:          []string{"number"},
 			pattern:       "\\d+",
 			ignoreCase:    false,
@@ -62,7 +62,7 @@ func TestOpMatches_Basic(t *testing.T) {
 		},
 		{
 			name:          "test missing path",
-			doc:           map[string]interface{}{"text": "hello"},
+			doc:           map[string]any{"text": "hello"},
 			path:          []string{"missing"},
 			pattern:       "hello",
 			ignoreCase:    false,
@@ -118,7 +118,7 @@ func TestOpMatches_InvalidPattern(t *testing.T) {
 	assert.NotNil(t, op)
 
 	// But test should fail (return false) for any input
-	result, _ := op.Test(map[string]interface{}{"email": "test@example.com"})
+	result, _ := op.Test(map[string]any{"email": "test@example.com"})
 	assert.False(t, result)
 }
 
@@ -138,12 +138,12 @@ func TestOpMatches_ToCompact(t *testing.T) {
 	op := NewMatches([]string{"name"}, "john", true, nil)
 	compact, err := op.ToCompact()
 	assert.NoError(t, err)
-	assert.Equal(t, []interface{}{internal.OpMatchesCode, []string{"name"}, "john", true}, compact)
+	assert.Equal(t, []any{internal.OpMatchesCode, []string{"name"}, "john", true}, compact)
 }
 
 func TestOpMatches_ToCompact_WithoutIgnoreCase(t *testing.T) {
 	op := NewMatches([]string{"name"}, "john", false, nil)
 	compact, err := op.ToCompact()
 	assert.NoError(t, err)
-	assert.Equal(t, []interface{}{internal.OpMatchesCode, []string{"name"}, "john", false}, compact)
+	assert.Equal(t, []any{internal.OpMatchesCode, []string{"name"}, "john", false}, compact)
 }

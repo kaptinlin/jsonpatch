@@ -8,12 +8,12 @@ import (
 // ReplaceOperation represents a replace operation that replaces a value at a specified path.
 type ReplaceOperation struct {
 	BaseOp
-	Value    interface{} `json:"value"`              // New value
-	OldValue interface{} `json:"oldValue,omitempty"` // The value that was replaced (optional)
+	Value    any `json:"value"`              // New value
+	OldValue any `json:"oldValue,omitempty"` // The value that was replaced (optional)
 }
 
 // NewReplace creates a new replace operation.
-func NewReplace(path []string, value interface{}) *ReplaceOperation {
+func NewReplace(path []string, value any) *ReplaceOperation {
 	return &ReplaceOperation{
 		BaseOp:   NewBaseOp(path),
 		Value:    value,
@@ -22,7 +22,7 @@ func NewReplace(path []string, value interface{}) *ReplaceOperation {
 }
 
 // NewReplaceWithOldValue creates a new replace operation with oldValue.
-func NewReplaceWithOldValue(path []string, value interface{}, oldValue interface{}) *ReplaceOperation {
+func NewReplaceWithOldValue(path []string, value any, oldValue any) *ReplaceOperation {
 	return &ReplaceOperation{
 		BaseOp:   NewBaseOp(path),
 		Value:    value,
@@ -53,7 +53,7 @@ func (o *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if len(o.path) == 1 && o.path[0] == "" {
 		// Special case: path "/" refers to the key "" in the root object
 		switch v := doc.(type) {
-		case map[string]interface{}:
+		case map[string]any:
 			oldValue := v[""]
 			v[""] = newValue
 			return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
@@ -70,7 +70,7 @@ func (o *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 	// Optimize: directly check type and get value in type switch
 	switch p := parent.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		k, ok := key.(string)
 		if !ok {
 			return internal.OpResult[any]{}, ErrInvalidKeyTypeMap
@@ -82,7 +82,7 @@ func (o *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 		}
 		return internal.OpResult[any]{}, ErrPathNotFound
 
-	case []interface{}:
+	case []any:
 		k, ok := key.(int)
 		if !ok {
 			return internal.OpResult[any]{}, ErrInvalidKeyTypeSlice

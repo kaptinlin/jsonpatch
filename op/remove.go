@@ -7,7 +7,7 @@ import (
 // RemoveOperation represents a remove operation that removes a value at a specified path.
 type RemoveOperation struct {
 	BaseOp
-	OldValue    interface{} `json:"oldValue,omitempty"` // The value that was removed (optional)
+	OldValue    any `json:"oldValue,omitempty"` // The value that was removed (optional)
 	HasOldValue bool        // Whether oldValue is explicitly set
 }
 
@@ -21,7 +21,7 @@ func NewRemove(path []string) *RemoveOperation {
 }
 
 // NewRemoveWithOldValue creates a new remove operation with oldValue.
-func NewRemoveWithOldValue(path []string, oldValue interface{}) *RemoveOperation {
+func NewRemoveWithOldValue(path []string, oldValue any) *RemoveOperation {
 	return &RemoveOperation{
 		BaseOp:      NewBaseOp(path),
 		OldValue:    oldValue,
@@ -51,14 +51,14 @@ func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 	if len(o.path) == 1 {
 		switch v := doc.(type) {
-		case map[string]interface{}:
+		case map[string]any:
 			oldValue, exists := v[o.path[0]]
 			if !exists {
 				return internal.OpResult[any]{}, ErrPathNotFound
 			}
 			delete(v, o.path[0])
 			return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
-		case []interface{}:
+		case []any:
 			index, err := parseArrayIndex(o.path[0])
 			if err != nil {
 				return internal.OpResult[any]{}, err
@@ -68,7 +68,7 @@ func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 			}
 			oldValue := v[index]
 			// Optimize: pre-allocate exact size and use copy
-			newArray := make([]interface{}, len(v)-1)
+			newArray := make([]any, len(v)-1)
 			copy(newArray, v[:index])
 			copy(newArray[index:], v[index+1:])
 			return internal.OpResult[any]{Doc: newArray, Old: oldValue}, nil
@@ -86,13 +86,13 @@ func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Check if the path actually exists
 	if oldValue == nil {
 		switch p := parent.(type) {
-		case map[string]interface{}:
+		case map[string]any:
 			if k, ok := key.(string); ok {
 				if _, exists := p[k]; !exists {
 					return internal.OpResult[any]{}, ErrPathNotFound
 				}
 			}
-		case []interface{}:
+		case []any:
 			if k, ok := key.(int); ok {
 				if k < 0 || k >= len(p) {
 					return internal.OpResult[any]{}, ErrPathNotFound
@@ -101,19 +101,19 @@ func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 		}
 	}
 	switch p := parent.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		if k, ok := key.(string); ok {
 			delete(p, k)
 		} else {
 			return internal.OpResult[any]{}, ErrInvalidKeyTypeMap
 		}
-	case []interface{}:
+	case []any:
 		if k, ok := key.(int); ok {
 			if k < 0 || k >= len(p) {
 				return internal.OpResult[any]{}, ErrIndexOutOfRange
 			}
 			// Optimize: pre-allocate exact size and use copy
-			newSlice := make([]interface{}, len(p)-1)
+			newSlice := make([]any, len(p)-1)
 			copy(newSlice, p[:k])
 			copy(newSlice[k:], p[k+1:])
 			if err := setValueAtPath(doc, o.path[:len(o.path)-1], newSlice); err != nil {

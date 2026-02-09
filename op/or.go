@@ -5,11 +5,11 @@ import "github.com/kaptinlin/jsonpatch/internal"
 // OrOperation represents an OR operation that combines multiple predicate operations.
 type OrOperation struct {
 	BaseOp
-	Operations []interface{} `json:"apply"` // Array of operations to apply
+	Operations []any `json:"apply"` // Array of operations to apply
 }
 
 // NewOr creates a new OR operation.
-func NewOr(path []string, ops []interface{}) *OrOperation {
+func NewOr(path []string, ops []any) *OrOperation {
 	return &OrOperation{
 		BaseOp:     NewBaseOp(path),
 		Operations: ops,
@@ -32,7 +32,7 @@ func (o *OrOperation) Ops() []internal.PredicateOp {
 }
 
 // Test performs the OR operation.
-func (o *OrOperation) Test(doc interface{}) (bool, error) {
+func (o *OrOperation) Test(doc any) (bool, error) {
 	// If no operations, return false (empty OR is false)
 	if len(o.Operations) == 0 {
 		return false, nil
@@ -96,7 +96,7 @@ func (o *OrOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (o *OrOperation) ToCompact() (internal.CompactOperation, error) {
-	opsCompact := make([]interface{}, 0, len(o.Operations))
+	opsCompact := make([]any, 0, len(o.Operations))
 	for _, op := range o.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {

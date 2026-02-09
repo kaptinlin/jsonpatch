@@ -27,14 +27,14 @@ func (o *UndefinedOperation) Code() int {
 }
 
 // checkPathUndefined is a helper function that checks if a path is undefined
-func (o *UndefinedOperation) checkPathUndefined(doc interface{}) bool {
+func (o *UndefinedOperation) checkPathUndefined(doc any) bool {
 	_, err := getValue(doc, o.path)
 	// Path doesn't exist means undefined is true
 	return err != nil
 }
 
 // Test performs the undefined operation.
-func (o *UndefinedOperation) Test(doc interface{}) (bool, error) {
+func (o *UndefinedOperation) Test(doc any) (bool, error) {
 	return o.checkPathUndefined(doc), nil
 }
 

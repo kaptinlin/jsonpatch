@@ -11,7 +11,7 @@ import (
 
 func TestOpAdd_Basic(t *testing.T) {
 	// Test adding to object
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 	}
 
@@ -25,7 +25,7 @@ func TestOpAdd_Basic(t *testing.T) {
 	assert.Equal(t, "qux", doc["baz"], "Original document should now have new field (mutate behavior)")
 
 	// Check the result points to the same document
-	resultDoc := result.Doc.(map[string]interface{})
+	resultDoc := result.Doc.(map[string]any)
 	assert.Equal(t, "bar", resultDoc["foo"], "Result should preserve existing fields")
 	assert.Equal(t, "qux", resultDoc["baz"], "Result should contain new field")
 	assert.Nil(t, result.Old, "Old value should be nil for new field")
@@ -36,7 +36,7 @@ func TestOpAdd_Basic(t *testing.T) {
 
 func TestOpAdd_ReplaceExisting(t *testing.T) {
 	// Test replacing existing field
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 	}
 
@@ -46,7 +46,7 @@ func TestOpAdd_ReplaceExisting(t *testing.T) {
 	require.NoError(t, err, "Add operation should succeed")
 
 	// Check the result
-	resultDoc := result.Doc.(map[string]interface{})
+	resultDoc := result.Doc.(map[string]any)
 	assert.Equal(t, "new_value", resultDoc["foo"], "Result should contain new value")
 	assert.Equal(t, "bar", result.Old, "Old value should be preserved")
 }

@@ -10,7 +10,7 @@ import (
 
 func TestOpTest_Basic(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
 	}
@@ -30,7 +30,7 @@ func TestOpTest_Basic(t *testing.T) {
 }
 
 func TestOpTest_Apply(t *testing.T) {
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 	}
 

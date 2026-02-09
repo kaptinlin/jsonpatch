@@ -5,7 +5,7 @@ import "github.com/kaptinlin/jsonpatch/internal"
 // NotOperation represents a logical NOT operation that negates predicates.
 type NotOperation struct {
 	BaseOp
-	Operations []interface{} `json:"apply"` // Array of operations to apply (then negate)
+	Operations []any `json:"apply"` // Array of operations to apply (then negate)
 }
 
 // NewNot creates a new NOT operation.
@@ -16,12 +16,12 @@ func NewNot(operand internal.PredicateOp) *NotOperation {
 	}
 	return &NotOperation{
 		BaseOp:     NewBaseOp(path),
-		Operations: []interface{}{operand},
+		Operations: []any{operand},
 	}
 }
 
 // NewNotMultiple creates a new NOT operation with multiple operands.
-func NewNotMultiple(path []string, ops []interface{}) *NotOperation {
+func NewNotMultiple(path []string, ops []any) *NotOperation {
 	return &NotOperation{
 		BaseOp:     NewBaseOp(path),
 		Operations: ops,
@@ -102,7 +102,7 @@ func (o *NotOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (o *NotOperation) ToCompact() (internal.CompactOperation, error) {
-	opsCompact := make([]interface{}, 0, len(o.Operations))
+	opsCompact := make([]any, 0, len(o.Operations))
 	for _, op := range o.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {

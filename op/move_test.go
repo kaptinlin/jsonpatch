@@ -10,10 +10,10 @@ import (
 
 func TestOpMove_Basic(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
-		"qux": map[string]interface{}{
+		"qux": map[string]any{
 			"nested": "value",
 		},
 	}
@@ -24,22 +24,22 @@ func TestOpMove_Basic(t *testing.T) {
 	require.NoError(t, err, "Move should succeed for existing field")
 
 	// Check that the field was moved
-	modifiedDoc := result.Doc.(map[string]interface{})
+	modifiedDoc := result.Doc.(map[string]any)
 	assert.Nil(t, result.Old, "Old value should be nil when moving to new location")
 	assert.NotContains(t, modifiedDoc, "foo", "Source field should be removed")
-	assert.Equal(t, "bar", modifiedDoc["qux"].(map[string]interface{})["moved"], "Field should be moved to target path")
+	assert.Equal(t, "bar", modifiedDoc["qux"].(map[string]any)["moved"], "Field should be moved to target path")
 	assert.Equal(t, 123, modifiedDoc["baz"], "Other fields should remain unchanged")
 }
 
 func TestOpMove_Array(t *testing.T) {
 	// Create a test document with array
-	doc := map[string]interface{}{
-		"items": []interface{}{
+	doc := map[string]any{
+		"items": []any{
 			"first",
 			"second",
 			"third",
 		},
-		"target": map[string]interface{}{},
+		"target": map[string]any{},
 	}
 
 	// Test moving an array element
@@ -48,9 +48,9 @@ func TestOpMove_Array(t *testing.T) {
 	require.NoError(t, err, "Move should succeed for existing array element")
 
 	// Check that the element was moved
-	modifiedDoc := result.Doc.(map[string]interface{})
-	items := modifiedDoc["items"].([]interface{})
-	target := modifiedDoc["target"].(map[string]interface{})
+	modifiedDoc := result.Doc.(map[string]any)
+	items := modifiedDoc["items"].([]any)
+	target := modifiedDoc["target"].(map[string]any)
 
 	assert.Nil(t, result.Old, "Old value should be nil when moving to new location")
 	assert.Len(t, items, 2, "Array should have one less element")
@@ -61,7 +61,7 @@ func TestOpMove_Array(t *testing.T) {
 
 func TestOpMove_FromNonExistent(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 	}
 
@@ -74,7 +74,7 @@ func TestOpMove_FromNonExistent(t *testing.T) {
 
 func TestOpMove_SamePath(t *testing.T) {
 	// Test moving to the same path (runtime behavior - should be no-op)
-	doc := map[string]interface{}{"foo": 1}
+	doc := map[string]any{"foo": 1}
 	moveOp := NewMove([]string{"foo"}, []string{"foo"})
 	result, err := moveOp.Apply(doc)
 	require.NoError(t, err, "Move to same location should have no effect")
@@ -84,14 +84,14 @@ func TestOpMove_SamePath(t *testing.T) {
 
 func TestOpMove_RootArray(t *testing.T) {
 	// Test moving within root array
-	doc := []interface{}{"first", "second", "third"}
+	doc := []any{"first", "second", "third"}
 	moveOp := NewMove([]string{"0"}, []string{"2"})
 	result, err := moveOp.Apply(doc)
 	require.NoError(t, err, "Move within root array should succeed")
 
-	resultArray := result.Doc.([]interface{})
+	resultArray := result.Doc.([]any)
 	// Moving "third" (index 2) to position 0, displacing "first"
-	assert.Equal(t, []interface{}{"third", "first", "second"}, resultArray, "Root array should be properly reordered")
+	assert.Equal(t, []any{"third", "first", "second"}, resultArray, "Root array should be properly reordered")
 	assert.Equal(t, "first", result.Old, "Old value should be the displaced element")
 }
 
@@ -187,38 +187,38 @@ func TestOpMove_RFC6902_RemoveAddPattern(t *testing.T) {
 	// RFC 6902 compliance: move should follow remove->add pattern
 	tests := []struct {
 		name     string
-		doc      map[string]interface{}
+		doc      map[string]any
 		from     []string
 		path     []string
-		expected map[string]interface{}
+		expected map[string]any
 	}{
 		{
 			name: "move from object property to array element",
-			doc: map[string]interface{}{
-				"baz": []interface{}{map[string]interface{}{"qux": "hello"}},
+			doc: map[string]any{
+				"baz": []any{map[string]any{"qux": "hello"}},
 				"bar": 1,
 			},
 			from: []string{"baz", "0", "qux"},
 			path: []string{"baz", "1"},
-			expected: map[string]interface{}{
-				"baz": []interface{}{map[string]interface{}{}, "hello"},
+			expected: map[string]any{
+				"baz": []any{map[string]any{}, "hello"},
 				"bar": 1,
 			},
 		},
 		{
 			name: "move array element to front",
-			doc: map[string]interface{}{
-				"users": []interface{}{
-					map[string]interface{}{"name": "Alice"},
-					map[string]interface{}{"name": "Bob"},
+			doc: map[string]any{
+				"users": []any{
+					map[string]any{"name": "Alice"},
+					map[string]any{"name": "Bob"},
 				},
 			},
 			from: []string{"users", "1"},
 			path: []string{"users", "0"},
-			expected: map[string]interface{}{
-				"users": []interface{}{
-					map[string]interface{}{"name": "Bob"},
-					map[string]interface{}{"name": "Alice"},
+			expected: map[string]any{
+				"users": []any{
+					map[string]any{"name": "Bob"},
+					map[string]any{"name": "Alice"},
 				},
 			},
 		},

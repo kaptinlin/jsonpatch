@@ -10,10 +10,10 @@ import (
 
 func TestOpRemove_Basic(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
-		"qux": map[string]interface{}{
+		"qux": map[string]any{
 			"nested": "value",
 		},
 	}
@@ -24,7 +24,7 @@ func TestOpRemove_Basic(t *testing.T) {
 	require.NoError(t, err, "Remove should succeed for existing field")
 
 	// Check that the field was removed
-	modifiedDoc := result.Doc.(map[string]interface{})
+	modifiedDoc := result.Doc.(map[string]any)
 	assert.Equal(t, "bar", result.Old, "Old value should be returned")
 	assert.NotContains(t, modifiedDoc, "foo", "Field should be removed")
 	assert.Contains(t, modifiedDoc, "baz", "Other fields should remain")
@@ -33,8 +33,8 @@ func TestOpRemove_Basic(t *testing.T) {
 
 func TestOpRemove_Nested(t *testing.T) {
 	// Create a test document with nested structure
-	doc := map[string]interface{}{
-		"foo": map[string]interface{}{
+	doc := map[string]any{
+		"foo": map[string]any{
 			"bar": "baz",
 			"qux": 123,
 		},
@@ -46,8 +46,8 @@ func TestOpRemove_Nested(t *testing.T) {
 	require.NoError(t, err, "Remove should succeed for existing nested field")
 
 	// Check that the nested field was removed
-	modifiedDoc := result.Doc.(map[string]interface{})
-	foo := modifiedDoc["foo"].(map[string]interface{})
+	modifiedDoc := result.Doc.(map[string]any)
+	foo := modifiedDoc["foo"].(map[string]any)
 	assert.Equal(t, "baz", result.Old, "Old value should be returned")
 	assert.NotContains(t, foo, "bar", "Nested field should be removed")
 	assert.Contains(t, foo, "qux", "Other nested fields should remain")
@@ -55,7 +55,7 @@ func TestOpRemove_Nested(t *testing.T) {
 
 func TestOpRemove_Array(t *testing.T) {
 	// Create a test document with array
-	doc := []interface{}{
+	doc := []any{
 		"first",
 		"second",
 		"third",
@@ -67,7 +67,7 @@ func TestOpRemove_Array(t *testing.T) {
 	require.NoError(t, err, "Remove should succeed for existing array element")
 
 	// Check that the element was removed
-	modifiedArray := result.Doc.([]interface{})
+	modifiedArray := result.Doc.([]any)
 	assert.Equal(t, "second", result.Old, "Old value should be returned")
 	assert.Len(t, modifiedArray, 2, "Array should have one less element")
 	assert.Equal(t, "first", modifiedArray[0], "First element should remain")
@@ -76,7 +76,7 @@ func TestOpRemove_Array(t *testing.T) {
 
 func TestOpRemove_NonExistent(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 	}
 
@@ -89,7 +89,7 @@ func TestOpRemove_NonExistent(t *testing.T) {
 
 func TestOpRemove_EmptyPath(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 	}
 

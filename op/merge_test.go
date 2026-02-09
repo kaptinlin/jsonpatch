@@ -12,80 +12,80 @@ func TestOpMerge_Apply(t *testing.T) {
 	tests := []struct {
 		name     string
 		path     []string
-		doc      interface{}
+		doc      any
 		pos      float64
-		props    interface{}
-		expected interface{}
-		oldValue interface{}
+		props    any
+		expected any
+		oldValue any
 		wantErr  bool
 	}{
 		{
 			name:     "merge strings",
 			path:     []string{"lines"}, // Path to array element, not array itself
-			doc:      map[string]interface{}{"lines": []interface{}{"hello", " world", "!"}},
+			doc:      map[string]any{"lines": []any{"hello", " world", "!"}},
 			pos:      1.0, // Merge position in the array (element 1 with element 0)
 			props:    nil,
-			expected: map[string]interface{}{"lines": []interface{}{"hello world", "!"}},
-			oldValue: []interface{}{"hello", " world"},
+			expected: map[string]any{"lines": []any{"hello world", "!"}},
+			oldValue: []any{"hello", " world"},
 		},
 		{
 			name:     "merge at end",
 			path:     []string{"lines"}, // Path to array element
-			doc:      map[string]interface{}{"lines": []interface{}{"hello", " world"}},
+			doc:      map[string]any{"lines": []any{"hello", " world"}},
 			pos:      1.0,
 			props:    nil,
-			expected: map[string]interface{}{"lines": []interface{}{"hello world"}},
-			oldValue: []interface{}{"hello", " world"},
+			expected: map[string]any{"lines": []any{"hello world"}},
+			oldValue: []any{"hello", " world"},
 		},
 		{
 			name:     "merge non-strings",
 			path:     []string{"items"},
-			doc:      map[string]interface{}{"items": []interface{}{1, 2, 3}},
+			doc:      map[string]any{"items": []any{1, 2, 3}},
 			pos:      1.0,
 			props:    nil,
-			expected: map[string]interface{}{"items": []interface{}{float64(3), 3}},
-			oldValue: []interface{}{1, 2},
+			expected: map[string]any{"items": []any{float64(3), 3}},
+			oldValue: []any{1, 2},
 		},
 		{
 			name:     "merge mixed types",
 			path:     []string{"items"},
-			doc:      map[string]interface{}{"items": []interface{}{"hello", 123, "world"}},
+			doc:      map[string]any{"items": []any{"hello", 123, "world"}},
 			pos:      1.0,
 			props:    nil,
-			expected: map[string]interface{}{"items": []interface{}{[]interface{}{"hello", 123}, "world"}},
-			oldValue: []interface{}{"hello", 123},
+			expected: map[string]any{"items": []any{[]any{"hello", 123}, "world"}},
+			oldValue: []any{"hello", 123},
 		},
 		{
 			name:     "merge in nested",
 			path:     []string{"user", "tags"}, // Path to array
-			doc:      map[string]interface{}{"user": map[string]interface{}{"tags": []interface{}{"go", "lang", "dev"}}},
+			doc:      map[string]any{"user": map[string]any{"tags": []any{"go", "lang", "dev"}}},
 			pos:      1.0,
 			props:    nil,
-			expected: map[string]interface{}{"user": map[string]interface{}{"tags": []interface{}{"golang", "dev"}}},
-			oldValue: []interface{}{"go", "lang"},
+			expected: map[string]any{"user": map[string]any{"tags": []any{"golang", "dev"}}},
+			oldValue: []any{"go", "lang"},
 		},
 		{
 			name:     "merge at root",
 			path:     []string{},
-			doc:      []interface{}{"a", "b", "c"},
+			doc:      []any{"a", "b", "c"},
 			pos:      1.0,
 			props:    nil,
-			expected: []interface{}{"ab", "c"},
-			oldValue: []interface{}{"a", "b"},
+			expected: []any{"ab", "c"},
+			oldValue: []any{"a", "b"},
 		},
 		{
 			name:     "merge with props",
 			path:     []string{"lines"},
-			doc:      map[string]interface{}{"lines": []interface{}{"hello", " world"}},
+			doc:      map[string]any{"lines": []any{"hello", " world"}},
 			pos:      1.0,
-			props:    map[string]interface{}{"type": "merge"},
-			expected: map[string]interface{}{"lines": []interface{}{"hello world"}},
-			oldValue: []interface{}{"hello", " world"},
+			props:    map[string]any{"type": "merge"},
+			expected: map[string]any{"lines": []any{"hello world"}},
+			oldValue: []any{"hello", " world"},
 		},
 		{
 			name:    "path not found",
 			path:    []string{"notfound"},
-			doc:     map[string]interface{}{"lines": []interface{}{"a", "b"}},
+			doc:     map[string]any{"lines": []any{"a", "b"}},
 			pos:     1.0,
 			props:   nil,
 			wantErr: true,
@@ -93,7 +93,7 @@ func TestOpMerge_Apply(t *testing.T) {
 		{
 			name:    "not an array",
 			path:    []string{"text"},
-			doc:     map[string]interface{}{"text": "abc"},
+			doc:     map[string]any{"text": "abc"},
 			pos:     1.0,
 			props:   nil,
 			wantErr: true,
@@ -109,7 +109,7 @@ func TestOpMerge_Apply(t *testing.T) {
 		{
 			name:    "merge position out of range",
 			path:    []string{"lines"},
-			doc:     map[string]interface{}{"lines": []interface{}{"a", "b"}},
+			doc:     map[string]any{"lines": []any{"a", "b"}},
 			pos:     2.0,
 			props:   nil,
 			wantErr: true,
@@ -117,7 +117,7 @@ func TestOpMerge_Apply(t *testing.T) {
 		{
 			name:    "merge negative position",
 			path:    []string{"lines"},
-			doc:     map[string]interface{}{"lines": []interface{}{"a", "b"}},
+			doc:     map[string]any{"lines": []any{"a", "b"}},
 			pos:     -1.0,
 			props:   nil,
 			wantErr: true,
@@ -125,7 +125,7 @@ func TestOpMerge_Apply(t *testing.T) {
 		{
 			name:    "merge position zero (invalid)",
 			path:    []string{"lines"},
-			doc:     map[string]interface{}{"lines": []interface{}{"a", "b"}},
+			doc:     map[string]any{"lines": []any{"a", "b"}},
 			pos:     0.0,
 			props:   nil,
 			wantErr: true,
@@ -133,7 +133,7 @@ func TestOpMerge_Apply(t *testing.T) {
 		{
 			name:    "single element array",
 			path:    []string{"lines"},
-			doc:     map[string]interface{}{"lines": []interface{}{"a"}},
+			doc:     map[string]any{"lines": []any{"a"}},
 			pos:     1.0,
 			props:   nil,
 			wantErr: true,
@@ -142,9 +142,9 @@ func TestOpMerge_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var props map[string]interface{}
+			var props map[string]any
 			if tt.props != nil {
-				props = tt.props.(map[string]interface{})
+				props = tt.props.(map[string]any)
 			}
 			op := NewMerge(tt.path, tt.pos, props)
 			docCopy, err := DeepClone(tt.doc)
@@ -177,7 +177,7 @@ func TestOpMerge_Code(t *testing.T) {
 func TestOpMerge_NewOpMerge(t *testing.T) {
 	path := []string{"user", "tags"}
 	pos := 1.0
-	props := map[string]interface{}{"type": "merge"}
+	props := map[string]any{"type": "merge"}
 	op := NewMerge(path, pos, props)
 	assert.Equal(t, path, op.Path())
 	assert.Equal(t, pos, op.Pos)

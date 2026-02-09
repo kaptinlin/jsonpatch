@@ -11,73 +11,73 @@ import (
 func TestOpIn_Apply(t *testing.T) {
 	tests := []struct {
 		name          string
-		doc           interface{}
+		doc           any
 		path          []string
-		values        []interface{}
+		values        []any
 		expectError   bool
 		expectedError error
 	}{
 		{
 			name:        "test value in array success",
-			doc:         map[string]interface{}{"status": "active"},
+			doc:         map[string]any{"status": "active"},
 			path:        []string{"status"},
-			values:      []interface{}{"active", "inactive", "pending"},
+			values:      []any{"active", "inactive", "pending"},
 			expectError: false,
 		},
 		{
 			name:        "test value not in array",
-			doc:         map[string]interface{}{"status": "deleted"},
+			doc:         map[string]any{"status": "deleted"},
 			path:        []string{"status"},
-			values:      []interface{}{"active", "inactive", "pending"},
+			values:      []any{"active", "inactive", "pending"},
 			expectError: true,
 		},
 		{
 			name:        "test number in array",
-			doc:         map[string]interface{}{"priority": 1},
+			doc:         map[string]any{"priority": 1},
 			path:        []string{"priority"},
-			values:      []interface{}{1, 2, 3},
+			values:      []any{1, 2, 3},
 			expectError: false,
 		},
 		{
 			name:        "test boolean in array",
-			doc:         map[string]interface{}{"enabled": true},
+			doc:         map[string]any{"enabled": true},
 			path:        []string{"enabled"},
-			values:      []interface{}{true, false},
+			values:      []any{true, false},
 			expectError: false,
 		},
 		{
 			name:        "test null value in array",
-			doc:         map[string]interface{}{"value": nil},
+			doc:         map[string]any{"value": nil},
 			path:        []string{"value"},
-			values:      []interface{}{nil, "test"},
+			values:      []any{nil, "test"},
 			expectError: false,
 		},
 		{
 			name:          "test path not found",
-			doc:           map[string]interface{}{"status": "active"},
+			doc:           map[string]any{"status": "active"},
 			path:          []string{"nonexistent"},
-			values:        []interface{}{"active", "inactive"},
+			values:        []any{"active", "inactive"},
 			expectError:   true,
 			expectedError: ErrPathNotFound,
 		},
 		{
 			name: "test nested path success",
-			doc: map[string]interface{}{
-				"user": map[string]interface{}{
+			doc: map[string]any{
+				"user": map[string]any{
 					"role": "admin",
 				},
 			},
 			path:        []string{"user", "role"},
-			values:      []interface{}{"admin", "user", "guest"},
+			values:      []any{"admin", "user", "guest"},
 			expectError: false,
 		},
 		{
 			name: "test array index success",
-			doc: map[string]interface{}{
-				"items": []interface{}{"apple", "banana", "cherry"},
+			doc: map[string]any{
+				"items": []any{"apple", "banana", "cherry"},
 			},
 			path:        []string{"items", "1"},
-			values:      []interface{}{"banana", "orange"},
+			values:      []any{"banana", "orange"},
 			expectError: false,
 		},
 	}

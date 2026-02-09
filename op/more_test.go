@@ -12,7 +12,7 @@ import (
 func TestOpMore_Basic(t *testing.T) {
 	tests := []struct {
 		name          string
-		doc           interface{}
+		doc           any
 		path          []string
 		value         float64
 		expectError   bool
@@ -20,35 +20,35 @@ func TestOpMore_Basic(t *testing.T) {
 	}{
 		{
 			name:        "test_greater_than_success",
-			doc:         map[string]interface{}{"score": 85.5},
+			doc:         map[string]any{"score": 85.5},
 			path:        []string{"score"},
 			value:       80.0,
 			expectError: false,
 		},
 		{
 			name:        "test_greater_than_failure",
-			doc:         map[string]interface{}{"score": 25.0},
+			doc:         map[string]any{"score": 25.0},
 			path:        []string{"score"},
 			value:       30.0,
 			expectError: true,
 		},
 		{
 			name:        "test_equal_failure",
-			doc:         map[string]interface{}{"score": 25.0},
+			doc:         map[string]any{"score": 25.0},
 			path:        []string{"score"},
 			value:       25.0,
 			expectError: true,
 		},
 		{
 			name:        "test_integer_comparison",
-			doc:         map[string]interface{}{"age": 30},
+			doc:         map[string]any{"age": 30},
 			path:        []string{"age"},
 			value:       25.0,
 			expectError: false,
 		},
 		{
 			name:          "test_non_numeric_value",
-			doc:           map[string]interface{}{"name": "John"},
+			doc:           map[string]any{"name": "John"},
 			path:          []string{"name"},
 			value:         10.0,
 			expectError:   true,
@@ -56,7 +56,7 @@ func TestOpMore_Basic(t *testing.T) {
 		},
 		{
 			name:          "test_missing_path",
-			doc:           map[string]interface{}{"score": 85.5},
+			doc:           map[string]any{"score": 85.5},
 			path:          []string{"missing"},
 			value:         80.0,
 			expectError:   true,
@@ -64,9 +64,9 @@ func TestOpMore_Basic(t *testing.T) {
 		},
 		{
 			name: "test_nested_path",
-			doc: map[string]interface{}{
-				"user": map[string]interface{}{
-					"stats": map[string]interface{}{
+			doc: map[string]any{
+				"user": map[string]any{
+					"stats": map[string]any{
 						"score": 95.0,
 					},
 				},
@@ -122,5 +122,5 @@ func TestOpMore_ToCompact(t *testing.T) {
 	op := NewMore([]string{"age"}, 18.0)
 	compact, err := op.ToCompact()
 	assert.NoError(t, err)
-	assert.Equal(t, []interface{}{internal.OpMoreCode, []string{"age"}, 18.0}, compact)
+	assert.Equal(t, []any{internal.OpMoreCode, []string{"age"}, 18.0}, compact)
 }

@@ -10,10 +10,10 @@ import (
 
 func TestOpReplace_Basic(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
-		"qux": map[string]interface{}{
+		"qux": map[string]any{
 			"nested": "value",
 		},
 	}
@@ -24,7 +24,7 @@ func TestOpReplace_Basic(t *testing.T) {
 	require.NoError(t, err, "Replace should succeed for existing field")
 
 	// Check that the field was replaced
-	modifiedDoc := result.Doc.(map[string]interface{})
+	modifiedDoc := result.Doc.(map[string]any)
 	assert.Equal(t, "bar", result.Old, "Old value should be returned")
 	assert.Equal(t, "new_value", modifiedDoc["foo"], "Field should be replaced")
 	assert.Equal(t, 123, modifiedDoc["baz"], "Other fields should remain unchanged")
@@ -32,8 +32,8 @@ func TestOpReplace_Basic(t *testing.T) {
 
 func TestOpReplace_Nested(t *testing.T) {
 	// Create a test document with nested structure
-	doc := map[string]interface{}{
-		"foo": map[string]interface{}{
+	doc := map[string]any{
+		"foo": map[string]any{
 			"bar": "baz",
 			"qux": 123,
 		},
@@ -45,8 +45,8 @@ func TestOpReplace_Nested(t *testing.T) {
 	require.NoError(t, err, "Replace should succeed for existing nested field")
 
 	// Check that the nested field was replaced
-	modifiedDoc := result.Doc.(map[string]interface{})
-	foo := modifiedDoc["foo"].(map[string]interface{})
+	modifiedDoc := result.Doc.(map[string]any)
+	foo := modifiedDoc["foo"].(map[string]any)
 	assert.Equal(t, "baz", result.Old, "Old value should be returned")
 	assert.Equal(t, "new_nested_value", foo["bar"], "Nested field should be replaced")
 	assert.Equal(t, 123, foo["qux"], "Other nested fields should remain unchanged")
@@ -54,7 +54,7 @@ func TestOpReplace_Nested(t *testing.T) {
 
 func TestOpReplace_Array(t *testing.T) {
 	// Create a test document with array
-	doc := []interface{}{
+	doc := []any{
 		"first",
 		"second",
 		"third",
@@ -66,7 +66,7 @@ func TestOpReplace_Array(t *testing.T) {
 	require.NoError(t, err, "Replace should succeed for existing array element")
 
 	// Check that the element was replaced
-	modifiedArray := result.Doc.([]interface{})
+	modifiedArray := result.Doc.([]any)
 	assert.Equal(t, "second", result.Old, "Old value should be returned")
 	assert.Equal(t, "new_second", modifiedArray[1], "Array element should be replaced")
 	assert.Equal(t, "first", modifiedArray[0], "Other elements should remain unchanged")
@@ -75,7 +75,7 @@ func TestOpReplace_Array(t *testing.T) {
 
 func TestOpReplace_NonExistent(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 	}
 
@@ -88,7 +88,7 @@ func TestOpReplace_NonExistent(t *testing.T) {
 
 func TestOpReplace_EmptyPath(t *testing.T) {
 	// Create a test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"foo": "bar",
 	}
 

@@ -63,7 +63,7 @@ func (o *MatchesOperation) Code() int {
 }
 
 // Test evaluates the matches predicate condition.
-func (o *MatchesOperation) Test(doc interface{}) (bool, error) {
+func (o *MatchesOperation) Test(doc any) (bool, error) {
 	// Get target value
 	val, err := getValue(doc, o.Path())
 	if err != nil {

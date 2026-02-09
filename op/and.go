@@ -5,11 +5,11 @@ import "github.com/kaptinlin/jsonpatch/internal"
 // AndOperation represents an and operation that combines multiple predicate operations.
 type AndOperation struct {
 	BaseOp
-	Operations []interface{} `json:"apply"` // Array of operations to apply
+	Operations []any `json:"apply"` // Array of operations to apply
 }
 
 // NewAnd creates a new AND operation.
-func NewAnd(path []string, ops []interface{}) *AndOperation {
+func NewAnd(path []string, ops []any) *AndOperation {
 	return &AndOperation{
 		BaseOp:     NewBaseOp(path),
 		Operations: ops,
@@ -32,7 +32,7 @@ func (o *AndOperation) Ops() []internal.PredicateOp {
 }
 
 // Test performs the AND operation.
-func (o *AndOperation) Test(doc interface{}) (bool, error) {
+func (o *AndOperation) Test(doc any) (bool, error) {
 	// If no operations, return true (vacuous truth - empty AND is true)
 	if len(o.Operations) == 0 {
 		return true, nil
@@ -93,7 +93,7 @@ func (o *AndOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (o *AndOperation) ToCompact() (internal.CompactOperation, error) {
-	opsCompact := make([]interface{}, 0, len(o.Operations))
+	opsCompact := make([]any, 0, len(o.Operations))
 	for _, op := range o.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {

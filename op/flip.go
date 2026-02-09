@@ -20,26 +20,26 @@ func NewFlip(path []string) *FlipOperation {
 }
 
 // Op returns the operation type
-func (op *FlipOperation) Op() internal.OpType {
+func (o *FlipOperation) Op() internal.OpType {
 	return internal.OpFlipType
 }
 
 // Code returns the operation code
-func (op *FlipOperation) Code() int {
+func (o *FlipOperation) Code() int {
 	return internal.OpFlipCode
 }
 
 // Apply applies the flip operation to the document
-func (op *FlipOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (o *FlipOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level flip specially
-	if len(op.Path()) == 0 {
+	if len(o.Path()) == 0 {
 		// Target is the root document
-		flippedValue := op.flipValue(doc)
+		flippedValue := o.flipValue(doc)
 		return internal.OpResult[any]{Doc: flippedValue, Old: doc}, nil
 	}
 
 	// Get the value to flip, or undefined if it doesn't exist
-	value, err := getValue(doc, op.Path())
+	value, err := getValue(doc, o.Path())
 	var oldValue any
 	if err != nil {
 		// If path doesn't exist, treat as undefined (which becomes false, then flips to true)
@@ -50,10 +50,10 @@ func (op *FlipOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	// Flip the value
-	flippedValue := op.flipValue(value)
+	flippedValue := o.flipValue(value)
 
 	// Set the flipped value back
-	err = setValueAtPath(doc, op.Path(), flippedValue)
+	err = setValueAtPath(doc, o.Path(), flippedValue)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -62,18 +62,18 @@ func (op *FlipOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // flipValue flips boolean values or converts other types to boolean and flip
-func (op *FlipOperation) flipValue(value interface{}) interface{} {
+func (o *FlipOperation) flipValue(value any) any {
 	switch v := value.(type) {
 	case bool:
 		return !v
 	default:
 		// Convert to boolean first, then flip
-		return !op.toBool(value)
+		return !o.toBool(value)
 	}
 }
 
 // toBool converts values to boolean for flip operation
-func (op *FlipOperation) toBool(value interface{}) bool {
+func (o *FlipOperation) toBool(value any) bool {
 	switch v := value.(type) {
 	case nil:
 		return false
@@ -117,7 +117,7 @@ func (op *FlipOperation) toBool(value interface{}) bool {
 			return true
 		case reflect.Chan:
 			return val.Len() > 0
-		case reflect.Ptr, reflect.Interface:
+		case reflect.Pointer, reflect.Interface:
 			return !val.IsNil()
 		case reflect.Invalid:
 			return false
@@ -147,20 +147,20 @@ func (op *FlipOperation) toBool(value interface{}) bool {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (op *FlipOperation) ToJSON() (internal.Operation, error) {
+func (o *FlipOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:   string(internal.OpFlipType),
-		Path: formatPath(op.Path()),
+		Path: formatPath(o.Path()),
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (op *FlipOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpFlipCode, op.Path()}, nil
+func (o *FlipOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpFlipCode, o.Path()}, nil
 }
 
 // Validate validates the flip operation.
-func (op *FlipOperation) Validate() error {
+func (o *FlipOperation) Validate() error {
 	// Empty path is valid for flip operation (root level)
 	return nil
 }
