@@ -20,6 +20,26 @@ func NewLess(path []string, value float64) *LessOperation {
 	}
 }
 
+// Op returns the operation type.
+func (o *LessOperation) Op() internal.OpType {
+	return internal.OpLessType
+}
+
+// Code returns the operation code.
+func (o *LessOperation) Code() int {
+	return internal.OpLessCode
+}
+
+// Test evaluates the less predicate condition.
+func (o *LessOperation) Test(doc any) (bool, error) {
+	_, actualValue, err := getNumericValue(doc, o.Path())
+	if err != nil {
+		//nolint:nilerr // intentional: path not found means test fails
+		return false, nil
+	}
+	return actualValue < o.Value, nil
+}
+
 // Apply applies the less test operation to the document.
 func (o *LessOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, actualValue, err := getNumericValue(doc, o.Path())
@@ -33,19 +53,8 @@ func (o *LessOperation) Apply(doc any) (internal.OpResult[any], error) {
 	return internal.OpResult[any]{Doc: doc, Old: value}, nil
 }
 
-// Op returns the operation type.
-func (o *LessOperation) Op() internal.OpType {
-	return internal.OpLessType
-}
-
-// Code returns the operation code.
-func (o *LessOperation) Code() int {
-	return internal.OpLessCode
-}
-
 // ToJSON serializes the operation to JSON format.
 func (o *LessOperation) ToJSON() (internal.Operation, error) {
-	// Convert float64 to int if it's a whole number
 	var value any = o.Value
 	if o.Value == float64(int(o.Value)) {
 		value = int(o.Value)
@@ -70,16 +79,3 @@ func (o *LessOperation) Validate() error {
 	}
 	return nil
 }
-
-// Test evaluates the less predicate condition.
-func (o *LessOperation) Test(doc any) (bool, error) {
-	_, actualValue, err := getNumericValue(doc, o.Path())
-	if err != nil {
-		// For JSON Patch test operations, path not found or wrong type means test fails (returns false)
-		// This is correct JSON Patch semantics - returning nil error with false result
-		//nolint:nilerr // This is intentional behavior for test operations
-		return false, nil
-	}
-	return actualValue < o.Value, nil
-}
-

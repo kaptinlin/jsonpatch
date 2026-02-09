@@ -138,8 +138,7 @@ func (o *SplitOperation) splitValue(value any) any {
 // splitString splits a string at the specified position
 func (o *SplitOperation) splitString(s string) []any {
 	runes := []rune(s)
-	// High-performance type conversion (single, boundary conversion)
-	pos := int(o.Pos) // Already validated as safe integer
+	pos := int(o.Pos)
 
 	// Handle negative positions (count from end)
 	if pos < 0 {
@@ -175,7 +174,7 @@ func (o *SplitOperation) splitString(s string) []any {
 
 // splitNumber splits a number at the specified position
 func (o *SplitOperation) splitNumber(n float64) []any {
-	pos := o.Pos // Already validated as safe number
+	pos := o.Pos
 	if pos > n {
 		pos = n
 	}

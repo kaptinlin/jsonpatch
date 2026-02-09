@@ -55,10 +55,7 @@ func (o *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error) 
 		return internal.OpResult[any]{}, ErrNotString
 	}
 
-	// High-performance type conversion (single, boundary conversion)
-	length := int(o.Length) // Already validated as safe integer
-	// Check if the string length matches (>= comparison like TypeScript version)
-	// Use XOR pattern: NotFlag XOR condition - if they're different, the test passes
+	length := int(o.Length)
 	lengthMatches := len(actualValue) >= length
 	shouldPass := lengthMatches != o.NotFlag
 	if !shouldPass {
@@ -124,11 +121,8 @@ func (o *TestStringLenOperation) Test(doc any) (bool, error) {
 		return false, nil // Return false if not string or byte slice
 	}
 
-	// High-performance type conversion (single, boundary conversion)
-	length := int(o.Length) // Already validated as safe integer
-	// Check if the string length matches (>= comparison like TypeScript version)
+	length := int(o.Length)
 	lengthMatches := len(str) >= length
-	// Use XOR pattern: NotFlag XOR condition - if they're different, the test passes
 	return o.NotFlag != lengthMatches, nil
 }
 

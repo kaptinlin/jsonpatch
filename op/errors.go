@@ -36,7 +36,7 @@ var (
 	ErrNotTestFailed       = errors.New("not test failed")
 
 	// Value operation errors
-	ErrCannotReplace          = errors.New("NOT_FOUND")
+	ErrCannotReplace          = errors.New("path not found for replace")
 	ErrCannotAddToValue       = errors.New("cannot add to non-object/non-array value")
 	ErrCannotRemoveFromValue  = errors.New("cannot remove from non-object/non-array document")
 	ErrCannotMoveIntoChildren = errors.New("cannot move into own children")

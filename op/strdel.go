@@ -119,7 +119,7 @@ func (o *StrDelOperation) applyStrDel(val string) string {
 	if o.Str != "" {
 		deletionLength = len([]rune(o.Str))
 	} else {
-		deletionLength = int(o.Len) // Already validated as safe integer
+		deletionLength = int(o.Len)
 	}
 
 	// Handle negative length by treating it as 0 (no deletion)

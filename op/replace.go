@@ -62,20 +62,17 @@ func (o *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 		}
 	}
 
-	// Optimize: directly check type and get value in type switch
 	parent, key, err := navigateToParent(doc, o.path)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
-	// Optimize: directly check type and get value in type switch
 	switch p := parent.(type) {
 	case map[string]any:
 		k, ok := key.(string)
 		if !ok {
 			return internal.OpResult[any]{}, ErrInvalidKeyTypeMap
 		}
-		// Optimize: merge existence check and value retrieval
 		if oldValue, exists := p[k]; exists {
 			p[k] = newValue
 			return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
@@ -87,7 +84,6 @@ func (o *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 		if !ok {
 			return internal.OpResult[any]{}, ErrInvalidKeyTypeSlice
 		}
-		// Optimize: merge boundary check and value retrieval
 		if k >= 0 && k < len(p) {
 			oldValue := p[k]
 			p[k] = newValue

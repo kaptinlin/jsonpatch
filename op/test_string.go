@@ -124,9 +124,7 @@ func (o *TestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, ErrNotString
 	}
 
-	// High-performance type conversion (single, boundary conversion)
-	pos := o.Pos // Already validated as safe integer
-	// Check if substring matches at the specified position
+	pos := o.Pos
 	if pos < 0 || pos > len(str) {
 		return internal.OpResult[any]{}, ErrPositionOutOfStringRange
 	}

@@ -67,7 +67,6 @@ func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 				return internal.OpResult[any]{}, ErrIndexOutOfRange
 			}
 			oldValue := v[index]
-			// Optimize: pre-allocate exact size and use copy
 			newArray := make([]any, len(v)-1)
 			copy(newArray, v[:index])
 			copy(newArray[index:], v[index+1:])
@@ -112,7 +111,6 @@ func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 			if k < 0 || k >= len(p) {
 				return internal.OpResult[any]{}, ErrIndexOutOfRange
 			}
-			// Optimize: pre-allocate exact size and use copy
 			newSlice := make([]any, len(p)-1)
 			copy(newSlice, p[:k])
 			copy(newSlice[k:], p[k+1:])

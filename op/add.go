@@ -110,7 +110,6 @@ func addToSlice(doc []any, path []string, value any) (any, any, error) {
 			displacedElement = doc[index]
 		}
 
-		// Optimize: pre-allocate correct size and use copy to avoid double allocation
 		newV := make([]any, len(doc)+1)
 		copy(newV, doc[:index])
 		newV[index] = value
