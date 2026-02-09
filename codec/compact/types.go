@@ -61,14 +61,8 @@ type EncoderOptions struct {
 	StringOpcode bool
 }
 
-// DecoderOptions configures the compact decoder behavior.
-type DecoderOptions struct{}
-
 // EncoderOption is a functional option for configuring the encoder.
 type EncoderOption func(*EncoderOptions)
-
-// DecoderOption is a functional option for configuring the decoder.
-type DecoderOption func(*DecoderOptions)
 
 // WithStringOpcode configures the encoder to use string opcodes.
 func WithStringOpcode(useString bool) EncoderOption {

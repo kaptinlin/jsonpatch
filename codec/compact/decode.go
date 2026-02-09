@@ -76,19 +76,44 @@ var (
 	}
 )
 
-// Decode decodes compact format operations using default options.
-func Decode(compactOps []Op, opts ...DecoderOption) ([]internal.Op, error) {
-	d := NewDecoder(opts...)
-	return d.DecodeSlice(compactOps)
+// Decoder decodes compact format operations into operation instances.
+type Decoder struct{}
+
+// NewDecoder creates a new compact decoder.
+func NewDecoder() *Decoder {
+	return &Decoder{}
+}
+
+// Decode decodes a single compact operation into an operation instance.
+func (d *Decoder) Decode(compactOp Op) (internal.Op, error) {
+	return parseOp(compactOp)
+}
+
+// DecodeSlice decodes multiple compact operations.
+func (d *Decoder) DecodeSlice(compactOps []Op) ([]internal.Op, error) {
+	result := make([]internal.Op, len(compactOps))
+	for i, compactOp := range compactOps {
+		parsed, err := parseOp(compactOp)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = parsed
+	}
+	return result, nil
+}
+
+// Decode decodes compact format operations.
+func Decode(compactOps []Op) ([]internal.Op, error) {
+	return NewDecoder().DecodeSlice(compactOps)
 }
 
 // DecodeJSON decodes compact format JSON bytes into operations.
-func DecodeJSON(data []byte, opts ...DecoderOption) ([]internal.Op, error) {
+func DecodeJSON(data []byte) ([]internal.Op, error) {
 	var compactOps []Op
 	if err := json.Unmarshal(data, &compactOps); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal compact operations: %w", err)
+		return nil, fmt.Errorf("unmarshal compact ops: %w", err)
 	}
-	return Decode(compactOps, opts...)
+	return Decode(compactOps)
 }
 
 // --- Header parsing ---
