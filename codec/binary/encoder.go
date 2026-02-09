@@ -1,11 +1,3 @@
-// Package binary implements a MessagePack-based binary codec for JSON Patch operations.
-//
-// Limitations:
-//   - Second-order predicates (and, or, not) are NOT supported in binary codec.
-//     These operations are skipped during encoding with a warning.
-//     Use the JSON or compact codec if you need second-order predicate support.
-//
-//nolint:gosec // Integer size conversions are safe due to operation code and slice length bounds.
 package binary
 
 import (
@@ -30,6 +22,7 @@ func (c *Codec) encode(ops []internal.Op) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// encodeOps writes the operation count followed by each encoded operation.
 func encodeOps(writer *msgp.Writer, ops []internal.Op) error {
 	if err := writer.WriteFloat64(float64(len(ops))); err != nil {
 		return err
@@ -42,44 +35,7 @@ func encodeOps(writer *msgp.Writer, ops []internal.Op) error {
 	return nil
 }
 
-// writeHeader writes the array header and operation code.
-func writeHeader(writer *msgp.Writer, size uint32, code int) error {
-	if err := writer.WriteArrayHeader(size); err != nil {
-		return err
-	}
-	return writer.WriteUint8(uint8(code))
-}
-
-// encodePathOnly encodes operations with format: [code, path] (e.g. remove, defined, undefined, flip).
-func encodePathOnly(writer *msgp.Writer, code int, path []string) error {
-	if err := writeHeader(writer, 2, code); err != nil {
-		return err
-	}
-	return encodePath(writer, path)
-}
-
-// encodePathValue encodes operations with format: [code, path, value] (e.g. add, replace, test).
-func encodePathValue(writer *msgp.Writer, code int, path []string, value any) error {
-	if err := writeHeader(writer, 3, code); err != nil {
-		return err
-	}
-	if err := encodePath(writer, path); err != nil {
-		return err
-	}
-	return encodeValue(writer, value)
-}
-
-// encodePathPaths encodes operations with format: [code, from, path] (e.g. move, copy).
-func encodePathPaths(writer *msgp.Writer, code int, from, path []string) error {
-	if err := writeHeader(writer, 3, code); err != nil {
-		return err
-	}
-	if err := encodePath(writer, from); err != nil {
-		return err
-	}
-	return encodePath(writer, path)
-}
-
+// encodeOp dispatches encoding to the appropriate helper by operation type.
 func encodeOp(writer *msgp.Writer, i internal.Op) error {
 	switch o := i.(type) {
 	// Standard RFC 6902
@@ -120,116 +76,178 @@ func encodeOp(writer *msgp.Writer, i internal.Op) error {
 
 	// Predicate operations with custom fields
 	case *op.MatchesOperation:
-		if err := writeHeader(writer, 4, o.Code()); err != nil {
-			return err
-		}
-		if err := encodePath(writer, o.Path()); err != nil {
-			return err
-		}
-		if err := writer.WriteString(o.Pattern); err != nil {
-			return err
-		}
-		return writer.WriteBool(o.IgnoreCase)
-
+		return encodeMatches(writer, o)
 	case *op.TestStringOperation:
-		if err := writeHeader(writer, 4, o.Code()); err != nil {
-			return err
-		}
-		if err := encodePath(writer, o.Path()); err != nil {
-			return err
-		}
-		if err := writer.WriteString(o.Str); err != nil {
-			return err
-		}
-		return writer.WriteFloat64(float64(o.Pos))
-
+		return encodeTestString(writer, o)
 	case *op.TestStringLenOperation:
-		if err := writeHeader(writer, 4, o.Code()); err != nil {
-			return err
-		}
-		if err := encodePath(writer, o.Path()); err != nil {
-			return err
-		}
-		if err := writer.WriteFloat64(o.Length); err != nil {
-			return err
-		}
-		return writer.WriteBool(o.Not())
-
+		return encodeTestStringLen(writer, o)
 	case *op.TypeOperation:
 		return encodePathValue(writer, o.Code(), o.Path(), o.TypeValue)
 
 	// Extended operations
 	case *op.FlipOperation:
 		return encodePathOnly(writer, o.Code(), o.Path())
-
 	case *op.IncOperation:
 		return encodePathValue(writer, o.Code(), o.Path(), o.Inc)
-
 	case *op.StrInsOperation:
-		if err := writeHeader(writer, 4, o.Code()); err != nil {
-			return err
-		}
-		if err := encodePath(writer, o.Path()); err != nil {
-			return err
-		}
-		if err := writer.WriteFloat64(o.Pos); err != nil {
-			return err
-		}
-		return writer.WriteString(o.Str)
-
+		return encodeStrIns(writer, o)
 	case *op.StrDelOperation:
-		if err := writeHeader(writer, 4, o.Code()); err != nil {
-			return err
-		}
-		if err := encodePath(writer, o.Path()); err != nil {
-			return err
-		}
-		if err := writer.WriteFloat64(o.Pos); err != nil {
-			return err
-		}
-		return writer.WriteFloat64(o.Len)
-
+		return encodeStrDel(writer, o)
 	case *op.SplitOperation:
-		if err := writeHeader(writer, 4, o.Code()); err != nil {
-			return err
-		}
-		if err := encodePath(writer, o.Path()); err != nil {
-			return err
-		}
-		if err := writer.WriteFloat64(o.Pos); err != nil {
-			return err
-		}
-		return encodeValue(writer, o.Props)
-
+		return encodePathFloat64Value(writer, o.Code(), o.Path(), o.Pos, o.Props)
 	case *op.ExtendOperation:
-		if err := writeHeader(writer, 4, o.Code()); err != nil {
-			return err
-		}
-		if err := encodePath(writer, o.Path()); err != nil {
-			return err
-		}
-		if err := encodeValue(writer, o.Properties); err != nil {
-			return err
-		}
-		return writer.WriteBool(o.DeleteNull)
-
+		return encodeExtend(writer, o)
 	case *op.MergeOperation:
-		if err := writeHeader(writer, 4, o.Code()); err != nil {
-			return err
-		}
-		if err := encodePath(writer, o.Path()); err != nil {
-			return err
-		}
-		if err := writer.WriteFloat64(o.Pos); err != nil {
-			return err
-		}
-		return encodeValue(writer, o.Props)
+		return encodePathFloat64Value(writer, o.Code(), o.Path(), o.Pos, o.Props)
 
 	default:
 		return fmt.Errorf("%w: %T", ErrUnsupportedOp, i)
 	}
 }
 
+// --- Encoding primitives ---
+
+// writeHeader writes the array header and operation code.
+func writeHeader(writer *msgp.Writer, size uint32, code int) error {
+	if err := writer.WriteArrayHeader(size); err != nil {
+		return err
+	}
+	return writer.WriteUint8(uint8(code)) //nolint:gosec // Operation codes are bounded constants within uint8 range.
+}
+
+// encodePathOnly encodes operations with format: [code, path].
+func encodePathOnly(writer *msgp.Writer, code int, path []string) error {
+	if err := writeHeader(writer, 2, code); err != nil {
+		return err
+	}
+	return encodePath(writer, path)
+}
+
+// encodePathValue encodes operations with format: [code, path, value].
+func encodePathValue(writer *msgp.Writer, code int, path []string, value any) error {
+	if err := writeHeader(writer, 3, code); err != nil {
+		return err
+	}
+	if err := encodePath(writer, path); err != nil {
+		return err
+	}
+	return encodeValue(writer, value)
+}
+
+// encodePathPaths encodes operations with format: [code, from, path].
+func encodePathPaths(writer *msgp.Writer, code int, from, path []string) error {
+	if err := writeHeader(writer, 3, code); err != nil {
+		return err
+	}
+	if err := encodePath(writer, from); err != nil {
+		return err
+	}
+	return encodePath(writer, path)
+}
+
+// encodePathFloat64Value encodes operations with format: [code, path, float64, value].
+func encodePathFloat64Value(writer *msgp.Writer, code int, path []string, f float64, value any) error {
+	if err := writeHeader(writer, 4, code); err != nil {
+		return err
+	}
+	if err := encodePath(writer, path); err != nil {
+		return err
+	}
+	if err := writer.WriteFloat64(f); err != nil {
+		return err
+	}
+	return encodeValue(writer, value)
+}
+
+// --- Operation-specific encoders ---
+
+// encodeMatches encodes a matches predicate: [code, path, pattern, ignoreCase].
+func encodeMatches(writer *msgp.Writer, o *op.MatchesOperation) error {
+	if err := writeHeader(writer, 4, o.Code()); err != nil {
+		return err
+	}
+	if err := encodePath(writer, o.Path()); err != nil {
+		return err
+	}
+	if err := writer.WriteString(o.Pattern); err != nil {
+		return err
+	}
+	return writer.WriteBool(o.IgnoreCase)
+}
+
+// encodeTestString encodes a test_string operation: [code, path, str, pos].
+func encodeTestString(writer *msgp.Writer, o *op.TestStringOperation) error {
+	if err := writeHeader(writer, 4, o.Code()); err != nil {
+		return err
+	}
+	if err := encodePath(writer, o.Path()); err != nil {
+		return err
+	}
+	if err := writer.WriteString(o.Str); err != nil {
+		return err
+	}
+	return writer.WriteFloat64(float64(o.Pos))
+}
+
+// encodeTestStringLen encodes a test_string_len operation: [code, path, length, not].
+func encodeTestStringLen(writer *msgp.Writer, o *op.TestStringLenOperation) error {
+	if err := writeHeader(writer, 4, o.Code()); err != nil {
+		return err
+	}
+	if err := encodePath(writer, o.Path()); err != nil {
+		return err
+	}
+	if err := writer.WriteFloat64(o.Length); err != nil {
+		return err
+	}
+	return writer.WriteBool(o.Not())
+}
+
+// encodeStrIns encodes a str_ins operation: [code, path, pos, str].
+func encodeStrIns(writer *msgp.Writer, o *op.StrInsOperation) error {
+	if err := writeHeader(writer, 4, o.Code()); err != nil {
+		return err
+	}
+	if err := encodePath(writer, o.Path()); err != nil {
+		return err
+	}
+	if err := writer.WriteFloat64(o.Pos); err != nil {
+		return err
+	}
+	return writer.WriteString(o.Str)
+}
+
+// encodeStrDel encodes a str_del operation: [code, path, pos, len].
+func encodeStrDel(writer *msgp.Writer, o *op.StrDelOperation) error {
+	if err := writeHeader(writer, 4, o.Code()); err != nil {
+		return err
+	}
+	if err := encodePath(writer, o.Path()); err != nil {
+		return err
+	}
+	if err := writer.WriteFloat64(o.Pos); err != nil {
+		return err
+	}
+	return writer.WriteFloat64(o.Len)
+}
+
+// encodeExtend encodes an extend operation: [code, path, properties, deleteNull].
+func encodeExtend(writer *msgp.Writer, o *op.ExtendOperation) error {
+	if err := writeHeader(writer, 4, o.Code()); err != nil {
+		return err
+	}
+	if err := encodePath(writer, o.Path()); err != nil {
+		return err
+	}
+	if err := encodeValue(writer, o.Properties); err != nil {
+		return err
+	}
+	return writer.WriteBool(o.DeleteNull)
+}
+
+// --- Low-level encoders ---
+
+// encodePath writes a path as a float64 count followed by string segments.
 func encodePath(writer *msgp.Writer, path []string) error {
 	if err := writer.WriteFloat64(float64(len(path))); err != nil {
 		return err
@@ -242,6 +260,7 @@ func encodePath(writer *msgp.Writer, path []string) error {
 	return nil
 }
 
+// encodeValue writes an arbitrary value using msgp interface encoding.
 func encodeValue(writer *msgp.Writer, value any) error {
 	return writer.WriteIntf(value)
 }
