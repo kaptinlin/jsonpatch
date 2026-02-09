@@ -1,26 +1,12 @@
 package binary
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/op"
 	"github.com/tinylib/msgp/msgp"
 )
-
-// encode converts a slice of operations to a byte slice in binary format.
-func (c *Codec) encode(ops []internal.Op) ([]byte, error) {
-	var buf bytes.Buffer
-	writer := msgp.NewWriter(&buf)
-	if err := encodeOps(writer, ops); err != nil {
-		return nil, err
-	}
-	if err := writer.Flush(); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
 
 // encodeOps writes the operation count followed by each encoded operation.
 func encodeOps(writer *msgp.Writer, ops []internal.Op) error {
@@ -101,7 +87,7 @@ func encodeOp(writer *msgp.Writer, i internal.Op) error {
 		return encodePathFloat64Value(writer, o.Code(), o.Path(), o.Pos, o.Props)
 
 	default:
-		return fmt.Errorf("%w: %T", ErrUnsupportedOp, i)
+		return fmt.Errorf("unsupported op type %T: %w", i, ErrUnsupportedOp)
 	}
 }
 

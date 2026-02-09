@@ -1,21 +1,36 @@
 package binary
 
-import "github.com/kaptinlin/jsonpatch/internal"
+import (
+	"bytes"
 
-// Codec implements the Codec interface for the binary format.
+	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/tinylib/msgp/msgp"
+)
+
+// Codec encodes and decodes JSON Patch operations in MessagePack binary format.
 type Codec struct{}
 
-// NewCodec creates a new Codec.
+// NewCodec creates a new binary Codec.
 func NewCodec() *Codec {
 	return &Codec{}
 }
 
-// Encode encodes a slice of operations into binary format.
+// Encode serializes operations into MessagePack binary format.
 func (c *Codec) Encode(ops []internal.Op) ([]byte, error) {
-	return c.encode(ops)
+	var buf bytes.Buffer
+	buf.Grow(len(ops) * 32) // pre-allocate based on typical operation size
+	writer := msgp.NewWriter(&buf)
+	if err := encodeOps(writer, ops); err != nil {
+		return nil, err
+	}
+	if err := writer.Flush(); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
-// Decode decodes a slice of operations from binary format.
+// Decode deserializes operations from MessagePack binary format.
 func (c *Codec) Decode(data []byte) ([]internal.Op, error) {
-	return c.decode(data)
+	reader := msgp.NewReader(bytes.NewReader(data))
+	return decodeOps(reader)
 }
