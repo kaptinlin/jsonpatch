@@ -1,78 +1,57 @@
-// Package internal provides internal types and constants for JSON Patch operations.
+// Package internal provides shared types, interfaces, and constants for JSON Patch operations.
 package internal
 
-// OpType represents the string type for JSON Patch operation names,
-// such as "add", "remove", "replace", etc.
-// Used for type safety and constant references only.
+// OpType represents a JSON Patch operation name such as "add" or "remove".
 type OpType string
 
+// JSON Patch (RFC 6902) operation types.
 const (
-	// OpAddType represents the "add" operation type for JSON Patch (RFC 6902)
-	OpAddType OpType = "add"
-	// OpRemoveType represents the "remove" operation type for JSON Patch (RFC 6902)
-	OpRemoveType OpType = "remove"
-	// OpReplaceType represents the "replace" operation type for JSON Patch (RFC 6902)
+	OpAddType     OpType = "add"
+	OpRemoveType  OpType = "remove"
 	OpReplaceType OpType = "replace"
-	// OpMoveType represents the "move" operation type for JSON Patch (RFC 6902)
-	OpMoveType OpType = "move"
-	// OpCopyType represents the "copy" operation type for JSON Patch (RFC 6902)
-	OpCopyType OpType = "copy"
-	// OpTestType represents the "test" operation type for JSON Patch (RFC 6902)
-	OpTestType OpType = "test"
+	OpMoveType    OpType = "move"
+	OpCopyType    OpType = "copy"
+	OpTestType    OpType = "test"
+)
 
-	// OpContainsType represents the "contains" operation type for JSON Predicate operations
-	OpContainsType OpType = "contains"
-	// OpDefinedType represents the "defined" operation type for JSON Predicate operations
-	OpDefinedType OpType = "defined"
-	// OpUndefinedType represents the "undefined" operation type for JSON Predicate operations
-	OpUndefinedType OpType = "undefined"
-	// OpTypeType represents the "type" operation type for JSON Predicate operations
-	OpTypeType OpType = "type"
-	// OpTestTypeType represents the "test_type" operation type for JSON Predicate operations
-	OpTestTypeType OpType = "test_type"
-	// OpTestStringType represents the "test_string" operation type for JSON Predicate operations
-	OpTestStringType OpType = "test_string"
-	// OpTestStringLenType represents the "test_string_len" operation type for JSON Predicate operations
+// JSON Predicate operation types.
+const (
+	OpContainsType      OpType = "contains"
+	OpDefinedType       OpType = "defined"
+	OpUndefinedType     OpType = "undefined"
+	OpTypeType          OpType = "type"
+	OpTestTypeType      OpType = "test_type"
+	OpTestStringType    OpType = "test_string"
 	OpTestStringLenType OpType = "test_string_len"
-	// OpEndsType represents the "ends" operation type for JSON Predicate operations
-	OpEndsType OpType = "ends"
-	// OpStartsType represents the "starts" operation type for JSON Predicate operations
-	OpStartsType OpType = "starts"
-	// OpInType represents the "in" operation type for JSON Predicate operations
-	OpInType OpType = "in"
-	// OpLessType represents the "less" operation type for JSON Predicate operations
-	OpLessType OpType = "less"
-	// OpMoreType represents the "more" operation type for JSON Predicate operations
-	OpMoreType OpType = "more"
-	// OpMatchesType represents the "matches" operation type for JSON Predicate operations
-	OpMatchesType OpType = "matches"
+	OpEndsType          OpType = "ends"
+	OpStartsType        OpType = "starts"
+	OpInType            OpType = "in"
+	OpLessType          OpType = "less"
+	OpMoreType          OpType = "more"
+	OpMatchesType       OpType = "matches"
+)
 
-	// OpAndType represents the "and" operation type for composite operations
+// Composite (second-order) predicate operation types.
+const (
 	OpAndType OpType = "and"
-	// OpOrType represents the "or" operation type for composite operations
-	OpOrType OpType = "or"
-	// OpNotType represents the "not" operation type for composite operations
+	OpOrType  OpType = "or"
 	OpNotType OpType = "not"
+)
 
-	// OpFlipType represents the "flip" operation type for extended operations
-	OpFlipType OpType = "flip"
-	// OpIncType represents the "inc" operation type for extended operations
-	OpIncType OpType = "inc"
-	// OpStrInsType represents the "str_ins" operation type for extended operations
+// Extended operation types.
+const (
+	OpFlipType   OpType = "flip"
+	OpIncType    OpType = "inc"
 	OpStrInsType OpType = "str_ins"
-	// OpStrDelType represents the "str_del" operation type for extended operations
 	OpStrDelType OpType = "str_del"
-	// OpSplitType represents the "split" operation type for extended operations
-	OpSplitType OpType = "split"
-	// OpMergeType represents the "merge" operation type for extended operations
-	OpMergeType OpType = "merge"
-	// OpExtendType represents the "extend" operation type for extended operations
+	OpSplitType  OpType = "split"
+	OpMergeType  OpType = "merge"
 	OpExtendType OpType = "extend"
 )
 
-// Operation code constants, numeric codes
+// Operation codes for binary serialization.
 const (
-	// JSON Patch (RFC 6902) operations
+	// JSON Patch (RFC 6902).
 	OpAddCode     = 0
 	OpRemoveCode  = 1
 	OpReplaceCode = 2
@@ -80,20 +59,20 @@ const (
 	OpMoveCode    = 4
 	OpTestCode    = 5
 
-	// String editing
+	// String editing.
 	OpStrInsCode = 6
 	OpStrDelCode = 7
 
-	// Extra
+	// Extra operations.
 	OpFlipCode = 8
 	OpIncCode  = 9
 
-	// Slate.js
+	// Slate.js operations.
 	OpSplitCode  = 10
 	OpMergeCode  = 11
 	OpExtendCode = 12
 
-	// JSON Predicate
+	// JSON Predicate operations.
 	OpContainsCode      = 30
 	OpDefinedCode       = 31
 	OpEndsCode          = 32

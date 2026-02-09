@@ -7,10 +7,7 @@ import (
 )
 
 func TestIsValidJSONPatchType(t *testing.T) {
-	valid := []string{
-		"string", "number", "boolean",
-		"object", "integer", "array", "null",
-	}
+	valid := []string{"string", "number", "boolean", "object", "integer", "array", "null"}
 	for _, v := range valid {
 		assert.True(t, IsValidJSONPatchType(v), "expected %q to be valid", v)
 	}
@@ -23,32 +20,27 @@ func TestIsValidJSONPatchType(t *testing.T) {
 
 func TestGetJSONPatchType(t *testing.T) {
 	tests := []struct {
-		name     string
-		value    any
-		expected JSONPatchTypes
+		name string
+		val  any
+		want JSONPatchType
 	}{
-		// Null
+		// Null.
 		{"nil", nil, JSONPatchTypeNull},
 		{"unknown type", struct{}{}, JSONPatchTypeNull},
-
-		// String
+		// String.
 		{"string", "hello", JSONPatchTypeString},
 		{"empty string", "", JSONPatchTypeString},
-
-		// Boolean
+		// Boolean.
 		{"true", true, JSONPatchTypeBoolean},
 		{"false", false, JSONPatchTypeBoolean},
-
-		// Arrays
+		// Arrays.
 		{"[]any", []any{1, 2}, JSONPatchTypeArray},
 		{"[]string", []string{"a"}, JSONPatchTypeArray},
 		{"[]int", []int{1, 2}, JSONPatchTypeArray},
 		{"[]float64", []float64{1.1}, JSONPatchTypeArray},
-
-		// Object
+		// Object.
 		{"map[string]any", map[string]any{"k": "v"}, JSONPatchTypeObject},
-
-		// Integer types
+		// Integer types.
 		{"int", 42, JSONPatchTypeInteger},
 		{"int8", int8(1), JSONPatchTypeInteger},
 		{"int16", int16(1), JSONPatchTypeInteger},
@@ -59,18 +51,16 @@ func TestGetJSONPatchType(t *testing.T) {
 		{"uint16", uint16(1), JSONPatchTypeInteger},
 		{"uint32", uint32(1), JSONPatchTypeInteger},
 		{"uint64", uint64(1), JSONPatchTypeInteger},
-
-		// Float as integer
+		// Float as integer (whole numbers).
 		{"float64 whole", float64(5), JSONPatchTypeInteger},
 		{"float32 whole", float32(5), JSONPatchTypeInteger},
-
-		// Float as number
+		// Float as number (fractional).
 		{"float64 frac", 3.14, JSONPatchTypeNumber},
 		{"float32 frac", float32(3.14), JSONPatchTypeNumber},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.expected, GetJSONPatchType(tt.value))
+			assert.Equal(t, tt.want, GetJSONPatchType(tt.val))
 		})
 	}
 }
@@ -116,23 +106,20 @@ func TestIsSecondOrderPredicateOperation(t *testing.T) {
 }
 
 func TestIsPredicateOperation(t *testing.T) {
-	// First-order predicates should be valid
 	firstOrder := []string{
 		"test", "defined", "undefined", "test_type",
 		"test_string", "test_string_len", "contains",
 		"ends", "starts", "in", "less", "more", "matches",
 	}
 	for _, op := range firstOrder {
-		assert.True(t, IsPredicateOperation(op), "expected %q to be valid", op)
+		assert.True(t, IsPredicateOperation(op), "expected first-order %q to be valid", op)
 	}
 
-	// Second-order predicates should be valid
 	secondOrder := []string{"and", "or", "not"}
 	for _, op := range secondOrder {
-		assert.True(t, IsPredicateOperation(op), "expected %q to be valid", op)
+		assert.True(t, IsPredicateOperation(op), "expected second-order %q to be valid", op)
 	}
 
-	// Non-predicates should be invalid
 	invalid := []string{"", "add", "remove", "inc", "flip", "unknown"}
 	for _, op := range invalid {
 		assert.False(t, IsPredicateOperation(op), "expected %q to be invalid", op)

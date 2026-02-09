@@ -1,48 +1,48 @@
 package internal
 
 // Op is the unified interface for all JSON Patch operations.
-// Any operation must implement these methods.
 type Op interface {
-	// Op returns the operation type string (e.g. "add", "remove", etc.)
+	// Op returns the operation type string (e.g. "add", "remove").
 	Op() OpType
-	// Code returns the numeric code for the operation (consistent with constants)
+	// Code returns the numeric code for the operation.
 	Code() int
-	// Path returns the JSON Pointer path for the operation (slice form)
+	// Path returns the JSON Pointer path as a string slice.
 	Path() []string
-	// Apply applies the operation to the document, returning the new document and old value
+	// Apply applies the operation to the document, returning the result and any error.
 	Apply(doc any) (OpResult[any], error)
-	// ToJSON returns the standard JSON Patch format
+	// ToJSON serializes the operation to standard JSON Patch format.
 	ToJSON() (Operation, error)
-	// ToCompact returns the compact array format
+	// ToCompact serializes the operation to compact array format.
 	ToCompact() (CompactOperation, error)
-	// Validate validates the operation parameters
+	// Validate checks that the operation parameters are valid.
 	Validate() error
 }
 
-// PredicateOp is the interface for all predicate (test-type) operations.
+// PredicateOp is the interface for predicate (test-type) operations.
 type PredicateOp interface {
 	Op
-	// Test tests the operation on the document, returning whether it passed
+	// Test evaluates the predicate against the document.
 	Test(doc any) (bool, error)
-	// Not returns whether the operation is a negation predicate
+	// Not reports whether the predicate is negated.
 	Not() bool
 }
 
-// SecondOrderPredicateOp is the interface for second-order predicate operations that combine multiple predicates.
+// SecondOrderPredicateOp is the interface for composite predicates
+// that combine multiple sub-predicates (and, or, not).
 type SecondOrderPredicateOp interface {
 	PredicateOp
-	// Ops returns all sub-predicate operations
+	// Ops returns the sub-predicate operations.
 	Ops() []PredicateOp
 }
 
-// Codec is the interface for codecs that provide unified encoding and decoding functionality.
+// Codec is the interface for encoding and decoding JSON Patch operations.
 type Codec interface {
-	// Decode decodes a JSON operation object into an Op instance
+	// Decode decodes a single JSON operation into an Op.
 	Decode(operation Operation) (Op, error)
-	// DecodeSlice decodes an array of operations into an Op slice
+	// DecodeSlice decodes a slice of JSON operations into Ops.
 	DecodeSlice(operations []Operation) ([]Op, error)
-	// Encode encodes an Op instance into a JSON operation object
+	// Encode encodes an Op into a JSON operation.
 	Encode(op Op) (Operation, error)
-	// EncodeSlice encodes an Op slice into an array of operations
+	// EncodeSlice encodes a slice of Ops into JSON operations.
 	EncodeSlice(ops []Op) ([]Operation, error)
 }

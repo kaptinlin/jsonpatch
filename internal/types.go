@@ -1,118 +1,101 @@
 package internal
 
-// Operation represents a JSON Patch operation object
-// Matches json-joy Operation interface exactly
+// Operation represents a JSON Patch operation object.
 type Operation struct {
 	Op    string `json:"op"`
 	Path  string `json:"path"`
 	Value any    `json:"value,omitempty"`
 	From  string `json:"from,omitempty"`
 
-	// Extended operation fields
-	Inc float64 `json:"inc"` // No omitempty - 0 is a valid increment
-	Pos int     `json:"pos"` // No omitempty - 0 is a valid position
+	// Extended operation fields.
+	Inc float64 `json:"inc"` // No omitempty — 0 is a valid increment.
+	Pos int     `json:"pos"` // No omitempty — 0 is a valid position.
 	Str string  `json:"str"`
-	Len int     `json:"len"` // No omitempty - 0 is a valid length
+	Len int     `json:"len"` // No omitempty — 0 is a valid length.
 
-	// Predicate fields
+	// Predicate fields.
 	Not        bool        `json:"not,omitempty"`
 	Type       any         `json:"type,omitempty"`
 	IgnoreCase bool        `json:"ignore_case,omitempty"`
 	Apply      []Operation `json:"apply,omitempty"`
 
-	// Special fields
+	// Special fields.
 	Props      map[string]any `json:"props,omitempty"`
 	DeleteNull bool           `json:"deleteNull,omitempty"`
 	OldValue   any            `json:"oldValue,omitempty"`
 }
 
-// CompactOperation represents a compact format operation as an array with clearer semantics.
+// CompactOperation represents a compact-format operation as an array.
 type CompactOperation = []any
 
-// OpResult represents the result of a single operation with generic type support.
+// OpResult holds the result of a single operation application.
 type OpResult[T Document] struct {
 	Doc T   `json:"doc"`
 	Old any `json:"old,omitempty"`
 }
 
-// PatchResult represents the result of applying a JSON Patch with generic type support.
-// It contains the patched document and the results of individual operations.
+// PatchResult holds the result of applying an entire JSON Patch.
 type PatchResult[T Document] struct {
-	Doc T             // The patched document of the original type
-	Res []OpResult[T] // Results of individual patch operations
+	Doc T             // The patched document.
+	Res []OpResult[T] // Results of individual operations.
 }
 
 // Document defines the supported document types for JSON Patch operations.
-// Supports: structs, map[string]any, []byte (JSON), and string (JSON).
 type Document interface {
 	~[]byte | ~string | map[string]any | any
 }
 
-// Options holds configuration parameters for patch operations.
-// This is the unified configuration struct following Go best practices.
+// Options holds configuration for patch operations.
 type Options struct {
-	Mutate        bool               // Whether to modify the original document
-	CreateMatcher CreateRegexMatcher // Optional regex matcher creator
+	Mutate        bool              // Whether to modify the original document.
+	CreateMatcher CreateRegexMatcher // Optional regex matcher factory.
 }
 
-// Option represents functional options for configuring patch operations.
-// This follows the standard Go functional options pattern.
+// Option is a functional option for configuring patch operations.
 type Option func(*Options)
 
-// WithMutate configures whether the patch operation should modify the original document.
-// When false (default), returns a new copy. When true, modifies the original.
+// WithMutate sets whether the patch should modify the original document.
 func WithMutate(mutate bool) Option {
-	return func(opts *Options) {
-		opts.Mutate = mutate
+	return func(o *Options) {
+		o.Mutate = mutate
 	}
 }
 
-// WithMatcher configures a custom regex matcher for pattern operations.
-// The createMatcher function should create a RegexMatcher from a pattern and ignoreCase flag.
+// WithMatcher sets a custom regex matcher factory for pattern operations.
 func WithMatcher(createMatcher CreateRegexMatcher) Option {
-	return func(opts *Options) {
-		opts.CreateMatcher = createMatcher
+	return func(o *Options) {
+		o.CreateMatcher = createMatcher
 	}
 }
 
-// JSONPatchTypes represents the valid JSON types for type operations.
-type JSONPatchTypes string
-
-const (
-	// JSONPatchTypeString represents the string data type for JSON Patch type operations
-	JSONPatchTypeString JSONPatchTypes = "string"
-	// JSONPatchTypeNumber represents the number data type for JSON Patch type operations
-	JSONPatchTypeNumber JSONPatchTypes = "number"
-	// JSONPatchTypeBoolean represents the boolean data type for JSON Patch type operations
-	JSONPatchTypeBoolean JSONPatchTypes = "boolean"
-	// JSONPatchTypeObject represents the object data type for JSON Patch type operations
-	JSONPatchTypeObject JSONPatchTypes = "object"
-	// JSONPatchTypeInteger represents the integer data type for JSON Patch type operations
-	JSONPatchTypeInteger JSONPatchTypes = "integer"
-	// JSONPatchTypeArray represents the array data type for JSON Patch type operations
-	JSONPatchTypeArray JSONPatchTypes = "array"
-	// JSONPatchTypeNull represents the null data type for JSON Patch type operations
-	JSONPatchTypeNull JSONPatchTypes = "null"
-)
-
-// RegexMatcher is a function type that tests if a value matches a pattern.
-// This aligns with json-joy's RegexMatcher type.
-type RegexMatcher func(value string) bool
-
-// CreateRegexMatcher is a function type that creates a RegexMatcher from a pattern.
-// This aligns with json-joy's CreateRegexMatcher type.
-// The function should return a matcher that always returns false if the pattern is invalid.
-type CreateRegexMatcher func(pattern string, ignoreCase bool) RegexMatcher
-
-// JSONPatchOptions contains options for JSON Patch decoding operations.
-// This aligns with json-joy's JsonPatchOptions interface.
+// JSONPatchOptions contains options for JSON Patch decoding.
 type JSONPatchOptions struct {
 	CreateMatcher CreateRegexMatcher
 }
 
-// IsValidJSONPatchType checks if a type string is a valid JSON Patch type
+// JSONPatchType represents valid JSON types for type-checking operations.
+type JSONPatchType string
+
+// Valid JSON Patch types.
+const (
+	JSONPatchTypeString  JSONPatchType = "string"
+	JSONPatchTypeNumber  JSONPatchType = "number"
+	JSONPatchTypeBoolean JSONPatchType = "boolean"
+	JSONPatchTypeObject  JSONPatchType = "object"
+	JSONPatchTypeInteger JSONPatchType = "integer"
+	JSONPatchTypeArray   JSONPatchType = "array"
+	JSONPatchTypeNull    JSONPatchType = "null"
+)
+
+// RegexMatcher tests whether a string value matches a pattern.
+type RegexMatcher func(value string) bool
+
+// CreateRegexMatcher creates a RegexMatcher from a pattern and case-sensitivity flag.
+type CreateRegexMatcher func(pattern string, ignoreCase bool) RegexMatcher
+
+// IsValidJSONPatchType reports whether typeStr is a valid JSON Patch type name.
 func IsValidJSONPatchType(typeStr string) bool {
-	switch JSONPatchTypes(typeStr) {
+	switch JSONPatchType(typeStr) {
 	case JSONPatchTypeString, JSONPatchTypeNumber, JSONPatchTypeBoolean,
 		JSONPatchTypeObject, JSONPatchTypeInteger, JSONPatchTypeArray,
 		JSONPatchTypeNull:
@@ -122,8 +105,9 @@ func IsValidJSONPatchType(typeStr string) bool {
 	}
 }
 
-// GetJSONPatchType returns the JSON Patch type for a given value.
-func GetJSONPatchType(value any) JSONPatchTypes {
+// GetJSONPatchType returns the JSON Patch type for a Go value.
+// Whole-number floats return "integer"; unknown types return "null".
+func GetJSONPatchType(value any) JSONPatchType {
 	if value == nil {
 		return JSONPatchTypeNull
 	}
@@ -131,33 +115,38 @@ func GetJSONPatchType(value any) JSONPatchTypes {
 	switch v := value.(type) {
 	case string:
 		return JSONPatchTypeString
+
 	case bool:
 		return JSONPatchTypeBoolean
+
 	case []any, []string, []int, []float64:
 		return JSONPatchTypeArray
+
 	case map[string]any:
 		return JSONPatchTypeObject
+
 	case int, int8, int16, int32, int64,
 		uint, uint8, uint16, uint32, uint64:
 		return JSONPatchTypeInteger
+
 	case float32:
 		if v == float32(int32(v)) {
 			return JSONPatchTypeInteger
 		}
 		return JSONPatchTypeNumber
+
 	case float64:
 		if v == float64(int64(v)) {
 			return JSONPatchTypeInteger
 		}
 		return JSONPatchTypeNumber
+
 	default:
 		return JSONPatchTypeNull
 	}
 }
 
-// Operation type checking functions provide efficient type detection
-
-// IsJSONPatchOperation checks if operation is a core JSON Patch operation
+// IsJSONPatchOperation reports whether op is a core JSON Patch (RFC 6902) operation.
 func IsJSONPatchOperation(op string) bool {
 	switch op {
 	case string(OpAddType), string(OpRemoveType), string(OpReplaceType),
@@ -168,26 +157,25 @@ func IsJSONPatchOperation(op string) bool {
 	}
 }
 
-// IsPredicateOperation checks if operation is a predicate operation
+// IsPredicateOperation reports whether op is any predicate operation.
 func IsPredicateOperation(op string) bool {
 	return IsFirstOrderPredicateOperation(op) || IsSecondOrderPredicateOperation(op)
 }
 
-// IsFirstOrderPredicateOperation checks if operation is a first-order predicate
+// IsFirstOrderPredicateOperation reports whether op is a first-order predicate.
 func IsFirstOrderPredicateOperation(op string) bool {
 	switch op {
 	case string(OpTestType), string(OpDefinedType), string(OpUndefinedType),
 		string(OpTestTypeType), string(OpTestStringType), string(OpTestStringLenType),
 		string(OpContainsType), string(OpEndsType), string(OpStartsType),
-		string(OpInType), string(OpLessType), string(OpMoreType),
-		string(OpMatchesType):
+		string(OpInType), string(OpLessType), string(OpMoreType), string(OpMatchesType):
 		return true
 	default:
 		return false
 	}
 }
 
-// IsSecondOrderPredicateOperation checks if operation is a second-order predicate.
+// IsSecondOrderPredicateOperation reports whether op is a second-order (composite) predicate.
 func IsSecondOrderPredicateOperation(op string) bool {
 	switch op {
 	case string(OpAndType), string(OpOrType), string(OpNotType):
@@ -197,12 +185,11 @@ func IsSecondOrderPredicateOperation(op string) bool {
 	}
 }
 
-// IsJSONPatchExtendedOperation checks if operation is an extended operation.
+// IsJSONPatchExtendedOperation reports whether op is an extended operation.
 func IsJSONPatchExtendedOperation(op string) bool {
 	switch op {
 	case string(OpStrInsType), string(OpStrDelType), string(OpFlipType),
-		string(OpIncType), string(OpSplitType), string(OpMergeType),
-		string(OpExtendType):
+		string(OpIncType), string(OpSplitType), string(OpMergeType), string(OpExtendType):
 		return true
 	default:
 		return false
