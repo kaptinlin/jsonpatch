@@ -130,4 +130,3 @@ func (o *TestStringLenOperation) Test(doc any) (bool, error) {
 func (o *TestStringLenOperation) Not() bool {
 	return o.NotFlag
 }
-

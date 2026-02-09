@@ -101,4 +101,3 @@ func (o *TypeOperation) Validate() error {
 	}
 	return nil
 }
-

@@ -65,4 +65,3 @@ func (o *DefinedOperation) Validate() error {
 	// Empty path (root) is valid for defined operation
 	return nil
 }
-

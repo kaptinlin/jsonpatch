@@ -123,4 +123,3 @@ func (o *ReplaceOperation) Validate() error {
 	}
 	return nil
 }
-

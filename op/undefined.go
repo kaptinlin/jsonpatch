@@ -66,4 +66,3 @@ func (o *UndefinedOperation) Validate() error {
 	}
 	return nil
 }
-

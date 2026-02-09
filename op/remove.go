@@ -7,8 +7,8 @@ import (
 // RemoveOperation represents a remove operation that removes a value at a specified path.
 type RemoveOperation struct {
 	BaseOp
-	OldValue    any `json:"oldValue,omitempty"` // The value that was removed (optional)
-	HasOldValue bool        // Whether oldValue is explicitly set
+	OldValue    any  `json:"oldValue,omitempty"` // The value that was removed (optional)
+	HasOldValue bool // Whether oldValue is explicitly set
 }
 
 // NewRemove creates a new remove operation.
@@ -152,4 +152,3 @@ func (o *RemoveOperation) Validate() error {
 	}
 	return nil
 }
-

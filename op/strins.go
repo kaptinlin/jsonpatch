@@ -143,4 +143,3 @@ func (o *StrInsOperation) Validate() error {
 	// Position bounds are checked in Apply method
 	return nil
 }
-

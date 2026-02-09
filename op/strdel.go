@@ -181,4 +181,3 @@ func (o *StrDelOperation) Validate() error {
 	// Position and length bounds are checked in Apply method
 	return nil
 }
-

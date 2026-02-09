@@ -139,4 +139,3 @@ func (o *NotOperation) Validate() error {
 	}
 	return nil
 }
-

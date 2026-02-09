@@ -125,4 +125,3 @@ func (o *OrOperation) Validate() error {
 	}
 	return nil
 }
-

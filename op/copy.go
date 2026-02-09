@@ -101,4 +101,3 @@ func (o *CopyOperation) Validate() error {
 	}
 	return nil
 }
-

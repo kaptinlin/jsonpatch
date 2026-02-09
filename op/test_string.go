@@ -197,4 +197,3 @@ func NewTestStringFull(path []string, str string, pos float64, not bool) *TestSt
 		IgnoreCase: false,
 	}
 }
-

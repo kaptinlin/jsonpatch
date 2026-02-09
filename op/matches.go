@@ -133,4 +133,3 @@ func (o *MatchesOperation) Validate() error {
 	}
 	return nil
 }
-

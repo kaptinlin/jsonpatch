@@ -98,4 +98,3 @@ func (o *InOperation) Validate() error {
 	}
 	return nil
 }
-

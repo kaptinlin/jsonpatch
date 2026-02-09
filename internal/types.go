@@ -47,7 +47,7 @@ type Document interface {
 
 // Options holds configuration for patch operations.
 type Options struct {
-	Mutate        bool              // Whether to modify the original document.
+	Mutate        bool               // Whether to modify the original document.
 	CreateMatcher CreateRegexMatcher // Optional regex matcher factory.
 }
 

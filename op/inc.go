@@ -87,4 +87,3 @@ func (o *IncOperation) ToCompact() (internal.CompactOperation, error) {
 func (o *IncOperation) Validate() error {
 	return nil
 }
-

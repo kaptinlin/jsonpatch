@@ -84,4 +84,3 @@ func (o *MoreOperation) Validate() error {
 	}
 	return nil
 }
-

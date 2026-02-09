@@ -9,8 +9,8 @@ import (
 // TestOperation represents a test operation that checks if a value equals a specified value.
 type TestOperation struct {
 	BaseOp
-	Value   any `json:"value"`         // Expected value
-	NotFlag bool        `json:"not,omitempty"` // Whether to negate the test
+	Value   any  `json:"value"`         // Expected value
+	NotFlag bool `json:"not,omitempty"` // Whether to negate the test
 }
 
 // NewTest creates a new test operation.
@@ -118,4 +118,3 @@ func (o *TestOperation) Validate() error {
 	}
 	return nil
 }
-

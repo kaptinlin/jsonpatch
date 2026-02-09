@@ -122,4 +122,3 @@ func (o *AndOperation) Validate() error {
 	}
 	return nil
 }
-

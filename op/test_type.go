@@ -213,4 +213,3 @@ func (o *TestTypeOperation) Validate() error {
 	}
 	return nil
 }
-

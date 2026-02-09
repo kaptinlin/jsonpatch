@@ -109,4 +109,3 @@ func (o *MoveOperation) Validate() error {
 	}
 	return nil
 }
-
