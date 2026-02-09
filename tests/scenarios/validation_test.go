@@ -5,6 +5,7 @@ import (
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // =============================================================================
@@ -14,33 +15,33 @@ import (
 func TestValidateOperations(t *testing.T) {
 	t.Run("throws on not an array", func(t *testing.T) {
 		err := jsonpatch.ValidateOperations(nil, false)
-		assert.EqualError(t, err, "not an array")
+		assert.ErrorIs(t, err, jsonpatch.ErrNotArray)
 	})
 
 	t.Run("throws on empty array", func(t *testing.T) {
 		err := jsonpatch.ValidateOperations([]jsonpatch.Operation{}, false)
-		assert.EqualError(t, err, "empty operation patch")
+		assert.ErrorIs(t, err, jsonpatch.ErrEmptyPatch)
 	})
 
 	t.Run("throws on no operation path", func(t *testing.T) {
 		ops := []jsonpatch.Operation{{}}
 		err := jsonpatch.ValidateOperations(ops, false)
-		assert.Contains(t, err.Error(), "error in operation [index = 0]")
-		assert.Contains(t, err.Error(), "missing required field 'op'")
+		require.Error(t, err)
+		assert.ErrorIs(t, err, jsonpatch.ErrMissingOp)
 	})
 
 	t.Run("throws on no operation code", func(t *testing.T) {
 		ops := []jsonpatch.Operation{{Path: "/"}}
 		err := jsonpatch.ValidateOperations(ops, false)
-		assert.Contains(t, err.Error(), "error in operation [index = 0]")
-		assert.Contains(t, err.Error(), "missing required field 'op'")
+		require.Error(t, err)
+		assert.ErrorIs(t, err, jsonpatch.ErrMissingOp)
 	})
 
 	t.Run("throws on invalid operation code", func(t *testing.T) {
 		ops := []jsonpatch.Operation{{Path: "/", Op: "123"}}
 		err := jsonpatch.ValidateOperations(ops, false)
-		assert.Contains(t, err.Error(), "error in operation [index = 0]")
-		assert.Contains(t, err.Error(), "unknown operation '123'")
+		require.Error(t, err)
+		assert.ErrorIs(t, err, jsonpatch.ErrInvalidOperation)
 	})
 
 	t.Run("succeeds on valid operation", func(t *testing.T) {
@@ -55,8 +56,8 @@ func TestValidateOperations(t *testing.T) {
 			{Op: "test", Path: "/test"},
 		}
 		err := jsonpatch.ValidateOperations(ops, false)
-		assert.Contains(t, err.Error(), "error in operation [index = 1]")
-		assert.Contains(t, err.Error(), "missing required field 'value'")
+		require.Error(t, err)
+		assert.ErrorIs(t, err, jsonpatch.ErrMissingValue)
 	})
 
 	t.Run("throws if JSON pointer does not start with forward slash", func(t *testing.T) {
@@ -65,8 +66,8 @@ func TestValidateOperations(t *testing.T) {
 			{Op: "test", Path: "test", Value: 1},
 		}
 		err := jsonpatch.ValidateOperations(ops, false)
-		assert.Contains(t, err.Error(), "error in operation [index = 1]")
-		assert.Contains(t, err.Error(), "invalid JSON pointer")
+		require.Error(t, err)
+		assert.ErrorIs(t, err, jsonpatch.ErrInvalidJSONPointer)
 	})
 }
 
@@ -77,17 +78,17 @@ func TestValidateOperations(t *testing.T) {
 func TestValidateAdd(t *testing.T) {
 	t.Run("throws with no path", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "add"}, false)
-		assert.EqualError(t, err, "missing required field 'path'")
+		assert.ErrorIs(t, err, jsonpatch.ErrMissingPath)
 	})
 
 	t.Run("throws with missing value", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "add", Path: "/"}, false)
-		assert.EqualError(t, err, "missing required field 'value'")
+		assert.ErrorIs(t, err, jsonpatch.ErrMissingValue)
 	})
 
 	t.Run("throws with null value", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "add", Path: "/", Value: nil}, false)
-		assert.EqualError(t, err, "missing required field 'value'")
+		assert.ErrorIs(t, err, jsonpatch.ErrMissingValue)
 	})
 
 	t.Run("succeeds on valid operation", func(t *testing.T) {
@@ -108,7 +109,7 @@ func TestValidateRemove(t *testing.T) {
 
 	t.Run("throws on invalid path", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "remove", Path: "asdf"}, false)
-		assert.Contains(t, err.Error(), "invalid JSON pointer")
+		assert.ErrorIs(t, err, jsonpatch.ErrInvalidJSONPointer)
 	})
 }
 
@@ -149,7 +150,7 @@ func TestValidateMove(t *testing.T) {
 
 	t.Run("cannot move into its own children", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "move", From: "/foo", Path: "/foo/bar"}, false)
-		assert.EqualError(t, err, "cannot move into own children")
+		assert.ErrorIs(t, err, jsonpatch.ErrCannotMoveToChildren)
 	})
 }
 
@@ -207,15 +208,15 @@ func TestValidateTestType(t *testing.T) {
 
 	t.Run("throws on no types provided", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "test_type", Path: "/foo", Type: ""}, false)
-		assert.Contains(t, err.Error(), "missing required field 'type'")
+		assert.ErrorIs(t, err, jsonpatch.ErrInvalidTypeField)
 	})
 
 	t.Run("throws on invalid type", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "test_type", Path: "/foo", Type: "monkey"}, false)
-		assert.Contains(t, err.Error(), "invalid type 'monkey'")
+		assert.ErrorIs(t, err, jsonpatch.ErrInvalidType)
 
 		err = jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "test_type", Path: "/foo", Type: "invalid"}, false)
-		assert.Contains(t, err.Error(), "invalid type 'invalid'")
+		assert.ErrorIs(t, err, jsonpatch.ErrInvalidType)
 	})
 }
 
@@ -438,7 +439,7 @@ func TestValidateContains(t *testing.T) {
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "contains", Path: "/foo/bar", Value: 123}, false)
-		assert.Contains(t, err.Error(), "expected value to be string")
+		assert.ErrorIs(t, err, jsonpatch.ErrExpectedValueToBeString)
 
 		err = jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "contains", Path: "/foo/bar", Value: "test", IgnoreCase: true}, false)
 		assert.NoError(t, err) // IgnoreCase is a boolean field, should be ok
@@ -457,7 +458,7 @@ func TestValidateEnds(t *testing.T) {
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "ends", Path: "/foo/bar", Value: 123}, false)
-		assert.Contains(t, err.Error(), "expected value to be string")
+		assert.ErrorIs(t, err, jsonpatch.ErrExpectedValueToBeString)
 
 		err = jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "ends", Path: "/foo/bar", Value: "test", IgnoreCase: true}, false)
 		assert.NoError(t, err) // IgnoreCase is a boolean field, should be ok
@@ -476,7 +477,7 @@ func TestValidateStarts(t *testing.T) {
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "starts", Path: "/foo/bar", Value: 123}, false)
-		assert.Contains(t, err.Error(), "expected value to be string")
+		assert.ErrorIs(t, err, jsonpatch.ErrExpectedValueToBeString)
 
 		err = jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "starts", Path: "/foo/bar", Value: "test", IgnoreCase: true}, false)
 		assert.NoError(t, err) // IgnoreCase is a boolean field, should be ok
@@ -495,7 +496,7 @@ func TestValidateMatches(t *testing.T) {
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "matches", Path: "/foo/bar", Value: 123}, true)
-		assert.Contains(t, err.Error(), "expected value to be string")
+		assert.ErrorIs(t, err, jsonpatch.ErrExpectedValueToBeString)
 
 		err = jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "matches", Path: "/foo/bar", Value: "test", IgnoreCase: true}, true)
 		assert.NoError(t, err) // IgnoreCase is a boolean field, should be ok
@@ -536,10 +537,10 @@ func TestValidateIn(t *testing.T) {
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "in", Path: "/foo/bar", Value: 123}, false)
-		assert.Contains(t, err.Error(), "in operation value must be an array")
+		assert.ErrorIs(t, err, jsonpatch.ErrInOperationValueMustBeArray)
 
 		err = jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "in", Path: "/foo/bar", Value: "test"}, false)
-		assert.Contains(t, err.Error(), "in operation value must be an array")
+		assert.ErrorIs(t, err, jsonpatch.ErrInOperationValueMustBeArray)
 	})
 }
 
@@ -555,7 +556,7 @@ func TestValidateMore(t *testing.T) {
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "more", Path: "/foo/bar", Value: "test"}, false)
-		assert.Contains(t, err.Error(), "value must be a number")
+		assert.ErrorIs(t, err, jsonpatch.ErrValueMustBeNumber)
 	})
 }
 
@@ -571,7 +572,7 @@ func TestValidateLess(t *testing.T) {
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "less", Path: "/foo/bar", Value: "test"}, false)
-		assert.Contains(t, err.Error(), "value must be a number")
+		assert.ErrorIs(t, err, jsonpatch.ErrValueMustBeNumber)
 	})
 }
 
@@ -587,7 +588,7 @@ func TestValidateType(t *testing.T) {
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "type", Path: "/foo/bar", Value: 123}, false)
-		assert.Contains(t, err.Error(), "expected value to be string")
+		assert.ErrorIs(t, err, jsonpatch.ErrExpectedValueToBeString)
 	})
 }
 
@@ -624,7 +625,7 @@ func TestValidateAnd(t *testing.T) {
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "and", Path: "/foo/bar", Apply: []jsonpatch.Operation{}}, false)
-		assert.Contains(t, err.Error(), "predicate list is empty")
+		assert.ErrorIs(t, err, jsonpatch.ErrEmptyPredicateList)
 	})
 }
 
@@ -661,7 +662,7 @@ func TestValidateNot(t *testing.T) {
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "not", Path: "/foo/bar", Apply: []jsonpatch.Operation{}}, false)
-		assert.Contains(t, err.Error(), "predicate list is empty")
+		assert.ErrorIs(t, err, jsonpatch.ErrEmptyPredicateList)
 	})
 }
 
@@ -698,7 +699,7 @@ func TestValidateOr(t *testing.T) {
 
 	t.Run("throws on invalid operation", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "or", Path: "/foo/bar", Apply: []jsonpatch.Operation{}}, false)
-		assert.Contains(t, err.Error(), "predicate list is empty")
+		assert.ErrorIs(t, err, jsonpatch.ErrEmptyPredicateList)
 	})
 }
 
@@ -709,7 +710,7 @@ func TestValidateOr(t *testing.T) {
 func TestValidateMatchesNotAllowed(t *testing.T) {
 	t.Run("throws when matches operation not allowed", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "matches", Path: "/foo/bar", Value: "test"}, false)
-		assert.Contains(t, err.Error(), "matches operation not allowed")
+		assert.ErrorIs(t, err, jsonpatch.ErrMatchesNotAllowed)
 	})
 }
 
@@ -720,11 +721,11 @@ func TestValidateMatchesNotAllowed(t *testing.T) {
 func TestValidateMergeErrors(t *testing.T) {
 	t.Run("throws on missing pos", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "merge", Path: "/foo/bar"}, false)
-		assert.Contains(t, err.Error(), "expected pos field to be greater than 0")
+		assert.ErrorIs(t, err, jsonpatch.ErrPosGreaterThanZero)
 	})
 
 	t.Run("throws on pos less than 1", func(t *testing.T) {
 		err := jsonpatch.ValidateOperation(jsonpatch.Operation{Op: "merge", Path: "/foo/bar", Pos: 0}, false)
-		assert.Contains(t, err.Error(), "expected pos field to be greater than 0")
+		assert.ErrorIs(t, err, jsonpatch.ErrPosGreaterThanZero)
 	})
 }

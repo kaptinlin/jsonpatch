@@ -1,11 +1,11 @@
 package jsonpatch_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/go-json-experiment/json"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/tests/data"
@@ -48,15 +48,9 @@ func TestAutomated(t *testing.T) {
 				case test.Expected != nil:
 					t.Run(testName, func(t *testing.T) {
 						result, err := jsonpatch.ApplyPatch(test.Doc, test.Patch, options)
+						require.NoError(t, err, "ApplyPatch should not fail")
 
-						if err != nil {
-							t.Fatalf("ApplyPatch failed: %v", err)
-						}
-
-						// Direct comparison for Go native testing
-						if !reflect.DeepEqual(test.Expected, result.Doc) {
-							t.Errorf("Expected %v, got %v", test.Expected, result.Doc)
-						}
+						assert.Equal(t, test.Expected, result.Doc, "ApplyPatch result mismatch")
 					})
 				case test.Error != "":
 					t.Run(testName, func(t *testing.T) {
@@ -76,7 +70,9 @@ func TestAutomated(t *testing.T) {
 						}
 					})
 				default:
-					t.Fatalf("Invalid test case: %+v", test)
+					t.Run(testName, func(t *testing.T) {
+						t.Fatalf("Invalid test case: %+v", test)
+					})
 				}
 			}
 		})
@@ -214,15 +210,10 @@ func TestCanOverwriteEmptyDocument(t *testing.T) {
 
 	options := jsonpatch.WithMutate(true)
 	result, err := jsonpatch.ApplyPatch(map[string]interface{}{}, patch, options)
-	if err != nil {
-		t.Fatalf("ApplyPatch failed: %v", err)
-	}
+	require.NoError(t, err, "ApplyPatch should not fail")
 
 	expected := map[string]interface{}{"foo": 123}
-	resultMap := result.Doc
-	if resultMap["foo"] != expected["foo"] {
-		t.Errorf("Expected %+v, got %+v", expected, resultMap)
-	}
+	assert.Equal(t, expected, result.Doc, "ApplyPatch result mismatch")
 }
 
 // TestCannotAddValueToNonexistingPath tests that adding to nonexisting path fails
