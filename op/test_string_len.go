@@ -13,8 +13,8 @@ type TestStringLenOperation struct {
 	NotFlag bool    `json:"not"` // Whether to negate the result
 }
 
-// NewOpTestStringLenOperation creates a new OpTestStringLenOperation operation.
-func NewOpTestStringLenOperation(path []string, expectedLength float64) *TestStringLenOperation {
+// NewTestStringLen creates a new test string length operation.
+func NewTestStringLen(path []string, expectedLength float64) *TestStringLenOperation {
 	return &TestStringLenOperation{
 		BaseOp:  NewBaseOp(path),
 		Length:  expectedLength,
@@ -22,8 +22,8 @@ func NewOpTestStringLenOperation(path []string, expectedLength float64) *TestStr
 	}
 }
 
-// NewOpTestStringLenOperationWithNot creates a new OpTestStringLenOperation operation with not flag.
-func NewOpTestStringLenOperationWithNot(path []string, expectedLength float64, not bool) *TestStringLenOperation {
+// NewTestStringLenWithNot creates a new test string length operation with not flag.
+func NewTestStringLenWithNot(path []string, expectedLength float64, not bool) *TestStringLenOperation {
 	return &TestStringLenOperation{
 		BaseOp:  NewBaseOp(path),
 		Length:  expectedLength,
@@ -137,10 +137,3 @@ func (op *TestStringLenOperation) Not() bool {
 	return op.NotFlag
 }
 
-// Short aliases for common use
-var (
-	// NewTestStringLen creates a new test string length operation
-	NewTestStringLen = NewOpTestStringLenOperation
-	// NewTestStringLenWithNot creates a new test string length operation with not flag
-	NewTestStringLenWithNot = NewOpTestStringLenOperationWithNot
-)

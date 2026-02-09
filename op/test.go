@@ -13,8 +13,8 @@ type TestOperation struct {
 	NotFlag bool        `json:"not,omitempty"` // Whether to negate the test
 }
 
-// NewOpTestOperation creates a new OpTestOperation operation.
-func NewOpTestOperation(path []string, value interface{}) *TestOperation {
+// NewTest creates a new test operation.
+func NewTest(path []string, value interface{}) *TestOperation {
 	return &TestOperation{
 		BaseOp:  NewBaseOp(path),
 		Value:   value,
@@ -22,8 +22,8 @@ func NewOpTestOperation(path []string, value interface{}) *TestOperation {
 	}
 }
 
-// NewOpTestOperationWithNot creates a new OpTestOperation operation with not flag.
-func NewOpTestOperationWithNot(path []string, value interface{}, not bool) *TestOperation {
+// NewTestWithNot creates a new test operation with not flag.
+func NewTestWithNot(path []string, value interface{}, not bool) *TestOperation {
 	return &TestOperation{
 		BaseOp:  NewBaseOp(path),
 		Value:   value,
@@ -119,8 +119,3 @@ func (o *TestOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewTest creates a new test operation
-	NewTest = NewOpTestOperation
-)

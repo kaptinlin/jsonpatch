@@ -1,4 +1,3 @@
-// Package json implements JSON Patch encoder functionality.
 package json
 
 import "github.com/kaptinlin/jsonpatch/internal"

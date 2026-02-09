@@ -16,8 +16,8 @@ type TestStringOperation struct {
 	IgnoreCase bool   `json:"ignore_case,omitempty"` // Whether to ignore case
 }
 
-// NewOpTestStringOperation creates a new OpTestStringOperation operation.
-func NewOpTestStringOperation(path []string, expectedValue string) *TestStringOperation {
+// NewTestString creates a new test string operation.
+func NewTestString(path []string, expectedValue string) *TestStringOperation {
 	return &TestStringOperation{
 		BaseOp:  NewBaseOp(path),
 		Str:     expectedValue,
@@ -26,8 +26,8 @@ func NewOpTestStringOperation(path []string, expectedValue string) *TestStringOp
 	}
 }
 
-// NewOpTestStringOperationWithPos creates a new OpTestStringOperation operation with position.
-func NewOpTestStringOperationWithPos(path []string, expectedValue string, pos float64) *TestStringOperation {
+// NewTestStringWithPos creates a new test string operation with position.
+func NewTestStringWithPos(path []string, expectedValue string, pos float64) *TestStringOperation {
 	return &TestStringOperation{
 		BaseOp:  NewBaseOp(path),
 		Str:     expectedValue,
@@ -36,8 +36,8 @@ func NewOpTestStringOperationWithPos(path []string, expectedValue string, pos fl
 	}
 }
 
-// NewOpTestStringOperationWithPosAndNot creates a new OpTestStringOperation operation with position and not flag.
-func NewOpTestStringOperationWithPosAndNot(path []string, expectedValue string, pos float64, notFlag bool) *TestStringOperation {
+// NewTestStringWithPosAndNot creates a new test string operation with position and not flag.
+func NewTestStringWithPosAndNot(path []string, expectedValue string, pos float64, notFlag bool) *TestStringOperation {
 	return &TestStringOperation{
 		BaseOp:     NewBaseOp(path),
 		Str:        expectedValue,
@@ -47,8 +47,8 @@ func NewOpTestStringOperationWithPosAndNot(path []string, expectedValue string, 
 	}
 }
 
-// NewOpTestStringOperationWithIgnoreCase creates a new OpTestStringOperation operation with ignore case flag.
-func NewOpTestStringOperationWithIgnoreCase(path []string, expectedValue string, pos float64, notFlag bool, ignoreCase bool) *TestStringOperation {
+// NewTestStringWithIgnoreCase creates a new test string operation with ignore case flag.
+func NewTestStringWithIgnoreCase(path []string, expectedValue string, pos float64, notFlag bool, ignoreCase bool) *TestStringOperation {
 	return &TestStringOperation{
 		BaseOp:     NewBaseOp(path),
 		Str:        expectedValue,
@@ -195,8 +195,8 @@ func (op *TestStringOperation) Validate() error {
 	return nil
 }
 
-// NewOpTestStringOperationFull creates a new OpTestStringOperation operation with all parameters.
-func NewOpTestStringOperationFull(path []string, str string, pos float64, not bool) *TestStringOperation {
+// NewTestStringFull creates a new test string operation with all parameters.
+func NewTestStringFull(path []string, str string, pos float64, not bool) *TestStringOperation {
 	return &TestStringOperation{
 		BaseOp:     NewBaseOp(path),
 		Str:        str,
@@ -206,12 +206,3 @@ func NewOpTestStringOperationFull(path []string, str string, pos float64, not bo
 	}
 }
 
-// Short aliases for common use
-var (
-	// NewTestString creates a new test string operation
-	NewTestString = NewOpTestStringOperation
-	// NewTestStringWithPos creates a new test string operation with position
-	NewTestStringWithPos = NewOpTestStringOperationWithPos
-	// NewTestStringFull creates a new test string operation with all parameters
-	NewTestStringFull = NewOpTestStringOperationFull
-)

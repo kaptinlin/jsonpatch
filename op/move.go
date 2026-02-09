@@ -10,8 +10,8 @@ type MoveOperation struct {
 	FromPath []string `json:"from"` // Source path
 }
 
-// NewOpMoveOperation creates a new OpMoveOperation operation.
-func NewOpMoveOperation(path, from []string) *MoveOperation {
+// NewMove creates a new move operation.
+func NewMove(path, from []string) *MoveOperation {
 	return &MoveOperation{
 		BaseOp:   NewBaseOpWithFrom(path, from),
 		FromPath: from,
@@ -48,7 +48,7 @@ func (o *MoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 	// Following TypeScript reference: move = remove + add
 	// First, remove from source path
-	removeOp := NewOpRemoveOperation(o.FromPath)
+	removeOp := NewRemove(o.FromPath)
 	removeResult, err := removeOp.Apply(doc)
 	if err != nil {
 		return internal.OpResult[any]{}, err
@@ -110,8 +110,3 @@ func (o *MoveOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewMove creates a new move operation
-	NewMove = NewOpMoveOperation
-)

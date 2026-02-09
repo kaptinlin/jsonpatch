@@ -12,8 +12,8 @@ type ReplaceOperation struct {
 	OldValue interface{} `json:"oldValue,omitempty"` // The value that was replaced (optional)
 }
 
-// NewOpReplaceOperation creates a new OpReplaceOperation operation.
-func NewOpReplaceOperation(path []string, value interface{}) *ReplaceOperation {
+// NewReplace creates a new replace operation.
+func NewReplace(path []string, value interface{}) *ReplaceOperation {
 	return &ReplaceOperation{
 		BaseOp:   NewBaseOp(path),
 		Value:    value,
@@ -21,8 +21,8 @@ func NewOpReplaceOperation(path []string, value interface{}) *ReplaceOperation {
 	}
 }
 
-// NewOpReplaceOperationWithOldValue creates a new OpReplaceOperation operation with oldValue.
-func NewOpReplaceOperationWithOldValue(path []string, value interface{}, oldValue interface{}) *ReplaceOperation {
+// NewReplaceWithOldValue creates a new replace operation with oldValue.
+func NewReplaceWithOldValue(path []string, value interface{}, oldValue interface{}) *ReplaceOperation {
 	return &ReplaceOperation{
 		BaseOp:   NewBaseOp(path),
 		Value:    value,
@@ -128,10 +128,3 @@ func (o *ReplaceOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewReplace creates a new replace operation
-	NewReplace = NewOpReplaceOperation
-	// NewReplaceWithOldValue creates a new replace operation with old value
-	NewReplaceWithOldValue = NewOpReplaceOperationWithOldValue
-)

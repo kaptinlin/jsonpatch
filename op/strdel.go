@@ -19,8 +19,8 @@ type StrDelOperation struct {
 	Str string  `json:"str"` // Specific string to delete (optional)
 }
 
-// NewOpStrDelOperation creates a new string delete operation with length.
-func NewOpStrDelOperation(path []string, pos, length float64) *StrDelOperation {
+// NewStrDel creates a new string delete operation with length.
+func NewStrDel(path []string, pos, length float64) *StrDelOperation {
 	return &StrDelOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
@@ -29,8 +29,8 @@ func NewOpStrDelOperation(path []string, pos, length float64) *StrDelOperation {
 	}
 }
 
-// NewOpStrDelOperationWithStr creates a new string delete operation with specific string.
-func NewOpStrDelOperationWithStr(path []string, pos float64, str string) *StrDelOperation {
+// NewStrDelWithStr creates a new string delete operation with specific string.
+func NewStrDelWithStr(path []string, pos float64, str string) *StrDelOperation {
 	return &StrDelOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
@@ -185,10 +185,3 @@ func (op *StrDelOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewStrDel creates a new string delete operation
-	NewStrDel = NewOpStrDelOperation
-	// NewStrDelWithStr creates a new string delete operation with string
-	NewStrDelWithStr = NewOpStrDelOperationWithStr
-)

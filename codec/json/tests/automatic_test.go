@@ -1,4 +1,3 @@
-// Package tests contains automated test cases for JSON codec functionality.
 package tests
 
 import (
@@ -19,7 +18,7 @@ func TestAutomaticCodec(t *testing.T) {
 	for name, operation := range SampleOperations {
 		t.Run(name, func(t *testing.T) {
 			// Decode operation
-			ops, err := json.Decode([]map[string]interface{}{operation}, options)
+			ops, err := json.Decode([]map[string]any{operation}, options)
 			if err != nil {
 				t.Logf("Failed to decode operation %s: %v", name, err)
 				t.Logf("Operation: %+v", operation)
@@ -64,7 +63,7 @@ func TestCodecRoundTrip(t *testing.T) {
 	options := json.PatchOptions{}
 
 	// Test that encoding and decoding preserves operation structure
-	originalOps := []map[string]interface{}{
+	originalOps := []map[string]any{
 		{
 			"op":    "add",
 			"path":  "/foo",
@@ -99,8 +98,8 @@ func TestCodecRoundTrip(t *testing.T) {
 	assert.Equal(t, expectedOps, encoded)
 }
 
-// mapToOperation converts a map[string]interface{} to internal.Operation struct
-func mapToOperation(opMap map[string]interface{}) internal.Operation {
+// mapToOperation converts a map[string]any to internal.Operation struct
+func mapToOperation(opMap map[string]any) internal.Operation {
 	op := internal.Operation{}
 
 	// Set basic fields first
@@ -131,7 +130,7 @@ func mapToOperation(opMap map[string]interface{}) internal.Operation {
 	if val, ok := opMap["ignore_case"].(bool); ok {
 		op.IgnoreCase = val
 	}
-	if val, ok := opMap["props"].(map[string]interface{}); ok {
+	if val, ok := opMap["props"].(map[string]any); ok {
 		op.Props = val
 	}
 	if val, ok := opMap["deleteNull"].(bool); ok {
@@ -145,7 +144,7 @@ func mapToOperation(opMap map[string]interface{}) internal.Operation {
 	if op.Op == "test_type" {
 		// For test_type operations, type field logic takes precedence
 		if typeField, exists := opMap["type"]; exists {
-			if typeSlice, ok := typeField.([]interface{}); ok {
+			if typeSlice, ok := typeField.([]any); ok {
 				typeStrings := make([]string, len(typeSlice))
 				for i, t := range typeSlice {
 					if typeStr, ok := t.(string); ok {
@@ -181,10 +180,10 @@ func mapToOperation(opMap map[string]interface{}) internal.Operation {
 	}
 
 	// Handle apply field for compound operations
-	if val, ok := opMap["apply"].([]interface{}); ok {
+	if val, ok := opMap["apply"].([]any); ok {
 		applyOps := make([]internal.Operation, 0, len(val))
 		for _, subOp := range val {
-			if subOpMap, ok := subOp.(map[string]interface{}); ok {
+			if subOpMap, ok := subOp.(map[string]any); ok {
 				applyOps = append(applyOps, mapToOperation(subOpMap))
 			}
 		}

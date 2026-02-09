@@ -14,8 +14,8 @@ type StartsOperation struct {
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case
 }
 
-// NewOpStartsOperation creates a new OpStartsOperation operation.
-func NewOpStartsOperation(path []string, prefix string) *StartsOperation {
+// NewStarts creates a new starts operation.
+func NewStarts(path []string, prefix string) *StartsOperation {
 	return &StartsOperation{
 		BaseOp:     NewBaseOp(path),
 		Value:      prefix,
@@ -23,8 +23,8 @@ func NewOpStartsOperation(path []string, prefix string) *StartsOperation {
 	}
 }
 
-// NewOpStartsOperationWithIgnoreCase creates a new OpStartsOperation operation with ignore case option.
-func NewOpStartsOperationWithIgnoreCase(path []string, prefix string, ignoreCase bool) *StartsOperation {
+// NewStartsWithIgnoreCase creates a new starts operation with ignore case option.
+func NewStartsWithIgnoreCase(path []string, prefix string, ignoreCase bool) *StartsOperation {
 	return &StartsOperation{
 		BaseOp:     NewBaseOp(path),
 		Value:      prefix,
@@ -122,10 +122,3 @@ func (op *StartsOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewStarts creates a new starts operation
-	NewStarts = NewOpStartsOperation
-	// NewStartsWithIgnoreCase creates a new starts operation with ignore case
-	NewStartsWithIgnoreCase = NewOpStartsOperationWithIgnoreCase
-)

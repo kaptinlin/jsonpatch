@@ -14,8 +14,8 @@ type EndsOperation struct {
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case
 }
 
-// NewOpEndsOperation creates a new OpEndsOperation operation.
-func NewOpEndsOperation(path []string, suffix string) *EndsOperation {
+// NewEnds creates a new ends operation.
+func NewEnds(path []string, suffix string) *EndsOperation {
 	return &EndsOperation{
 		BaseOp:     NewBaseOp(path),
 		Value:      suffix,
@@ -23,8 +23,8 @@ func NewOpEndsOperation(path []string, suffix string) *EndsOperation {
 	}
 }
 
-// NewOpEndsOperationWithIgnoreCase creates a new OpEndsOperation operation with ignore case option.
-func NewOpEndsOperationWithIgnoreCase(path []string, suffix string, ignoreCase bool) *EndsOperation {
+// NewEndsWithIgnoreCase creates a new ends operation with ignore case option.
+func NewEndsWithIgnoreCase(path []string, suffix string, ignoreCase bool) *EndsOperation {
 	return &EndsOperation{
 		BaseOp:     NewBaseOp(path),
 		Value:      suffix,
@@ -122,10 +122,3 @@ func (op *EndsOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewEnds creates a new ends operation
-	NewEnds = NewOpEndsOperation
-	// NewEndsWithIgnoreCase creates a new ends operation with ignore case
-	NewEndsWithIgnoreCase = NewOpEndsOperationWithIgnoreCase
-)

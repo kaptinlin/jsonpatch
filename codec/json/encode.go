@@ -1,4 +1,3 @@
-// Package json implements JSON codec for JSON Patch operations.
 package json
 
 import (
@@ -8,13 +7,13 @@ import (
 
 // Encode converts operations to JSON format.
 func Encode(ops []internal.Op) ([]internal.Operation, error) {
-	operations := make([]internal.Operation, 0, len(ops))
-	for _, operation := range ops {
-		jsonOp, err := operation.ToJSON()
+	operations := make([]internal.Operation, len(ops))
+	for i, o := range ops {
+		jsonOp, err := o.ToJSON()
 		if err != nil {
 			return nil, err
 		}
-		operations = append(operations, jsonOp)
+		operations[i] = jsonOp
 	}
 	return operations, nil
 }

@@ -36,10 +36,10 @@ func createMatcherDefault(pattern string, ignoreCase bool) internal.RegexMatcher
 	return re.MatchString
 }
 
-// NewOpMatchesOperation creates a new matches operation.
+// NewMatches creates a new matches operation.
 // If createMatcher is nil, uses the default Go regexp implementation.
 // This aligns with json-joy's OpMatches constructor pattern.
-func NewOpMatchesOperation(path []string, pattern string, ignoreCase bool, createMatcher internal.CreateRegexMatcher) *MatchesOperation {
+func NewMatches(path []string, pattern string, ignoreCase bool, createMatcher internal.CreateRegexMatcher) *MatchesOperation {
 	if createMatcher == nil {
 		createMatcher = createMatcherDefault
 	}
@@ -134,8 +134,3 @@ func (o *MatchesOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewMatches creates a new matches operation
-	NewMatches = NewOpMatchesOperation
-)

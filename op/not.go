@@ -8,8 +8,8 @@ type NotOperation struct {
 	Operations []interface{} `json:"apply"` // Array of operations to apply (then negate)
 }
 
-// NewOpNotOperation creates a new NOT operation.
-func NewOpNotOperation(operand internal.PredicateOp) *NotOperation {
+// NewNot creates a new NOT operation.
+func NewNot(operand internal.PredicateOp) *NotOperation {
 	var path []string
 	if operand != nil {
 		path = operand.Path()
@@ -20,8 +20,8 @@ func NewOpNotOperation(operand internal.PredicateOp) *NotOperation {
 	}
 }
 
-// NewOpNotOperationMultiple creates a new NOT operation with multiple operands.
-func NewOpNotOperationMultiple(path []string, ops []interface{}) *NotOperation {
+// NewNotMultiple creates a new NOT operation with multiple operands.
+func NewNotMultiple(path []string, ops []interface{}) *NotOperation {
 	return &NotOperation{
 		BaseOp:     NewBaseOp(path),
 		Operations: ops,
@@ -140,10 +140,3 @@ func (o *NotOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewNot creates a new not operation
-	NewNot = NewOpNotOperation
-	// NewNotMultiple creates a new not operation with multiple operands
-	NewNotMultiple = NewOpNotOperationMultiple
-)

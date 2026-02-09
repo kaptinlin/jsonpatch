@@ -12,8 +12,8 @@ type FlipOperation struct {
 	BaseOp
 }
 
-// NewOpFlipOperation creates a new flip operation
-func NewOpFlipOperation(path []string) *FlipOperation {
+// NewFlip creates a new flip operation.
+func NewFlip(path []string) *FlipOperation {
 	return &FlipOperation{
 		BaseOp: NewBaseOp(path),
 	}
@@ -165,8 +165,3 @@ func (op *FlipOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewFlip creates a new flip operation
-	NewFlip = NewOpFlipOperation
-)

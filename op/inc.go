@@ -10,8 +10,8 @@ type IncOperation struct {
 	Inc float64 `json:"inc"` // Increment value
 }
 
-// NewOpIncOperation creates a new OpIncOperation operation.
-func NewOpIncOperation(path []string, inc float64) *IncOperation {
+// NewInc creates a new increment operation.
+func NewInc(path []string, inc float64) *IncOperation {
 	return &IncOperation{
 		BaseOp: NewBaseOp(path),
 		Inc:    inc,
@@ -88,8 +88,3 @@ func (op *IncOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewInc creates a new inc operation
-	NewInc = NewOpIncOperation
-)

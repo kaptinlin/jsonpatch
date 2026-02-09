@@ -12,8 +12,8 @@ type TypeOperation struct {
 	TypeValue string `json:"value"` // Expected type name
 }
 
-// NewOpTypeOperation creates a new OpTypeOperation operation.
-func NewOpTypeOperation(path []string, expectedType string) *TypeOperation {
+// NewType creates a new type operation.
+func NewType(path []string, expectedType string) *TypeOperation {
 	return &TypeOperation{
 		BaseOp:    NewBaseOp(path),
 		TypeValue: expectedType,
@@ -102,8 +102,3 @@ func (op *TypeOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewType creates a new type operation
-	NewType = NewOpTypeOperation
-)

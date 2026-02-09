@@ -19,7 +19,7 @@ func main() {
 
 	// Test that passes
 	fmt.Println("\n1. Test that should pass:")
-	testOp := op.NewOpTestOperation([]string{"name"}, "John")
+	testOp := op.NewTest([]string{"name"}, "John")
 	result, err := jsonpatch.ApplyOp(doc, testOp)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
@@ -29,7 +29,7 @@ func main() {
 
 	// Test that fails
 	fmt.Println("\n2. Test that should fail:")
-	failOp := op.NewOpTestOperation([]string{"name"}, "Jane")
+	failOp := op.NewTest([]string{"name"}, "Jane")
 	_, err = jsonpatch.ApplyOp(doc, failOp)
 	if err != nil {
 		fmt.Printf("Test failed as expected: %v\n", err)

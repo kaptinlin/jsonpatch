@@ -13,8 +13,8 @@ type InOperation struct {
 	Value []interface{} `json:"value"` // Array of values to check against
 }
 
-// NewOpInOperation creates a new OpInOperation operation.
-func NewOpInOperation(path []string, values []interface{}) *InOperation {
+// NewIn creates a new in operation.
+func NewIn(path []string, values []interface{}) *InOperation {
 	return &InOperation{
 		BaseOp: NewBaseOp(path),
 		Value:  values,
@@ -100,8 +100,3 @@ func (op *InOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewIn creates a new in operation
-	NewIn = NewOpInOperation
-)

@@ -15,10 +15,8 @@ type ExtendOperation struct {
 	DeleteNull bool                   `json:"deleteNull"` // Whether to delete null properties
 }
 
-type OpExtendOperation = ExtendOperation //nolint:revive // Backward compatibility alias
-
-// NewOpExtendOperation creates a new object extend operation.
-func NewOpExtendOperation(path []string, properties map[string]interface{}, deleteNull bool) *ExtendOperation {
+// NewExtend creates a new object extend operation.
+func NewExtend(path []string, properties map[string]interface{}, deleteNull bool) *ExtendOperation {
 	return &ExtendOperation{
 		BaseOp:     NewBaseOp(path),
 		Properties: properties,
@@ -132,8 +130,3 @@ func objExtend(obj map[string]interface{}, props map[string]interface{}, deleteN
 	return result
 }
 
-// Short aliases for common use
-var (
-	// NewExtend creates a new extend operation
-	NewExtend = NewOpExtendOperation
-)

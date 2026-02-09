@@ -9,8 +9,8 @@ type DefinedOperation struct {
 	BaseOp
 }
 
-// NewOpDefinedOperation creates a new OpDefinedOperation operation.
-func NewOpDefinedOperation(path []string) *DefinedOperation {
+// NewDefined creates a new defined operation.
+func NewDefined(path []string) *DefinedOperation {
 	return &DefinedOperation{
 		BaseOp: NewBaseOp(path),
 	}
@@ -66,8 +66,3 @@ func (o *DefinedOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewDefined creates a new defined operation
-	NewDefined = NewOpDefinedOperation
-)

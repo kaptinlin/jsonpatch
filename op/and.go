@@ -8,8 +8,8 @@ type AndOperation struct {
 	Operations []interface{} `json:"apply"` // Array of operations to apply
 }
 
-// NewOpAndOperation creates a new AndOperation operation.
-func NewOpAndOperation(path []string, ops []interface{}) *AndOperation {
+// NewAnd creates a new AND operation.
+func NewAnd(path []string, ops []interface{}) *AndOperation {
 	return &AndOperation{
 		BaseOp:     NewBaseOp(path),
 		Operations: ops,
@@ -123,8 +123,3 @@ func (o *AndOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewAnd creates a new and operation
-	NewAnd = NewOpAndOperation
-)

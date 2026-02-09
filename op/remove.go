@@ -11,8 +11,8 @@ type RemoveOperation struct {
 	HasOldValue bool        // Whether oldValue is explicitly set
 }
 
-// NewOpRemoveOperation creates a new OpRemoveOperation operation.
-func NewOpRemoveOperation(path []string) *RemoveOperation {
+// NewRemove creates a new remove operation.
+func NewRemove(path []string) *RemoveOperation {
 	return &RemoveOperation{
 		BaseOp:      NewBaseOp(path),
 		OldValue:    nil,
@@ -20,8 +20,8 @@ func NewOpRemoveOperation(path []string) *RemoveOperation {
 	}
 }
 
-// NewOpRemoveOperationWithOldValue creates a new OpRemoveOperation operation with oldValue.
-func NewOpRemoveOperationWithOldValue(path []string, oldValue interface{}) *RemoveOperation {
+// NewRemoveWithOldValue creates a new remove operation with oldValue.
+func NewRemoveWithOldValue(path []string, oldValue interface{}) *RemoveOperation {
 	return &RemoveOperation{
 		BaseOp:      NewBaseOp(path),
 		OldValue:    oldValue,
@@ -155,10 +155,3 @@ func (o *RemoveOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewRemove creates a new remove operation
-	NewRemove = NewOpRemoveOperation
-	// NewRemoveWithOldValue creates a new remove operation with old value
-	NewRemoveWithOldValue = NewOpRemoveOperationWithOldValue
-)

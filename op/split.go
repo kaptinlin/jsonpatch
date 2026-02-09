@@ -15,8 +15,8 @@ type SplitOperation struct {
 	Props interface{} `json:"props"` // Properties to apply after split
 }
 
-// NewOpSplitOperation creates a new string split operation.
-func NewOpSplitOperation(path []string, pos float64, props interface{}) *SplitOperation {
+// NewSplit creates a new split operation.
+func NewSplit(path []string, pos float64, props interface{}) *SplitOperation {
 	return &SplitOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
@@ -216,12 +216,6 @@ func (op *SplitOperation) Validate() error {
 	// Position bounds are checked in Apply method
 	return nil
 }
-
-// Short aliases for common use
-var (
-	// NewSplit creates a new split operation
-	NewSplit = NewOpSplitOperation
-)
 
 // splitSlateTextNode splits a Slate text node at the specified position
 func splitSlateTextNode(nodeMap map[string]interface{}, pos int, props map[string]interface{}) []map[string]interface{} {

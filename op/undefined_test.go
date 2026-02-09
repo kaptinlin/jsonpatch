@@ -18,19 +18,19 @@ func TestOpUndefined_Basic(t *testing.T) {
 	}
 
 	// Test non-existing path
-	undefinedOp := NewOpUndefinedOperation([]string{"qux"})
+	undefinedOp := NewUndefined([]string{"qux"})
 	ok, err := undefinedOp.Test(doc)
 	require.NoError(t, err, "Undefined test should not fail")
 	assert.True(t, ok, "Undefined should return true for non-existing path")
 
 	// Test existing path
-	undefinedOp = NewOpUndefinedOperation([]string{"foo"})
+	undefinedOp = NewUndefined([]string{"foo"})
 	ok, err = undefinedOp.Test(doc)
 	require.NoError(t, err, "Undefined test should not fail")
 	assert.False(t, ok, "Undefined should return false for existing path")
 
 	// Test nested non-existing path
-	undefinedOp = NewOpUndefinedOperation([]string{"baz", "quux"})
+	undefinedOp = NewUndefined([]string{"baz", "quux"})
 	ok, err = undefinedOp.Test(doc)
 	require.NoError(t, err, "Undefined test should not fail")
 	assert.True(t, ok, "Undefined should return true for non-existing nested path")
@@ -43,13 +43,13 @@ func TestOpUndefined_Not(t *testing.T) {
 	}
 
 	// Test non-existing path (standard undefined behavior)
-	undefinedOp := NewOpUndefinedOperation([]string{"qux"})
+	undefinedOp := NewUndefined([]string{"qux"})
 	ok, err := undefinedOp.Test(doc)
 	require.NoError(t, err, "Undefined test should not fail")
 	assert.True(t, ok, "undefined should return true for non-existing path")
 
 	// Test existing path (standard undefined behavior)
-	undefinedOp = NewOpUndefinedOperation([]string{"foo"})
+	undefinedOp = NewUndefined([]string{"foo"})
 	ok, err = undefinedOp.Test(doc)
 	require.NoError(t, err, "Undefined test should not fail")
 	assert.False(t, ok, "undefined should return false for existing path")
@@ -62,20 +62,20 @@ func TestOpUndefined_Apply(t *testing.T) {
 	}
 
 	// Test non-existing path
-	undefinedOp := NewOpUndefinedOperation([]string{"qux"})
+	undefinedOp := NewUndefined([]string{"qux"})
 	result, err := undefinedOp.Apply(doc)
 	require.NoError(t, err, "Undefined apply should succeed for non-existing path")
 	assert.True(t, deepEqual(result.Doc, doc), "Apply should return the original document")
 
 	// Test existing path
-	undefinedOp = NewOpUndefinedOperation([]string{"foo"})
+	undefinedOp = NewUndefined([]string{"foo"})
 	_, err = undefinedOp.Apply(doc)
 	assert.Error(t, err, "Undefined apply should fail for existing path")
 	assert.ErrorIs(t, err, ErrUndefinedTestFailed)
 }
 
 func TestOpUndefined_InterfaceMethods(t *testing.T) {
-	undefinedOp := NewOpUndefinedOperation([]string{"test"})
+	undefinedOp := NewUndefined([]string{"test"})
 
 	// Test Op() method
 	assert.Equal(t, internal.OpUndefinedType, undefinedOp.Op(), "Op() should return correct operation type")
@@ -91,7 +91,7 @@ func TestOpUndefined_InterfaceMethods(t *testing.T) {
 }
 
 func TestOpUndefined_ToJSON(t *testing.T) {
-	undefinedOp := NewOpUndefinedOperation([]string{"test"})
+	undefinedOp := NewUndefined([]string{"test"})
 
 	json, err := undefinedOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
@@ -105,7 +105,7 @@ func TestOpUndefined_ToJSON(t *testing.T) {
 // no longer supports direct negation. Use second-order predicate "not" for negation.
 
 func TestOpUndefined_ToCompact(t *testing.T) {
-	undefinedOp := NewOpUndefinedOperation([]string{"test"})
+	undefinedOp := NewUndefined([]string{"test"})
 
 	// Test compact format (no longer includes 'not' parameter)
 	compact, err := undefinedOp.ToCompact()
@@ -117,12 +117,12 @@ func TestOpUndefined_ToCompact(t *testing.T) {
 
 func TestOpUndefined_Validate(t *testing.T) {
 	// Test valid operation
-	undefinedOp := NewOpUndefinedOperation([]string{"test"})
+	undefinedOp := NewUndefined([]string{"test"})
 	err := undefinedOp.Validate()
 	assert.NoError(t, err, "Valid operation should not fail validation")
 
 	// Test invalid operation (empty path)
-	undefinedOp = NewOpUndefinedOperation([]string{})
+	undefinedOp = NewUndefined([]string{})
 	err = undefinedOp.Validate()
 	assert.Error(t, err, "Invalid operation should fail validation")
 	assert.ErrorIs(t, err, ErrPathEmpty)

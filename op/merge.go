@@ -15,8 +15,8 @@ type MergeOperation struct {
 	Props map[string]interface{} `json:"props"` // Properties to apply after merge
 }
 
-// NewOpMergeOperation creates a new array merge operation.
-func NewOpMergeOperation(path []string, pos float64, props map[string]interface{}) *MergeOperation {
+// NewMerge creates a new merge operation.
+func NewMerge(path []string, pos float64, props map[string]interface{}) *MergeOperation {
 	return &MergeOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
@@ -177,12 +177,6 @@ func (op *MergeOperation) Validate() error {
 	}
 	return nil
 }
-
-// Short aliases for common use
-var (
-	// NewMerge creates a new merge operation
-	NewMerge = NewOpMergeOperation
-)
 
 // Slate node helper functions (inlined from pkg/slate)
 

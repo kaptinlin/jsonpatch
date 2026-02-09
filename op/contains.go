@@ -14,16 +14,16 @@ type ContainsOperation struct {
 	IgnoreCase bool   `json:"ignore_case"` // Whether to ignore case when comparing
 }
 
-// NewOpContainsOperation creates a new OpContainsOperation operation.
-func NewOpContainsOperation(path []string, substring string) *ContainsOperation {
+// NewContains creates a new contains operation.
+func NewContains(path []string, substring string) *ContainsOperation {
 	return &ContainsOperation{
 		BaseOp: NewBaseOp(path),
 		Value:  substring,
 	}
 }
 
-// NewOpContainsOperationWithIgnoreCase creates a new OpContainsOperation operation with ignore case option.
-func NewOpContainsOperationWithIgnoreCase(path []string, substring string, ignoreCase bool) *ContainsOperation {
+// NewContainsWithIgnoreCase creates a new contains operation with ignore case option.
+func NewContainsWithIgnoreCase(path []string, substring string, ignoreCase bool) *ContainsOperation {
 	return &ContainsOperation{
 		BaseOp:     NewBaseOp(path),
 		Value:      substring,
@@ -115,10 +115,3 @@ func (op *ContainsOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewContains creates a new contains operation
-	NewContains = NewOpContainsOperation
-	// NewContainsWithIgnoreCase creates a new contains operation with ignore case
-	NewContainsWithIgnoreCase = NewOpContainsOperationWithIgnoreCase
-)

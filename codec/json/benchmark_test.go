@@ -1,4 +1,3 @@
-// Package json implements performance benchmarks for JSON codec optimizations.
 package json
 
 import (
@@ -18,7 +17,7 @@ var testOperations = []internal.Operation{
 }
 
 // Legacy test data as maps for compatibility testing
-var testOperationMaps = []map[string]interface{}{
+var testOperationMaps = []map[string]any{
 	{"op": "add", "path": "/name", "value": "John"},
 	{"op": "replace", "path": "/age", "value": 30},
 	{"op": "remove", "path": "/temp"},
@@ -146,7 +145,7 @@ func TestJSONDecodeEncode(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify it's valid JSON and roundtrip works
-	var decoded []map[string]interface{}
+	var decoded []map[string]any
 	err = json.Unmarshal(data, &decoded)
 	require.NoError(t, err)
 	require.Len(t, decoded, 4)
@@ -170,7 +169,7 @@ func TestAllOperationTypes(t *testing.T) {
 		{Op: "ends", Path: "/text", Value: "suffix"},
 		{Op: "more", Path: "/number", Value: 10.0},
 		{Op: "less", Path: "/number", Value: 100.0},
-		{Op: "in", Path: "/value", Value: []interface{}{"a", "b", "c"}},
+		{Op: "in", Path: "/value", Value: []any{"a", "b", "c"}},
 		{Op: "type", Path: "/type", Value: "string"},
 		{Op: "test_type", Path: "/test_type", Type: "number"},
 		{Op: "test_string", Path: "/test_string", Str: "hello"},
@@ -179,9 +178,9 @@ func TestAllOperationTypes(t *testing.T) {
 		{Op: "flip", Path: "/boolean"},
 		{Op: "str_ins", Path: "/string", Pos: 1, Str: "prefix"},
 		{Op: "str_del", Path: "/string", Pos: 1, Len: 5},
-		{Op: "split", Path: "/array", Pos: 1, Props: map[string]interface{}{"key": "value"}},
-		{Op: "merge", Path: "/object", Props: map[string]interface{}{"key": "value"}},
-		{Op: "extend", Path: "/object", Props: map[string]interface{}{"newKey": "newValue"}},
+		{Op: "split", Path: "/array", Pos: 1, Props: map[string]any{"key": "value"}},
+		{Op: "merge", Path: "/object", Props: map[string]any{"key": "value"}},
+		{Op: "extend", Path: "/object", Props: map[string]any{"newKey": "newValue"}},
 	}
 
 	// Test all operations can be decoded

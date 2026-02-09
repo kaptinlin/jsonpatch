@@ -1,7 +1,8 @@
+// Package tests provides test data and automated codec tests for the JSON codec.
 package tests
 
 // SampleOperations contains all the test operations from TypeScript version
-var SampleOperations = map[string]map[string]interface{}{
+var SampleOperations = map[string]map[string]any{
 	// JSON Patch core operations
 	"add1": {
 		"op":    "add",
@@ -21,7 +22,7 @@ var SampleOperations = map[string]map[string]interface{}{
 	"add4": {
 		"op":   "add",
 		"path": "/mentions/2",
-		"value": map[string]interface{}{
+		"value": map[string]any{
 			"id":   "1234",
 			"name": "Joe Jones",
 		},
@@ -29,7 +30,7 @@ var SampleOperations = map[string]map[string]interface{}{
 	"add5": {
 		"op":   "add",
 		"path": "/mentions/2/-",
-		"value": map[string]interface{}{
+		"value": map[string]any{
 			"id":   "1234",
 			"name": "Joe Jones",
 		},
@@ -37,12 +38,12 @@ var SampleOperations = map[string]map[string]interface{}{
 	"add6": {
 		"op":    "add",
 		"path":  "",
-		"value": map[string]interface{}{},
+		"value": map[string]any{},
 	},
 	"add7": {
 		"op":    "add",
 		"path":  "/5/a",
-		"value": []interface{}{1, nil, "3"},
+		"value": []any{1, nil, "3"},
 	},
 
 	"remove1": {
@@ -61,7 +62,7 @@ var SampleOperations = map[string]map[string]interface{}{
 	"remove4": {
 		"op":   "remove",
 		"path": "/user/123/name",
-		"oldValue": map[string]interface{}{
+		"oldValue": map[string]any{
 			"firstName": "John",
 			"lastName":  "Notjohn",
 		},
@@ -80,10 +81,10 @@ var SampleOperations = map[string]map[string]interface{}{
 	"replace3": {
 		"op":   "replace",
 		"path": "/a/1/-",
-		"value": map[string]interface{}{
+		"value": map[string]any{
 			"foo": "qux",
 		},
-		"oldValue": map[string]interface{}{
+		"oldValue": map[string]any{
 			"foo": "bar",
 		},
 	},
@@ -128,12 +129,12 @@ var SampleOperations = map[string]map[string]interface{}{
 	"test2": {
 		"op":    "test",
 		"path":  "/ha/hi",
-		"value": map[string]interface{}{"foo": "bar"},
+		"value": map[string]any{"foo": "bar"},
 	},
 	"test3": {
 		"op":    "test",
 		"path":  "/ha/1/2",
-		"value": []interface{}{1, map[string]interface{}{"a": false}, "null"},
+		"value": []any{1, map[string]any{"a": false}, "null"},
 	},
 
 	// JSON Predicate operations
@@ -294,12 +295,12 @@ var SampleOperations = map[string]map[string]interface{}{
 	"in1": {
 		"op":    "in",
 		"path":  "/",
-		"value": []interface{}{"asdf"},
+		"value": []any{"asdf"},
 	},
 	"in2": {
 		"op":    "in",
 		"path":  "/foo/bar",
-		"value": []interface{}{"asdf", 132, map[string]interface{}{"a": "b"}, nil},
+		"value": []any{"asdf", 132, map[string]any{"a": "b"}, nil},
 	},
 
 	"less1": {
@@ -327,80 +328,80 @@ var SampleOperations = map[string]map[string]interface{}{
 	"and1": {
 		"op":   "and",
 		"path": "/a",
-		"apply": []interface{}{
-			map[string]interface{}{"op": "test", "path": "/b", "value": 123},
+		"apply": []any{
+			map[string]any{"op": "test", "path": "/b", "value": 123},
 		},
 	},
 	"and2": {
 		"op":   "and",
 		"path": "/",
-		"apply": []interface{}{
-			map[string]interface{}{"op": "less", "path": "", "value": 0},
-			map[string]interface{}{"op": "more", "path": "", "value": 1},
-			map[string]interface{}{"op": "in", "path": "/", "value": []interface{}{"asdf"}},
+		"apply": []any{
+			map[string]any{"op": "less", "path": "", "value": 0},
+			map[string]any{"op": "more", "path": "", "value": 1},
+			map[string]any{"op": "in", "path": "/", "value": []any{"asdf"}},
 		},
 	},
 	"and3": {
 		"op":   "and",
 		"path": "/a/1/.",
-		"apply": []interface{}{
-			map[string]interface{}{"op": "test", "path": "", "value": nil},
-			map[string]interface{}{"op": "test", "path": "/ha/hi", "value": map[string]interface{}{"foo": "bar"}},
-			map[string]interface{}{"op": "test", "path": "/ha/1/2", "value": []interface{}{1, map[string]interface{}{"a": false}, "null"}},
+		"apply": []any{
+			map[string]any{"op": "test", "path": "", "value": nil},
+			map[string]any{"op": "test", "path": "/ha/hi", "value": map[string]any{"foo": "bar"}},
+			map[string]any{"op": "test", "path": "/ha/1/2", "value": []any{1, map[string]any{"a": false}, "null"}},
 		},
 	},
 	"and4": {
 		"op":   "and",
 		"path": "/a/1/.",
-		"apply": []interface{}{
-			map[string]interface{}{"op": "test", "path": "", "value": nil},
-			map[string]interface{}{
+		"apply": []any{
+			map[string]any{"op": "test", "path": "", "value": nil},
+			map[string]any{
 				"op":   "and",
 				"path": "/gg/bet",
-				"apply": []interface{}{
-					map[string]interface{}{"op": "test", "path": "", "value": nil},
-					map[string]interface{}{"op": "test", "path": "/ha/hi", "value": map[string]interface{}{"foo": "bar"}},
+				"apply": []any{
+					map[string]any{"op": "test", "path": "", "value": nil},
+					map[string]any{"op": "test", "path": "/ha/hi", "value": map[string]any{"foo": "bar"}},
 				},
 			},
-			map[string]interface{}{"op": "test", "path": "/ha/hi", "value": map[string]interface{}{"foo": "bar"}},
+			map[string]any{"op": "test", "path": "/ha/hi", "value": map[string]any{"foo": "bar"}},
 		},
 	},
 
 	"not1": {
 		"op":   "not",
 		"path": "/",
-		"apply": []interface{}{
-			map[string]interface{}{"op": "less", "path": "", "value": 0},
-			map[string]interface{}{"op": "more", "path": "", "value": 1},
-			map[string]interface{}{"op": "in", "path": "/", "value": []interface{}{"asdf"}},
+		"apply": []any{
+			map[string]any{"op": "less", "path": "", "value": 0},
+			map[string]any{"op": "more", "path": "", "value": 1},
+			map[string]any{"op": "in", "path": "/", "value": []any{"asdf"}},
 		},
 	},
 	"not2": {
 		"op":   "not",
 		"path": "/a/1/.",
-		"apply": []interface{}{
-			map[string]interface{}{"op": "test", "path": "", "value": nil},
-			map[string]interface{}{"op": "test", "path": "/ha/hi", "value": map[string]interface{}{"foo": "bar"}},
-			map[string]interface{}{"op": "test", "path": "/ha/1/2", "value": []interface{}{1, map[string]interface{}{"a": false}, "null"}},
+		"apply": []any{
+			map[string]any{"op": "test", "path": "", "value": nil},
+			map[string]any{"op": "test", "path": "/ha/hi", "value": map[string]any{"foo": "bar"}},
+			map[string]any{"op": "test", "path": "/ha/1/2", "value": []any{1, map[string]any{"a": false}, "null"}},
 		},
 	},
 
 	"or1": {
 		"op":   "or",
 		"path": "/",
-		"apply": []interface{}{
-			map[string]interface{}{"op": "less", "path": "", "value": 0},
-			map[string]interface{}{"op": "more", "path": "", "value": 1},
-			map[string]interface{}{"op": "in", "path": "/", "value": []interface{}{"asdf"}},
+		"apply": []any{
+			map[string]any{"op": "less", "path": "", "value": 0},
+			map[string]any{"op": "more", "path": "", "value": 1},
+			map[string]any{"op": "in", "path": "/", "value": []any{"asdf"}},
 		},
 	},
 	"or2": {
 		"op":   "or",
 		"path": "/a/1/.",
-		"apply": []interface{}{
-			map[string]interface{}{"op": "test", "path": "", "value": nil},
-			map[string]interface{}{"op": "test", "path": "/ha/hi", "value": map[string]interface{}{"foo": "bar"}},
-			map[string]interface{}{"op": "test", "path": "/ha/1/2", "value": []interface{}{1, map[string]interface{}{"a": false}, "null"}},
+		"apply": []any{
+			map[string]any{"op": "test", "path": "", "value": nil},
+			map[string]any{"op": "test", "path": "/ha/hi", "value": map[string]any{"foo": "bar"}},
+			map[string]any{"op": "test", "path": "/ha/1/2", "value": []any{1, map[string]any{"a": false}, "null"}},
 		},
 	},
 
@@ -471,7 +472,7 @@ var SampleOperations = map[string]map[string]interface{}{
 		"op":   "split",
 		"path": "/i/asdf/sdf/d",
 		"pos":  123.0,
-		"props": map[string]interface{}{
+		"props": map[string]any{
 			"foo": "bar",
 			"a":   123,
 		},
@@ -486,31 +487,31 @@ var SampleOperations = map[string]map[string]interface{}{
 		"op":   "merge",
 		"path": "/a/b/c",
 		"pos":  123412341234.0,
-		"props": map[string]interface{}{
+		"props": map[string]any{
 			"foo": nil,
 			"bar": 23,
 			"baz": "asdf",
 			"quz": true,
-			"qux": []interface{}{1, "2", 3, true, false, nil},
+			"qux": []any{1, "2", 3, true, false, nil},
 		},
 	},
 
 	"extend1": {
 		"op":    "extend",
 		"path":  "/",
-		"props": map[string]interface{}{},
+		"props": map[string]any{},
 	},
 	"extend2": {
 		"op":   "extend",
 		"path": "/asdf/asdf/asdf",
-		"props": map[string]interface{}{
+		"props": map[string]any{
 			"foo": "bar",
 		},
 	},
 	"extend3": {
 		"op":   "extend",
 		"path": "/asdf/asdf/asdf",
-		"props": map[string]interface{}{
+		"props": map[string]any{
 			"foo": "bar",
 			"a":   nil,
 			"b":   true,

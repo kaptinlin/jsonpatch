@@ -9,8 +9,8 @@ type UndefinedOperation struct {
 	BaseOp
 }
 
-// NewOpUndefinedOperation creates a new undefined operation.
-func NewOpUndefinedOperation(path []string) *UndefinedOperation {
+// NewUndefined creates a new undefined operation.
+func NewUndefined(path []string) *UndefinedOperation {
 	return &UndefinedOperation{
 		BaseOp: NewBaseOp(path),
 	}
@@ -67,8 +67,3 @@ func (o *UndefinedOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewUndefined creates a new undefined operation
-	NewUndefined = NewOpUndefinedOperation
-)

@@ -10,10 +10,8 @@ type CopyOperation struct {
 	FromPath []string `json:"from"` // Source path
 }
 
-type OpCopyOperation = CopyOperation //nolint:revive // Backward compatibility alias
-
-// NewOpCopyOperation creates a new OpCopyOperation operation.
-func NewOpCopyOperation(path, from []string) *CopyOperation {
+// NewCopy creates a new copy operation.
+func NewCopy(path, from []string) *CopyOperation {
 	return &CopyOperation{
 		BaseOp:   NewBaseOpWithFrom(path, from),
 		FromPath: from,
@@ -106,8 +104,3 @@ func (o *CopyOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewCopy creates a new copy operation
-	NewCopy = NewOpCopyOperation
-)

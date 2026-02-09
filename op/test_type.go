@@ -14,16 +14,16 @@ type TestTypeOperation struct {
 	Types []string `json:"type"` // Expected type names
 }
 
-// NewOpTestTypeOperation creates a new OpTestTypeOperation operation.
-func NewOpTestTypeOperation(path []string, expectedType string) *TestTypeOperation {
+// NewTestType creates a new test type operation.
+func NewTestType(path []string, expectedType string) *TestTypeOperation {
 	return &TestTypeOperation{
 		BaseOp: NewBaseOp(path),
 		Types:  []string{expectedType},
 	}
 }
 
-// NewOpTestTypeOperationMultiple creates a new OpTestTypeOperation operation with multiple internal.
-func NewOpTestTypeOperationMultiple(path []string, expectedTypes []string) *TestTypeOperation {
+// NewTestTypeMultiple creates a new test type operation with multiple types.
+func NewTestTypeMultiple(path []string, expectedTypes []string) *TestTypeOperation {
 	return &TestTypeOperation{
 		BaseOp: NewBaseOp(path),
 		Types:  expectedTypes,
@@ -221,10 +221,3 @@ func (op *TestTypeOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewTestType creates a new test type operation
-	NewTestType = NewOpTestTypeOperation
-	// NewTestTypeMultiple creates a new test type operation with multiple types
-	NewTestTypeMultiple = NewOpTestTypeOperationMultiple
-)

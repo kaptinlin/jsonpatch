@@ -12,8 +12,8 @@ type LessOperation struct {
 	Value float64 `json:"value"` // Value to compare against
 }
 
-// NewOpLessOperation creates a new OpLessOperation operation.
-func NewOpLessOperation(path []string, value float64) *LessOperation {
+// NewLess creates a new less operation.
+func NewLess(path []string, value float64) *LessOperation {
 	return &LessOperation{
 		BaseOp: NewBaseOp(path),
 		Value:  value,
@@ -83,8 +83,3 @@ func (op *LessOperation) Test(doc any) (bool, error) {
 	return actualValue < op.Value, nil
 }
 
-// Short aliases for common use
-var (
-	// NewLess creates a new less operation
-	NewLess = NewOpLessOperation
-)

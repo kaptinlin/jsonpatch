@@ -17,8 +17,8 @@ type StrInsOperation struct {
 	Str string  `json:"str"` // String to insert
 }
 
-// NewOpStrInsOperation creates a new string insert operation.
-func NewOpStrInsOperation(path []string, pos float64, str string) *StrInsOperation {
+// NewStrIns creates a new string insert operation.
+func NewStrIns(path []string, pos float64, str string) *StrInsOperation {
 	return &StrInsOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
@@ -147,8 +147,3 @@ func (op *StrInsOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewStrIns creates a new string insert operation
-	NewStrIns = NewOpStrInsOperation
-)

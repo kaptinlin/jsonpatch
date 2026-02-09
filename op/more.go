@@ -12,8 +12,8 @@ type MoreOperation struct {
 	Value float64 `json:"value"` // The number to compare against
 }
 
-// NewOpMoreOperation creates a new more operation.
-func NewOpMoreOperation(path []string, value float64) *MoreOperation {
+// NewMore creates a new more operation.
+func NewMore(path []string, value float64) *MoreOperation {
 	return &MoreOperation{
 		BaseOp: NewBaseOp(path),
 		Value:  value,
@@ -85,8 +85,3 @@ func (o *MoreOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewMore creates a new more operation
-	NewMore = NewOpMoreOperation
-)

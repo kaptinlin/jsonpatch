@@ -8,8 +8,8 @@ type OrOperation struct {
 	Operations []interface{} `json:"apply"` // Array of operations to apply
 }
 
-// NewOpOrOperation creates a new OpOrOperation operation.
-func NewOpOrOperation(path []string, ops []interface{}) *OrOperation {
+// NewOr creates a new OR operation.
+func NewOr(path []string, ops []interface{}) *OrOperation {
 	return &OrOperation{
 		BaseOp:     NewBaseOp(path),
 		Operations: ops,
@@ -126,8 +126,3 @@ func (o *OrOperation) Validate() error {
 	return nil
 }
 
-// Short aliases for common use
-var (
-	// NewOr creates a new or operation
-	NewOr = NewOpOrOperation
-)
