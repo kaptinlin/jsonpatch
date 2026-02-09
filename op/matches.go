@@ -53,19 +53,19 @@ func NewMatches(path []string, pattern string, ignoreCase bool, createMatcher in
 }
 
 // Op returns the operation type.
-func (o *MatchesOperation) Op() internal.OpType {
+func (ma *MatchesOperation) Op() internal.OpType {
 	return internal.OpMatchesType
 }
 
 // Code returns the operation code.
-func (o *MatchesOperation) Code() int {
+func (ma *MatchesOperation) Code() int {
 	return internal.OpMatchesCode
 }
 
 // Test evaluates the matches predicate condition.
-func (o *MatchesOperation) Test(doc any) (bool, error) {
+func (ma *MatchesOperation) Test(doc any) (bool, error) {
 	// Get target value
-	val, err := getValue(doc, o.Path())
+	val, err := getValue(doc, ma.Path())
 	if err != nil {
 		// For JSON Patch test operations, path not found means test fails (returns false)
 		// This is correct JSON Patch semantics - returning nil error with false result
@@ -82,13 +82,13 @@ func (o *MatchesOperation) Test(doc any) (bool, error) {
 		return false, nil
 	}
 
-	return o.matcher(str), nil
+	return ma.matcher(str), nil
 }
 
 // Apply applies the matches operation.
-func (o *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (ma *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get target value
-	val, err := getValue(doc, o.Path())
+	val, err := getValue(doc, ma.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, ErrPathNotFound
 	}
@@ -99,7 +99,7 @@ func (o *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, ErrNotString
 	}
 
-	if !o.matcher(str) {
+	if !ma.matcher(str) {
 		return internal.OpResult[any]{}, fmt.Errorf("%w: string '%s' does not match pattern", ErrStringMismatch, str)
 	}
 
@@ -107,28 +107,28 @@ func (o *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON converts the operation to JSON representation.
-func (o *MatchesOperation) ToJSON() (internal.Operation, error) {
+func (ma *MatchesOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		Op:         string(internal.OpMatchesType),
-		Path:       formatPath(o.Path()),
-		Value:      o.Pattern,
-		IgnoreCase: o.IgnoreCase,
+		Path:       formatPath(ma.Path()),
+		Value:      ma.Pattern,
+		IgnoreCase: ma.IgnoreCase,
 	}
 
 	return result, nil
 }
 
 // ToCompact converts the operation to compact array representation.
-func (o *MatchesOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpMatchesCode, o.Path(), o.Pattern, o.IgnoreCase}, nil
+func (ma *MatchesOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpMatchesCode, ma.Path(), ma.Pattern, ma.IgnoreCase}, nil
 }
 
 // Validate validates the matches operation.
-func (o *MatchesOperation) Validate() error {
-	if len(o.Path()) == 0 {
+func (ma *MatchesOperation) Validate() error {
+	if len(ma.Path()) == 0 {
 		return ErrPathEmpty
 	}
-	if o.Pattern == "" {
+	if ma.Pattern == "" {
 		return ErrPatternEmpty
 	}
 	return nil

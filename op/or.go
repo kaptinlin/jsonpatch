@@ -17,29 +17,29 @@ func NewOr(path []string, ops []any) *OrOperation {
 }
 
 // Op returns the operation type.
-func (o *OrOperation) Op() internal.OpType {
+func (oo *OrOperation) Op() internal.OpType {
 	return internal.OpOrType
 }
 
 // Code returns the operation code.
-func (o *OrOperation) Code() int {
+func (oo *OrOperation) Code() int {
 	return internal.OpOrCode
 }
 
 // Ops returns the predicate operations.
-func (o *OrOperation) Ops() []internal.PredicateOp {
-	return extractPredicateOps(o.Operations)
+func (oo *OrOperation) Ops() []internal.PredicateOp {
+	return extractPredicateOps(oo.Operations)
 }
 
 // Test performs the OR operation.
-func (o *OrOperation) Test(doc any) (bool, error) {
+func (oo *OrOperation) Test(doc any) (bool, error) {
 	// If no operations, return false (empty OR is false)
-	if len(o.Operations) == 0 {
+	if len(oo.Operations) == 0 {
 		return false, nil
 	}
 
 	// Test all operations
-	for _, op := range o.Operations {
+	for _, op := range oo.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {
 			return false, ErrInvalidPredicateInOr
@@ -59,8 +59,8 @@ func (o *OrOperation) Test(doc any) (bool, error) {
 }
 
 // Apply applies the OR operation to the document.
-func (o *OrOperation) Apply(doc any) (internal.OpResult[any], error) {
-	for _, predicateInterface := range o.Operations {
+func (oo *OrOperation) Apply(doc any) (internal.OpResult[any], error) {
+	for _, predicateInterface := range oo.Operations {
 		predicate, ok := predicateInterface.(internal.PredicateOp)
 		if !ok {
 			return internal.OpResult[any]{}, ErrInvalidPredicateInOr
@@ -74,9 +74,9 @@ func (o *OrOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *OrOperation) ToJSON() (internal.Operation, error) {
-	opsJSON := make([]internal.Operation, 0, len(o.Operations))
-	for _, op := range o.Operations {
+func (oo *OrOperation) ToJSON() (internal.Operation, error) {
+	opsJSON := make([]internal.Operation, 0, len(oo.Operations))
+	for _, op := range oo.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {
 			return internal.Operation{}, ErrInvalidPredicateInOr
@@ -89,15 +89,15 @@ func (o *OrOperation) ToJSON() (internal.Operation, error) {
 	}
 	return internal.Operation{
 		Op:    string(internal.OpOrType),
-		Path:  formatPath(o.Path()),
+		Path:  formatPath(oo.Path()),
 		Apply: opsJSON,
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *OrOperation) ToCompact() (internal.CompactOperation, error) {
-	opsCompact := make([]any, 0, len(o.Operations))
-	for _, op := range o.Operations {
+func (oo *OrOperation) ToCompact() (internal.CompactOperation, error) {
+	opsCompact := make([]any, 0, len(oo.Operations))
+	for _, op := range oo.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {
 			return nil, ErrInvalidPredicateInOr
@@ -108,13 +108,13 @@ func (o *OrOperation) ToCompact() (internal.CompactOperation, error) {
 		}
 		opsCompact = append(opsCompact, compact)
 	}
-	return internal.CompactOperation{internal.OpOrCode, o.Path(), opsCompact}, nil
+	return internal.CompactOperation{internal.OpOrCode, oo.Path(), opsCompact}, nil
 }
 
 // Validate validates the OR operation.
-func (o *OrOperation) Validate() error {
+func (oo *OrOperation) Validate() error {
 	// Empty operations are valid (though they return false)
-	for _, op := range o.Operations {
+	for _, op := range oo.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {
 			return ErrInvalidPredicateInOr

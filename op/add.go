@@ -21,27 +21,27 @@ func NewAdd(path []string, value any) *AddOperation {
 }
 
 // Op returns the operation type.
-func (o *AddOperation) Op() internal.OpType {
+func (a *AddOperation) Op() internal.OpType {
 	return internal.OpAddType
 }
 
 // Code returns the operation code.
-func (o *AddOperation) Code() int {
+func (a *AddOperation) Code() int {
 	return internal.OpAddCode
 }
 
 // Apply applies the add operation.
-func (o *AddOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (a *AddOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Clone the new value to prevent external mutations
-	newValue := deepclone.Clone(o.Value)
+	newValue := deepclone.Clone(a.Value)
 
 	// Handle empty path (root replacement) - only for truly empty path, not empty string key
-	if len(o.path) == 0 {
+	if len(a.path) == 0 {
 		// Replace entire document
 		return internal.OpResult[any]{Doc: newValue, Old: doc}, nil
 	}
 
-	newDoc, oldValue, err := addAtPath(doc, o.path, newValue)
+	newDoc, oldValue, err := addAtPath(doc, a.path, newValue)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -129,22 +129,22 @@ func addToSlice(doc []any, path []string, value any) (any, any, error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *AddOperation) ToJSON() (internal.Operation, error) {
+func (a *AddOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:    string(internal.OpAddType),
-		Path:  formatPath(o.path),
-		Value: o.Value,
+		Path:  formatPath(a.path),
+		Value: a.Value,
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *AddOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpAddCode, o.path, o.Value}, nil
+func (a *AddOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpAddCode, a.path, a.Value}, nil
 }
 
 // Validate validates the add operation.
-func (o *AddOperation) Validate() error {
-	if len(o.path) == 0 {
+func (a *AddOperation) Validate() error {
+	if len(a.path) == 0 {
 		return ErrPathEmpty
 	}
 	// Note: value field is not validated here as it can be any value including nil

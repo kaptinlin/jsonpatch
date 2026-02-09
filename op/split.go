@@ -25,41 +25,41 @@ func NewSplit(path []string, pos float64, props any) *SplitOperation {
 }
 
 // Op returns the operation type.
-func (o *SplitOperation) Op() internal.OpType {
+func (sp *SplitOperation) Op() internal.OpType {
 	return internal.OpSplitType
 }
 
 // Code returns the operation code.
-func (o *SplitOperation) Code() int {
+func (sp *SplitOperation) Code() int {
 	return internal.OpSplitCode
 }
 
 // Apply applies the split operation following TypeScript reference.
-func (o *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (sp *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get the target value
 	var target any
 	var err error
 
-	if len(o.Path()) == 0 {
+	if len(sp.Path()) == 0 {
 		target = doc
 	} else {
-		target, err = getValue(doc, o.Path())
+		target, err = getValue(doc, sp.Path())
 		if err != nil {
 			return internal.OpResult[any]{}, err
 		}
 	}
 
 	// Split the value following TypeScript logic
-	parts := o.splitValue(target)
+	parts := sp.splitValue(target)
 
 	// Following TypeScript reference behavior
-	if len(o.Path()) == 0 {
+	if len(sp.Path()) == 0 {
 		// Root level split - return the split result as new document
 		return internal.OpResult[any]{Doc: parts, Old: target}, nil
 	}
 
 	// For array elements, follow TypeScript pattern: replace element and insert new one
-	parent, key, err := navigateToParent(doc, o.Path())
+	parent, key, err := navigateToParent(doc, sp.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -77,7 +77,7 @@ func (o *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 			copy(newSlice[index+2:], slice[index+1:])
 
 			// Update parent
-			parentPath := o.Path()[:len(o.Path())-1]
+			parentPath := sp.Path()[:len(sp.Path())-1]
 			if len(parentPath) == 0 {
 				// Root array - return new array
 				return internal.OpResult[any]{Doc: newSlice, Old: target}, nil
@@ -89,7 +89,7 @@ func (o *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 		}
 	} else {
 		// For objects, replace the value with split result
-		err = setValueAtPath(doc, o.Path(), parts)
+		err = setValueAtPath(doc, sp.Path(), parts)
 		if err != nil {
 			return internal.OpResult[any]{}, err
 		}
@@ -99,30 +99,30 @@ func (o *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // splitValue splits a value based on its type
-func (o *SplitOperation) splitValue(value any) any {
+func (sp *SplitOperation) splitValue(value any) any {
 	switch v := value.(type) {
 	case string:
-		return o.splitString(v)
+		return sp.splitString(v)
 	case float64:
-		return o.splitNumber(v)
+		return sp.splitNumber(v)
 	case int:
-		return o.splitNumber(float64(v))
+		return sp.splitNumber(float64(v))
 	case bool:
 		// For boolean, return a tuple of the same value
 		return []any{v, v}
 	case map[string]any:
 		// Check if it's a Slate-like text node
 		if isSlateTextNode(v) {
-			propsMap, _ := o.Props.(map[string]any)
-			results := splitSlateTextNode(v, int(o.Pos), propsMap)
+			propsMap, _ := sp.Props.(map[string]any)
+			results := splitSlateTextNode(v, int(sp.Pos), propsMap)
 			if results != nil {
 				return []any{results[0], results[1]}
 			}
 		}
 		// Check if it's a Slate-like element node with children
 		if isSlateElementNode(v) {
-			propsMap, _ := o.Props.(map[string]any)
-			results := splitSlateElementNode(v, int(o.Pos), propsMap)
+			propsMap, _ := sp.Props.(map[string]any)
+			results := splitSlateElementNode(v, int(sp.Pos), propsMap)
 			if results != nil {
 				return []any{results[0], results[1]}
 			}
@@ -136,9 +136,9 @@ func (o *SplitOperation) splitValue(value any) any {
 }
 
 // splitString splits a string at the specified position
-func (o *SplitOperation) splitString(s string) []any {
+func (sp *SplitOperation) splitString(s string) []any {
 	runes := []rune(s)
-	pos := int(o.Pos)
+	pos := int(sp.Pos)
 
 	// Handle negative positions (count from end)
 	if pos < 0 {
@@ -154,8 +154,8 @@ func (o *SplitOperation) splitString(s string) []any {
 	after := string(runes[pos:])
 
 	// If props are specified, wrap in text nodes
-	if o.Props != nil {
-		if propsMap, ok := o.Props.(map[string]any); ok {
+	if sp.Props != nil {
+		if propsMap, ok := sp.Props.(map[string]any); ok {
 			beforeNode := map[string]any{"text": before}
 			afterNode := map[string]any{"text": after}
 
@@ -173,8 +173,8 @@ func (o *SplitOperation) splitString(s string) []any {
 }
 
 // splitNumber splits a number at the specified position
-func (o *SplitOperation) splitNumber(n float64) []any {
-	pos := o.Pos
+func (sp *SplitOperation) splitNumber(n float64) []any {
+	pos := sp.Pos
 	if pos > n {
 		pos = n
 	}
@@ -187,14 +187,14 @@ func (o *SplitOperation) splitNumber(n float64) []any {
 // Old Slate-specific split methods removed - now using pkg/slate functions
 
 // ToJSON serializes the operation to JSON format.
-func (o *SplitOperation) ToJSON() (internal.Operation, error) {
+func (sp *SplitOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		Op:   string(internal.OpSplitType),
-		Path: formatPath(o.Path()),
-		Pos:  int(o.Pos),
+		Path: formatPath(sp.Path()),
+		Pos:  int(sp.Pos),
 	}
-	if o.Props != nil {
-		if props, ok := o.Props.(map[string]any); ok {
+	if sp.Props != nil {
+		if props, ok := sp.Props.(map[string]any); ok {
 			result.Props = props
 		}
 	}
@@ -202,12 +202,12 @@ func (o *SplitOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *SplitOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpSplitCode, o.Path(), o.Pos, o.Props}, nil
+func (sp *SplitOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpSplitCode, sp.Path(), sp.Pos, sp.Props}, nil
 }
 
 // Validate validates the split operation.
-func (o *SplitOperation) Validate() error {
+func (sp *SplitOperation) Validate() error {
 	// Empty path is valid for split operation (root level)
 	// Position bounds are checked in Apply method
 	return nil

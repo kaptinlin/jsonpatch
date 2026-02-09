@@ -19,23 +19,23 @@ func NewCopy(path, from []string) *CopyOperation {
 }
 
 // Op returns the operation type.
-func (o *CopyOperation) Op() internal.OpType {
+func (c *CopyOperation) Op() internal.OpType {
 	return internal.OpCopyType
 }
 
 // Code returns the operation code.
-func (o *CopyOperation) Code() int {
+func (c *CopyOperation) Code() int {
 	return internal.OpCopyCode
 }
 
 // From returns the source path.
-func (o *CopyOperation) From() []string {
-	return o.FromPath
+func (c *CopyOperation) From() []string {
+	return c.FromPath
 }
 
 // Apply applies the copy operation.
-func (o *CopyOperation) Apply(doc any) (internal.OpResult[any], error) {
-	value, err := getValue(doc, o.FromPath)
+func (c *CopyOperation) Apply(doc any) (internal.OpResult[any], error) {
+	value, err := getValue(doc, c.FromPath)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -54,19 +54,19 @@ func (o *CopyOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	// Handle empty path (root replacement)
-	if len(o.Path()) == 0 {
+	if len(c.Path()) == 0 {
 		// Copy to root - replace entire document
 		return internal.OpResult[any]{Doc: clonedValue, Old: doc}, nil
 	}
 
 	var oldValue any
-	if old, err := getValue(doc, o.Path()); err == nil {
+	if old, err := getValue(doc, c.Path()); err == nil {
 		oldValue = old
 	}
 	// If the value is not found, oldValue remains nil, which is correct behavior
 
 	// Set value to target path
-	err = insertValueAtPath(doc, o.Path(), clonedValue)
+	err = insertValueAtPath(doc, c.Path(), clonedValue)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -75,28 +75,28 @@ func (o *CopyOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *CopyOperation) ToJSON() (internal.Operation, error) {
+func (c *CopyOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:   string(internal.OpCopyType),
-		Path: formatPath(o.Path()),
-		From: formatPath(o.FromPath),
+		Path: formatPath(c.Path()),
+		From: formatPath(c.FromPath),
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *CopyOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpCopyCode, o.Path(), o.FromPath}, nil
+func (c *CopyOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpCopyCode, c.Path(), c.FromPath}, nil
 }
 
 // Validate validates the copy operation.
-func (o *CopyOperation) Validate() error {
+func (c *CopyOperation) Validate() error {
 	// Empty path is valid for copy (copies to root)
 	// Only from path cannot be empty
-	if len(o.FromPath) == 0 {
+	if len(c.FromPath) == 0 {
 		return ErrFromPathEmpty
 	}
 	// Check that path and from are not the same
-	if pathEquals(o.Path(), o.FromPath) {
+	if pathEquals(c.Path(), c.FromPath) {
 		return ErrPathsIdentical
 	}
 	return nil

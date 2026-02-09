@@ -32,18 +32,18 @@ func NewEndsWithIgnoreCase(path []string, suffix string, ignoreCase bool) *EndsO
 }
 
 // Op returns the operation type.
-func (o *EndsOperation) Op() internal.OpType {
+func (e *EndsOperation) Op() internal.OpType {
 	return internal.OpEndsType
 }
 
 // Code returns the operation code.
-func (o *EndsOperation) Code() int {
+func (e *EndsOperation) Code() int {
 	return internal.OpEndsCode
 }
 
 // Test evaluates the ends predicate condition.
-func (o *EndsOperation) Test(doc any) (bool, error) {
-	_, str, err := getAndValidateString(doc, o.Path())
+func (e *EndsOperation) Test(doc any) (bool, error) {
+	_, str, err := getAndValidateString(doc, e.Path())
 	if err != nil {
 		// For JSON Patch test operations, path not found or wrong type means test fails (returns false)
 		// This is correct JSON Patch semantics - returning nil error with false result
@@ -51,54 +51,54 @@ func (o *EndsOperation) Test(doc any) (bool, error) {
 		return false, nil
 	}
 
-	if o.IgnoreCase {
-		return strings.HasSuffix(strings.ToLower(str), strings.ToLower(o.Value)), nil
+	if e.IgnoreCase {
+		return strings.HasSuffix(strings.ToLower(str), strings.ToLower(e.Value)), nil
 	}
-	return strings.HasSuffix(str, o.Value), nil
+	return strings.HasSuffix(str, e.Value), nil
 }
 
 // Apply applies the ends test operation to the document.
-func (o *EndsOperation) Apply(doc any) (internal.OpResult[any], error) {
-	value, str, err := getAndValidateString(doc, o.Path())
+func (e *EndsOperation) Apply(doc any) (internal.OpResult[any], error) {
+	value, str, err := getAndValidateString(doc, e.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
 	var hasSuffix bool
-	if o.IgnoreCase {
-		hasSuffix = strings.HasSuffix(strings.ToLower(str), strings.ToLower(o.Value))
+	if e.IgnoreCase {
+		hasSuffix = strings.HasSuffix(strings.ToLower(str), strings.ToLower(e.Value))
 	} else {
-		hasSuffix = strings.HasSuffix(str, o.Value)
+		hasSuffix = strings.HasSuffix(str, e.Value)
 	}
 
 	if !hasSuffix {
-		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not end with %q", ErrStringMismatch, str, o.Value)
+		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not end with %q", ErrStringMismatch, str, e.Value)
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: value}, nil
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *EndsOperation) ToJSON() (internal.Operation, error) {
+func (e *EndsOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		Op:    string(internal.OpEndsType),
-		Path:  formatPath(o.Path()),
-		Value: o.Value,
+		Path:  formatPath(e.Path()),
+		Value: e.Value,
 	}
-	if o.IgnoreCase {
-		result.IgnoreCase = o.IgnoreCase
+	if e.IgnoreCase {
+		result.IgnoreCase = e.IgnoreCase
 	}
 	return result, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *EndsOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpEndsCode, o.Path(), o.Value}, nil
+func (e *EndsOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpEndsCode, e.Path(), e.Value}, nil
 }
 
 // Validate validates the ends operation.
-func (o *EndsOperation) Validate() error {
-	if len(o.Path()) == 0 {
+func (e *EndsOperation) Validate() error {
+	if len(e.Path()) == 0 {
 		return ErrPathEmpty
 	}
 	return nil

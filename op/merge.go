@@ -27,21 +27,21 @@ func NewMerge(path []string, pos float64, props map[string]any) *MergeOperation 
 }
 
 // Op returns the operation type.
-func (o *MergeOperation) Op() internal.OpType {
+func (mg *MergeOperation) Op() internal.OpType {
 	return internal.OpMergeType
 }
 
 // Code returns the operation code.
-func (o *MergeOperation) Code() int {
+func (mg *MergeOperation) Code() int {
 	return internal.OpMergeCode
 }
 
 // Apply applies the merge operation following TypeScript reference.
-func (o *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (mg *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// TypeScript reference: merge works on arrays directly using pos parameter
 	var targetArray []any
 
-	if len(o.Path()) == 0 {
+	if len(mg.Path()) == 0 {
 		// Root level array
 		slice, ok := doc.([]any)
 		if !ok {
@@ -50,7 +50,7 @@ func (o *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 		targetArray = slice
 	} else {
 		// Get array at path
-		target, err := getValue(doc, o.Path())
+		target, err := getValue(doc, mg.Path())
 		if err != nil {
 			return internal.OpResult[any]{}, err
 		}
@@ -61,7 +61,7 @@ func (o *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 		targetArray = slice
 	}
 
-	pos := int(o.Pos)
+	pos := int(mg.Pos)
 	// TypeScript: if (ref.key <= 0) throw new Error('INVALID_KEY');
 	if pos <= 0 || pos >= len(targetArray) {
 		return internal.OpResult[any]{}, ErrInvalidIndex
@@ -70,7 +70,7 @@ func (o *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get elements to merge (pos-1 and pos)
 	one := targetArray[pos-1]
 	two := targetArray[pos]
-	merged := o.mergeElements(one, two)
+	merged := mg.mergeElements(one, two)
 
 	// Create new array with merged result
 	newSlice := make([]any, len(targetArray)-1)
@@ -79,12 +79,12 @@ func (o *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	copy(newSlice[pos:], targetArray[pos+1:])
 
 	// Update the document
-	if len(o.Path()) == 0 {
+	if len(mg.Path()) == 0 {
 		// Root array
 		return internal.OpResult[any]{Doc: newSlice, Old: []any{one, two}}, nil
 	}
 
-	err := setValueAtPath(doc, o.Path(), newSlice)
+	err := setValueAtPath(doc, mg.Path(), newSlice)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -93,7 +93,7 @@ func (o *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // mergeElements merges two elements based on their type.
-func (o *MergeOperation) mergeElements(one, two any) any {
+func (mg *MergeOperation) mergeElements(one, two any) any {
 	// String concatenation
 	if strOne, ok := one.(string); ok {
 		if strTwo, ok := two.(string); ok {
@@ -128,7 +128,7 @@ func (o *MergeOperation) mergeElements(one, two any) any {
 	if isSlateTextNode(one) && isSlateTextNode(two) {
 		merged := mergeSlateTextNodes(one.(map[string]any), two.(map[string]any))
 		// Apply props if specified
-		maps.Copy(merged, o.Props)
+		maps.Copy(merged, mg.Props)
 		return merged
 	}
 
@@ -136,7 +136,7 @@ func (o *MergeOperation) mergeElements(one, two any) any {
 	if isSlateElementNode(one) && isSlateElementNode(two) {
 		merged := mergeSlateElementNodes(one.(map[string]any), two.(map[string]any))
 		// Apply props if specified
-		maps.Copy(merged, o.Props)
+		maps.Copy(merged, mg.Props)
 		return merged
 	}
 
@@ -147,26 +147,26 @@ func (o *MergeOperation) mergeElements(one, two any) any {
 // Old methods removed - now using pkg/slate functions
 
 // ToJSON serializes the operation to JSON format.
-func (o *MergeOperation) ToJSON() (internal.Operation, error) {
+func (mg *MergeOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		Op:   string(internal.OpMergeType),
-		Path: formatPath(o.Path()),
-		Pos:  int(o.Pos),
+		Path: formatPath(mg.Path()),
+		Pos:  int(mg.Pos),
 	}
-	if len(o.Props) > 0 {
-		result.Props = o.Props
+	if len(mg.Props) > 0 {
+		result.Props = mg.Props
 	}
 	return result, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *MergeOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpMergeCode, o.Path(), o.Props}, nil
+func (mg *MergeOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpMergeCode, mg.Path(), mg.Props}, nil
 }
 
 // Validate validates the merge operation.
-func (o *MergeOperation) Validate() error {
-	if o.Pos < 0 {
+func (mg *MergeOperation) Validate() error {
+	if mg.Pos < 0 {
 		return ErrPositionNegative
 	}
 	return nil

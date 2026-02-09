@@ -17,51 +17,51 @@ func NewUndefined(path []string) *UndefinedOperation {
 }
 
 // Op returns the operation type.
-func (o *UndefinedOperation) Op() internal.OpType {
+func (u *UndefinedOperation) Op() internal.OpType {
 	return internal.OpUndefinedType
 }
 
 // Code returns the operation code.
-func (o *UndefinedOperation) Code() int {
+func (u *UndefinedOperation) Code() int {
 	return internal.OpUndefinedCode
 }
 
 // checkPathUndefined is a helper function that checks if a path is undefined
-func (o *UndefinedOperation) checkPathUndefined(doc any) bool {
-	_, err := getValue(doc, o.path)
+func (u *UndefinedOperation) checkPathUndefined(doc any) bool {
+	_, err := getValue(doc, u.path)
 	// Path doesn't exist means undefined is true
 	return err != nil
 }
 
 // Test performs the undefined operation.
-func (o *UndefinedOperation) Test(doc any) (bool, error) {
-	return o.checkPathUndefined(doc), nil
+func (u *UndefinedOperation) Test(doc any) (bool, error) {
+	return u.checkPathUndefined(doc), nil
 }
 
 // Apply applies the undefined operation.
-func (o *UndefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
-	if !o.checkPathUndefined(doc) {
+func (u *UndefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
+	if !u.checkPathUndefined(doc) {
 		return internal.OpResult[any]{}, ErrUndefinedTestFailed
 	}
 	return internal.OpResult[any]{Doc: doc}, nil
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *UndefinedOperation) ToJSON() (internal.Operation, error) {
+func (u *UndefinedOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:   string(internal.OpUndefinedType),
-		Path: formatPath(o.path),
+		Path: formatPath(u.path),
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *UndefinedOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpUndefinedCode, o.path}, nil
+func (u *UndefinedOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpUndefinedCode, u.path}, nil
 }
 
 // Validate validates the undefined operation.
-func (o *UndefinedOperation) Validate() error {
-	if len(o.path) == 0 {
+func (u *UndefinedOperation) Validate() error {
+	if len(u.path) == 0 {
 		return ErrPathEmpty
 	}
 	return nil

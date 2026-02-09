@@ -27,20 +27,20 @@ func NewStrIns(path []string, pos float64, str string) *StrInsOperation {
 }
 
 // Op returns the operation type.
-func (o *StrInsOperation) Op() internal.OpType {
+func (si *StrInsOperation) Op() internal.OpType {
 	return internal.OpStrInsType
 }
 
 // Code returns the operation code.
-func (o *StrInsOperation) Code() int {
+func (si *StrInsOperation) Code() int {
 	return internal.OpStrInsCode
 }
 
 // getTargetString extracts and validates the target string from a value
-func (o *StrInsOperation) getTargetString(target any) (string, error) {
+func (si *StrInsOperation) getTargetString(target any) (string, error) {
 	if target == nil {
 		// Handle undefined/nil case
-		if o.Pos != 0 {
+		if si.Pos != 0 {
 			return "", ErrPositionNegative
 		}
 		return "", nil
@@ -54,35 +54,35 @@ func (o *StrInsOperation) getTargetString(target any) (string, error) {
 }
 
 // Apply applies the string insert operation.
-func (o *StrInsOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (si *StrInsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level specially
-	if len(o.Path()) == 0 {
-		targetStr, err := o.getTargetString(doc)
+	if len(si.Path()) == 0 {
+		targetStr, err := si.getTargetString(doc)
 		if err != nil {
 			return internal.OpResult[any]{}, err
 		}
 
 		// Apply string insertion with optimized implementation
-		result := o.applyStrIns(targetStr)
+		result := si.applyStrIns(targetStr)
 		return internal.OpResult[any]{Doc: result, Old: doc}, nil
 	}
 
 	// Get the target value for non-root paths
-	target, err := getValue(doc, o.Path())
+	target, err := getValue(doc, si.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
-	targetStr, err := o.getTargetString(target)
+	targetStr, err := si.getTargetString(target)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
 	// Apply string insertion with optimized implementation
-	result := o.applyStrIns(targetStr)
+	result := si.applyStrIns(targetStr)
 
 	// Set the result back
-	err = setValueAtPath(doc, o.Path(), result)
+	err = setValueAtPath(doc, si.Path(), result)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -91,13 +91,13 @@ func (o *StrInsOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // applyStrIns applies string insertion with optimized string building
-func (o *StrInsOperation) applyStrIns(str string) string {
+func (si *StrInsOperation) applyStrIns(str string) string {
 	// Convert to runes once for proper Unicode handling
 	runes := []rune(str)
 	runeLen := len(runes)
 
 	// Handle position: negative positions count from end
-	pos := int(o.Pos)
+	pos := int(si.Pos)
 	if pos < 0 {
 		// Negative position counts from end
 		pos = max(runeLen+pos, 0)
@@ -108,13 +108,13 @@ func (o *StrInsOperation) applyStrIns(str string) string {
 	// Use strings.Builder for efficient string concatenation
 	var builder strings.Builder
 	// Pre-allocate capacity to avoid reallocations
-	builder.Grow(len(str) + len(o.Str))
+	builder.Grow(len(str) + len(si.Str))
 
 	// Build the result string efficiently
 	if pos > 0 {
 		builder.WriteString(string(runes[:pos]))
 	}
-	builder.WriteString(o.Str)
+	builder.WriteString(si.Str)
 	if pos < runeLen {
 		builder.WriteString(string(runes[pos:]))
 	}
@@ -123,22 +123,22 @@ func (o *StrInsOperation) applyStrIns(str string) string {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *StrInsOperation) ToJSON() (internal.Operation, error) {
+func (si *StrInsOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:   string(internal.OpStrInsType),
-		Path: formatPath(o.Path()),
-		Pos:  int(o.Pos),
-		Str:  o.Str,
+		Path: formatPath(si.Path()),
+		Pos:  int(si.Pos),
+		Str:  si.Str,
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *StrInsOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpStrInsCode, o.Path(), o.Pos, o.Str}, nil
+func (si *StrInsOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpStrInsCode, si.Path(), si.Pos, si.Str}, nil
 }
 
 // Validate validates the string insert operation.
-func (o *StrInsOperation) Validate() error {
+func (si *StrInsOperation) Validate() error {
 	// Empty path is valid for str_ins operation (root level)
 	// Position bounds are checked in Apply method
 	return nil

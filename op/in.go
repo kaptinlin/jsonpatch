@@ -21,18 +21,18 @@ func NewIn(path []string, values []any) *InOperation {
 }
 
 // Op returns the operation type.
-func (o *InOperation) Op() internal.OpType {
+func (in *InOperation) Op() internal.OpType {
 	return internal.OpInType
 }
 
 // Code returns the operation code.
-func (o *InOperation) Code() int {
+func (in *InOperation) Code() int {
 	return internal.OpInCode
 }
 
 // Test evaluates the in predicate condition.
-func (o *InOperation) Test(doc any) (bool, error) {
-	_, found, err := o.getValueAndCheckInArray(doc)
+func (in *InOperation) Test(doc any) (bool, error) {
+	_, found, err := in.getValueAndCheckInArray(doc)
 	if err != nil {
 		// For JSON Patch test operations, path not found means test fails (returns false)
 		// This is correct JSON Patch semantics - returning nil error with false result
@@ -43,29 +43,29 @@ func (o *InOperation) Test(doc any) (bool, error) {
 }
 
 // Apply applies the in test operation to the document.
-func (o *InOperation) Apply(doc any) (internal.OpResult[any], error) {
-	value, found, err := o.getValueAndCheckInArray(doc)
+func (in *InOperation) Apply(doc any) (internal.OpResult[any], error) {
+	value, found, err := in.getValueAndCheckInArray(doc)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
 	if !found {
-		return internal.OpResult[any]{}, fmt.Errorf("%w: value %v is not in array %v", ErrOperationFailed, value, o.Value)
+		return internal.OpResult[any]{}, fmt.Errorf("%w: value %v is not in array %v", ErrOperationFailed, value, in.Value)
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: value}, nil
 }
 
 // getValueAndCheckInArray retrieves the value and checks if it's in the array
-func (o *InOperation) getValueAndCheckInArray(doc any) (any, bool, error) {
+func (in *InOperation) getValueAndCheckInArray(doc any) (any, bool, error) {
 	// Get target value
-	val, err := getValue(doc, o.Path())
+	val, err := getValue(doc, in.Path())
 	if err != nil {
 		return nil, false, ErrPathNotFound
 	}
 
 	// Check if the value is in the specified array
-	for _, v := range o.Value {
+	for _, v := range in.Value {
 		if deepEqual(val, v) {
 			return val, true, nil
 		}
@@ -75,25 +75,25 @@ func (o *InOperation) getValueAndCheckInArray(doc any) (any, bool, error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *InOperation) ToJSON() (internal.Operation, error) {
+func (in *InOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:    string(internal.OpInType),
-		Path:  formatPath(o.Path()),
-		Value: o.Value,
+		Path:  formatPath(in.Path()),
+		Value: in.Value,
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *InOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpInCode, o.Path(), o.Value}, nil
+func (in *InOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpInCode, in.Path(), in.Value}, nil
 }
 
 // Validate validates the in operation.
-func (o *InOperation) Validate() error {
-	if len(o.Path()) == 0 {
+func (in *InOperation) Validate() error {
+	if len(in.Path()) == 0 {
 		return ErrPathEmpty
 	}
-	if len(o.Value) == 0 {
+	if len(in.Value) == 0 {
 		return ErrValuesArrayEmpty
 	}
 	return nil

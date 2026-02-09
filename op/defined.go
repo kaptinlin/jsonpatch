@@ -17,51 +17,51 @@ func NewDefined(path []string) *DefinedOperation {
 }
 
 // Op returns the operation type.
-func (o *DefinedOperation) Op() internal.OpType {
+func (d *DefinedOperation) Op() internal.OpType {
 	return internal.OpDefinedType
 }
 
 // Code returns the operation code.
-func (o *DefinedOperation) Code() int {
+func (d *DefinedOperation) Code() int {
 	return internal.OpDefinedCode
 }
 
 // checkPathExists is a helper function that checks if a path exists
-func (o *DefinedOperation) checkPathExists(doc any) bool {
-	_, err := getValue(doc, o.path)
+func (d *DefinedOperation) checkPathExists(doc any) bool {
+	_, err := getValue(doc, d.path)
 	return err == nil
 }
 
 // Test performs the defined operation.
-func (o *DefinedOperation) Test(doc any) (bool, error) {
+func (d *DefinedOperation) Test(doc any) (bool, error) {
 	// Direct return without intermediate variables
-	return o.checkPathExists(doc), nil
+	return d.checkPathExists(doc), nil
 }
 
 // Apply applies the defined operation.
-func (o *DefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (d *DefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Use the same logic as Test but avoid double call
-	if !o.checkPathExists(doc) {
+	if !d.checkPathExists(doc) {
 		return internal.OpResult[any]{}, ErrDefinedTestFailed
 	}
 	return internal.OpResult[any]{Doc: doc}, nil
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *DefinedOperation) ToJSON() (internal.Operation, error) {
+func (d *DefinedOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:   string(internal.OpDefinedType),
-		Path: formatPath(o.Path()),
+		Path: formatPath(d.Path()),
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *DefinedOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpDefinedCode, o.Path()}, nil
+func (d *DefinedOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpDefinedCode, d.Path()}, nil
 }
 
 // Validate validates the defined operation.
-func (o *DefinedOperation) Validate() error {
+func (d *DefinedOperation) Validate() error {
 	// Empty path (root) is valid for defined operation
 	return nil
 }

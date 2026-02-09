@@ -27,19 +27,19 @@ func NewExtend(path []string, properties map[string]any, deleteNull bool) *Exten
 }
 
 // Op returns the operation type.
-func (o *ExtendOperation) Op() internal.OpType {
+func (ex *ExtendOperation) Op() internal.OpType {
 	return internal.OpExtendType
 }
 
 // Code returns the operation code.
-func (o *ExtendOperation) Code() int {
+func (ex *ExtendOperation) Code() int {
 	return internal.OpExtendCode
 }
 
 // Apply applies the object extend operation.
-func (o *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (ex *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle root level extend specially
-	if len(o.Path()) == 0 {
+	if len(ex.Path()) == 0 {
 		// Target is the root document
 		targetObj, ok := doc.(map[string]any)
 		if !ok {
@@ -50,13 +50,13 @@ func (o *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 		original := maps.Clone(targetObj)
 
 		// Use objExtend to properly handle the extension with deleteNull
-		extendedObj := objExtend(targetObj, o.Properties, o.DeleteNull)
+		extendedObj := objExtend(targetObj, ex.Properties, ex.DeleteNull)
 
 		return internal.OpResult[any]{Doc: extendedObj, Old: original}, nil
 	}
 
 	// Get the target object
-	target, err := getValue(doc, o.Path())
+	target, err := getValue(doc, ex.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -68,10 +68,10 @@ func (o *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	// Use objExtend to properly handle the extension with deleteNull
-	extendedObj := objExtend(targetObj, o.Properties, o.DeleteNull)
+	extendedObj := objExtend(targetObj, ex.Properties, ex.DeleteNull)
 
 	// Set the extended object back
-	err = setValueAtPath(doc, o.Path(), extendedObj)
+	err = setValueAtPath(doc, ex.Path(), extendedObj)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -80,24 +80,24 @@ func (o *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *ExtendOperation) ToJSON() (internal.Operation, error) {
+func (ex *ExtendOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:         string(internal.OpExtendType),
-		Path:       formatPath(o.Path()),
-		Props:      o.Properties,
-		DeleteNull: o.DeleteNull,
+		Path:       formatPath(ex.Path()),
+		Props:      ex.Properties,
+		DeleteNull: ex.DeleteNull,
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *ExtendOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpExtendCode, o.Path(), o.Properties}, nil
+func (ex *ExtendOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpExtendCode, ex.Path(), ex.Properties}, nil
 }
 
 // Validate validates the extend operation.
-func (o *ExtendOperation) Validate() error {
+func (ex *ExtendOperation) Validate() error {
 	// Empty path is valid for extend operation (root level)
-	if o.Properties == nil {
+	if ex.Properties == nil {
 		return ErrPropertiesNil
 	}
 	return nil

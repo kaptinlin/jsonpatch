@@ -31,31 +31,31 @@ func NewTestTypeMultiple(path []string, expectedTypes []string) *TestTypeOperati
 }
 
 // Op returns the operation type.
-func (o *TestTypeOperation) Op() internal.OpType {
+func (tt *TestTypeOperation) Op() internal.OpType {
 	return internal.OpTestTypeType
 }
 
 // Code returns the operation code.
-func (o *TestTypeOperation) Code() int {
+func (tt *TestTypeOperation) Code() int {
 	return internal.OpTestTypeCode
 }
 
 // getValueAndCheckType retrieves the value and checks if it matches any expected type.
-func (o *TestTypeOperation) getValueAndCheckType(doc any) (any, string, bool, error) {
-	val, err := getValue(doc, o.Path())
+func (tt *TestTypeOperation) getValueAndCheckType(doc any) (any, string, bool, error) {
+	val, err := getValue(doc, tt.Path())
 	if err != nil {
 		return nil, "", false, err
 	}
 
 	actualType := getTypeNameWithIntegerSupport(val)
-	typeMatches := o.checkTypeMatch(actualType)
+	typeMatches := tt.checkTypeMatch(actualType)
 
 	return val, actualType, typeMatches, nil
 }
 
 // checkTypeMatch checks if actualType matches any expected type.
-func (o *TestTypeOperation) checkTypeMatch(actualType string) bool {
-	for _, expectedType := range o.Types {
+func (tt *TestTypeOperation) checkTypeMatch(actualType string) bool {
+	for _, expectedType := range tt.Types {
 		if actualType == expectedType {
 			return true
 		}
@@ -68,8 +68,8 @@ func (o *TestTypeOperation) checkTypeMatch(actualType string) bool {
 }
 
 // Test evaluates the test type predicate condition.
-func (o *TestTypeOperation) Test(doc any) (bool, error) {
-	_, _, typeMatches, err := o.getValueAndCheckType(doc)
+func (tt *TestTypeOperation) Test(doc any) (bool, error) {
+	_, _, typeMatches, err := tt.getValueAndCheckType(doc)
 	if err != nil {
 		// Path access error means the path doesn't exist
 		// For JSON Patch test operations, path not found means test fails (returns false)
@@ -81,14 +81,14 @@ func (o *TestTypeOperation) Test(doc any) (bool, error) {
 }
 
 // Apply applies the test type operation to the document.
-func (o *TestTypeOperation) Apply(doc any) (internal.OpResult[any], error) {
-	_, actualType, typeMatches, err := o.getValueAndCheckType(doc)
+func (tt *TestTypeOperation) Apply(doc any) (internal.OpResult[any], error) {
+	_, actualType, typeMatches, err := tt.getValueAndCheckType(doc)
 	if err != nil {
 		return internal.OpResult[any]{}, ErrPathNotFound
 	}
 
 	if !typeMatches {
-		expectedTypesStr := strings.Join(o.Types, ", ")
+		expectedTypesStr := strings.Join(tt.Types, ", ")
 		return internal.OpResult[any]{}, fmt.Errorf("%w: expected type %s, got %s", ErrTypeMismatch, expectedTypesStr, actualType)
 	}
 
@@ -178,35 +178,35 @@ func getTypeNameViaReflection(v any, distinguishInteger bool) string {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *TestTypeOperation) ToJSON() (internal.Operation, error) {
-	if len(o.Types) == 1 {
+func (tt *TestTypeOperation) ToJSON() (internal.Operation, error) {
+	if len(tt.Types) == 1 {
 		return internal.Operation{
 			Op:   string(internal.OpTestTypeType),
-			Path: formatPath(o.Path()),
-			Type: o.Types[0],
+			Path: formatPath(tt.Path()),
+			Type: tt.Types[0],
 		}, nil
 	}
 	return internal.Operation{
 		Op:    string(internal.OpTestTypeType),
-		Path:  formatPath(o.Path()),
-		Value: o.Types,
+		Path:  formatPath(tt.Path()),
+		Value: tt.Types,
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *TestTypeOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpTestTypeCode, o.Path(), o.Types}, nil
+func (tt *TestTypeOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpTestTypeCode, tt.Path(), tt.Types}, nil
 }
 
 // Validate validates the test type operation.
-func (o *TestTypeOperation) Validate() error {
-	if len(o.Path()) == 0 {
+func (tt *TestTypeOperation) Validate() error {
+	if len(tt.Path()) == 0 {
 		return ErrPathEmpty
 	}
-	if len(o.Types) == 0 {
+	if len(tt.Types) == 0 {
 		return ErrEmptyTypeList
 	}
-	for _, t := range o.Types {
+	for _, t := range tt.Types {
 		if !internal.IsValidJSONPatchType(t) {
 			return ErrInvalidType
 		}

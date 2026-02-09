@@ -21,18 +21,18 @@ func NewType(path []string, expectedType string) *TypeOperation {
 }
 
 // Op returns the operation type.
-func (o *TypeOperation) Op() internal.OpType {
+func (tp *TypeOperation) Op() internal.OpType {
 	return internal.OpTypeType
 }
 
 // Code returns the operation code.
-func (o *TypeOperation) Code() int {
+func (tp *TypeOperation) Code() int {
 	return internal.OpTypeCode
 }
 
 // Test evaluates the type predicate condition.
-func (o *TypeOperation) Test(doc any) (bool, error) {
-	val, err := getValue(doc, o.Path())
+func (tp *TypeOperation) Test(doc any) (bool, error) {
+	val, err := getValue(doc, tp.Path())
 	if err != nil {
 		// For JSON Patch test operations, path not found means test fails (returns false)
 		// This is correct JSON Patch semantics - returning nil error with false result
@@ -44,13 +44,13 @@ func (o *TypeOperation) Test(doc any) (bool, error) {
 	actualType := getTypeName(val)
 
 	// Check if the type matches
-	return actualType == o.TypeValue, nil
+	return actualType == tp.TypeValue, nil
 }
 
 // Apply applies the type operation to the document.
-func (o *TypeOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (tp *TypeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get target value
-	val, err := getValue(doc, o.Path())
+	val, err := getValue(doc, tp.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, ErrPathNotFound
 	}
@@ -59,44 +59,44 @@ func (o *TypeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	actualType := getTypeName(val)
 
 	// Check if the type matches
-	typeMatches := actualType == o.TypeValue
+	typeMatches := actualType == tp.TypeValue
 
 	// Special case: if expected type is "number" and actual is "integer", it should match
-	if !typeMatches && o.TypeValue == "number" && actualType == "integer" {
+	if !typeMatches && tp.TypeValue == "number" && actualType == "integer" {
 		typeMatches = true
 	}
 
 	if !typeMatches {
-		return internal.OpResult[any]{}, fmt.Errorf("%w: expected type %s, got %s", ErrTypeMismatch, o.TypeValue, actualType)
+		return internal.OpResult[any]{}, fmt.Errorf("%w: expected type %s, got %s", ErrTypeMismatch, tp.TypeValue, actualType)
 	}
 
 	return internal.OpResult[any]{Doc: doc}, nil
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *TypeOperation) ToJSON() (internal.Operation, error) {
+func (tp *TypeOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:    string(internal.OpTypeType),
-		Path:  formatPath(o.Path()),
-		Value: o.TypeValue,
+		Path:  formatPath(tp.Path()),
+		Value: tp.TypeValue,
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *TypeOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpTypeCode, o.Path(), o.TypeValue}, nil
+func (tp *TypeOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpTypeCode, tp.Path(), tp.TypeValue}, nil
 }
 
 // Validate validates the type operation.
-func (o *TypeOperation) Validate() error {
-	if len(o.Path()) == 0 {
+func (tp *TypeOperation) Validate() error {
+	if len(tp.Path()) == 0 {
 		return ErrPathEmpty
 	}
-	if o.TypeValue == "" {
+	if tp.TypeValue == "" {
 		return ErrInvalidType
 	}
 	// Validate that the type is a known valid type
-	if !internal.IsValidJSONPatchType(o.TypeValue) {
+	if !internal.IsValidJSONPatchType(tp.TypeValue) {
 		return ErrInvalidType
 	}
 	return nil

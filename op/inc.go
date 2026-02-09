@@ -19,28 +19,28 @@ func NewInc(path []string, inc float64) *IncOperation {
 }
 
 // Op returns the operation type.
-func (o *IncOperation) Op() internal.OpType {
+func (ic *IncOperation) Op() internal.OpType {
 	return internal.OpIncType
 }
 
 // Code returns the operation code.
-func (o *IncOperation) Code() int {
+func (ic *IncOperation) Code() int {
 	return internal.OpIncCode
 }
 
 // Apply applies the increment operation to the document.
-func (o *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
-	if len(o.path) == 0 {
+func (ic *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
+	if len(ic.path) == 0 {
 		// Root level increment
 		oldValue, ok := ToFloat64(doc)
 		if !ok {
 			return internal.OpResult[any]{}, ErrNotNumber
 		}
-		result := oldValue + o.Inc
+		result := oldValue + ic.Inc
 		return internal.OpResult[any]{Doc: result, Old: oldValue}, nil
 	}
 
-	parent, key, err := navigateToParent(doc, o.path)
+	parent, key, err := navigateToParent(doc, ic.path)
 	if err != nil {
 		return internal.OpResult[any]{}, ErrPathNotFound
 	}
@@ -48,7 +48,7 @@ func (o *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Check if path exists and get current value
 	var currentValue any
 	var oldValue float64
-	if pathExists(doc, o.path) {
+	if pathExists(doc, ic.path) {
 		currentValue = getValueFromParent(parent, key)
 		var ok bool
 		oldValue, ok = ToFloat64(currentValue)
@@ -60,7 +60,7 @@ func (o *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 		currentValue = nil
 		oldValue = 0
 	}
-	result := oldValue + o.Inc
+	result := oldValue + ic.Inc
 
 	if err := updateParent(parent, key, result); err != nil {
 		return internal.OpResult[any]{}, err
@@ -70,20 +70,20 @@ func (o *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *IncOperation) ToJSON() (internal.Operation, error) {
+func (ic *IncOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:   string(internal.OpIncType),
-		Path: formatPath(o.path),
-		Inc:  o.Inc,
+		Path: formatPath(ic.path),
+		Inc:  ic.Inc,
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *IncOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpIncCode, o.path, o.Inc}, nil
+func (ic *IncOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpIncCode, ic.path, ic.Inc}, nil
 }
 
 // Validate validates the increment operation.
-func (o *IncOperation) Validate() error {
+func (ic *IncOperation) Validate() error {
 	return nil
 }

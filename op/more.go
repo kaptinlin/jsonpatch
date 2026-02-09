@@ -21,18 +21,18 @@ func NewMore(path []string, value float64) *MoreOperation {
 }
 
 // Op returns the operation type.
-func (o *MoreOperation) Op() internal.OpType {
+func (mo *MoreOperation) Op() internal.OpType {
 	return internal.OpMoreType
 }
 
 // Code returns the operation code.
-func (o *MoreOperation) Code() int {
+func (mo *MoreOperation) Code() int {
 	return internal.OpMoreCode
 }
 
 // Test evaluates the more predicate condition.
-func (o *MoreOperation) Test(doc any) (bool, error) {
-	_, num, err := getNumericValue(doc, o.Path())
+func (mo *MoreOperation) Test(doc any) (bool, error) {
+	_, num, err := getNumericValue(doc, mo.Path())
 	if err != nil {
 		// For JSON Patch test operations, path not found or wrong type means test fails (returns false)
 		// This is correct JSON Patch semantics - returning nil error with false result
@@ -40,40 +40,40 @@ func (o *MoreOperation) Test(doc any) (bool, error) {
 		return false, nil
 	}
 
-	return num > o.Value, nil
+	return num > mo.Value, nil
 }
 
 // Apply applies the more operation.
-func (o *MoreOperation) Apply(doc any) (internal.OpResult[any], error) {
-	val, num, err := getNumericValue(doc, o.Path())
+func (mo *MoreOperation) Apply(doc any) (internal.OpResult[any], error) {
+	val, num, err := getNumericValue(doc, mo.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
-	if num <= o.Value {
-		return internal.OpResult[any]{}, fmt.Errorf("%w: value %f is not greater than %f", ErrComparisonFailed, num, o.Value)
+	if num <= mo.Value {
+		return internal.OpResult[any]{}, fmt.Errorf("%w: value %f is not greater than %f", ErrComparisonFailed, num, mo.Value)
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: val}, nil
 }
 
 // ToJSON converts the operation to JSON representation.
-func (o *MoreOperation) ToJSON() (internal.Operation, error) {
+func (mo *MoreOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:    string(internal.OpMoreType),
-		Path:  formatPath(o.Path()),
-		Value: floatToJSONValue(o.Value),
+		Path:  formatPath(mo.Path()),
+		Value: floatToJSONValue(mo.Value),
 	}, nil
 }
 
 // ToCompact converts the operation to compact array representation.
-func (o *MoreOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpMoreCode, o.Path(), o.Value}, nil
+func (mo *MoreOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpMoreCode, mo.Path(), mo.Value}, nil
 }
 
 // Validate validates the more operation.
-func (o *MoreOperation) Validate() error {
-	if len(o.Path()) == 0 {
+func (mo *MoreOperation) Validate() error {
+	if len(mo.Path()) == 0 {
 		return ErrPathEmpty
 	}
 	return nil

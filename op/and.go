@@ -17,29 +17,29 @@ func NewAnd(path []string, ops []any) *AndOperation {
 }
 
 // Op returns the operation type.
-func (o *AndOperation) Op() internal.OpType {
+func (ao *AndOperation) Op() internal.OpType {
 	return internal.OpAndType
 }
 
 // Code returns the operation code.
-func (o *AndOperation) Code() int {
+func (ao *AndOperation) Code() int {
 	return internal.OpAndCode
 }
 
 // Ops returns the predicate operations.
-func (o *AndOperation) Ops() []internal.PredicateOp {
-	return extractPredicateOps(o.Operations)
+func (ao *AndOperation) Ops() []internal.PredicateOp {
+	return extractPredicateOps(ao.Operations)
 }
 
 // Test performs the AND operation.
-func (o *AndOperation) Test(doc any) (bool, error) {
+func (ao *AndOperation) Test(doc any) (bool, error) {
 	// If no operations, return true (vacuous truth - empty AND is true)
-	if len(o.Operations) == 0 {
+	if len(ao.Operations) == 0 {
 		return true, nil
 	}
 
 	// Test all operations
-	for _, op := range o.Operations {
+	for _, op := range ao.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {
 			return false, ErrInvalidPredicateInAnd
@@ -59,8 +59,8 @@ func (o *AndOperation) Test(doc any) (bool, error) {
 }
 
 // Apply applies the AND operation.
-func (o *AndOperation) Apply(doc any) (internal.OpResult[any], error) {
-	ok, err := o.Test(doc)
+func (ao *AndOperation) Apply(doc any) (internal.OpResult[any], error) {
+	ok, err := ao.Test(doc)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -71,9 +71,9 @@ func (o *AndOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *AndOperation) ToJSON() (internal.Operation, error) {
-	operations := make([]internal.Operation, 0, len(o.Operations))
-	for _, op := range o.Operations {
+func (ao *AndOperation) ToJSON() (internal.Operation, error) {
+	operations := make([]internal.Operation, 0, len(ao.Operations))
+	for _, op := range ao.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {
 			return internal.Operation{}, ErrInvalidPredicateInAnd
@@ -86,15 +86,15 @@ func (o *AndOperation) ToJSON() (internal.Operation, error) {
 	}
 	return internal.Operation{
 		Op:    string(internal.OpAndType),
-		Path:  formatPath(o.path),
+		Path:  formatPath(ao.path),
 		Apply: operations,
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *AndOperation) ToCompact() (internal.CompactOperation, error) {
-	opsCompact := make([]any, 0, len(o.Operations))
-	for _, op := range o.Operations {
+func (ao *AndOperation) ToCompact() (internal.CompactOperation, error) {
+	opsCompact := make([]any, 0, len(ao.Operations))
+	for _, op := range ao.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {
 			return nil, ErrInvalidPredicateInAnd
@@ -105,13 +105,13 @@ func (o *AndOperation) ToCompact() (internal.CompactOperation, error) {
 		}
 		opsCompact = append(opsCompact, compact)
 	}
-	return internal.CompactOperation{internal.OpAndCode, o.path, opsCompact}, nil
+	return internal.CompactOperation{internal.OpAndCode, ao.path, opsCompact}, nil
 }
 
 // Validate validates the AND operation.
-func (o *AndOperation) Validate() error {
+func (ao *AndOperation) Validate() error {
 	// Empty operations are valid (vacuous truth)
-	for _, op := range o.Operations {
+	for _, op := range ao.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {
 			return ErrInvalidPredicateInAnd

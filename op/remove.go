@@ -28,31 +28,31 @@ func NewRemoveWithOldValue(path []string, oldValue any) *RemoveOperation {
 }
 
 // Op returns the operation type.
-func (o *RemoveOperation) Op() internal.OpType {
+func (r *RemoveOperation) Op() internal.OpType {
 	return internal.OpRemoveType
 }
 
 // Code returns the operation code.
-func (o *RemoveOperation) Code() int {
+func (r *RemoveOperation) Code() int {
 	return internal.OpRemoveCode
 }
 
 // Apply applies the remove operation to the document.
-func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
-	if len(o.path) == 0 {
+func (r *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
+	if len(r.path) == 0 {
 		return internal.OpResult[any]{}, ErrPathEmpty
 	}
-	if len(o.path) == 1 {
+	if len(r.path) == 1 {
 		switch v := doc.(type) {
 		case map[string]any:
-			oldValue, exists := v[o.path[0]]
+			oldValue, exists := v[r.path[0]]
 			if !exists {
 				return internal.OpResult[any]{}, ErrPathNotFound
 			}
-			delete(v, o.path[0])
+			delete(v, r.path[0])
 			return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 		case []any:
-			index, err := parseArrayIndex(o.path[0])
+			index, err := parseArrayIndex(r.path[0])
 			if err != nil {
 				return internal.OpResult[any]{}, err
 			}
@@ -69,7 +69,7 @@ func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 		}
 	}
 	// Not root path, recursively delete
-	parent, key, err := navigateToParent(doc, o.path)
+	parent, key, err := navigateToParent(doc, r.path)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -98,7 +98,7 @@ func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 		newSlice := make([]any, len(p)-1)
 		copy(newSlice, p[:k])
 		copy(newSlice[k:], p[k+1:])
-		if err := setValueAtPath(doc, o.path[:len(o.path)-1], newSlice); err != nil {
+		if err := setValueAtPath(doc, r.path[:len(r.path)-1], newSlice); err != nil {
 			return internal.OpResult[any]{}, err
 		}
 		return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
@@ -108,27 +108,27 @@ func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *RemoveOperation) ToJSON() (internal.Operation, error) {
+func (r *RemoveOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		Op:   string(internal.OpRemoveType),
-		Path: formatPath(o.path),
+		Path: formatPath(r.path),
 	}
 
-	if o.HasOldValue {
-		result.OldValue = o.OldValue
+	if r.HasOldValue {
+		result.OldValue = r.OldValue
 	}
 
 	return result, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *RemoveOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpRemoveCode, o.path}, nil
+func (r *RemoveOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpRemoveCode, r.path}, nil
 }
 
 // Validate validates the remove operation.
-func (o *RemoveOperation) Validate() error {
-	if len(o.path) == 0 {
+func (r *RemoveOperation) Validate() error {
+	if len(r.path) == 0 {
 		return ErrPathEmpty
 	}
 	return nil

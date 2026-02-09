@@ -31,19 +31,19 @@ func NewTestStringLenWithNot(path []string, expectedLength float64, not bool) *T
 }
 
 // Op returns the operation type.
-func (o *TestStringLenOperation) Op() internal.OpType {
+func (tl *TestStringLenOperation) Op() internal.OpType {
 	return internal.OpTestStringLenType
 }
 
 // Code returns the operation code.
-func (o *TestStringLenOperation) Code() int {
+func (tl *TestStringLenOperation) Code() int {
 	return internal.OpTestStringLenCode
 }
 
 // Apply applies the test string length operation to the document.
-func (o *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (tl *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get the value at the path
-	value, err := getValue(doc, o.Path())
+	value, err := getValue(doc, tl.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, ErrPathNotFound
 	}
@@ -54,12 +54,12 @@ func (o *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error) 
 		return internal.OpResult[any]{}, ErrNotString
 	}
 
-	length := int(o.Length)
+	length := int(tl.Length)
 	lengthMatches := len(actualValue) >= length
-	shouldPass := lengthMatches != o.NotFlag
+	shouldPass := lengthMatches != tl.NotFlag
 	if !shouldPass {
 		// Test failed
-		if o.NotFlag {
+		if tl.NotFlag {
 			// When Not is true and test fails, it means the length DID match when we expected it not to
 			return internal.OpResult[any]{}, fmt.Errorf("%w: string length %d matched condition (>= %d) when NOT expected", ErrStringLengthMismatch, len(actualValue), length)
 		}
@@ -75,38 +75,38 @@ func (o *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error) 
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *TestStringLenOperation) ToJSON() (internal.Operation, error) {
+func (tl *TestStringLenOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		Op:   string(internal.OpTestStringLenType),
-		Path: formatPath(o.Path()),
-		Len:  int(o.Length),
+		Path: formatPath(tl.Path()),
+		Len:  int(tl.Length),
 	}
-	if o.NotFlag {
-		result.Not = o.NotFlag
+	if tl.NotFlag {
+		result.Not = tl.NotFlag
 	}
 	return result, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *TestStringLenOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpTestStringLenCode, o.Path(), o.Length}, nil
+func (tl *TestStringLenOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpTestStringLenCode, tl.Path(), tl.Length}, nil
 }
 
 // Validate validates the test string length operation.
-func (o *TestStringLenOperation) Validate() error {
-	if len(o.Path()) == 0 {
+func (tl *TestStringLenOperation) Validate() error {
+	if len(tl.Path()) == 0 {
 		return ErrPathEmpty
 	}
-	if o.Length < 0 {
+	if tl.Length < 0 {
 		return ErrLengthNegative
 	}
 	return nil
 }
 
 // Test tests the string length condition on the document.
-func (o *TestStringLenOperation) Test(doc any) (bool, error) {
+func (tl *TestStringLenOperation) Test(doc any) (bool, error) {
 	// Get the value at the path
-	value, err := getValue(doc, o.Path())
+	value, err := getValue(doc, tl.Path())
 	if err != nil {
 		// For JSON Patch test operations, path not found means test fails (returns false)
 		// This is correct JSON Patch semantics - returning nil error with false result
@@ -120,12 +120,12 @@ func (o *TestStringLenOperation) Test(doc any) (bool, error) {
 		return false, nil // Return false if not string or byte slice
 	}
 
-	length := int(o.Length)
+	length := int(tl.Length)
 	lengthMatches := len(str) >= length
-	return o.NotFlag != lengthMatches, nil
+	return tl.NotFlag != lengthMatches, nil
 }
 
 // Not returns whether this is a negation predicate.
-func (o *TestStringLenOperation) Not() bool {
-	return o.NotFlag
+func (tl *TestStringLenOperation) Not() bool {
+	return tl.NotFlag
 }

@@ -20,23 +20,23 @@ func NewFlip(path []string) *FlipOperation {
 }
 
 // Op returns the operation type.
-func (o *FlipOperation) Op() internal.OpType {
+func (f *FlipOperation) Op() internal.OpType {
 	return internal.OpFlipType
 }
 
 // Code returns the operation code.
-func (o *FlipOperation) Code() int {
+func (f *FlipOperation) Code() int {
 	return internal.OpFlipCode
 }
 
 // Apply applies the flip operation to the document.
-func (o *FlipOperation) Apply(doc any) (internal.OpResult[any], error) {
-	if len(o.Path()) == 0 {
+func (f *FlipOperation) Apply(doc any) (internal.OpResult[any], error) {
+	if len(f.Path()) == 0 {
 		flipped := flipValue(doc)
 		return internal.OpResult[any]{Doc: flipped, Old: doc}, nil
 	}
 
-	value, err := getValue(doc, o.Path())
+	value, err := getValue(doc, f.Path())
 	var oldValue any
 	if err != nil {
 		// Path doesn't exist: treat as undefined (false), flip to true
@@ -47,7 +47,7 @@ func (o *FlipOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 	flipped := flipValue(value)
 
-	err = setValueAtPath(doc, o.Path(), flipped)
+	err = setValueAtPath(doc, f.Path(), flipped)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -130,19 +130,19 @@ func toBoolReflect(value any) bool {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *FlipOperation) ToJSON() (internal.Operation, error) {
+func (f *FlipOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:   string(internal.OpFlipType),
-		Path: formatPath(o.Path()),
+		Path: formatPath(f.Path()),
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *FlipOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpFlipCode, o.Path()}, nil
+func (f *FlipOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpFlipCode, f.Path()}, nil
 }
 
 // Validate validates the flip operation.
-func (o *FlipOperation) Validate() error {
+func (f *FlipOperation) Validate() error {
 	return nil
 }

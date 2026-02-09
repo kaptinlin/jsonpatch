@@ -32,21 +32,21 @@ func NewContainsWithIgnoreCase(path []string, substring string, ignoreCase bool)
 }
 
 // Apply applies the contains test operation to the document.
-func (o *ContainsOperation) Apply(doc any) (internal.OpResult[any], error) {
-	value, actualValue, testValue, testString, err := o.getAndPrepareStrings(doc)
+func (co *ContainsOperation) Apply(doc any) (internal.OpResult[any], error) {
+	value, actualValue, testValue, testString, err := co.getAndPrepareStrings(doc)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
 	if !strings.Contains(testValue, testString) {
-		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not contain %q", ErrStringMismatch, actualValue, o.Value)
+		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not contain %q", ErrStringMismatch, actualValue, co.Value)
 	}
 	return internal.OpResult[any]{Doc: doc, Old: value}, nil
 }
 
 // Test performs the contains test operation.
-func (o *ContainsOperation) Test(doc any) (bool, error) {
-	_, _, testValue, testString, err := o.getAndPrepareStrings(doc)
+func (co *ContainsOperation) Test(doc any) (bool, error) {
+	_, _, testValue, testString, err := co.getAndPrepareStrings(doc)
 	if err != nil {
 		// For JSON Patch test operations, path not found or wrong type means test fails (returns false)
 		// This is correct JSON Patch semantics - returning nil error with false result
@@ -59,8 +59,8 @@ func (o *ContainsOperation) Test(doc any) (bool, error) {
 
 // getAndPrepareStrings retrieves the value, converts to string, and prepares test strings
 // Optimized to avoid unnecessary allocations in case-sensitive operations
-func (o *ContainsOperation) getAndPrepareStrings(doc any) (any, string, string, string, error) {
-	value, err := getValue(doc, o.Path())
+func (co *ContainsOperation) getAndPrepareStrings(doc any) (any, string, string, string, error) {
+	value, err := getValue(doc, co.Path())
 	if err != nil {
 		return nil, "", "", "", ErrPathNotFound
 	}
@@ -71,45 +71,45 @@ func (o *ContainsOperation) getAndPrepareStrings(doc any) (any, string, string, 
 	}
 
 	// Fast path: case-sensitive comparison (most common case)
-	if !o.IgnoreCase {
-		return value, actualValue, actualValue, o.Value, nil
+	if !co.IgnoreCase {
+		return value, actualValue, actualValue, co.Value, nil
 	}
 
 	// Slower path: case-insensitive comparison
 	testValue := strings.ToLower(actualValue)
-	testString := strings.ToLower(o.Value)
+	testString := strings.ToLower(co.Value)
 
 	return value, actualValue, testValue, testString, nil
 }
 
 // Op returns the operation type.
-func (o *ContainsOperation) Op() internal.OpType {
+func (co *ContainsOperation) Op() internal.OpType {
 	return internal.OpContainsType
 }
 
 // Code returns the operation code.
-func (o *ContainsOperation) Code() int {
+func (co *ContainsOperation) Code() int {
 	return internal.OpContainsCode
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *ContainsOperation) ToJSON() (internal.Operation, error) {
+func (co *ContainsOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:         string(internal.OpContainsType),
-		Path:       formatPath(o.Path()),
-		Value:      o.Value,
-		IgnoreCase: o.IgnoreCase,
+		Path:       formatPath(co.Path()),
+		Value:      co.Value,
+		IgnoreCase: co.IgnoreCase,
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *ContainsOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpContainsCode, o.Path(), o.Value}, nil
+func (co *ContainsOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpContainsCode, co.Path(), co.Value}, nil
 }
 
 // Validate validates the contains operation.
-func (o *ContainsOperation) Validate() error {
-	if len(o.Path()) == 0 {
+func (co *ContainsOperation) Validate() error {
+	if len(co.Path()) == 0 {
 		return ErrPathEmpty
 	}
 	return nil

@@ -28,18 +28,18 @@ func NewTestString(path []string, str string, pos float64, not bool, ignoreCase 
 }
 
 // Op returns the operation type.
-func (o *TestStringOperation) Op() internal.OpType {
+func (ts *TestStringOperation) Op() internal.OpType {
 	return internal.OpTestStringType
 }
 
 // Code returns the operation code.
-func (o *TestStringOperation) Code() int {
+func (ts *TestStringOperation) Code() int {
 	return internal.OpTestStringCode
 }
 
 // Test evaluates the test string predicate condition.
-func (o *TestStringOperation) Test(doc any) (bool, error) {
-	val, err := getValue(doc, o.Path())
+func (ts *TestStringOperation) Test(doc any) (bool, error) {
+	val, err := getValue(doc, ts.Path())
 	if err != nil {
 		// For JSON Patch test operations, path not found means test fails (returns false)
 		// This is correct JSON Patch semantics - returning nil error with false result
@@ -61,23 +61,23 @@ func (o *TestStringOperation) Test(doc any) (bool, error) {
 	// return this.not ? !test : test;
 
 	length := len(str)
-	start := min(o.Pos, length)
-	end := min(o.Pos+len(o.Str), length)
+	start := min(ts.Pos, length)
+	end := min(ts.Pos+len(ts.Str), length)
 
 	substring := str[start:end]
 	var test bool
-	if o.IgnoreCase {
-		test = strings.EqualFold(substring, o.Str)
+	if ts.IgnoreCase {
+		test = strings.EqualFold(substring, ts.Str)
 	} else {
-		test = substring == o.Str
+		test = substring == ts.Str
 	}
-	return o.NotFlag != test, nil // XOR with NotFlag for negation
+	return ts.NotFlag != test, nil // XOR with NotFlag for negation
 }
 
 // Apply applies the test string operation to the document.
-func (o *TestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (ts *TestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get target value
-	val, err := getValue(doc, o.Path())
+	val, err := getValue(doc, ts.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, ErrPathNotFound
 	}
@@ -93,64 +93,64 @@ func (o *TestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, ErrNotString
 	}
 
-	pos := o.Pos
+	pos := ts.Pos
 	if pos < 0 || pos > len(str) {
 		return internal.OpResult[any]{}, ErrPositionOutOfStringRange
 	}
 
-	endPos := pos + len(o.Str)
+	endPos := pos + len(ts.Str)
 	if endPos > len(str) {
 		return internal.OpResult[any]{}, ErrSubstringTooLong
 	}
 
 	substring := str[pos:endPos]
 	var matches bool
-	if o.IgnoreCase {
-		matches = strings.EqualFold(substring, o.Str)
+	if ts.IgnoreCase {
+		matches = strings.EqualFold(substring, ts.Str)
 	} else {
-		matches = substring == o.Str
+		matches = substring == ts.Str
 	}
 
 	// Apply negation logic using XOR (same as Test method)
-	shouldPass := matches != o.NotFlag
+	shouldPass := matches != ts.NotFlag
 	if !shouldPass {
-		if o.NotFlag {
+		if ts.NotFlag {
 			// When Not is true and test fails, it means the string DID match when we expected it not to
-			return internal.OpResult[any]{}, fmt.Errorf("%w: string matched %q at position %d when NOT expected", ErrSubstringMismatch, o.Str, pos)
+			return internal.OpResult[any]{}, fmt.Errorf("%w: string matched %q at position %d when NOT expected", ErrSubstringMismatch, ts.Str, pos)
 		}
 		// When Not is false and test fails, it means the string didn't match when we expected it to
-		return internal.OpResult[any]{}, fmt.Errorf("%w: expected %q at position %d, got %q", ErrSubstringMismatch, o.Str, pos, substring)
+		return internal.OpResult[any]{}, fmt.Errorf("%w: expected %q at position %d, got %q", ErrSubstringMismatch, ts.Str, pos, substring)
 	}
 
 	return internal.OpResult[any]{Doc: doc}, nil
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *TestStringOperation) ToJSON() (internal.Operation, error) {
+func (ts *TestStringOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		Op:         string(internal.OpTestStringType),
-		Path:       formatPath(o.Path()),
-		Str:        o.Str,
-		Pos:        o.Pos,
-		Not:        o.NotFlag,
-		IgnoreCase: o.IgnoreCase,
+		Path:       formatPath(ts.Path()),
+		Str:        ts.Str,
+		Pos:        ts.Pos,
+		Not:        ts.NotFlag,
+		IgnoreCase: ts.IgnoreCase,
 	}
 	return result, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *TestStringOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpTestStringCode, o.Path(), o.Str}, nil
+func (ts *TestStringOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpTestStringCode, ts.Path(), ts.Str}, nil
 }
 
 // Not returns whether this operation is a negation predicate.
-func (o *TestStringOperation) Not() bool {
-	return o.NotFlag
+func (ts *TestStringOperation) Not() bool {
+	return ts.NotFlag
 }
 
 // Validate validates the test string operation.
-func (o *TestStringOperation) Validate() error {
-	if len(o.Path()) == 0 {
+func (ts *TestStringOperation) Validate() error {
+	if len(ts.Path()) == 0 {
 		return ErrPathEmpty
 	}
 	return nil

@@ -30,26 +30,26 @@ func NewReplaceWithOldValue(path []string, value any, oldValue any) *ReplaceOper
 }
 
 // Op returns the operation type.
-func (o *ReplaceOperation) Op() internal.OpType {
+func (rp *ReplaceOperation) Op() internal.OpType {
 	return internal.OpReplaceType
 }
 
 // Code returns the operation code.
-func (o *ReplaceOperation) Code() int {
+func (rp *ReplaceOperation) Code() int {
 	return internal.OpReplaceCode
 }
 
 // Apply applies the replace operation to the document.
-func (o *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
+func (rp *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Clone the new value to prevent external mutations
-	newValue := deepclone.Clone(o.Value)
+	newValue := deepclone.Clone(rp.Value)
 
-	if len(o.path) == 0 {
+	if len(rp.path) == 0 {
 		// Replace entire document
 		oldValue := doc
 		return internal.OpResult[any]{Doc: newValue, Old: oldValue}, nil
 	}
-	if len(o.path) == 1 && o.path[0] == "" {
+	if len(rp.path) == 1 && rp.path[0] == "" {
 		// Special case: path "/" refers to the key "" in the root object
 		switch v := doc.(type) {
 		case map[string]any:
@@ -61,7 +61,7 @@ func (o *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 		}
 	}
 
-	parent, key, err := navigateToParent(doc, o.path)
+	parent, key, err := navigateToParent(doc, rp.path)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -96,28 +96,28 @@ func (o *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *ReplaceOperation) ToJSON() (internal.Operation, error) {
+func (rp *ReplaceOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		Op:    string(internal.OpReplaceType),
-		Path:  formatPath(o.path),
-		Value: o.Value,
+		Path:  formatPath(rp.path),
+		Value: rp.Value,
 	}
 
-	if o.OldValue != nil {
-		result.OldValue = o.OldValue
+	if rp.OldValue != nil {
+		result.OldValue = rp.OldValue
 	}
 
 	return result, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *ReplaceOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpReplaceCode, o.path, o.Value}, nil
+func (rp *ReplaceOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpReplaceCode, rp.path, rp.Value}, nil
 }
 
 // Validate validates the replace operation.
-func (o *ReplaceOperation) Validate() error {
-	if len(o.path) == 0 {
+func (rp *ReplaceOperation) Validate() error {
+	if len(rp.path) == 0 {
 		return ErrPathEmpty
 	}
 	return nil

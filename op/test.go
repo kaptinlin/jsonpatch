@@ -31,65 +31,65 @@ func NewTestWithNot(path []string, value any, not bool) *TestOperation {
 }
 
 // Op returns the operation type.
-func (o *TestOperation) Op() internal.OpType {
+func (t *TestOperation) Op() internal.OpType {
 	return internal.OpTestType
 }
 
 // Code returns the operation code.
-func (o *TestOperation) Code() int {
+func (t *TestOperation) Code() int {
 	return internal.OpTestCode
 }
 
 // Test performs the test operation.
-func (o *TestOperation) Test(doc any) (bool, error) {
+func (t *TestOperation) Test(doc any) (bool, error) {
 	// Get target value
-	target, err := getValue(doc, o.Path())
+	target, err := getValue(doc, t.Path())
 	if err != nil {
 		// If path not found, return inverse of 'not' flag (matches json-joy behavior)
 		//nolint:nilerr // This is intentional JSON Patch behavior - path not found is not an error
-		return o.NotFlag, nil
+		return t.NotFlag, nil
 	}
 
 	// Compare values and apply negation using XOR logic
-	result := deepEqual(target, o.Value)
-	return result != o.NotFlag, nil
+	result := deepEqual(target, t.Value)
+	return result != t.NotFlag, nil
 }
 
 // Not returns whether this operation is negated.
-func (o *TestOperation) Not() bool {
-	return o.NotFlag
+func (t *TestOperation) Not() bool {
+	return t.NotFlag
 }
 
 // Apply applies the test operation.
-func (o *TestOperation) Apply(doc any) (internal.OpResult[any], error) {
-	value, err := getValue(doc, o.path)
+func (t *TestOperation) Apply(doc any) (internal.OpResult[any], error) {
+	value, err := getValue(doc, t.path)
 	if err != nil {
 		// If path not found, determine test result based on 'not' flag (matches json-joy behavior)
-		shouldPass := o.NotFlag
+		shouldPass := t.NotFlag
 		if !shouldPass {
 			return internal.OpResult[any]{}, fmt.Errorf("%w: path not found", ErrTestOperationFailed)
 		}
 		return internal.OpResult[any]{Doc: doc, Old: nil}, nil
 	}
 
-	isEqual := deepEqual(value, o.Value)
+	isEqual := deepEqual(value, t.Value)
 
 	// Determine if test should pass using XOR logic
-	shouldPass := isEqual != o.NotFlag
+	shouldPass := isEqual != t.NotFlag
 
 	if !shouldPass {
 		// Test failed
-		if o.NotFlag {
-			return internal.OpResult[any]{}, fmt.Errorf("%w: expected not %v, but got %v", ErrTestOperationFailed, o.Value, value)
+		if t.NotFlag {
+			return internal.OpResult[any]{}, fmt.Errorf("%w: expected not %v, but got %v", ErrTestOperationFailed, t.Value, value)
 		}
 		// Check if it's a string vs number comparison for specific error message
-		if _, ok := o.Value.(string); ok {
+		if _, ok := t.Value.(string); ok {
 			if _, ok := value.(float64); ok {
 				return internal.OpResult[any]{}, ErrTestOperationNumberStringMismatch
 			}
 			return internal.OpResult[any]{}, ErrTestOperationStringNotEquivalent
 		}
-		return internal.OpResult[any]{}, fmt.Errorf("%w: expected %v, got %v", ErrTestOperationFailed, o.Value, value)
+		return internal.OpResult[any]{}, fmt.Errorf("%w: expected %v, got %v", ErrTestOperationFailed, t.Value, value)
 	}
 
 	// Test operations don't modify the document and return nil for old value
@@ -97,22 +97,22 @@ func (o *TestOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *TestOperation) ToJSON() (internal.Operation, error) {
+func (t *TestOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:    string(internal.OpTestType),
-		Path:  formatPath(o.path),
-		Value: o.Value,
+		Path:  formatPath(t.path),
+		Value: t.Value,
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *TestOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpTestCode, o.path, o.Value}, nil
+func (t *TestOperation) ToCompact() (internal.CompactOperation, error) {
+	return internal.CompactOperation{internal.OpTestCode, t.path, t.Value}, nil
 }
 
 // Validate validates the test operation.
-func (o *TestOperation) Validate() error {
-	if len(o.Path()) == 0 {
+func (t *TestOperation) Validate() error {
+	if len(t.Path()) == 0 {
 		return ErrPathEmpty
 	}
 	return nil

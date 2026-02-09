@@ -29,19 +29,19 @@ func NewNotMultiple(path []string, ops []any) *NotOperation {
 }
 
 // Op returns the operation type.
-func (o *NotOperation) Op() internal.OpType {
+func (n *NotOperation) Op() internal.OpType {
 	return internal.OpNotType
 }
 
 // Code returns the operation code.
-func (o *NotOperation) Code() int {
+func (n *NotOperation) Code() int {
 	return internal.OpNotCode
 }
 
 // Test evaluates the NOT predicate condition.
-func (o *NotOperation) Test(doc any) (bool, error) {
+func (n *NotOperation) Test(doc any) (bool, error) {
 	// NOT operation: returns true if ALL operands are false
-	for _, op := range o.Operations {
+	for _, op := range n.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {
 			return false, ErrInvalidPredicateInNot
@@ -62,13 +62,13 @@ func (o *NotOperation) Test(doc any) (bool, error) {
 }
 
 // Not returns true since this is a NOT operation.
-func (o *NotOperation) Not() bool {
+func (n *NotOperation) Not() bool {
 	return true
 }
 
 // Apply applies the NOT operation.
-func (o *NotOperation) Apply(doc any) (internal.OpResult[any], error) {
-	ok, err := o.Test(doc)
+func (n *NotOperation) Apply(doc any) (internal.OpResult[any], error) {
+	ok, err := n.Test(doc)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -79,9 +79,9 @@ func (o *NotOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // ToJSON serializes the operation to JSON format.
-func (o *NotOperation) ToJSON() (internal.Operation, error) {
-	opsJSON := make([]internal.Operation, 0, len(o.Operations))
-	for _, op := range o.Operations {
+func (n *NotOperation) ToJSON() (internal.Operation, error) {
+	opsJSON := make([]internal.Operation, 0, len(n.Operations))
+	for _, op := range n.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {
 			return internal.Operation{}, ErrInvalidPredicateInNot
@@ -95,15 +95,15 @@ func (o *NotOperation) ToJSON() (internal.Operation, error) {
 
 	return internal.Operation{
 		Op:    string(internal.OpNotType),
-		Path:  formatPath(o.Path()),
+		Path:  formatPath(n.Path()),
 		Apply: opsJSON,
 	}, nil
 }
 
 // ToCompact serializes the operation to compact format.
-func (o *NotOperation) ToCompact() (internal.CompactOperation, error) {
-	opsCompact := make([]any, 0, len(o.Operations))
-	for _, op := range o.Operations {
+func (n *NotOperation) ToCompact() (internal.CompactOperation, error) {
+	opsCompact := make([]any, 0, len(n.Operations))
+	for _, op := range n.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {
 			return internal.CompactOperation{}, ErrInvalidPredicateInNot
@@ -115,20 +115,20 @@ func (o *NotOperation) ToCompact() (internal.CompactOperation, error) {
 		opsCompact = append(opsCompact, compact)
 	}
 
-	return internal.CompactOperation{internal.OpNotCode, o.Path(), opsCompact}, nil
+	return internal.CompactOperation{internal.OpNotCode, n.Path(), opsCompact}, nil
 }
 
 // Ops returns the operand operations.
-func (o *NotOperation) Ops() []internal.PredicateOp {
-	return extractPredicateOps(o.Operations)
+func (n *NotOperation) Ops() []internal.PredicateOp {
+	return extractPredicateOps(n.Operations)
 }
 
 // Validate validates the NOT operation.
-func (o *NotOperation) Validate() error {
-	if len(o.Operations) == 0 {
+func (n *NotOperation) Validate() error {
+	if len(n.Operations) == 0 {
 		return ErrNotNoOperands
 	}
-	for _, op := range o.Operations {
+	for _, op := range n.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {
 			return ErrInvalidPredicateInNot
