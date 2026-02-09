@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,11 +34,16 @@ func TestGetJSONPatchType(t *testing.T) {
 		// Boolean.
 		{"true", true, JSONPatchTypeBoolean},
 		{"false", false, JSONPatchTypeBoolean},
-		// Arrays.
+		// Arrays (common types).
 		{"[]any", []any{1, 2}, JSONPatchTypeArray},
 		{"[]string", []string{"a"}, JSONPatchTypeArray},
 		{"[]int", []int{1, 2}, JSONPatchTypeArray},
 		{"[]float64", []float64{1.1}, JSONPatchTypeArray},
+		// Arrays (reflect-based detection).
+		{"[]bool", []bool{true, false}, JSONPatchTypeArray},
+		{"[]uint", []uint{1, 2}, JSONPatchTypeArray},
+		{"[]int64", []int64{1, 2}, JSONPatchTypeArray},
+		{"[2]int", [2]int{1, 2}, JSONPatchTypeArray},
 		// Object.
 		{"map[string]any", map[string]any{"k": "v"}, JSONPatchTypeObject},
 		// Integer types.
@@ -57,6 +63,12 @@ func TestGetJSONPatchType(t *testing.T) {
 		// Float as number (fractional).
 		{"float64 frac", 3.14, JSONPatchTypeNumber},
 		{"float32 frac", float32(3.14), JSONPatchTypeNumber},
+		// Float edge cases (NaN, Inf).
+		{"float64 NaN", math.NaN(), JSONPatchTypeNumber},
+		{"float64 +Inf", math.Inf(1), JSONPatchTypeNumber},
+		{"float64 -Inf", math.Inf(-1), JSONPatchTypeNumber},
+		{"float32 NaN", float32(math.NaN()), JSONPatchTypeNumber},
+		{"float32 +Inf", float32(math.Inf(1)), JSONPatchTypeNumber},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -1,5 +1,10 @@
 package internal
 
+import (
+	"math"
+	"reflect"
+)
+
 // Operation represents a JSON Patch operation object.
 type Operation struct {
 	Op    string `json:"op"`
@@ -119,9 +124,6 @@ func GetJSONPatchType(value any) JSONPatchType {
 	case bool:
 		return JSONPatchTypeBoolean
 
-	case []any, []string, []int, []float64:
-		return JSONPatchTypeArray
-
 	case map[string]any:
 		return JSONPatchTypeObject
 
@@ -130,27 +132,36 @@ func GetJSONPatchType(value any) JSONPatchType {
 		return JSONPatchTypeInteger
 
 	case float32:
-		if v == float32(int32(v)) {
+		if !math.IsNaN(float64(v)) && !math.IsInf(float64(v), 0) && math.Trunc(float64(v)) == float64(v) {
 			return JSONPatchTypeInteger
 		}
 		return JSONPatchTypeNumber
 
 	case float64:
-		if v == float64(int64(v)) {
+		if !math.IsNaN(v) && !math.IsInf(v, 0) && math.Trunc(v) == v {
 			return JSONPatchTypeInteger
 		}
 		return JSONPatchTypeNumber
 
 	default:
+		if isSliceKind(value) {
+			return JSONPatchTypeArray
+		}
 		return JSONPatchTypeNull
 	}
 }
 
+// isSliceKind reports whether value is a slice or array using reflection.
+func isSliceKind(value any) bool {
+	kind := reflect.TypeOf(value).Kind()
+	return kind == reflect.Slice || kind == reflect.Array
+}
+
 // IsJSONPatchOperation reports whether op is a core JSON Patch (RFC 6902) operation.
 func IsJSONPatchOperation(op string) bool {
-	switch op {
-	case string(OpAddType), string(OpRemoveType), string(OpReplaceType),
-		string(OpMoveType), string(OpCopyType), string(OpTestType):
+	switch OpType(op) { //nolint:exhaustive // intentionally matches only RFC 6902 operations
+	case OpAddType, OpRemoveType, OpReplaceType,
+		OpMoveType, OpCopyType, OpTestType:
 		return true
 	default:
 		return false
@@ -164,11 +175,11 @@ func IsPredicateOperation(op string) bool {
 
 // IsFirstOrderPredicateOperation reports whether op is a first-order predicate.
 func IsFirstOrderPredicateOperation(op string) bool {
-	switch op {
-	case string(OpTestType), string(OpDefinedType), string(OpUndefinedType),
-		string(OpTestTypeType), string(OpTestStringType), string(OpTestStringLenType),
-		string(OpContainsType), string(OpEndsType), string(OpStartsType),
-		string(OpInType), string(OpLessType), string(OpMoreType), string(OpMatchesType):
+	switch OpType(op) { //nolint:exhaustive // intentionally matches only first-order predicates
+	case OpTestType, OpDefinedType, OpUndefinedType,
+		OpTestTypeType, OpTestStringType, OpTestStringLenType,
+		OpContainsType, OpEndsType, OpStartsType,
+		OpInType, OpLessType, OpMoreType, OpMatchesType:
 		return true
 	default:
 		return false
@@ -177,8 +188,8 @@ func IsFirstOrderPredicateOperation(op string) bool {
 
 // IsSecondOrderPredicateOperation reports whether op is a second-order (composite) predicate.
 func IsSecondOrderPredicateOperation(op string) bool {
-	switch op {
-	case string(OpAndType), string(OpOrType), string(OpNotType):
+	switch OpType(op) { //nolint:exhaustive // intentionally matches only second-order predicates
+	case OpAndType, OpOrType, OpNotType:
 		return true
 	default:
 		return false
@@ -187,9 +198,9 @@ func IsSecondOrderPredicateOperation(op string) bool {
 
 // IsJSONPatchExtendedOperation reports whether op is an extended operation.
 func IsJSONPatchExtendedOperation(op string) bool {
-	switch op {
-	case string(OpStrInsType), string(OpStrDelType), string(OpFlipType),
-		string(OpIncType), string(OpSplitType), string(OpMergeType), string(OpExtendType):
+	switch OpType(op) { //nolint:exhaustive // intentionally matches only extended operations
+	case OpStrInsType, OpStrDelType, OpFlipType,
+		OpIncType, OpSplitType, OpMergeType, OpExtendType:
 		return true
 	default:
 		return false
