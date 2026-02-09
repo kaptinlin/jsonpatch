@@ -20,7 +20,7 @@ func NewEncoder(opts ...EncoderOption) *Encoder {
 
 // Encode encodes a single operation into compact format.
 func (e *Encoder) Encode(op internal.Op) (Op, error) {
-	return opToCompact(op, e.options)
+	return encodeOp(op, e.options)
 }
 
 // EncodeSlice encodes multiple operations into compact format.

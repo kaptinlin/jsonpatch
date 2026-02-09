@@ -20,7 +20,7 @@ func NewDecoder(opts ...DecoderOption) *Decoder {
 
 // Decode decodes a single compact operation into an operation instance.
 func (d *Decoder) Decode(compactOp Op) (internal.Op, error) {
-	return compactToOp(compactOp, d.options)
+	return decodeOp(compactOp, d.options)
 }
 
 // DecodeSlice decodes multiple compact operations into operation instances.

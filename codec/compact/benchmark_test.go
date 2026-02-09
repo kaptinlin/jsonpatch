@@ -14,10 +14,10 @@ var benchmarkOps = []internal.Op{
 	op.NewMove([]string{"dest"}, []string{"src"}),
 	op.NewCopy([]string{"copy_dest"}, []string{"copy_src"}),
 	op.NewTest([]string{"check"}, "expected"),
-	op.NewOpFlipOperation([]string{"flag"}),
-	op.NewOpIncOperation([]string{"counter"}, 5),
-	op.NewOpDefinedOperation([]string{"exists"}),
-	op.NewOpUndefinedOperation([]string{"missing"}),
+	op.NewFlip([]string{"flag"}),
+	op.NewInc([]string{"counter"}, 5),
+	op.NewDefined([]string{"exists"}),
+	op.NewUndefined([]string{"missing"}),
 }
 
 func BenchmarkEncode(b *testing.B) {

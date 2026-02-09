@@ -21,42 +21,37 @@ func EncodeJSON(ops []internal.Op, opts ...EncoderOption) ([]byte, error) {
 	return json.Marshal(compactOps)
 }
 
-// opToCompact converts a single operation to compact format.
-func opToCompact(op internal.Op, options EncoderOptions) (Op, error) {
-	// Get the standard compact format from the operation
-	compactOp, err := op.ToCompact()
+// encodeOp converts a single operation to compact format.
+func encodeOp(o internal.Op, options EncoderOptions) (Op, error) {
+	compactOp, err := o.ToCompact()
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert to our Op type and adjust opcode if needed
 	result := make(Op, len(compactOp))
 	copy(result, compactOp)
 
-	// Convert opcode to string if requested
 	if options.StringOpcode {
-		result[0] = string(op.Op())
+		result[0] = string(o.Op())
 	}
 
-	// Convert all path-like fields from []string to string format for JSON compatibility
+	// Convert path fields from []string to JSON Pointer string format.
 	if len(result) > 1 {
 		if pathSlice, ok := result[1].([]string); ok {
-			result[1] = pathToString(pathSlice)
+			result[1] = formatPath(pathSlice)
 		}
 	}
-
-	// Handle 'from' path for move/copy operations (third element)
 	if len(result) > 2 {
 		if fromSlice, ok := result[2].([]string); ok {
-			result[2] = pathToString(fromSlice)
+			result[2] = formatPath(fromSlice)
 		}
 	}
 
 	return result, nil
 }
 
-// pathToString converts a JSON pointer path to string representation.
-func pathToString(path []string) string {
+// formatPath converts a JSON pointer path to string representation.
+func formatPath(path []string) string {
 	if len(path) == 0 {
 		return ""
 	}
