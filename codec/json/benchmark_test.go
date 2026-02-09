@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-json-experiment/json"
 	"github.com/google/go-cmp/cmp"
+
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
@@ -215,6 +216,70 @@ func TestAllOperationTypes(t *testing.T) {
 	}
 	if len(encoded) != len(allOps) {
 		t.Fatalf("Encode returned %d ops, want %d", len(encoded), len(allOps))
+	}
+}
+
+// TestOperationToMapNestedType verifies that the type field is preserved
+// when converting nested operations (e.g., test_type inside and/or/not).
+func TestOperationToMapNestedType(t *testing.T) {
+	options := PatchOptions{}
+
+	// test_type with string type inside "and" composite operation
+	andOp := []internal.Operation{
+		{
+			Op:   "and",
+			Path: "/data",
+			Apply: []internal.Operation{
+				{Op: "test_type", Path: "/value", Type: "number"},
+				{Op: "defined", Path: "/value"},
+			},
+		},
+	}
+
+	ops, err := DecodeOperations(andOp, options)
+	if err != nil {
+		t.Fatalf("DecodeOperations: %v", err)
+	}
+
+	encoded, err := Encode(ops)
+	if err != nil {
+		t.Fatalf("Encode: %v", err)
+	}
+	if got, want := encoded[0].Op, "and"; got != want {
+		t.Errorf("Op = %v, want %v", got, want)
+	}
+}
+
+// TestOperationToMapNestedTypeList verifies that multi-type test_type
+// operations are preserved through nested operationToMap conversion.
+func TestOperationToMapNestedTypeList(t *testing.T) {
+	options := PatchOptions{}
+
+	andOp := []internal.Operation{
+		{
+			Op:   "and",
+			Path: "/data",
+			Apply: []internal.Operation{
+				{
+					Op:   "test_type",
+					Path: "/value",
+					Type: []any{"number", "string"},
+				},
+			},
+		},
+	}
+
+	ops, err := DecodeOperations(andOp, options)
+	if err != nil {
+		t.Fatalf("DecodeOperations: %v", err)
+	}
+
+	encoded, err := Encode(ops)
+	if err != nil {
+		t.Fatalf("Encode: %v", err)
+	}
+	if got, want := encoded[0].Op, "and"; got != want {
+		t.Errorf("Op = %v, want %v", got, want)
 	}
 }
 
