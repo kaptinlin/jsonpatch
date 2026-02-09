@@ -9,15 +9,15 @@ import (
 )
 
 // decodeOps reads the operation count and decodes each operation.
-func decodeOps(reader *msgp.Reader) ([]internal.Op, error) {
-	count, err := reader.ReadFloat64()
+func decodeOps(r *msgp.Reader) ([]internal.Op, error) {
+	count, err := r.ReadFloat64()
 	if err != nil {
 		return nil, err
 	}
 	size := int(count)
 	ops := make([]internal.Op, size)
 	for i := range size {
-		decoded, err := decodeOp(reader)
+		decoded, err := decodeOp(r)
 		if err != nil {
 			return nil, err
 		}
@@ -28,15 +28,15 @@ func decodeOps(reader *msgp.Reader) ([]internal.Op, error) {
 
 // decodeOp reads the array header, operation code, and path,
 // then dispatches to the appropriate decoder.
-func decodeOp(reader *msgp.Reader) (internal.Op, error) {
-	if _, err := reader.ReadArrayHeader(); err != nil {
+func decodeOp(r *msgp.Reader) (internal.Op, error) {
+	if _, err := r.ReadArrayHeader(); err != nil {
 		return nil, err
 	}
-	code, err := reader.ReadUint8()
+	code, err := r.ReadUint8()
 	if err != nil {
 		return nil, err
 	}
-	path, err := decodePath(reader)
+	path, err := decodePath(r)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func decodeOp(reader *msgp.Reader) (internal.Op, error) {
 	switch code {
 	// Standard RFC 6902
 	case internal.OpAddCode:
-		value, err := decodeValue(reader)
+		value, err := decodeValue(r)
 		if err != nil {
 			return nil, err
 		}
@@ -52,25 +52,25 @@ func decodeOp(reader *msgp.Reader) (internal.Op, error) {
 	case internal.OpRemoveCode:
 		return op.NewRemove(path), nil
 	case internal.OpReplaceCode:
-		value, err := decodeValue(reader)
+		value, err := decodeValue(r)
 		if err != nil {
 			return nil, err
 		}
 		return op.NewReplace(path, value), nil
 	case internal.OpMoveCode:
-		from, err := decodePath(reader)
+		from, err := decodePath(r)
 		if err != nil {
 			return nil, err
 		}
 		return op.NewMove(from, path), nil
 	case internal.OpCopyCode:
-		from, err := decodePath(reader)
+		from, err := decodePath(r)
 		if err != nil {
 			return nil, err
 		}
 		return op.NewCopy(from, path), nil
 	case internal.OpTestCode:
-		value, err := decodeValue(reader)
+		value, err := decodeValue(r)
 		if err != nil {
 			return nil, err
 		}
@@ -82,67 +82,67 @@ func decodeOp(reader *msgp.Reader) (internal.Op, error) {
 	case internal.OpUndefinedCode:
 		return op.NewUndefined(path), nil
 	case internal.OpTestTypeCode:
-		return decodeTestType(reader, path)
+		return decodeTestType(r, path)
 	case internal.OpLessCode:
-		v, err := readFloat64(reader)
+		v, err := readFloat64(r)
 		if err != nil {
 			return nil, err
 		}
 		return op.NewLess(path, v), nil
 	case internal.OpMoreCode:
-		v, err := readFloat64(reader)
+		v, err := readFloat64(r)
 		if err != nil {
 			return nil, err
 		}
 		return op.NewMore(path, v), nil
 	case internal.OpContainsCode:
-		v, err := readString(reader)
+		v, err := readString(r)
 		if err != nil {
 			return nil, err
 		}
 		return op.NewContains(path, v), nil
 	case internal.OpStartsCode:
-		v, err := readString(reader)
+		v, err := readString(r)
 		if err != nil {
 			return nil, err
 		}
 		return op.NewStarts(path, v), nil
 	case internal.OpEndsCode:
-		v, err := readString(reader)
+		v, err := readString(r)
 		if err != nil {
 			return nil, err
 		}
 		return op.NewEnds(path, v), nil
 	case internal.OpInCode:
-		return decodeIn(reader, path)
+		return decodeIn(r, path)
 	case internal.OpMatchesCode:
-		return decodeMatches(reader, path)
+		return decodeMatches(r, path)
 	case internal.OpTestStringCode:
-		return decodeTestString(reader, path)
+		return decodeTestString(r, path)
 	case internal.OpTestStringLenCode:
-		return decodeTestStringLen(reader, path)
+		return decodeTestStringLen(r, path)
 	case internal.OpTypeCode:
-		return decodeType(reader, path)
+		return decodeType(r, path)
 
 	// Extended operations
 	case internal.OpFlipCode:
 		return op.NewFlip(path), nil
 	case internal.OpIncCode:
-		inc, err := reader.ReadFloat64()
+		inc, err := r.ReadFloat64()
 		if err != nil {
 			return nil, err
 		}
 		return op.NewInc(path, inc), nil
 	case internal.OpStrInsCode:
-		return decodeStrIns(reader, path)
+		return decodeStrIns(r, path)
 	case internal.OpStrDelCode:
-		return decodeStrDel(reader, path)
+		return decodeStrDel(r, path)
 	case internal.OpSplitCode:
-		return decodeSplit(reader, path)
+		return decodeSplit(r, path)
 	case internal.OpExtendCode:
-		return decodeExtend(reader, path)
+		return decodeExtend(r, path)
 	case internal.OpMergeCode:
-		return decodeMerge(reader, path)
+		return decodeMerge(r, path)
 
 	default:
 		return nil, fmt.Errorf("unsupported op code %d: %w",
@@ -150,11 +150,9 @@ func decodeOp(reader *msgp.Reader) (internal.Op, error) {
 	}
 }
 
-// --- Typed value readers ---
-
 // readFloat64 reads an interface value and asserts it is float64.
-func readFloat64(reader *msgp.Reader) (float64, error) {
-	value, err := decodeValue(reader)
+func readFloat64(r *msgp.Reader) (float64, error) {
+	value, err := decodeValue(r)
 	if err != nil {
 		return 0, err
 	}
@@ -166,8 +164,8 @@ func readFloat64(reader *msgp.Reader) (float64, error) {
 }
 
 // readString reads an interface value and asserts it is string.
-func readString(reader *msgp.Reader) (string, error) {
-	value, err := decodeValue(reader)
+func readString(r *msgp.Reader) (string, error) {
+	value, err := decodeValue(r)
 	if err != nil {
 		return "", err
 	}
@@ -178,49 +176,47 @@ func readString(reader *msgp.Reader) (string, error) {
 	return s, nil
 }
 
-// --- Operation-specific decoders ---
-
 // decodeTestType decodes a test_type operation.
-func decodeTestType(reader *msgp.Reader, path []string) (internal.Op, error) {
-	typesVal, err := decodeValue(reader)
+func decodeTestType(r *msgp.Reader, path []string) (internal.Op, error) {
+	raw, err := decodeValue(r)
 	if err != nil {
 		return nil, err
 	}
-	types, ok := typesVal.([]any)
+	types, ok := raw.([]any)
 	if !ok {
 		return nil, ErrInvalidTestTypeFormat
 	}
-	strTypes := make([]string, len(types))
+	strs := make([]string, len(types))
 	for i, v := range types {
 		str, ok := v.(string)
 		if !ok {
 			return nil, fmt.Errorf("expected string at index %d, got %T: %w", i, v, ErrInvalidTestTypeFormat)
 		}
-		strTypes[i] = str
+		strs[i] = str
 	}
-	return op.NewTestTypeMultiple(path, strTypes), nil
+	return op.NewTestTypeMultiple(path, strs), nil
 }
 
 // decodeIn decodes an in predicate operation.
-func decodeIn(reader *msgp.Reader, path []string) (internal.Op, error) {
-	values, err := decodeValue(reader)
+func decodeIn(r *msgp.Reader, path []string) (internal.Op, error) {
+	raw, err := decodeValue(r)
 	if err != nil {
 		return nil, err
 	}
-	arr, ok := values.([]any)
+	arr, ok := raw.([]any)
 	if !ok {
-		return nil, fmt.Errorf("in values must be an array, got %T: %w", values, ErrInvalidValueType)
+		return nil, fmt.Errorf("in values must be an array, got %T: %w", raw, ErrInvalidValueType)
 	}
 	return op.NewIn(path, arr), nil
 }
 
 // decodeMatches decodes a matches predicate operation.
-func decodeMatches(reader *msgp.Reader, path []string) (internal.Op, error) {
-	pattern, err := reader.ReadString()
+func decodeMatches(r *msgp.Reader, path []string) (internal.Op, error) {
+	pattern, err := r.ReadString()
 	if err != nil {
 		return nil, err
 	}
-	ignoreCase, err := reader.ReadBool()
+	ignoreCase, err := r.ReadBool()
 	if err != nil {
 		return nil, err
 	}
@@ -228,12 +224,12 @@ func decodeMatches(reader *msgp.Reader, path []string) (internal.Op, error) {
 }
 
 // decodeTestString decodes a test_string operation.
-func decodeTestString(reader *msgp.Reader, path []string) (internal.Op, error) {
-	str, err := reader.ReadString()
+func decodeTestString(r *msgp.Reader, path []string) (internal.Op, error) {
+	str, err := r.ReadString()
 	if err != nil {
 		return nil, err
 	}
-	pos, err := reader.ReadFloat64()
+	pos, err := r.ReadFloat64()
 	if err != nil {
 		return nil, err
 	}
@@ -241,12 +237,12 @@ func decodeTestString(reader *msgp.Reader, path []string) (internal.Op, error) {
 }
 
 // decodeTestStringLen decodes a test_string_len operation.
-func decodeTestStringLen(reader *msgp.Reader, path []string) (internal.Op, error) {
-	length, err := reader.ReadFloat64()
+func decodeTestStringLen(r *msgp.Reader, path []string) (internal.Op, error) {
+	length, err := r.ReadFloat64()
 	if err != nil {
 		return nil, err
 	}
-	not, err := reader.ReadBool()
+	not, err := r.ReadBool()
 	if err != nil {
 		return nil, err
 	}
@@ -254,21 +250,21 @@ func decodeTestStringLen(reader *msgp.Reader, path []string) (internal.Op, error
 }
 
 // decodeType decodes a type predicate operation.
-func decodeType(reader *msgp.Reader, path []string) (internal.Op, error) {
-	expectedType, err := reader.ReadString()
+func decodeType(r *msgp.Reader, path []string) (internal.Op, error) {
+	expected, err := r.ReadString()
 	if err != nil {
 		return nil, err
 	}
-	return op.NewType(path, expectedType), nil
+	return op.NewType(path, expected), nil
 }
 
 // decodeStrIns decodes a str_ins operation.
-func decodeStrIns(reader *msgp.Reader, path []string) (internal.Op, error) {
-	pos, err := reader.ReadFloat64()
+func decodeStrIns(r *msgp.Reader, path []string) (internal.Op, error) {
+	pos, err := r.ReadFloat64()
 	if err != nil {
 		return nil, err
 	}
-	str, err := reader.ReadString()
+	str, err := r.ReadString()
 	if err != nil {
 		return nil, err
 	}
@@ -276,12 +272,12 @@ func decodeStrIns(reader *msgp.Reader, path []string) (internal.Op, error) {
 }
 
 // decodeStrDel decodes a str_del operation.
-func decodeStrDel(reader *msgp.Reader, path []string) (internal.Op, error) {
-	pos, err := reader.ReadFloat64()
+func decodeStrDel(r *msgp.Reader, path []string) (internal.Op, error) {
+	pos, err := r.ReadFloat64()
 	if err != nil {
 		return nil, err
 	}
-	length, err := reader.ReadFloat64()
+	length, err := r.ReadFloat64()
 	if err != nil {
 		return nil, err
 	}
@@ -289,12 +285,12 @@ func decodeStrDel(reader *msgp.Reader, path []string) (internal.Op, error) {
 }
 
 // decodeSplit decodes a split operation.
-func decodeSplit(reader *msgp.Reader, path []string) (internal.Op, error) {
-	pos, err := reader.ReadFloat64()
+func decodeSplit(r *msgp.Reader, path []string) (internal.Op, error) {
+	pos, err := r.ReadFloat64()
 	if err != nil {
 		return nil, err
 	}
-	props, err := decodeValue(reader)
+	props, err := decodeValue(r)
 	if err != nil {
 		return nil, err
 	}
@@ -302,62 +298,60 @@ func decodeSplit(reader *msgp.Reader, path []string) (internal.Op, error) {
 }
 
 // decodeExtend decodes an extend operation.
-func decodeExtend(reader *msgp.Reader, path []string) (internal.Op, error) {
-	properties, err := decodeValue(reader)
+func decodeExtend(r *msgp.Reader, path []string) (internal.Op, error) {
+	raw, err := decodeValue(r)
 	if err != nil {
 		return nil, err
 	}
-	propsMap, ok := properties.(map[string]any)
+	props, ok := raw.(map[string]any)
 	if !ok {
-		return nil, fmt.Errorf("extend properties must be an object, got %T: %w", properties, ErrInvalidValueType)
+		return nil, fmt.Errorf("extend properties must be an object, got %T: %w", raw, ErrInvalidValueType)
 	}
-	deleteNull, err := reader.ReadBool()
+	deleteNull, err := r.ReadBool()
 	if err != nil {
 		return nil, err
 	}
-	return op.NewExtend(path, propsMap, deleteNull), nil
+	return op.NewExtend(path, props, deleteNull), nil
 }
 
 // decodeMerge decodes a merge operation.
-func decodeMerge(reader *msgp.Reader, path []string) (internal.Op, error) {
-	pos, err := reader.ReadFloat64()
+func decodeMerge(r *msgp.Reader, path []string) (internal.Op, error) {
+	pos, err := r.ReadFloat64()
 	if err != nil {
 		return nil, err
 	}
-	props, err := decodeValue(reader)
+	raw, err := decodeValue(r)
 	if err != nil {
 		return nil, err
 	}
-	propsMap, ok := props.(map[string]any)
+	props, ok := raw.(map[string]any)
 	if !ok {
-		return nil, fmt.Errorf("merge properties must be an object, got %T: %w", props, ErrInvalidValueType)
+		return nil, fmt.Errorf("merge properties must be an object, got %T: %w", raw, ErrInvalidValueType)
 	}
-	return op.NewMerge(path, pos, propsMap), nil
+	return op.NewMerge(path, pos, props), nil
 }
 
-// --- Low-level decoders ---
-
 // decodePath reads a path as a float64 count followed by string segments.
-func decodePath(reader *msgp.Reader) ([]string, error) {
-	count, err := reader.ReadFloat64()
+func decodePath(r *msgp.Reader) ([]string, error) {
+	count, err := r.ReadFloat64()
 	if err != nil {
 		return nil, err
 	}
 	size := int(count)
 	path := make([]string, size)
 	for i := range size {
-		segment, err := reader.ReadString()
+		seg, err := r.ReadString()
 		if err != nil {
 			return nil, err
 		}
-		path[i] = segment
+		path[i] = seg
 	}
 	return path, nil
 }
 
 // decodeValue reads an arbitrary msgp value and normalizes map types.
-func decodeValue(reader *msgp.Reader) (any, error) {
-	v, err := reader.ReadIntf()
+func decodeValue(r *msgp.Reader) (any, error) {
+	v, err := r.ReadIntf()
 	if err != nil {
 		return nil, err
 	}

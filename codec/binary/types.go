@@ -10,8 +10,8 @@ import (
 // Codec encodes and decodes JSON Patch operations in MessagePack binary format.
 type Codec struct{}
 
-// NewCodec creates a new binary Codec.
-func NewCodec() *Codec {
+// New creates a new binary Codec.
+func New() *Codec {
 	return &Codec{}
 }
 
@@ -19,11 +19,11 @@ func NewCodec() *Codec {
 func (c *Codec) Encode(ops []internal.Op) ([]byte, error) {
 	var buf bytes.Buffer
 	buf.Grow(len(ops) * 32) // pre-allocate based on typical operation size
-	writer := msgp.NewWriter(&buf)
-	if err := encodeOps(writer, ops); err != nil {
+	w := msgp.NewWriter(&buf)
+	if err := encodeOps(w, ops); err != nil {
 		return nil, err
 	}
-	if err := writer.Flush(); err != nil {
+	if err := w.Flush(); err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
@@ -31,6 +31,6 @@ func (c *Codec) Encode(ops []internal.Op) ([]byte, error) {
 
 // Decode deserializes operations from MessagePack binary format.
 func (c *Codec) Decode(data []byte) ([]internal.Op, error) {
-	reader := msgp.NewReader(bytes.NewReader(data))
-	return decodeOps(reader)
+	r := msgp.NewReader(bytes.NewReader(data))
+	return decodeOps(r)
 }
