@@ -11,7 +11,7 @@ type Encoder struct {
 
 // NewEncoder creates a new compact encoder with the given options.
 func NewEncoder(opts ...EncoderOption) *Encoder {
-	options := defaultEncoderOptions
+	var options EncoderOptions
 	for _, opt := range opts {
 		opt(&options)
 	}

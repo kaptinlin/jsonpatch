@@ -52,21 +52,17 @@ const (
 	OpCodeOr            OpCode = OpCode(internal.OpOrCode)
 )
 
-// Note: String operation codes are defined in decode.go lookup table for better performance
-
 // Op represents a compact format operation as an array.
 type Op []any
 
 // EncoderOptions configures the compact encoder behavior.
 type EncoderOptions struct {
-	// StringOpcode determines whether to use string opcodes instead of numeric ones.
+	// StringOpcode uses string opcodes instead of numeric ones.
 	StringOpcode bool
 }
 
 // DecoderOptions configures the compact decoder behavior.
-type DecoderOptions struct {
-	// Reserved for future options.
-}
+type DecoderOptions struct{}
 
 // EncoderOption is a functional option for configuring the encoder.
 type EncoderOption func(*EncoderOptions)
@@ -80,14 +76,6 @@ func WithStringOpcode(useString bool) EncoderOption {
 		opts.StringOpcode = useString
 	}
 }
-
-// defaultEncoderOptions are the default encoder settings.
-var defaultEncoderOptions = EncoderOptions{
-	StringOpcode: false,
-}
-
-// defaultDecoderOptions are the default decoder settings.
-var defaultDecoderOptions DecoderOptions
 
 // Operation represents a compact format operation.
 type Operation = internal.CompactOperation

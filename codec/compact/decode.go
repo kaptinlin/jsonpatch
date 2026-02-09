@@ -78,8 +78,8 @@ var (
 
 // Decode decodes compact format operations using default options.
 func Decode(compactOps []Op, opts ...DecoderOption) ([]internal.Op, error) {
-	decoder := NewDecoder(opts...)
-	return decoder.DecodeSlice(compactOps)
+	d := NewDecoder(opts...)
+	return d.DecodeSlice(compactOps)
 }
 
 // DecodeJSON decodes compact format JSON bytes into operations.
@@ -91,15 +91,17 @@ func DecodeJSON(data []byte, opts ...DecoderOption) ([]internal.Op, error) {
 	return Decode(compactOps, opts...)
 }
 
+// --- Header parsing ---
+
 // parseHeader extracts and validates the opcode and path from a compact operation.
 func parseHeader(compactOp Op) (internal.OpType, []string, error) {
 	if len(compactOp) < 2 {
-		return "", nil, ErrCompactOperationMinLength
+		return "", nil, ErrOpMinLength
 	}
 
 	pathStr, ok := compactOp[1].(string)
 	if !ok {
-		return "", nil, ErrCompactOperationPathNotString
+		return "", nil, ErrOpPathNotString
 	}
 
 	opType, err := resolveOpType(compactOp[0])
@@ -110,8 +112,10 @@ func parseHeader(compactOp Op) (internal.OpType, []string, error) {
 	return opType, parsePath(pathStr), nil
 }
 
-// decodeOp converts a compact operation to an operation instance.
-func decodeOp(compactOp Op, opts DecoderOptions) (internal.Op, error) {
+// --- Operation dispatching ---
+
+// parseOp converts a compact operation to an operation instance.
+func parseOp(compactOp Op) (internal.Op, error) {
 	opType, path, err := parseHeader(compactOp)
 	if err != nil {
 		return nil, err
@@ -120,24 +124,26 @@ func decodeOp(compactOp Op, opts DecoderOptions) (internal.Op, error) {
 	switch opType { //nolint:exhaustive // Intentional grouping; all cases covered across sub-functions.
 	case internal.OpAddType, internal.OpRemoveType, internal.OpReplaceType,
 		internal.OpMoveType, internal.OpCopyType, internal.OpTestType:
-		return decodeCoreOp(opType, path, compactOp)
+		return parseCoreOp(opType, path, compactOp)
 	case internal.OpFlipType, internal.OpIncType,
 		internal.OpStrInsType, internal.OpStrDelType,
 		internal.OpSplitType, internal.OpMergeType, internal.OpExtendType:
-		return decodeExtendedOp(opType, path, compactOp)
+		return parseExtendedOp(opType, path, compactOp)
 	case internal.OpAndType, internal.OpOrType, internal.OpNotType:
-		return decodeCompositeOp(opType, path, compactOp, opts)
+		return parseCompositeOp(opType, path, compactOp)
 	default:
-		return decodePredicateOp(opType, path, compactOp)
+		return parsePredicateOp(opType, path, compactOp)
 	}
 }
 
-// decodeCoreOp decodes standard JSON Patch (RFC 6902) operations.
-func decodeCoreOp(opType internal.OpType, path []string, compactOp Op) (internal.Op, error) {
+// --- Core operations (RFC 6902) ---
+
+// parseCoreOp decodes standard JSON Patch (RFC 6902) operations.
+func parseCoreOp(opType internal.OpType, path []string, compactOp Op) (internal.Op, error) {
 	switch opType { //nolint:exhaustive // Only handles core RFC 6902 operations.
 	case internal.OpAddType:
 		if len(compactOp) < 3 {
-			return nil, ErrAddOperationRequiresValue
+			return nil, ErrAddOpMissingValue
 		}
 		return op.NewAdd(path, compactOp[2]), nil
 
@@ -149,7 +155,7 @@ func decodeCoreOp(opType internal.OpType, path []string, compactOp Op) (internal
 
 	case internal.OpReplaceType:
 		if len(compactOp) < 3 {
-			return nil, ErrReplaceOperationRequiresValue
+			return nil, ErrReplaceOpMissingValue
 		}
 		if len(compactOp) >= 4 {
 			return op.NewReplaceWithOldValue(path, compactOp[2], compactOp[3]), nil
@@ -157,14 +163,14 @@ func decodeCoreOp(opType internal.OpType, path []string, compactOp Op) (internal
 		return op.NewReplace(path, compactOp[2]), nil
 
 	case internal.OpMoveType:
-		from, err := requireFromPath(compactOp, ErrMoveOperationRequiresFrom, ErrMoveOperationFromNotString)
+		from, err := requireFromPath(compactOp, ErrMoveOpMissingFrom, ErrMoveOpFromNotString)
 		if err != nil {
 			return nil, err
 		}
 		return op.NewMove(path, from), nil
 
 	case internal.OpCopyType:
-		from, err := requireFromPath(compactOp, ErrCopyOperationRequiresFrom, ErrCopyOperationFromNotString)
+		from, err := requireFromPath(compactOp, ErrCopyOpMissingFrom, ErrCopyOpFromNotString)
 		if err != nil {
 			return nil, err
 		}
@@ -172,79 +178,69 @@ func decodeCoreOp(opType internal.OpType, path []string, compactOp Op) (internal
 
 	case internal.OpTestType:
 		if len(compactOp) < 3 {
-			return nil, ErrTestOperationRequiresValue
+			return nil, ErrTestOpMissingValue
 		}
 		not := boolAt(compactOp, 3)
 		return op.NewTestWithNot(path, compactOp[2], not), nil
 
 	default:
-		return nil, fmt.Errorf("%w: %s", ErrUnsupportedOperationType, opType)
+		return nil, fmt.Errorf("%w: %s", ErrUnsupportedOp, opType)
 	}
 }
 
-// requireFromPath extracts and validates the "from" path at index 2.
-func requireFromPath(compactOp Op, errMissing, errNotString error) ([]string, error) {
-	if len(compactOp) < 3 {
-		return nil, errMissing
-	}
-	fromStr, ok := compactOp[2].(string)
-	if !ok {
-		return nil, errNotString
-	}
-	return parsePath(fromStr), nil
-}
+// --- Extended operations ---
 
-// decodeExtendedOp decodes extended operations (flip, inc, str_ins, str_del, split, merge, extend).
-func decodeExtendedOp(opType internal.OpType, path []string, compactOp Op) (internal.Op, error) {
+// parseExtendedOp decodes extended operations (flip, inc, str_ins, str_del, split, merge, extend).
+func parseExtendedOp(opType internal.OpType, path []string, compactOp Op) (internal.Op, error) {
 	switch opType { //nolint:exhaustive // Only handles extended operations.
 	case internal.OpFlipType:
 		return op.NewFlip(path), nil
 
 	case internal.OpIncType:
 		if len(compactOp) < 3 {
-			return nil, ErrIncOperationRequiresDelta
+			return nil, ErrIncOpMissingDelta
 		}
 		delta, err := toFloat64(compactOp[2])
 		if err != nil {
-			return nil, ErrIncOperationDeltaNotNumber
+			return nil, ErrIncOpDeltaNotNumber
 		}
 		return op.NewInc(path, delta), nil
 
 	case internal.OpStrInsType:
 		if len(compactOp) < 4 {
-			return nil, ErrStrInsOperationRequiresPosAndStr
+			return nil, ErrStrInsOpMissingFields
 		}
 		pos, err := toFloat64(compactOp[2])
 		if err != nil {
-			return nil, ErrStrInsOperationPosNotNumber
+			return nil, ErrStrInsOpPosNotNumber
 		}
 		str, ok := compactOp[3].(string)
 		if !ok {
-			return nil, ErrStrInsOperationStrNotString
+			return nil, ErrStrInsOpStrNotString
 		}
 		return op.NewStrIns(path, pos, str), nil
 
 	case internal.OpStrDelType:
 		if len(compactOp) < 4 {
-			return nil, ErrStrDelOperationRequiresPosAndLen
+			return nil, ErrStrDelOpMissingFields
 		}
 		pos, err := toFloat64(compactOp[2])
 		if err != nil {
-			return nil, ErrStrDelOperationPosNotNumber
+			return nil, ErrStrDelOpPosNotNumber
 		}
 		length, err := toFloat64(compactOp[3])
 		if err != nil {
-			return nil, ErrStrDelOperationLenNotNumber
+			return nil, ErrStrDelOpLenNotNumber
 		}
 		return op.NewStrDel(path, pos, length), nil
 
 	case internal.OpSplitType:
 		if len(compactOp) < 3 {
-			return nil, ErrSplitOperationRequiresPos
+			return nil, ErrSplitOpMissingPos
 		}
 		pos, err := toFloat64(compactOp[2])
 		if err != nil {
-			return nil, ErrSplitOperationPosNotNumber
+			return nil, ErrSplitOpPosNotNumber
 		}
 		var props any
 		if len(compactOp) >= 4 {
@@ -254,11 +250,11 @@ func decodeExtendedOp(opType internal.OpType, path []string, compactOp Op) (inte
 
 	case internal.OpMergeType:
 		if len(compactOp) < 3 {
-			return nil, ErrMergeOperationRequiresPos
+			return nil, ErrMergeOpMissingPos
 		}
 		pos, err := toFloat64(compactOp[2])
 		if err != nil {
-			return nil, ErrMergeOperationPosNotNumber
+			return nil, ErrMergeOpPosNotNumber
 		}
 		var props map[string]any
 		if len(compactOp) >= 4 {
@@ -270,22 +266,24 @@ func decodeExtendedOp(opType internal.OpType, path []string, compactOp Op) (inte
 
 	case internal.OpExtendType:
 		if len(compactOp) < 3 {
-			return nil, ErrExtendOperationRequiresProps
+			return nil, ErrExtendOpMissingProps
 		}
 		props, ok := compactOp[2].(map[string]any)
 		if !ok {
-			return nil, ErrExtendOperationPropsNotObject
+			return nil, ErrExtendOpPropsNotObject
 		}
 		deleteNull := boolAt(compactOp, 3)
 		return op.NewExtend(path, props, deleteNull), nil
 
 	default:
-		return nil, fmt.Errorf("%w: %s", ErrUnsupportedOperationType, opType)
+		return nil, fmt.Errorf("%w: %s", ErrUnsupportedOp, opType)
 	}
 }
 
-// decodePredicateOp decodes JSON Predicate operations.
-func decodePredicateOp(opType internal.OpType, path []string, compactOp Op) (internal.Op, error) {
+// --- Predicate operations ---
+
+// parsePredicateOp decodes JSON Predicate operations.
+func parsePredicateOp(opType internal.OpType, path []string, compactOp Op) (internal.Op, error) {
 	switch opType { //nolint:exhaustive // Only handles predicate operations.
 	case internal.OpDefinedType:
 		return op.NewDefined(path), nil
@@ -294,21 +292,21 @@ func decodePredicateOp(opType internal.OpType, path []string, compactOp Op) (int
 		return op.NewUndefined(path), nil
 
 	case internal.OpContainsType:
-		value, err := requireString(compactOp, 2, ErrContainsOperationRequiresValue, ErrContainsOperationValueNotString)
+		value, err := requireString(compactOp, 2, ErrContainsOpMissingValue, ErrContainsOpValueNotString)
 		if err != nil {
 			return nil, err
 		}
 		return op.NewContainsWithIgnoreCase(path, value, boolAt(compactOp, 3)), nil
 
 	case internal.OpStartsType:
-		value, err := requireString(compactOp, 2, ErrStartsOperationRequiresValue, ErrStartsOperationValueNotString)
+		value, err := requireString(compactOp, 2, ErrStartsOpMissingValue, ErrStartsOpValueNotString)
 		if err != nil {
 			return nil, err
 		}
 		return op.NewStartsWithIgnoreCase(path, value, boolAt(compactOp, 3)), nil
 
 	case internal.OpEndsType:
-		value, err := requireString(compactOp, 2, ErrEndsOperationRequiresValue, ErrEndsOperationValueNotString)
+		value, err := requireString(compactOp, 2, ErrEndsOpMissingValue, ErrEndsOpValueNotString)
 		if err != nil {
 			return nil, err
 		}
@@ -316,31 +314,31 @@ func decodePredicateOp(opType internal.OpType, path []string, compactOp Op) (int
 
 	case internal.OpTypeType:
 		if len(compactOp) < 3 {
-			return nil, ErrTypeOperationRequiresType
+			return nil, ErrTypeOpMissingType
 		}
 		expectedType, ok := compactOp[2].(string)
 		if !ok {
-			return nil, ErrTypeOperationTypeNotString
+			return nil, ErrTypeOpTypeNotString
 		}
 		return op.NewType(path, expectedType), nil
 
 	case internal.OpTestTypeType:
 		if len(compactOp) < 3 {
-			return nil, ErrTestTypeOperationRequiresTypes
+			return nil, ErrTestTypeOpMissingTypes
 		}
 		types, err := toStringSlice(compactOp[2])
 		if err != nil {
-			return nil, ErrTestTypeOperationTypesNotArray
+			return nil, ErrTestTypeOpTypesNotArray
 		}
 		return op.NewTestTypeMultiple(path, types), nil
 
 	case internal.OpTestStringType:
 		if len(compactOp) < 3 {
-			return nil, ErrTestStringOperationRequiresStr
+			return nil, ErrTestStringOpMissingStr
 		}
 		str, ok := compactOp[2].(string)
 		if !ok {
-			return nil, ErrTestStringOperationStrNotString
+			return nil, ErrTestStringOpStrNotString
 		}
 		pos, _ := float64At(compactOp, 3)
 		not := boolAt(compactOp, 4)
@@ -348,34 +346,34 @@ func decodePredicateOp(opType internal.OpType, path []string, compactOp Op) (int
 
 	case internal.OpTestStringLenType:
 		if len(compactOp) < 3 {
-			return nil, ErrTestStringLenOperationRequiresLen
+			return nil, ErrTestStringLenOpMissingLen
 		}
 		length, err := toFloat64(compactOp[2])
 		if err != nil {
-			return nil, ErrTestStringLenOperationLenNotNumber
+			return nil, ErrTestStringLenOpLenNotNumber
 		}
 		not := boolAt(compactOp, 3)
 		return op.NewTestStringLenWithNot(path, length, not), nil
 
 	case internal.OpInType:
 		if len(compactOp) < 3 {
-			return nil, ErrInOperationRequiresValues
+			return nil, ErrInOpMissingValues
 		}
 		values, ok := compactOp[2].([]any)
 		if !ok {
-			return nil, ErrInOperationValuesNotArray
+			return nil, ErrInOpValuesNotArray
 		}
 		return op.NewIn(path, values), nil
 
 	case internal.OpLessType:
-		value, err := requireFloat64(compactOp, 2, ErrLessOperationRequiresValue, ErrLessOperationValueNotNumber)
+		value, err := requireFloat64(compactOp, 2, ErrLessOpMissingValue, ErrLessOpValueNotNumber)
 		if err != nil {
 			return nil, err
 		}
 		return op.NewLess(path, value), nil
 
 	case internal.OpMoreType:
-		value, err := requireFloat64(compactOp, 2, ErrMoreOperationRequiresValue, ErrMoreOperationValueNotNumber)
+		value, err := requireFloat64(compactOp, 2, ErrMoreOpMissingValue, ErrMoreOpValueNotNumber)
 		if err != nil {
 			return nil, err
 		}
@@ -383,34 +381,36 @@ func decodePredicateOp(opType internal.OpType, path []string, compactOp Op) (int
 
 	case internal.OpMatchesType:
 		if len(compactOp) < 3 {
-			return nil, ErrMatchesOperationRequiresPattern
+			return nil, ErrMatchesOpMissingPattern
 		}
 		pattern, ok := compactOp[2].(string)
 		if !ok {
-			return nil, ErrMatchesOperationPatternNotString
+			return nil, ErrMatchesOpPatternNotString
 		}
 		ignoreCase := boolAt(compactOp, 3)
 		return op.NewMatches(path, pattern, ignoreCase, nil), nil
 
 	default:
-		return nil, fmt.Errorf("%w: %s", ErrUnsupportedOperationType, opType)
+		return nil, fmt.Errorf("%w: %s", ErrUnsupportedOp, opType)
 	}
 }
 
-// decodeCompositeOp decodes second-order predicate operations (and, or, not).
-func decodeCompositeOp(opType internal.OpType, path []string, compactOp Op, opts DecoderOptions) (internal.Op, error) {
+// --- Composite operations (and, or, not) ---
+
+// parseCompositeOp decodes second-order predicate operations (and, or, not).
+func parseCompositeOp(opType internal.OpType, path []string, compactOp Op) (internal.Op, error) {
 	if len(compactOp) < 3 {
 		switch opType { //nolint:exhaustive // Only handles composite operations.
 		case internal.OpAndType:
-			return nil, ErrAndOperationRequiresOps
+			return nil, ErrAndOpMissingOps
 		case internal.OpOrType:
-			return nil, ErrOrOperationRequiresOps
+			return nil, ErrOrOpMissingOps
 		default:
-			return nil, ErrNotOperationRequiresOps
+			return nil, ErrNotOpMissingOps
 		}
 	}
 
-	subOps, err := decodePredicateOps(compactOp[2], opts)
+	subOps, err := parsePredicateOps(compactOp[2])
 	if err != nil {
 		return nil, err
 	}
@@ -423,6 +423,20 @@ func decodeCompositeOp(opType internal.OpType, path []string, compactOp Op, opts
 	default:
 		return op.NewNotMultiple(path, subOps), nil
 	}
+}
+
+// --- Helper functions ---
+
+// requireFromPath extracts and validates the "from" path at index 2.
+func requireFromPath(compactOp Op, errMissing, errNotString error) ([]string, error) {
+	if len(compactOp) < 3 {
+		return nil, errMissing
+	}
+	fromStr, ok := compactOp[2].(string)
+	if !ok {
+		return nil, errNotString
+	}
+	return parsePath(fromStr), nil
 }
 
 // requireString extracts a required string value at the given index.
@@ -449,8 +463,8 @@ func requireFloat64(compactOp Op, index int, errMissing, errNotNumber error) (fl
 	return value, nil
 }
 
-// decodePredicateOps decodes an array of compact operations into []any for and/or/not operations.
-func decodePredicateOps(value any, opts DecoderOptions) ([]any, error) {
+// parsePredicateOps decodes an array of compact operations into []any for and/or/not operations.
+func parsePredicateOps(value any) ([]any, error) {
 	arr, ok := value.([]any)
 	if !ok {
 		return nil, ErrPredicateOpsNotArray
@@ -462,7 +476,7 @@ func decodePredicateOps(value any, opts DecoderOptions) ([]any, error) {
 		if !ok {
 			return nil, ErrPredicateOpNotArray
 		}
-		decoded, err := decodeOp(compactOp, opts)
+		decoded, err := parseOp(compactOp)
 		if err != nil {
 			return nil, err
 		}
@@ -473,6 +487,8 @@ func decodePredicateOps(value any, opts DecoderOptions) ([]any, error) {
 	}
 	return result, nil
 }
+
+// --- Opcode resolution ---
 
 // resolveOpType determines the operation type from the opcode using lookup tables.
 func resolveOpType(opcode any) (internal.OpType, error) {
@@ -501,6 +517,8 @@ func resolveOpType(opcode any) (internal.OpType, error) {
 	return "", fmt.Errorf("%w: %d", ErrUnknownNumericOpcode, code)
 }
 
+// --- Path utilities ---
+
 // parsePath converts a JSON pointer string to a path slice.
 func parsePath(pathStr string) []string {
 	if pathStr == "" {
@@ -508,6 +526,8 @@ func parsePath(pathStr string) []string {
 	}
 	return []string(jsonpointer.Parse(pathStr))
 }
+
+// --- Type conversion utilities ---
 
 // boolAt safely extracts a bool value at the given index, returning false if absent.
 func boolAt(compactOp Op, index int) bool {

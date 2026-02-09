@@ -11,7 +11,7 @@ type Decoder struct {
 
 // NewDecoder creates a new compact decoder with the given options.
 func NewDecoder(opts ...DecoderOption) *Decoder {
-	options := defaultDecoderOptions
+	var options DecoderOptions
 	for _, opt := range opts {
 		opt(&options)
 	}
@@ -20,7 +20,7 @@ func NewDecoder(opts ...DecoderOption) *Decoder {
 
 // Decode decodes a single compact operation into an operation instance.
 func (d *Decoder) Decode(compactOp Op) (internal.Op, error) {
-	return decodeOp(compactOp, d.options)
+	return parseOp(compactOp)
 }
 
 // DecodeSlice decodes multiple compact operations into operation instances.
