@@ -16,7 +16,7 @@ import (
 func Decode(operations []map[string]any, options internal.JSONPatchOptions) ([]internal.Op, error) {
 	ops := make([]internal.Op, 0, len(operations))
 	for _, operation := range operations {
-		o, err := OperationToOp(operation, options)
+		o, err := mapToOp(operation, options)
 		if err != nil {
 			return nil, err
 		}
@@ -29,7 +29,7 @@ func Decode(operations []map[string]any, options internal.JSONPatchOptions) ([]i
 func DecodeOperations(operations []internal.Operation, options internal.JSONPatchOptions) ([]internal.Op, error) {
 	operationMaps := make([]map[string]any, len(operations))
 	for i, o := range operations {
-		operationMaps[i] = toMap(o)
+		operationMaps[i] = operationToMap(o, false)
 	}
 	return Decode(operationMaps, options)
 }
@@ -63,8 +63,8 @@ func parseOpHeader(operation map[string]any) (opType, pathStr string, path []str
 	return opType, pathStr, jsonpointer.Parse(pathStr), nil
 }
 
-// OperationToOp converts a JSON operation map to an Op instance.
-func OperationToOp(operation map[string]any, options internal.JSONPatchOptions) (internal.Op, error) {
+// mapToOp converts a JSON operation map to an Op instance.
+func mapToOp(operation map[string]any, options internal.JSONPatchOptions) (internal.Op, error) {
 	opType, pathStr, path, err := parseOpHeader(operation)
 	if err != nil {
 		return nil, err
@@ -82,8 +82,8 @@ func OperationToOp(operation map[string]any, options internal.JSONPatchOptions) 
 	}
 }
 
-// OperationToPredicateOp converts a JSON operation map to a PredicateOp instance.
-func OperationToPredicateOp(operation map[string]any, options internal.JSONPatchOptions) (internal.Op, error) {
+// mapToPredicateOp converts a JSON operation map to a PredicateOp instance.
+func mapToPredicateOp(operation map[string]any, options internal.JSONPatchOptions) (internal.Op, error) {
 	opType, pathStr, path, err := parseOpHeader(operation)
 	if err != nil {
 		return nil, err
@@ -415,14 +415,23 @@ func parseTestStringLen(path []string, operation map[string]any) (internal.Op, e
 	return op.NewTestStringLen(path, lenVal), nil
 }
 
-// parseNotOp decodes a top-level not operation with multiple predicates.
-func parseNotOp(path []string, pathStr string, operation map[string]any, options internal.JSONPatchOptions) (internal.Op, error) {
+// extractApplyField extracts and validates the "apply" array from an operation map.
+func extractApplyField(operation map[string]any) ([]any, error) {
 	apply, ok := operation["apply"].([]any)
 	if !ok {
 		return nil, ErrNotOpMissingApply
 	}
 	if len(apply) == 0 {
 		return nil, ErrNotOpRequiresOperand
+	}
+	return apply, nil
+}
+
+// parseNotOp decodes a top-level not operation with multiple predicates.
+func parseNotOp(path []string, pathStr string, operation map[string]any, options internal.JSONPatchOptions) (internal.Op, error) {
+	apply, err := extractApplyField(operation)
+	if err != nil {
+		return nil, err
 	}
 	predicateOps, err := decodeCompositePredicates(apply, jsonpointer.Parse(pathStr), options)
 	if err != nil {
@@ -433,12 +442,9 @@ func parseNotOp(path []string, pathStr string, operation map[string]any, options
 
 // parsePredicateNot decodes a not predicate with a single operand.
 func parsePredicateNot(pathStr string, operation map[string]any, options internal.JSONPatchOptions) (internal.Op, error) {
-	apply, ok := operation["apply"].([]any)
-	if !ok {
-		return nil, ErrNotOpMissingApply
-	}
-	if len(apply) == 0 {
-		return nil, ErrNotOpRequiresOperand
+	apply, err := extractApplyField(operation)
+	if err != nil {
+		return nil, err
 	}
 	applyMap, ok := apply[0].(map[string]any)
 	if !ok {
@@ -452,7 +458,7 @@ func parsePredicateNot(pathStr string, operation map[string]any, options interna
 	mergedPath := mergePaths(jsonpointer.Parse(pathStr), jsonpointer.Parse(subPath))
 	applyMap["path"] = jsonpointer.Format(mergedPath...)
 
-	operand, err := OperationToPredicateOp(applyMap, options)
+	operand, err := mapToPredicateOp(applyMap, options)
 	if err != nil {
 		return nil, err
 	}
@@ -479,7 +485,7 @@ func decodeCompositePredicates(apply []any, basePath jsonpointer.Path, options i
 		mergedPath := mergePaths(basePath, jsonpointer.Parse(subPath))
 		subOpMap["path"] = jsonpointer.Format(mergedPath...)
 
-		predicateOp, err := OperationToPredicateOp(subOpMap, options)
+		predicateOp, err := mapToPredicateOp(subOpMap, options)
 		if err != nil {
 			return nil, err
 		}
@@ -511,31 +517,51 @@ func mergePaths(basePath, subPath jsonpointer.Path) jsonpointer.Path {
 	return result
 }
 
-// toMap converts an internal.Operation struct to a map for decoding.
-func toMap(o internal.Operation) map[string]any {
+// operationToMap converts an internal.Operation struct to a map for decoding.
+// When nested is true, uses conditional inclusion for pos/str/len fields
+// and omits top-level-only fields (Apply, Props, DeleteNull, OldValue).
+func operationToMap(o internal.Operation, nested bool) map[string]any {
 	m := make(map[string]any, 8)
 
 	m["op"] = o.Op
 	m["path"] = o.Path
 
-	// Value field - include for operations that require it (even nil is valid).
-	if o.Value != nil || o.Op == "add" || o.Op == "replace" || o.Op == "test" {
+	if nested {
+		if o.Value != nil {
+			m["value"] = o.Value
+		}
+	} else if o.Value != nil || o.Op == "add" || o.Op == "replace" || o.Op == "test" {
 		m["value"] = o.Value
 	}
 	if o.From != "" {
 		m["from"] = o.From
 	}
 
-	// Numeric fields without omitempty: 0 is a valid value.
 	m["inc"] = o.Inc
-	m["pos"] = float64(o.Pos)
-	m["str"] = o.Str
-	m["len"] = float64(o.Len)
+	if nested {
+		if o.Pos != 0 {
+			m["pos"] = float64(o.Pos)
+		}
+		if o.Str != "" {
+			m["str"] = o.Str
+		}
+		if o.Len != 0 {
+			m["len"] = float64(o.Len)
+		}
+	} else {
+		m["pos"] = float64(o.Pos)
+		m["str"] = o.Str
+		m["len"] = float64(o.Len)
+	}
 
 	if o.Not {
-		m["not"] = o.Not
+		m["not"] = true
 	}
-	if o.Type != nil {
+	if nested {
+		if o.Type != "" {
+			m["type"] = o.Type
+		}
+	} else if o.Type != nil {
 		if o.Op == "test_type" {
 			m["type"] = o.Type
 		} else if typeStr, ok := o.Type.(string); ok && typeStr != "" {
@@ -543,60 +569,26 @@ func toMap(o internal.Operation) map[string]any {
 		}
 	}
 	if o.IgnoreCase {
-		m["ignore_case"] = o.IgnoreCase
+		m["ignore_case"] = true
 	}
-	if len(o.Apply) > 0 {
-		nestedOps := make([]any, len(o.Apply))
-		for j, nested := range o.Apply {
-			nestedOps[j] = nestedToMap(nested)
+
+	if !nested {
+		if len(o.Apply) > 0 {
+			nestedOps := make([]any, len(o.Apply))
+			for j, sub := range o.Apply {
+				nestedOps[j] = operationToMap(sub, true)
+			}
+			m["apply"] = nestedOps
 		}
-		m["apply"] = nestedOps
-	}
-	if len(o.Props) > 0 {
-		m["props"] = o.Props
-	}
-	if o.DeleteNull {
-		m["deleteNull"] = o.DeleteNull
-	}
-	if o.OldValue != nil {
-		m["oldValue"] = o.OldValue
-	}
-
-	return m
-}
-
-// nestedToMap converts a nested Operation to a map.
-// Nested operations use conditional inclusion for pos/str/len fields.
-func nestedToMap(o internal.Operation) map[string]any {
-	m := make(map[string]any, 8)
-
-	m["op"] = o.Op
-	m["path"] = o.Path
-
-	if o.Value != nil {
-		m["value"] = o.Value
-	}
-	if o.From != "" {
-		m["from"] = o.From
-	}
-	m["inc"] = o.Inc
-	if o.Pos != 0 {
-		m["pos"] = float64(o.Pos)
-	}
-	if o.Str != "" {
-		m["str"] = o.Str
-	}
-	if o.Len != 0 {
-		m["len"] = float64(o.Len)
-	}
-	if o.Not {
-		m["not"] = o.Not
-	}
-	if o.Type != "" {
-		m["type"] = o.Type
-	}
-	if o.IgnoreCase {
-		m["ignore_case"] = o.IgnoreCase
+		if len(o.Props) > 0 {
+			m["props"] = o.Props
+		}
+		if o.DeleteNull {
+			m["deleteNull"] = true
+		}
+		if o.OldValue != nil {
+			m["oldValue"] = o.OldValue
+		}
 	}
 
 	return m
