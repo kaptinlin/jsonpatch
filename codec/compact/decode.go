@@ -367,7 +367,7 @@ func parsePredicateOp(opType internal.OpType, path []string, compactOp Op) (inte
 		}
 		pos, _ := float64At(compactOp, 3)
 		not := boolAt(compactOp, 4)
-		return op.NewTestStringFull(path, str, pos, not), nil
+		return op.NewTestString(path, str, pos, not, false), nil
 
 	case internal.OpTestStringLenType:
 		if len(compactOp) < 3 {

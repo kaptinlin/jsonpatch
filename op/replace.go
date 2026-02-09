@@ -15,9 +15,8 @@ type ReplaceOperation struct {
 // NewReplace creates a new replace operation.
 func NewReplace(path []string, value any) *ReplaceOperation {
 	return &ReplaceOperation{
-		BaseOp:   NewBaseOp(path),
-		Value:    value,
-		OldValue: nil,
+		BaseOp: NewBaseOp(path),
+		Value:  value,
 	}
 }
 

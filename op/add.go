@@ -12,7 +12,7 @@ type AddOperation struct {
 	Value any `json:"value"` // Value to add
 }
 
-// NewAdd creates a new AddOperation operation.
+// NewAdd creates a new add operation.
 func NewAdd(path []string, value any) *AddOperation {
 	return &AddOperation{
 		BaseOp: NewBaseOp(path),
@@ -28,11 +28,6 @@ func (o *AddOperation) Op() internal.OpType {
 // Code returns the operation code.
 func (o *AddOperation) Code() int {
 	return internal.OpAddCode
-}
-
-// Path returns the operation path.
-func (o *AddOperation) Path() []string {
-	return o.path
 }
 
 // Apply applies the add operation.

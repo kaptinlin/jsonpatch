@@ -16,9 +16,8 @@ type TestOperation struct {
 // NewTest creates a new test operation.
 func NewTest(path []string, value any) *TestOperation {
 	return &TestOperation{
-		BaseOp:  NewBaseOp(path),
-		Value:   value,
-		NotFlag: false,
+		BaseOp: NewBaseOp(path),
+		Value:  value,
 	}
 }
 

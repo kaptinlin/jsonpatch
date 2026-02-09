@@ -396,10 +396,7 @@ func parseTestString(path []string, operation map[string]any) (internal.Op, erro
 	notFlag, _ := operation["not"].(bool)
 	ignoreCase, _ := operation["ignore_case"].(bool)
 
-	if pos != 0 || notFlag || ignoreCase {
-		return op.NewTestStringWithIgnoreCase(path, str, pos, notFlag, ignoreCase), nil
-	}
-	return op.NewTestString(path, str), nil
+	return op.NewTestString(path, str, pos, notFlag, ignoreCase), nil
 }
 
 // parseTestStringLen decodes a test_string_len operation.

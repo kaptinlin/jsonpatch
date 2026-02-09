@@ -55,15 +55,10 @@ func (o *LessOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // ToJSON serializes the operation to JSON format.
 func (o *LessOperation) ToJSON() (internal.Operation, error) {
-	var value any = o.Value
-	if o.Value == float64(int(o.Value)) {
-		value = int(o.Value)
-	}
-
 	return internal.Operation{
 		Op:    string(internal.OpLessType),
 		Path:  formatPath(o.Path()),
-		Value: value,
+		Value: floatToJSONValue(o.Value),
 	}, nil
 }
 

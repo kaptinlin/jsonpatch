@@ -113,7 +113,7 @@ func TestTestString_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			testStringOp := NewTestStringWithPos(tt.path, tt.expectedValue, tt.pos)
+			testStringOp := NewTestString(tt.path, tt.expectedValue, tt.pos, false, false)
 			result, err := testStringOp.Apply(tt.doc)
 
 			if tt.expectError {

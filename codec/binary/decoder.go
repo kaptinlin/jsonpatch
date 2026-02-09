@@ -237,7 +237,7 @@ func decodeTestString(reader *msgp.Reader, path []string) (internal.Op, error) {
 	if err != nil {
 		return nil, err
 	}
-	return op.NewTestStringWithPos(path, str, pos), nil
+	return op.NewTestString(path, str, pos, false, false), nil
 }
 
 // decodeTestStringLen decodes a test_string_len operation.

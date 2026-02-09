@@ -17,9 +17,8 @@ type EndsOperation struct {
 // NewEnds creates a new ends operation.
 func NewEnds(path []string, suffix string) *EndsOperation {
 	return &EndsOperation{
-		BaseOp:     NewBaseOp(path),
-		Value:      suffix,
-		IgnoreCase: false,
+		BaseOp: NewBaseOp(path),
+		Value:  suffix,
 	}
 }
 

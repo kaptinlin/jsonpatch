@@ -59,16 +59,10 @@ func (o *MoreOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // ToJSON converts the operation to JSON representation.
 func (o *MoreOperation) ToJSON() (internal.Operation, error) {
-	// Convert float64 to int if it's a whole number
-	var value any = o.Value
-	if o.Value == float64(int(o.Value)) {
-		value = int(o.Value)
-	}
-
 	return internal.Operation{
 		Op:    string(internal.OpMoreType),
 		Path:  formatPath(o.Path()),
-		Value: value,
+		Value: floatToJSONValue(o.Value),
 	}, nil
 }
 

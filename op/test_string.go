@@ -17,43 +17,12 @@ type TestStringOperation struct {
 }
 
 // NewTestString creates a new test string operation.
-func NewTestString(path []string, expectedValue string) *TestStringOperation {
-	return &TestStringOperation{
-		BaseOp:  NewBaseOp(path),
-		Str:     expectedValue,
-		Pos:     0,     // Default position
-		NotFlag: false, // Default not flag
-	}
-}
-
-// NewTestStringWithPos creates a new test string operation with position.
-func NewTestStringWithPos(path []string, expectedValue string, pos float64) *TestStringOperation {
-	return &TestStringOperation{
-		BaseOp:  NewBaseOp(path),
-		Str:     expectedValue,
-		Pos:     int(pos),
-		NotFlag: false, // Default not flag
-	}
-}
-
-// NewTestStringWithPosAndNot creates a new test string operation with position and not flag.
-func NewTestStringWithPosAndNot(path []string, expectedValue string, pos float64, notFlag bool) *TestStringOperation {
+func NewTestString(path []string, str string, pos float64, not bool, ignoreCase bool) *TestStringOperation {
 	return &TestStringOperation{
 		BaseOp:     NewBaseOp(path),
-		Str:        expectedValue,
+		Str:        str,
 		Pos:        int(pos),
-		NotFlag:    notFlag,
-		IgnoreCase: false,
-	}
-}
-
-// NewTestStringWithIgnoreCase creates a new test string operation with ignore case flag.
-func NewTestStringWithIgnoreCase(path []string, expectedValue string, pos float64, notFlag bool, ignoreCase bool) *TestStringOperation {
-	return &TestStringOperation{
-		BaseOp:     NewBaseOp(path),
-		Str:        expectedValue,
-		Pos:        int(pos),
-		NotFlag:    notFlag,
+		NotFlag:    not,
 		IgnoreCase: ignoreCase,
 	}
 }
@@ -187,13 +156,3 @@ func (o *TestStringOperation) Validate() error {
 	return nil
 }
 
-// NewTestStringFull creates a new test string operation with all parameters.
-func NewTestStringFull(path []string, str string, pos float64, not bool) *TestStringOperation {
-	return &TestStringOperation{
-		BaseOp:     NewBaseOp(path),
-		Str:        str,
-		Pos:        int(pos),
-		NotFlag:    not,
-		IgnoreCase: false,
-	}
-}

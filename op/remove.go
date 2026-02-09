@@ -14,9 +14,7 @@ type RemoveOperation struct {
 // NewRemove creates a new remove operation.
 func NewRemove(path []string) *RemoveOperation {
 	return &RemoveOperation{
-		BaseOp:      NewBaseOp(path),
-		OldValue:    nil,
-		HasOldValue: false,
+		BaseOp: NewBaseOp(path),
 	}
 }
 
@@ -37,11 +35,6 @@ func (o *RemoveOperation) Op() internal.OpType {
 // Code returns the operation code.
 func (o *RemoveOperation) Code() int {
 	return internal.OpRemoveCode
-}
-
-// Path returns the operation path.
-func (o *RemoveOperation) Path() []string {
-	return o.path
 }
 
 // Apply applies the remove operation to the document.
@@ -80,50 +73,38 @@ func (o *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
-	oldValue := getValueFromParent(parent, key)
 
-	// Check if the path actually exists
-	if oldValue == nil {
-		switch p := parent.(type) {
-		case map[string]any:
-			if k, ok := key.(string); ok {
-				if _, exists := p[k]; !exists {
-					return internal.OpResult[any]{}, ErrPathNotFound
-				}
-			}
-		case []any:
-			if k, ok := key.(int); ok {
-				if k < 0 || k >= len(p) {
-					return internal.OpResult[any]{}, ErrPathNotFound
-				}
-			}
-		}
-	}
 	switch p := parent.(type) {
 	case map[string]any:
-		if k, ok := key.(string); ok {
-			delete(p, k)
-		} else {
+		k, ok := key.(string)
+		if !ok {
 			return internal.OpResult[any]{}, ErrInvalidKeyTypeMap
 		}
+		oldValue, exists := p[k]
+		if !exists {
+			return internal.OpResult[any]{}, ErrPathNotFound
+		}
+		delete(p, k)
+		return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 	case []any:
-		if k, ok := key.(int); ok {
-			if k < 0 || k >= len(p) {
-				return internal.OpResult[any]{}, ErrIndexOutOfRange
-			}
-			newSlice := make([]any, len(p)-1)
-			copy(newSlice, p[:k])
-			copy(newSlice[k:], p[k+1:])
-			if err := setValueAtPath(doc, o.path[:len(o.path)-1], newSlice); err != nil {
-				return internal.OpResult[any]{}, err
-			}
-		} else {
+		k, ok := key.(int)
+		if !ok {
 			return internal.OpResult[any]{}, ErrInvalidKeyTypeSlice
 		}
+		if k < 0 || k >= len(p) {
+			return internal.OpResult[any]{}, ErrIndexOutOfRange
+		}
+		oldValue := p[k]
+		newSlice := make([]any, len(p)-1)
+		copy(newSlice, p[:k])
+		copy(newSlice[k:], p[k+1:])
+		if err := setValueAtPath(doc, o.path[:len(o.path)-1], newSlice); err != nil {
+			return internal.OpResult[any]{}, err
+		}
+		return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 	default:
 		return internal.OpResult[any]{}, ErrUnsupportedParentType
 	}
-	return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 }
 
 // ToJSON serializes the operation to JSON format.

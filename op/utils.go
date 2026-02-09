@@ -528,3 +528,12 @@ func getAndValidateString(doc any, path []string) (any, string, error) {
 	}
 	return val, str, nil
 }
+
+// floatToJSONValue converts a float64 to int if it's a whole number,
+// for cleaner JSON serialization (e.g., 5.0 -> 5).
+func floatToJSONValue(f float64) any {
+	if f == float64(int(f)) {
+		return int(f)
+	}
+	return f
+}

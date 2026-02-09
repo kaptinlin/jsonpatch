@@ -17,9 +17,8 @@ type StartsOperation struct {
 // NewStarts creates a new starts operation.
 func NewStarts(path []string, prefix string) *StartsOperation {
 	return &StartsOperation{
-		BaseOp:     NewBaseOp(path),
-		Value:      prefix,
-		IgnoreCase: false,
+		BaseOp: NewBaseOp(path),
+		Value:  prefix,
 	}
 }
 

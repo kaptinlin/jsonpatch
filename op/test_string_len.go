@@ -16,9 +16,8 @@ type TestStringLenOperation struct {
 // NewTestStringLen creates a new test string length operation.
 func NewTestStringLen(path []string, expectedLength float64) *TestStringLenOperation {
 	return &TestStringLenOperation{
-		BaseOp:  NewBaseOp(path),
-		Length:  expectedLength,
-		NotFlag: false,
+		BaseOp: NewBaseOp(path),
+		Length: expectedLength,
 	}
 }
 
