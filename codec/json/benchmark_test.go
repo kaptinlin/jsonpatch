@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/go-json-experiment/json"
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/require"
 )
 
 // Simple test data for benchmarking - using struct-based Operations
@@ -33,10 +33,8 @@ var testPatch = `[
 
 func BenchmarkDecode(b *testing.B) {
 	options := PatchOptions{}
-
 	b.ResetTimer()
 	b.ReportAllocs()
-
 	for b.Loop() {
 		_, err := DecodeOperations(testOperations, options)
 		if err != nil {
@@ -48,11 +46,11 @@ func BenchmarkDecode(b *testing.B) {
 func BenchmarkEncode(b *testing.B) {
 	options := PatchOptions{}
 	ops, err := DecodeOperations(testOperations, options)
-	require.NoError(b, err)
-
+	if err != nil {
+		b.Fatalf("setup DecodeOperations: %v", err)
+	}
 	b.ResetTimer()
 	b.ReportAllocs()
-
 	for b.Loop() {
 		_, err := Encode(ops)
 		if err != nil {
@@ -64,10 +62,8 @@ func BenchmarkEncode(b *testing.B) {
 func BenchmarkDecodeJSON(b *testing.B) {
 	data := []byte(testPatch)
 	options := PatchOptions{}
-
 	b.ResetTimer()
 	b.ReportAllocs()
-
 	for b.Loop() {
 		_, err := DecodeJSON(data, options)
 		if err != nil {
@@ -79,11 +75,11 @@ func BenchmarkDecodeJSON(b *testing.B) {
 func BenchmarkEncodeJSON(b *testing.B) {
 	options := PatchOptions{}
 	ops, err := DecodeOperations(testOperations, options)
-	require.NoError(b, err)
-
+	if err != nil {
+		b.Fatalf("setup DecodeOperations: %v", err)
+	}
 	b.ResetTimer()
 	b.ReportAllocs()
-
 	for b.Loop() {
 		_, err := EncodeJSON(ops)
 		if err != nil {
@@ -95,16 +91,13 @@ func BenchmarkEncodeJSON(b *testing.B) {
 func BenchmarkRoundTrip(b *testing.B) {
 	options := PatchOptions{}
 	data := []byte(testPatch)
-
 	b.ResetTimer()
 	b.ReportAllocs()
-
 	for b.Loop() {
 		ops, err := DecodeJSON(data, options)
 		if err != nil {
 			b.Fatal(err)
 		}
-
 		_, err = EncodeJSON(ops)
 		if err != nil {
 			b.Fatal(err)
@@ -118,18 +111,32 @@ func TestBasicDecodeEncode(t *testing.T) {
 
 	// Test decode using struct-based operations
 	ops, err := DecodeOperations(testOperations, options)
-	require.NoError(t, err)
-	require.Len(t, ops, 4)
+	if err != nil {
+		t.Fatalf("DecodeOperations: %v", err)
+	}
+	if len(ops) != 4 {
+		t.Fatalf("DecodeOperations returned %d ops, want 4", len(ops))
+	}
 
 	// Test encode
 	encoded, err := Encode(ops)
-	require.NoError(t, err)
-	require.Len(t, encoded, 4)
+	if err != nil {
+		t.Fatalf("Encode: %v", err)
+	}
+	if len(encoded) != 4 {
+		t.Fatalf("Encode returned %d ops, want 4", len(encoded))
+	}
 
 	// Verify roundtrip matches original structure
-	require.Equal(t, "add", encoded[0].Op)
-	require.Equal(t, "/name", encoded[0].Path)
-	require.Equal(t, "John", encoded[0].Value)
+	if got, want := encoded[0].Op, "add"; got != want {
+		t.Errorf("encoded[0].Op = %v, want %v", got, want)
+	}
+	if got, want := encoded[0].Path, "/name"; got != want {
+		t.Errorf("encoded[0].Path = %v, want %v", got, want)
+	}
+	if diff := cmp.Diff(any("John"), encoded[0].Value); diff != "" {
+		t.Errorf("encoded[0].Value mismatch (-want +got):\n%s", diff)
+	}
 }
 
 func TestJSONDecodeEncode(t *testing.T) {
@@ -137,18 +144,27 @@ func TestJSONDecodeEncode(t *testing.T) {
 
 	// Test JSON decode
 	ops, err := DecodeJSON([]byte(testPatch), options)
-	require.NoError(t, err)
-	require.Len(t, ops, 4)
+	if err != nil {
+		t.Fatalf("DecodeJSON: %v", err)
+	}
+	if len(ops) != 4 {
+		t.Fatalf("DecodeJSON returned %d ops, want 4", len(ops))
+	}
 
 	// Test JSON encode
 	data, err := EncodeJSON(ops)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("EncodeJSON: %v", err)
+	}
 
 	// Verify it's valid JSON and roundtrip works
 	var decoded []map[string]any
-	err = json.Unmarshal(data, &decoded)
-	require.NoError(t, err)
-	require.Len(t, decoded, 4)
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("json.Unmarshal: %v", err)
+	}
+	if len(decoded) != 4 {
+		t.Fatalf("json.Unmarshal returned %d ops, want 4", len(decoded))
+	}
 }
 
 // Test all operation types work with API
@@ -185,13 +201,21 @@ func TestAllOperationTypes(t *testing.T) {
 
 	// Test all operations can be decoded
 	ops, err := DecodeOperations(allOps, options)
-	require.NoError(t, err)
-	require.Len(t, ops, len(allOps))
+	if err != nil {
+		t.Fatalf("DecodeOperations: %v", err)
+	}
+	if len(ops) != len(allOps) {
+		t.Fatalf("DecodeOperations returned %d ops, want %d", len(ops), len(allOps))
+	}
 
 	// Test all operations can be encoded back
 	encoded, err := Encode(ops)
-	require.NoError(t, err)
-	require.Len(t, encoded, len(allOps))
+	if err != nil {
+		t.Fatalf("Encode: %v", err)
+	}
+	if len(encoded) != len(allOps) {
+		t.Fatalf("Encode returned %d ops, want %d", len(encoded), len(allOps))
+	}
 }
 
 // Benchmark comparing struct-based vs map-based operations
@@ -224,18 +248,13 @@ func BenchmarkDecodeStructVsMap(b *testing.B) {
 // Benchmark the complete roundtrip with struct-based operations
 func BenchmarkStructRoundTrip(b *testing.B) {
 	options := PatchOptions{}
-
 	b.ResetTimer()
 	b.ReportAllocs()
-
 	for b.Loop() {
-		// Decode struct-based operations
 		ops, err := DecodeOperations(testOperations, options)
 		if err != nil {
 			b.Fatal(err)
 		}
-
-		// Encode back to struct format
 		_, err = Encode(ops)
 		if err != nil {
 			b.Fatal(err)

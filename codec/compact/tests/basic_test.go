@@ -6,8 +6,6 @@ import (
 	"github.com/kaptinlin/jsonpatch/codec/compact"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/op"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestBasicOperationsNumericCodes(t *testing.T) {
@@ -53,55 +51,81 @@ func TestBasicOperationsNumericCodes(t *testing.T) {
 			// Test encoding
 			encoder := compact.NewEncoder()
 			encoded, err := encoder.Encode(tt.op)
-			require.NoError(t, err, "encoding should not error")
+			if err != nil {
+				t.Fatalf("encoding should not error: %v", err)
+			}
 
 			// Check encoded result
-			assert.Equal(t, len(tt.expected), len(encoded), "encoded length should match expected")
+			if got, want := len(encoded), len(tt.expected); got != want {
+				t.Errorf("encoded length = %d, want %d", got, want)
+			}
 
 			// Check opcode
-			assert.Equal(t, tt.expected[0], encoded[0], "opcode should match")
+			if got, want := encoded[0], tt.expected[0]; got != want {
+				t.Errorf("opcode = %v, want %v", got, want)
+			}
 
 			// Check path
-			assert.Equal(t, tt.expected[1], encoded[1], "path should match")
+			if got, want := encoded[1], tt.expected[1]; got != want {
+				t.Errorf("path = %v, want %v", got, want)
+			}
 
 			// Test round-trip decoding
 			decoder := compact.NewDecoder()
 			decoded, err := decoder.Decode(encoded)
-			require.NoError(t, err, "decoding should not error")
+			if err != nil {
+				t.Fatalf("decoding should not error: %v", err)
+			}
 
 			// Check that decoded operation has the same type and path
-			assert.Equal(t, tt.op.Op(), decoded.Op(), "operation type should match")
+			if got, want := decoded.Op(), tt.op.Op(); got != want {
+				t.Errorf("operation type = %v, want %v", got, want)
+			}
 
 			// Check path equality
 			originalPath := tt.op.Path()
 			decodedPath := decoded.Path()
-			assert.Equal(t, len(originalPath), len(decodedPath), "path length should match")
+			if got, want := len(decodedPath), len(originalPath); got != want {
+				t.Errorf("path length = %d, want %d", got, want)
+			}
 			for i, segment := range originalPath {
-				assert.Equal(t, segment, decodedPath[i], "path segment %d should match", i)
+				if got := decodedPath[i]; got != segment {
+					t.Errorf("path segment %d = %v, want %v", i, got, segment)
+				}
 			}
 		})
 	}
 }
 
 func TestStringOpcodes(t *testing.T) {
-	op := op.NewAdd([]string{"foo"}, "bar")
+	addOp := op.NewAdd([]string{"foo"}, "bar")
 
 	// Test with string opcodes
 	encoder := compact.NewEncoder(compact.WithStringOpcode(true))
-	encoded, err := encoder.Encode(op)
-	require.NoError(t, err, "encoding with string opcodes should not error")
+	encoded, err := encoder.Encode(addOp)
+	if err != nil {
+		t.Fatalf("encoding with string opcodes should not error: %v", err)
+	}
 
 	// Check that opcode is a string
 	opcode, ok := encoded[0].(string)
-	assert.True(t, ok, "opcode should be a string")
-	assert.Equal(t, "add", opcode, "opcode should be 'add'")
+	if !ok {
+		t.Fatal("opcode should be a string")
+	}
+	if opcode != "add" {
+		t.Errorf("opcode = %v, want %v", opcode, "add")
+	}
 
 	// Test decoding
 	decoder := compact.NewDecoder()
 	decoded, err := decoder.Decode(encoded)
-	require.NoError(t, err, "decoding string opcode operation should not error")
+	if err != nil {
+		t.Fatalf("decoding string opcode operation should not error: %v", err)
+	}
 
-	assert.Equal(t, internal.OpAddType, decoded.Op(), "decoded operation type should match")
+	if got, want := decoded.Op(), internal.OpAddType; got != want {
+		t.Errorf("decoded operation type = %v, want %v", got, want)
+	}
 }
 
 func TestSliceOperations(t *testing.T) {
@@ -113,18 +137,28 @@ func TestSliceOperations(t *testing.T) {
 
 	// Test encoding slice
 	encoded, err := compact.Encode(ops)
-	require.NoError(t, err, "encoding operations slice should not error")
+	if err != nil {
+		t.Fatalf("encoding operations slice should not error: %v", err)
+	}
 
-	assert.Equal(t, len(ops), len(encoded), "encoded slice length should match")
+	if got, want := len(encoded), len(ops); got != want {
+		t.Errorf("encoded slice length = %d, want %d", got, want)
+	}
 
 	// Test decoding slice
 	decoded, err := compact.Decode(encoded)
-	require.NoError(t, err, "decoding operations slice should not error")
+	if err != nil {
+		t.Fatalf("decoding operations slice should not error: %v", err)
+	}
 
-	assert.Equal(t, len(ops), len(decoded), "decoded slice length should match")
+	if got, want := len(decoded), len(ops); got != want {
+		t.Errorf("decoded slice length = %d, want %d", got, want)
+	}
 
 	for i, decodedOp := range decoded {
-		assert.Equal(t, ops[i].Op(), decodedOp.Op(), "operation %d type should match", i)
+		if got, want := decodedOp.Op(), ops[i].Op(); got != want {
+			t.Errorf("operation %d type = %v, want %v", i, got, want)
+		}
 	}
 }
 
@@ -136,15 +170,23 @@ func TestJSONMarshaling(t *testing.T) {
 
 	// Test encoding to JSON
 	jsonData, err := compact.EncodeJSON(ops)
-	require.NoError(t, err, "encoding to JSON should not error")
+	if err != nil {
+		t.Fatalf("encoding to JSON should not error: %v", err)
+	}
 
 	// Test decoding from JSON
 	decoded, err := compact.DecodeJSON(jsonData)
-	require.NoError(t, err, "decoding from JSON should not error")
+	if err != nil {
+		t.Fatalf("decoding from JSON should not error: %v", err)
+	}
 
-	assert.Equal(t, len(ops), len(decoded), "JSON round-trip length should match")
+	if got, want := len(decoded), len(ops); got != want {
+		t.Errorf("JSON round-trip length = %d, want %d", got, want)
+	}
 
 	for i, decodedOp := range decoded {
-		assert.Equal(t, ops[i].Op(), decodedOp.Op(), "JSON round-trip operation %d type should match", i)
+		if got, want := decodedOp.Op(), ops[i].Op(); got != want {
+			t.Errorf("JSON round-trip operation %d type = %v, want %v", i, got, want)
+		}
 	}
 }

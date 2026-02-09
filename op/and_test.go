@@ -1,11 +1,11 @@
 package op
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAnd_Basic(t *testing.T) {
@@ -20,8 +20,12 @@ func TestAnd_Basic(t *testing.T) {
 	andOp := NewAnd([]string{}, []any{test1, test2})
 
 	ok, err := andOp.Test(doc)
-	require.NoError(t, err, "AND test should not fail")
-	assert.True(t, ok, "AND should pass when all operations pass")
+	if err != nil {
+		t.Fatalf("And.Test() failed: %v", err)
+	}
+	if !ok {
+		t.Error("And.Test() = false, want true when all operations pass")
+	}
 }
 
 func TestAnd_OneFails(t *testing.T) {
@@ -36,8 +40,12 @@ func TestAnd_OneFails(t *testing.T) {
 	andOp := NewAnd([]string{}, []any{test1, test2})
 
 	ok, err := andOp.Test(doc)
-	require.NoError(t, err, "AND test should not fail")
-	assert.False(t, ok, "AND should fail when any operation fails")
+	if err != nil {
+		t.Fatalf("And.Test() failed: %v", err)
+	}
+	if ok {
+		t.Error("And.Test() = true, want false when any operation fails")
+	}
 }
 
 func TestAnd_Empty(t *testing.T) {
@@ -45,8 +53,12 @@ func TestAnd_Empty(t *testing.T) {
 
 	doc := map[string]any{"foo": "bar"}
 	ok, err := andOp.Test(doc)
-	require.NoError(t, err, "AND test should not fail")
-	assert.True(t, ok, "Empty AND should return true (vacuous truth)")
+	if err != nil {
+		t.Fatalf("And.Test() failed: %v", err)
+	}
+	if !ok {
+		t.Error("And.Test() = false, want true for empty AND (vacuous truth)")
+	}
 }
 
 func TestAnd_Apply(t *testing.T) {
@@ -61,8 +73,12 @@ func TestAnd_Apply(t *testing.T) {
 	andOp := NewAnd([]string{}, []any{test1, test2})
 
 	result, err := andOp.Apply(doc)
-	require.NoError(t, err, "AND apply should succeed when all operations pass")
-	assert.Equal(t, doc, result.Doc, "Apply should return the original document")
+	if err != nil {
+		t.Fatalf("And.Apply() failed: %v", err)
+	}
+	if diff := cmp.Diff(doc, result.Doc); diff != "" {
+		t.Errorf("And.Apply() result.Doc mismatch (-want +got):\n%s", diff)
+	}
 }
 
 func TestAnd_Apply_Fails(t *testing.T) {
@@ -77,8 +93,12 @@ func TestAnd_Apply_Fails(t *testing.T) {
 	andOp := NewAnd([]string{}, []any{test1, test2})
 
 	_, err := andOp.Apply(doc)
-	assert.Error(t, err, "AND apply should fail when any operation fails")
-	assert.ErrorIs(t, err, ErrAndTestFailed)
+	if err == nil {
+		t.Error("And.Apply() succeeded, want error when any operation fails")
+	}
+	if !errors.Is(err, ErrAndTestFailed) {
+		t.Errorf("And.Apply() error = %v, want %v", err, ErrAndTestFailed)
+	}
 }
 
 func TestAnd_InterfaceMethods(t *testing.T) {
@@ -87,14 +107,26 @@ func TestAnd_InterfaceMethods(t *testing.T) {
 
 	andOp := NewAnd([]string{"test"}, []any{test1, test2})
 
-	assert.Equal(t, internal.OpAndType, andOp.Op(), "Op() should return correct operation type")
-	assert.Equal(t, internal.OpAndCode, andOp.Code(), "Code() should return correct operation code")
-	assert.Equal(t, []string{"test"}, andOp.Path(), "Path() should return correct path")
+	if got := andOp.Op(); got != internal.OpAndType {
+		t.Errorf("Op() = %v, want %v", got, internal.OpAndType)
+	}
+	if got := andOp.Code(); got != internal.OpAndCode {
+		t.Errorf("Code() = %v, want %v", got, internal.OpAndCode)
+	}
+	if diff := cmp.Diff([]string{"test"}, andOp.Path()); diff != "" {
+		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
+	}
 
 	ops := andOp.Ops()
-	assert.Len(t, ops, 2, "Ops() should return correct number of operations")
-	assert.Equal(t, test1, ops[0], "First operation should match")
-	assert.Equal(t, test2, ops[1], "Second operation should match")
+	if len(ops) != 2 {
+		t.Fatalf("len(Ops()) = %d, want 2", len(ops))
+	}
+	if ops[0] != test1 {
+		t.Error("Ops()[0] does not match first operation")
+	}
+	if ops[1] != test2 {
+		t.Error("Ops()[1] does not match second operation")
+	}
 }
 
 func TestAnd_ToJSON(t *testing.T) {
@@ -104,11 +136,18 @@ func TestAnd_ToJSON(t *testing.T) {
 	andOp := NewAnd([]string{"test"}, []any{test1, test2})
 
 	got, err := andOp.ToJSON()
-	require.NoError(t, err, "ToJSON should not fail for valid operation")
-
-	assert.Equal(t, "and", got.Op, "JSON should contain correct op type")
-	assert.Equal(t, "/test", got.Path, "JSON should contain correct formatted path")
-	assert.Len(t, got.Apply, 2, "JSON should contain correct number of operations")
+	if err != nil {
+		t.Fatalf("ToJSON() failed: %v", err)
+	}
+	if got.Op != "and" {
+		t.Errorf("ToJSON().Op = %q, want %q", got.Op, "and")
+	}
+	if got.Path != "/test" {
+		t.Errorf("ToJSON().Path = %q, want %q", got.Path, "/test")
+	}
+	if len(got.Apply) != 2 {
+		t.Errorf("len(ToJSON().Apply) = %d, want 2", len(got.Apply))
+	}
 }
 
 func TestAnd_ToCompact(t *testing.T) {
@@ -118,11 +157,18 @@ func TestAnd_ToCompact(t *testing.T) {
 	andOp := NewAnd([]string{"test"}, []any{test1, test2})
 
 	compact, err := andOp.ToCompact()
-	require.NoError(t, err, "ToCompact should not fail for valid operation")
-
-	assert.Equal(t, internal.OpAndCode, compact[0], "First element should be operation code")
-	assert.Equal(t, []string{"test"}, compact[1], "Second element should be path")
-	assert.IsType(t, []any{}, compact[2], "Third element should be ops array")
+	if err != nil {
+		t.Fatalf("ToCompact() failed: %v", err)
+	}
+	if compact[0] != internal.OpAndCode {
+		t.Errorf("ToCompact()[0] = %v, want %v", compact[0], internal.OpAndCode)
+	}
+	if diff := cmp.Diff([]string{"test"}, compact[1]); diff != "" {
+		t.Errorf("ToCompact()[1] mismatch (-want +got):\n%s", diff)
+	}
+	if _, ok := compact[2].([]any); !ok {
+		t.Errorf("ToCompact()[2] type = %T, want []any", compact[2])
+	}
 }
 
 func TestAnd_Validate(t *testing.T) {
@@ -130,11 +176,13 @@ func TestAnd_Validate(t *testing.T) {
 	test2 := NewTest([]string{"baz"}, 123)
 
 	andOp := NewAnd([]string{"test"}, []any{test1, test2})
-	err := andOp.Validate()
-	assert.NoError(t, err, "Valid operation should not fail validation")
+	if err := andOp.Validate(); err != nil {
+		t.Errorf("Validate() = %v, want nil for valid operation", err)
+	}
 
 	// Vacuous truth allows empty operations
 	andOp = NewAnd([]string{"test"}, []any{})
-	err = andOp.Validate()
-	assert.NoError(t, err, "Empty operations are valid (vacuous truth)")
+	if err := andOp.Validate(); err != nil {
+		t.Errorf("Validate() = %v, want nil for empty operations (vacuous truth)", err)
+	}
 }

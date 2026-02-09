@@ -3,9 +3,9 @@ package ops_test
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestIncOp(t *testing.T) {
@@ -29,7 +29,9 @@ func TestIncOp(t *testing.T) {
 			"val3": float64(2),
 			"val4": float64(1),
 		}
-		assert.Equal(t, expected, result)
+		if diff := cmp.Diff(expected, result); diff != "" {
+			t.Errorf("result mismatch (-want +got):\n%s", diff)
+		}
 	})
 
 	t.Run("can use arbitrary increment value and can decrement", func(t *testing.T) {
@@ -44,7 +46,9 @@ func TestIncOp(t *testing.T) {
 		expected := map[string]interface{}{
 			"foo": float64(8),
 		}
-		assert.Equal(t, expected, result)
+		if diff := cmp.Diff(expected, result); diff != "" {
+			t.Errorf("result mismatch (-want +got):\n%s", diff)
+		}
 	})
 
 	t.Run("increment can be a floating point number", func(t *testing.T) {
@@ -58,7 +62,9 @@ func TestIncOp(t *testing.T) {
 		expected := map[string]interface{}{
 			"foo": 1.1,
 		}
-		assert.Equal(t, expected, result)
+		if diff := cmp.Diff(expected, result); diff != "" {
+			t.Errorf("result mismatch (-want +got):\n%s", diff)
+		}
 	})
 
 	t.Run("root", func(t *testing.T) {
@@ -69,7 +75,9 @@ func TestIncOp(t *testing.T) {
 				Inc:  5,
 			}
 			result := testutils.ApplyInternalOps(t, 0, []internal.Operation{operation})
-			assert.Equal(t, float64(5), result)
+			if result != float64(5) {
+				t.Errorf("result = %v, want %v", result, float64(5))
+			}
 		})
 
 		t.Run("increments from -0 to 5", func(t *testing.T) {
@@ -79,7 +87,9 @@ func TestIncOp(t *testing.T) {
 				Inc:  5,
 			}
 			result := testutils.ApplyInternalOps(t, -0, []internal.Operation{operation})
-			assert.Equal(t, float64(5), result)
+			if result != float64(5) {
+				t.Errorf("result = %v, want %v", result, float64(5))
+			}
 		})
 	})
 
@@ -92,7 +102,9 @@ func TestIncOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOps(t, map[string]interface{}{"lala": 0}, []internal.Operation{operation})
 			expected := map[string]interface{}{"lala": float64(5)}
-			assert.Equal(t, expected, result)
+			if diff := cmp.Diff(expected, result); diff != "" {
+				t.Errorf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 
 		t.Run("increments from -0 to 5", func(t *testing.T) {
@@ -103,7 +115,9 @@ func TestIncOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOps(t, map[string]interface{}{"lala": -0}, []internal.Operation{operation})
 			expected := map[string]interface{}{"lala": float64(5)}
-			assert.Equal(t, expected, result)
+			if diff := cmp.Diff(expected, result); diff != "" {
+				t.Errorf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 
 		t.Run("casts string to number", func(t *testing.T) {
@@ -114,7 +128,9 @@ func TestIncOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOps(t, map[string]interface{}{"lala": "4"}, []internal.Operation{operation})
 			expected := map[string]interface{}{"lala": float64(9)}
-			assert.Equal(t, expected, result)
+			if diff := cmp.Diff(expected, result); diff != "" {
+				t.Errorf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 
 		t.Run("can increment twice", func(t *testing.T) {
@@ -132,7 +148,9 @@ func TestIncOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOps(t, map[string]interface{}{"lala": 0}, operations)
 			expected := map[string]interface{}{"lala": float64(3)}
-			assert.Equal(t, expected, result)
+			if diff := cmp.Diff(expected, result); diff != "" {
+				t.Errorf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 
 		t.Run("creates value when path doesn't exist", func(t *testing.T) {
@@ -143,7 +161,9 @@ func TestIncOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOps(t, map[string]interface{}{}, []internal.Operation{operation})
 			expected := map[string]interface{}{"newfield": float64(5)}
-			assert.Equal(t, expected, result)
+			if diff := cmp.Diff(expected, result); diff != "" {
+				t.Errorf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 	})
 
@@ -156,7 +176,9 @@ func TestIncOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOps(t, []interface{}{0}, []internal.Operation{operation})
 			expected := []interface{}{float64(-3)}
-			assert.Equal(t, expected, result)
+			if diff := cmp.Diff(expected, result); diff != "" {
+				t.Errorf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 
 		t.Run("increments from -0 to -3", func(t *testing.T) {
@@ -167,7 +189,9 @@ func TestIncOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOps(t, []interface{}{-0}, []internal.Operation{operation})
 			expected := []interface{}{float64(-3)}
-			assert.Equal(t, expected, result)
+			if diff := cmp.Diff(expected, result); diff != "" {
+				t.Errorf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 	})
 }

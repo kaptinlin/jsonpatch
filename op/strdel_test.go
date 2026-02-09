@@ -3,9 +3,8 @@ package op
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestStrDel_Apply(t *testing.T) {
@@ -148,18 +147,28 @@ func TestStrDel_Apply(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			strDelOp := NewStrDel(tt.path, tt.pos, tt.length)
 			docCopy, err := DeepClone(tt.doc)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("DeepClone() error: %v", err)
+			}
 
 			result, err := strDelOp.Apply(docCopy)
 
 			if tt.wantErr {
-				assert.Error(t, err)
+				if err == nil {
+					t.Error("Apply() expected error, got nil")
+				}
 				return
 			}
 
-			require.NoError(t, err)
-			assert.Equal(t, tt.expected, result.Doc)
-			assert.Equal(t, tt.oldValue, result.Old)
+			if err != nil {
+				t.Fatalf("Apply() unexpected error: %v", err)
+			}
+			if diff := cmp.Diff(tt.expected, result.Doc); diff != "" {
+				t.Errorf("Apply() Doc mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.oldValue, result.Old); diff != "" {
+				t.Errorf("Apply() Old mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
@@ -169,9 +178,19 @@ func TestStrDel_Constructor(t *testing.T) {
 	pos := 2.0
 	length := 3.0
 	strDelOp := NewStrDel(path, pos, length)
-	assert.Equal(t, path, strDelOp.Path())
-	assert.Equal(t, pos, strDelOp.Pos)
-	assert.Equal(t, length, strDelOp.Len)
-	assert.Equal(t, internal.OpStrDelType, strDelOp.Op())
-	assert.Equal(t, internal.OpStrDelCode, strDelOp.Code())
+	if diff := cmp.Diff(path, strDelOp.Path()); diff != "" {
+		t.Errorf("NewStrDel() Path mismatch (-want +got):\n%s", diff)
+	}
+	if strDelOp.Pos != pos {
+		t.Errorf("NewStrDel() Pos = %v, want %v", strDelOp.Pos, pos)
+	}
+	if strDelOp.Len != length {
+		t.Errorf("NewStrDel() Len = %v, want %v", strDelOp.Len, length)
+	}
+	if got := strDelOp.Op(); got != internal.OpStrDelType {
+		t.Errorf("Op() = %v, want %v", got, internal.OpStrDelType)
+	}
+	if got := strDelOp.Code(); got != internal.OpStrDelCode {
+		t.Errorf("Code() = %v, want %v", got, internal.OpStrDelCode)
+	}
 }

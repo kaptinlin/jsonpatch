@@ -3,9 +3,8 @@ package op
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestExtend_Apply(t *testing.T) {
@@ -112,18 +111,28 @@ func TestExtend_Apply(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			extendOp := NewExtend(tt.path, tt.props.(map[string]any), tt.deleteNull)
 			docCopy, err := DeepClone(tt.doc)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("DeepClone() error: %v", err)
+			}
 
 			result, err := extendOp.Apply(docCopy)
 
 			if tt.wantErr {
-				assert.Error(t, err)
+				if err == nil {
+					t.Error("Apply() expected error, got nil")
+				}
 				return
 			}
 
-			require.NoError(t, err)
-			assert.Equal(t, tt.expected, result.Doc)
-			assert.Equal(t, tt.oldValue, result.Old)
+			if err != nil {
+				t.Fatalf("Apply() unexpected error: %v", err)
+			}
+			if diff := cmp.Diff(tt.expected, result.Doc); diff != "" {
+				t.Errorf("Apply() Doc mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.oldValue, result.Old); diff != "" {
+				t.Errorf("Apply() Old mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
@@ -133,9 +142,19 @@ func TestExtend_Constructor(t *testing.T) {
 	props := map[string]any{"age": 30, "city": "NYC"}
 	deleteNull := true
 	extendOp := NewExtend(path, props, deleteNull)
-	assert.Equal(t, path, extendOp.Path())
-	assert.Equal(t, props, extendOp.Properties)
-	assert.Equal(t, deleteNull, extendOp.DeleteNull)
-	assert.Equal(t, internal.OpExtendType, extendOp.Op())
-	assert.Equal(t, internal.OpExtendCode, extendOp.Code())
+	if diff := cmp.Diff(path, extendOp.Path()); diff != "" {
+		t.Errorf("NewExtend() Path mismatch (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(props, extendOp.Properties); diff != "" {
+		t.Errorf("NewExtend() Properties mismatch (-want +got):\n%s", diff)
+	}
+	if extendOp.DeleteNull != deleteNull {
+		t.Errorf("NewExtend() DeleteNull = %v, want %v", extendOp.DeleteNull, deleteNull)
+	}
+	if got := extendOp.Op(); got != internal.OpExtendType {
+		t.Errorf("Op() = %v, want %v", got, internal.OpExtendType)
+	}
+	if got := extendOp.Code(); got != internal.OpExtendCode {
+		t.Errorf("Code() = %v, want %v", got, internal.OpExtendCode)
+	}
 }

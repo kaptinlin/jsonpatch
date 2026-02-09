@@ -3,9 +3,8 @@ package op
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSplit_Apply(t *testing.T) {
@@ -141,18 +140,28 @@ func TestSplit_Apply(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			splitOp := NewSplit(tt.path, tt.pos, tt.props)
 			docCopy, err := DeepClone(tt.doc)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("DeepClone() error: %v", err)
+			}
 
 			result, err := splitOp.Apply(docCopy)
 
 			if tt.wantErr {
-				assert.Error(t, err)
+				if err == nil {
+					t.Error("Apply() expected error, got nil")
+				}
 				return
 			}
 
-			require.NoError(t, err)
-			assert.Equal(t, tt.expected, result.Doc)
-			assert.Equal(t, tt.oldValue, result.Old)
+			if err != nil {
+				t.Fatalf("Apply() unexpected error: %v", err)
+			}
+			if diff := cmp.Diff(tt.expected, result.Doc); diff != "" {
+				t.Errorf("Apply() Doc mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.oldValue, result.Old); diff != "" {
+				t.Errorf("Apply() Old mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
@@ -162,11 +171,21 @@ func TestSplit_Constructor(t *testing.T) {
 	pos := 2.0
 	props := map[string]any{"type": "split"}
 	splitOp := NewSplit(path, pos, props)
-	assert.Equal(t, path, splitOp.Path())
-	assert.Equal(t, pos, splitOp.Pos)
-	assert.Equal(t, props, splitOp.Props)
-	assert.Equal(t, internal.OpSplitType, splitOp.Op())
-	assert.Equal(t, internal.OpSplitCode, splitOp.Code())
+	if diff := cmp.Diff(path, splitOp.Path()); diff != "" {
+		t.Errorf("NewSplit() Path mismatch (-want +got):\n%s", diff)
+	}
+	if splitOp.Pos != pos {
+		t.Errorf("NewSplit() Pos = %v, want %v", splitOp.Pos, pos)
+	}
+	if diff := cmp.Diff(props, splitOp.Props); diff != "" {
+		t.Errorf("NewSplit() Props mismatch (-want +got):\n%s", diff)
+	}
+	if got := splitOp.Op(); got != internal.OpSplitType {
+		t.Errorf("Op() = %v, want %v", got, internal.OpSplitType)
+	}
+	if got := splitOp.Code(); got != internal.OpSplitCode {
+		t.Errorf("Code() = %v, want %v", got, internal.OpSplitCode)
+	}
 }
 
 func TestSplit_TypeScript_Compatibility(t *testing.T) {
@@ -219,8 +238,12 @@ func TestSplit_TypeScript_Compatibility(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			splitOp := NewSplit(tt.path, tt.pos, tt.props)
 			result, err := splitOp.Apply(tt.doc)
-			require.NoError(t, err, "Split operation should work")
-			assert.Equal(t, tt.expected, result.Doc, "Result should match TypeScript behavior")
+			if err != nil {
+				t.Fatalf("Apply() unexpected error: %v", err)
+			}
+			if diff := cmp.Diff(tt.expected, result.Doc); diff != "" {
+				t.Errorf("Apply() Doc mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }

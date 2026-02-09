@@ -5,7 +5,6 @@ import (
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMoreOp(t *testing.T) {
@@ -18,7 +17,9 @@ func TestMoreOp(t *testing.T) {
 			}
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch(123, patch, internal.WithMutate(true))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			}
 		})
 
 		t.Run("fails when value is not higher than requested", func(t *testing.T) {
@@ -29,7 +30,9 @@ func TestMoreOp(t *testing.T) {
 			}
 			patch1 := []internal.Operation{op1}
 			_, err1 := jsonpatch.ApplyPatch(123, patch1, internal.WithMutate(true))
-			require.Error(t, err1)
+			if err1 == nil {
+				t.Fatal("ApplyPatch() error = nil, want error for equal value")
+			}
 
 			op2 := internal.Operation{
 				Op:    "more",
@@ -38,7 +41,9 @@ func TestMoreOp(t *testing.T) {
 			}
 			patch2 := []internal.Operation{op2}
 			_, err2 := jsonpatch.ApplyPatch(123, patch2, internal.WithMutate(true))
-			require.Error(t, err2)
+			if err2 == nil {
+				t.Fatal("ApplyPatch() error = nil, want error for higher value")
+			}
 		})
 	})
 }

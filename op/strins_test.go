@@ -3,9 +3,8 @@ package op
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestStrIns_Apply(t *testing.T) {
@@ -130,18 +129,28 @@ func TestStrIns_Apply(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			strInsOp := NewStrIns(tt.path, tt.pos, tt.str)
 			docCopy, err := DeepClone(tt.doc)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("DeepClone() error: %v", err)
+			}
 
 			result, err := strInsOp.Apply(docCopy)
 
 			if tt.wantErr {
-				assert.Error(t, err)
+				if err == nil {
+					t.Error("Apply() expected error, got nil")
+				}
 				return
 			}
 
-			require.NoError(t, err)
-			assert.Equal(t, tt.expected, result.Doc)
-			assert.Equal(t, tt.oldValue, result.Old)
+			if err != nil {
+				t.Fatalf("Apply() unexpected error: %v", err)
+			}
+			if diff := cmp.Diff(tt.expected, result.Doc); diff != "" {
+				t.Errorf("Apply() Doc mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.oldValue, result.Old); diff != "" {
+				t.Errorf("Apply() Old mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
@@ -151,9 +160,19 @@ func TestStrIns_Constructor(t *testing.T) {
 	pos := 2.0
 	str := "abc"
 	strInsOp := NewStrIns(path, pos, str)
-	assert.Equal(t, path, strInsOp.Path())
-	assert.Equal(t, pos, strInsOp.Pos)
-	assert.Equal(t, str, strInsOp.Str)
-	assert.Equal(t, internal.OpStrInsType, strInsOp.Op())
-	assert.Equal(t, internal.OpStrInsCode, strInsOp.Code())
+	if diff := cmp.Diff(path, strInsOp.Path()); diff != "" {
+		t.Errorf("NewStrIns() Path mismatch (-want +got):\n%s", diff)
+	}
+	if strInsOp.Pos != pos {
+		t.Errorf("NewStrIns() Pos = %v, want %v", strInsOp.Pos, pos)
+	}
+	if strInsOp.Str != str {
+		t.Errorf("NewStrIns() Str = %q, want %q", strInsOp.Str, str)
+	}
+	if got := strInsOp.Op(); got != internal.OpStrInsType {
+		t.Errorf("Op() = %v, want %v", got, internal.OpStrInsType)
+	}
+	if got := strInsOp.Code(); got != internal.OpStrInsCode {
+		t.Errorf("Code() = %v, want %v", got, internal.OpStrInsCode)
+	}
 }

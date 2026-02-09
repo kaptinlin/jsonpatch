@@ -3,9 +3,8 @@ package op
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMerge_Apply(t *testing.T) {
@@ -148,18 +147,28 @@ func TestMerge_Apply(t *testing.T) {
 			}
 			mergeOp := NewMerge(tt.path, tt.pos, props)
 			docCopy, err := DeepClone(tt.doc)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("DeepClone() error: %v", err)
+			}
 
 			result, err := mergeOp.Apply(docCopy)
 
 			if tt.wantErr {
-				assert.Error(t, err)
+				if err == nil {
+					t.Error("Apply() expected error, got nil")
+				}
 				return
 			}
 
-			require.NoError(t, err)
-			assert.Equal(t, tt.expected, result.Doc)
-			assert.Equal(t, tt.oldValue, result.Old)
+			if err != nil {
+				t.Fatalf("Apply() unexpected error: %v", err)
+			}
+			if diff := cmp.Diff(tt.expected, result.Doc); diff != "" {
+				t.Errorf("Apply() Doc mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.oldValue, result.Old); diff != "" {
+				t.Errorf("Apply() Old mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
@@ -169,9 +178,19 @@ func TestMerge_Constructor(t *testing.T) {
 	pos := 1.0
 	props := map[string]any{"type": "merge"}
 	mergeOp := NewMerge(path, pos, props)
-	assert.Equal(t, path, mergeOp.Path())
-	assert.Equal(t, pos, mergeOp.Pos)
-	assert.Equal(t, props, mergeOp.Props)
-	assert.Equal(t, internal.OpMergeType, mergeOp.Op())
-	assert.Equal(t, internal.OpMergeCode, mergeOp.Code())
+	if diff := cmp.Diff(path, mergeOp.Path()); diff != "" {
+		t.Errorf("NewMerge() Path mismatch (-want +got):\n%s", diff)
+	}
+	if mergeOp.Pos != pos {
+		t.Errorf("NewMerge() Pos = %v, want %v", mergeOp.Pos, pos)
+	}
+	if diff := cmp.Diff(props, mergeOp.Props); diff != "" {
+		t.Errorf("NewMerge() Props mismatch (-want +got):\n%s", diff)
+	}
+	if got := mergeOp.Op(); got != internal.OpMergeType {
+		t.Errorf("Op() = %v, want %v", got, internal.OpMergeType)
+	}
+	if got := mergeOp.Code(); got != internal.OpMergeCode {
+		t.Errorf("Code() = %v, want %v", got, internal.OpMergeCode)
+	}
 }

@@ -1,11 +1,11 @@
 package op
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestNot_Basic(t *testing.T) {
@@ -17,8 +17,12 @@ func TestNot_Basic(t *testing.T) {
 	notOp := NewNot(testOp)
 
 	ok, err := notOp.Test(doc)
-	require.NoError(t, err, "NOT test should not fail")
-	assert.False(t, ok, "NOT should return false when wrapped operation passes")
+	if err != nil {
+		t.Fatalf("Not.Test() failed: %v", err)
+	}
+	if ok {
+		t.Error("Not.Test() = true, want false when wrapped operation passes")
+	}
 }
 
 func TestNot_Negation(t *testing.T) {
@@ -30,8 +34,12 @@ func TestNot_Negation(t *testing.T) {
 	notOp := NewNot(testOp)
 
 	ok, err := notOp.Test(doc)
-	require.NoError(t, err, "NOT test should not fail")
-	assert.True(t, ok, "NOT should return true when wrapped operation fails")
+	if err != nil {
+		t.Fatalf("Not.Test() failed: %v", err)
+	}
+	if !ok {
+		t.Error("Not.Test() = false, want true when wrapped operation fails")
+	}
 }
 
 func TestNot_Apply(t *testing.T) {
@@ -43,8 +51,12 @@ func TestNot_Apply(t *testing.T) {
 	notOp := NewNot(testOp)
 
 	result, err := notOp.Apply(doc)
-	require.NoError(t, err, "NOT apply should succeed when wrapped operation fails")
-	assert.Equal(t, doc, result.Doc, "Apply should return the original document")
+	if err != nil {
+		t.Fatalf("Not.Apply() failed: %v", err)
+	}
+	if diff := cmp.Diff(doc, result.Doc); diff != "" {
+		t.Errorf("Not.Apply() result.Doc mismatch (-want +got):\n%s", diff)
+	}
 }
 
 func TestNot_Apply_Fails(t *testing.T) {
@@ -56,21 +68,35 @@ func TestNot_Apply_Fails(t *testing.T) {
 	notOp := NewNot(testOp)
 
 	_, err := notOp.Apply(doc)
-	assert.Error(t, err, "NOT apply should fail when wrapped operation passes")
-	assert.ErrorIs(t, err, ErrNotTestFailed)
+	if err == nil {
+		t.Error("Not.Apply() succeeded, want error when wrapped operation passes")
+	}
+	if !errors.Is(err, ErrNotTestFailed) {
+		t.Errorf("Not.Apply() error = %v, want %v", err, ErrNotTestFailed)
+	}
 }
 
 func TestNot_InterfaceMethods(t *testing.T) {
 	testOp := NewTest([]string{"foo"}, "bar")
 	notOp := NewNot(testOp)
 
-	assert.Equal(t, internal.OpNotType, notOp.Op(), "Op() should return correct operation type")
-	assert.Equal(t, internal.OpNotCode, notOp.Code(), "Code() should return correct operation code")
-	assert.Equal(t, []string{"foo"}, notOp.Path(), "Path() should return correct path")
+	if got := notOp.Op(); got != internal.OpNotType {
+		t.Errorf("Op() = %v, want %v", got, internal.OpNotType)
+	}
+	if got := notOp.Code(); got != internal.OpNotCode {
+		t.Errorf("Code() = %v, want %v", got, internal.OpNotCode)
+	}
+	if diff := cmp.Diff([]string{"foo"}, notOp.Path()); diff != "" {
+		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
+	}
 
 	ops := notOp.Ops()
-	assert.Len(t, ops, 1, "Ops() should return correct number of operations")
-	assert.Equal(t, testOp, ops[0], "Operation should match")
+	if len(ops) != 1 {
+		t.Fatalf("len(Ops()) = %d, want 1", len(ops))
+	}
+	if ops[0] != testOp {
+		t.Error("Ops()[0] does not match wrapped operation")
+	}
 }
 
 func TestNot_ToJSON(t *testing.T) {
@@ -78,11 +104,18 @@ func TestNot_ToJSON(t *testing.T) {
 	notOp := NewNot(test1)
 
 	got, err := notOp.ToJSON()
-	require.NoError(t, err, "ToJSON should not fail for valid operation")
-
-	assert.Equal(t, "not", got.Op, "JSON should contain correct op type")
-	assert.Equal(t, "/foo", got.Path, "JSON should contain correct formatted path")
-	assert.NotNil(t, got.Apply, "JSON should contain apply field")
+	if err != nil {
+		t.Fatalf("ToJSON() failed: %v", err)
+	}
+	if got.Op != "not" {
+		t.Errorf("ToJSON().Op = %q, want %q", got.Op, "not")
+	}
+	if got.Path != "/foo" {
+		t.Errorf("ToJSON().Path = %q, want %q", got.Path, "/foo")
+	}
+	if got.Apply == nil {
+		t.Error("ToJSON().Apply = nil, want non-nil")
+	}
 }
 
 func TestNot_ToCompact(t *testing.T) {
@@ -90,23 +123,37 @@ func TestNot_ToCompact(t *testing.T) {
 	notOp := NewNot(test1)
 
 	compact, err := notOp.ToCompact()
-	require.NoError(t, err, "ToCompact should not fail for valid operation")
-
-	require.Len(t, compact, 3, "Compact format should have 3 elements")
-	assert.Equal(t, internal.OpNotCode, compact[0], "First element should be operation code")
-	assert.Equal(t, []string{"foo"}, compact[1], "Second element should be path")
-	assert.NotNil(t, compact[2], "Third element should be the compact operand")
+	if err != nil {
+		t.Fatalf("ToCompact() failed: %v", err)
+	}
+	if len(compact) != 3 {
+		t.Fatalf("len(ToCompact()) = %d, want 3", len(compact))
+	}
+	if compact[0] != internal.OpNotCode {
+		t.Errorf("ToCompact()[0] = %v, want %v", compact[0], internal.OpNotCode)
+	}
+	if diff := cmp.Diff([]string{"foo"}, compact[1]); diff != "" {
+		t.Errorf("ToCompact()[1] mismatch (-want +got):\n%s", diff)
+	}
+	if compact[2] == nil {
+		t.Error("ToCompact()[2] = nil, want non-nil compact operand")
+	}
 }
 
 func TestNot_Validate(t *testing.T) {
 	testOp := NewTest([]string{"foo"}, "bar")
 
 	notOp := NewNot(testOp)
-	err := notOp.Validate()
-	assert.NoError(t, err, "Valid operation should not fail validation")
+	if err := notOp.Validate(); err != nil {
+		t.Errorf("Validate() = %v, want nil for valid operation", err)
+	}
 
 	notOp = &NotOperation{BaseOp: NewBaseOp([]string{"test"}), Operations: []any{}}
-	err = notOp.Validate()
-	assert.Error(t, err, "Invalid operation should fail validation")
-	assert.ErrorIs(t, err, ErrNotNoOperands)
+	err := notOp.Validate()
+	if err == nil {
+		t.Error("Validate() = nil, want error for empty operations")
+	}
+	if !errors.Is(err, ErrNotNoOperands) {
+		t.Errorf("Validate() error = %v, want %v", err, ErrNotNoOperands)
+	}
 }

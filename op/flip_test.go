@@ -3,9 +3,8 @@ package op
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestFlip_Apply(t *testing.T) {
@@ -142,18 +141,28 @@ func TestFlip_Apply(t *testing.T) {
 			flipOp := NewFlip(tt.path)
 
 			docCopy, err := DeepClone(tt.doc)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("DeepClone() error: %v", err)
+			}
 
 			result, err := flipOp.Apply(docCopy)
 
 			if tt.wantErr {
-				assert.Error(t, err)
+				if err == nil {
+					t.Error("Apply() expected error, got nil")
+				}
 				return
 			}
 
-			require.NoError(t, err)
-			assert.Equal(t, tt.expected, result.Doc)
-			assert.Equal(t, tt.oldValue, result.Old)
+			if err != nil {
+				t.Fatalf("Apply() unexpected error: %v", err)
+			}
+			if diff := cmp.Diff(tt.expected, result.Doc); diff != "" {
+				t.Errorf("Apply() Doc mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.oldValue, result.Old); diff != "" {
+				t.Errorf("Apply() Old mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
@@ -162,9 +171,15 @@ func TestFlip_Constructor(t *testing.T) {
 	path := []string{"user", "active"}
 	flipOp := NewFlip(path)
 
-	assert.Equal(t, path, flipOp.Path())
-	assert.Equal(t, internal.OpFlipType, flipOp.Op())
-	assert.Equal(t, internal.OpFlipCode, flipOp.Code())
+	if diff := cmp.Diff(path, flipOp.Path()); diff != "" {
+		t.Errorf("NewFlip() Path mismatch (-want +got):\n%s", diff)
+	}
+	if got := flipOp.Op(); got != internal.OpFlipType {
+		t.Errorf("Op() = %v, want %v", got, internal.OpFlipType)
+	}
+	if got := flipOp.Code(); got != internal.OpFlipCode {
+		t.Errorf("Code() = %v, want %v", got, internal.OpFlipCode)
+	}
 }
 
 func TestFlip_ComplexTypes(t *testing.T) {
@@ -189,10 +204,14 @@ func TestFlip_ComplexTypes(t *testing.T) {
 			doc := map[string]any{"value": tt.value}
 
 			result, err := flipOp.Apply(doc)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Apply() unexpected error: %v", err)
+			}
 
 			resultDoc := result.Doc.(map[string]any)
-			assert.Equal(t, tt.expected, resultDoc["value"])
+			if resultDoc["value"] != tt.expected {
+				t.Errorf("Apply() value = %v, want %v", resultDoc["value"], tt.expected)
+			}
 		})
 	}
 }

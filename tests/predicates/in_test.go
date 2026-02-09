@@ -3,9 +3,9 @@ package ops_test
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestInOp(t *testing.T) {
@@ -25,7 +25,9 @@ func TestInOp(t *testing.T) {
 				},
 			}
 			result := testutils.ApplyInternalOp(t, obj, op)
-			assert.Equal(t, obj, result)
+			if diff := cmp.Diff(obj, result); diff != "" {
+				t.Errorf("ApplyInternalOp() mismatch (-want +got):\n%s", diff)
+			}
 		})
 
 		t.Run("should test against root (on a json document of type object) - and return false", func(t *testing.T) {

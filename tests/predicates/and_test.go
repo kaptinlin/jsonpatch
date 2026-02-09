@@ -39,7 +39,7 @@ func TestAnd(t *testing.T) {
 					},
 				},
 			},
-			ShouldFail: true,
+			WantErr: true,
 			Comment:    "AND should fail when any predicate fails",
 		},
 	}

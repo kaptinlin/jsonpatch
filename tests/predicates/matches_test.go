@@ -1,12 +1,11 @@
 package ops_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch"
 	operrors "github.com/kaptinlin/jsonpatch/op"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMatchesOp(t *testing.T) {
@@ -19,8 +18,12 @@ func TestMatchesOp(t *testing.T) {
 			}
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch("123", patch, jsonpatch.WithMutate(true))
-			require.NoError(t, err)
-			assert.Equal(t, "123", result.Doc)
+			if err != nil {
+				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			}
+			if got := result.Doc; got != "123" {
+				t.Errorf("ApplyPatch() doc = %v, want %v", got, "123")
+			}
 		})
 
 		t.Run("fails when does not match the string", func(t *testing.T) {
@@ -31,8 +34,12 @@ func TestMatchesOp(t *testing.T) {
 			}
 			patch := []jsonpatch.Operation{op}
 			_, err := jsonpatch.ApplyPatch("asdf", patch, jsonpatch.WithMutate(true))
-			require.Error(t, err)
-			assert.ErrorIs(t, err, operrors.ErrStringMismatch)
+			if err == nil {
+				t.Fatal("ApplyPatch() error = nil, want error")
+			}
+			if !errors.Is(err, operrors.ErrStringMismatch) {
+				t.Errorf("ApplyPatch() error = %v, want %v", err, operrors.ErrStringMismatch)
+			}
 		})
 
 		t.Run("succeeds with case insensitive matching", func(t *testing.T) {
@@ -44,8 +51,12 @@ func TestMatchesOp(t *testing.T) {
 			}
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch("hello world", patch, jsonpatch.WithMutate(true))
-			require.NoError(t, err)
-			assert.Equal(t, "hello world", result.Doc)
+			if err != nil {
+				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			}
+			if got := result.Doc; got != "hello world" {
+				t.Errorf("ApplyPatch() doc = %v, want %v", got, "hello world")
+			}
 		})
 
 		t.Run("fails with case sensitive matching", func(t *testing.T) {
@@ -57,7 +68,9 @@ func TestMatchesOp(t *testing.T) {
 			}
 			patch := []jsonpatch.Operation{op}
 			_, err := jsonpatch.ApplyPatch("hello world", patch, jsonpatch.WithMutate(true))
-			require.Error(t, err)
+			if err == nil {
+				t.Fatal("ApplyPatch() error = nil, want error")
+			}
 		})
 	})
 
@@ -73,9 +86,12 @@ func TestMatchesOp(t *testing.T) {
 			}
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
-			require.NoError(t, err)
-			resultDoc := result.Doc
-			assert.Equal(t, "user@example.com", resultDoc["email"])
+			if err != nil {
+				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			}
+			if got := result.Doc["email"]; got != "user@example.com" {
+				t.Errorf("result.Doc[email] = %v, want %v", got, "user@example.com")
+			}
 		})
 
 		t.Run("fails with invalid email pattern", func(t *testing.T) {
@@ -89,7 +105,9 @@ func TestMatchesOp(t *testing.T) {
 			}
 			patch := []jsonpatch.Operation{op}
 			_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
-			require.Error(t, err)
+			if err == nil {
+				t.Fatal("ApplyPatch() error = nil, want error")
+			}
 		})
 
 		t.Run("matches phone number pattern", func(t *testing.T) {
@@ -103,9 +121,12 @@ func TestMatchesOp(t *testing.T) {
 			}
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
-			require.NoError(t, err)
-			resultDoc := result.Doc
-			assert.Equal(t, "123-456-7890", resultDoc["phone"])
+			if err != nil {
+				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			}
+			if got := result.Doc["phone"]; got != "123-456-7890" {
+				t.Errorf("result.Doc[phone] = %v, want %v", got, "123-456-7890")
+			}
 		})
 	})
 
@@ -121,10 +142,13 @@ func TestMatchesOp(t *testing.T) {
 			}
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
-			require.NoError(t, err)
-			resultDoc := result.Doc
-			items := resultDoc["items"].([]interface{})
-			assert.Equal(t, "banana", items[1])
+			if err != nil {
+				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			}
+			items := result.Doc["items"].([]interface{})
+			if got := items[1]; got != "banana" {
+				t.Errorf("items[1] = %v, want %v", got, "banana")
+			}
 		})
 	})
 
@@ -140,9 +164,12 @@ func TestMatchesOp(t *testing.T) {
 			}
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
-			require.NoError(t, err)
-			resultDoc := result.Doc
-			assert.Equal(t, "https://example.com", resultDoc["website"])
+			if err != nil {
+				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			}
+			if got := result.Doc["website"]; got != "https://example.com" {
+				t.Errorf("result.Doc[website] = %v, want %v", got, "https://example.com")
+			}
 		})
 
 		t.Run("matches UUID pattern", func(t *testing.T) {
@@ -156,9 +183,12 @@ func TestMatchesOp(t *testing.T) {
 			}
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
-			require.NoError(t, err)
-			resultDoc := result.Doc
-			assert.Equal(t, "123e4567-e89b-12d3-a456-426614174000", resultDoc["id"])
+			if err != nil {
+				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			}
+			if got := result.Doc["id"]; got != "123e4567-e89b-12d3-a456-426614174000" {
+				t.Errorf("result.Doc[id] = %v, want %v", got, "123e4567-e89b-12d3-a456-426614174000")
+			}
 		})
 	})
 
@@ -171,8 +201,12 @@ func TestMatchesOp(t *testing.T) {
 			}
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch("", patch, jsonpatch.WithMutate(true))
-			require.NoError(t, err)
-			assert.Equal(t, "", result.Doc)
+			if err != nil {
+				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			}
+			if got := result.Doc; got != "" {
+				t.Errorf("ApplyPatch() doc = %q, want %q", got, "")
+			}
 		})
 
 		t.Run("dot matches any character", func(t *testing.T) {
@@ -183,8 +217,12 @@ func TestMatchesOp(t *testing.T) {
 			}
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch("x", patch, jsonpatch.WithMutate(true))
-			require.NoError(t, err)
-			assert.Equal(t, "x", result.Doc)
+			if err != nil {
+				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			}
+			if got := result.Doc; got != "x" {
+				t.Errorf("ApplyPatch() doc = %v, want %v", got, "x")
+			}
 		})
 
 		t.Run("fails on non-string value", func(t *testing.T) {
@@ -198,8 +236,12 @@ func TestMatchesOp(t *testing.T) {
 			}
 			patch := []jsonpatch.Operation{op}
 			_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
-			require.Error(t, err)
-			assert.ErrorIs(t, err, operrors.ErrNotString)
+			if err == nil {
+				t.Fatal("ApplyPatch() error = nil, want error")
+			}
+			if !errors.Is(err, operrors.ErrNotString) {
+				t.Errorf("ApplyPatch() error = %v, want %v", err, operrors.ErrNotString)
+			}
 		})
 
 		t.Run("fails on missing path", func(t *testing.T) {
@@ -213,8 +255,12 @@ func TestMatchesOp(t *testing.T) {
 			}
 			patch := []jsonpatch.Operation{op}
 			_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
-			require.Error(t, err)
-			assert.ErrorIs(t, err, operrors.ErrPathNotFound)
+			if err == nil {
+				t.Fatal("ApplyPatch() error = nil, want error")
+			}
+			if !errors.Is(err, operrors.ErrPathNotFound) {
+				t.Errorf("ApplyPatch() error = %v, want %v", err, operrors.ErrPathNotFound)
+			}
 		})
 	})
 }

@@ -3,10 +3,9 @@ package ops_test
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMergeOp(t *testing.T) {
@@ -23,11 +22,15 @@ func TestMergeOp(t *testing.T) {
 			},
 		}
 		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("ApplyPatch() error: %v", err)
+		}
 		expected := []interface{}{
 			map[string]interface{}{"text": "foobar"},
 		}
-		assert.Equal(t, expected, result.Doc)
+		if diff := cmp.Diff(expected, result.Doc); diff != "" {
+			t.Errorf("result mismatch (-want +got):\n%s", diff)
+		}
 	})
 
 	t.Run("cannot target first array element when merging", func(t *testing.T) {
@@ -43,7 +46,9 @@ func TestMergeOp(t *testing.T) {
 			},
 		}
 		_, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
-		require.Error(t, err)
+		if err == nil {
+			t.Fatal("ApplyPatch() error = nil, want error")
+		}
 	})
 
 	t.Run("can merge slate element nodes", func(t *testing.T) {
@@ -62,14 +67,18 @@ func TestMergeOp(t *testing.T) {
 			},
 		}
 		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("ApplyPatch() error: %v", err)
+		}
 		expected := map[string]interface{}{
 			"foo": []interface{}{
 				map[string]interface{}{"children": []interface{}{map[string]interface{}{"text": "1"}, map[string]interface{}{"text": "2"}}},
 				map[string]interface{}{"children": []interface{}{map[string]interface{}{"text": "1"}, map[string]interface{}{"text": "2"}, map[string]interface{}{"text": "3"}, map[string]interface{}{"text": "4"}}},
 			},
 		}
-		assert.Equal(t, expected, result.Doc)
+		if diff := cmp.Diff(expected, result.Doc); diff != "" {
+			t.Errorf("result mismatch (-want +got):\n%s", diff)
+		}
 	})
 
 	t.Run("cannot merge root", func(t *testing.T) {
@@ -81,7 +90,9 @@ func TestMergeOp(t *testing.T) {
 			},
 		}
 		_, err := jsonpatch.ApplyPatch(123, operations, internal.WithMutate(true))
-		require.Error(t, err)
+		if err == nil {
+			t.Fatal("ApplyPatch() error = nil, want error")
+		}
 	})
 
 	t.Run("can merge strings", func(t *testing.T) {
@@ -94,9 +105,13 @@ func TestMergeOp(t *testing.T) {
 			},
 		}
 		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("ApplyPatch() error: %v", err)
+		}
 		expected := []interface{}{"hello world"}
-		assert.Equal(t, expected, result.Doc)
+		if diff := cmp.Diff(expected, result.Doc); diff != "" {
+			t.Errorf("result mismatch (-want +got):\n%s", diff)
+		}
 	})
 
 	t.Run("can merge numbers", func(t *testing.T) {
@@ -109,9 +124,13 @@ func TestMergeOp(t *testing.T) {
 			},
 		}
 		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("ApplyPatch() error: %v", err)
+		}
 		expected := []interface{}{float64(8)}
-		assert.Equal(t, expected, result.Doc)
+		if diff := cmp.Diff(expected, result.Doc); diff != "" {
+			t.Errorf("result mismatch (-want +got):\n%s", diff)
+		}
 	})
 
 	t.Run("returns array for non-mergeable types", func(t *testing.T) {
@@ -124,8 +143,12 @@ func TestMergeOp(t *testing.T) {
 			},
 		}
 		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("ApplyPatch() error: %v", err)
+		}
 		expected := []interface{}{[]interface{}{true, false}}
-		assert.Equal(t, expected, result.Doc)
+		if diff := cmp.Diff(expected, result.Doc); diff != "" {
+			t.Errorf("result mismatch (-want +got):\n%s", diff)
+		}
 	})
 }

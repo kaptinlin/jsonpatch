@@ -1,11 +1,11 @@
 package op
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMatches_Basic(t *testing.T) {
@@ -77,15 +77,25 @@ func TestMatches_Basic(t *testing.T) {
 			result, err := matchesOp.Apply(tt.doc)
 
 			if tt.expectError {
-				assert.Error(t, err)
-				if tt.expectedError != nil {
-					assert.ErrorIs(t, err, tt.expectedError)
+				if err == nil {
+					t.Error("Apply() succeeded, want error")
 				}
-				assert.Equal(t, internal.OpResult[any]{}, result)
+				if tt.expectedError != nil && !errors.Is(err, tt.expectedError) {
+					t.Errorf("Apply() error = %v, want %v", err, tt.expectedError)
+				}
+				if diff := cmp.Diff(internal.OpResult[any]{}, result); diff != "" {
+					t.Errorf("Apply() result mismatch (-want +got):\n%s", diff)
+				}
 			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, result)
-				assert.Equal(t, tt.doc, result.Doc)
+				if err != nil {
+					t.Errorf("Apply() failed: %v", err)
+				}
+				if result.Doc == nil {
+					t.Error("Apply() result.Doc = nil, want non-nil")
+				}
+				if diff := cmp.Diff(tt.doc, result.Doc); diff != "" {
+					t.Errorf("Apply() result.Doc mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
@@ -98,11 +108,21 @@ func TestMatches_Constructor(t *testing.T) {
 
 	matchesOp := NewMatches(path, pattern, ignoreCase, nil)
 
-	assert.Equal(t, path, matchesOp.Path())
-	assert.Equal(t, pattern, matchesOp.Pattern)
-	assert.Equal(t, ignoreCase, matchesOp.IgnoreCase)
-	assert.Equal(t, internal.OpMatchesType, matchesOp.Op())
-	assert.Equal(t, internal.OpMatchesCode, matchesOp.Code())
+	if diff := cmp.Diff(path, matchesOp.Path()); diff != "" {
+		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
+	}
+	if matchesOp.Pattern != pattern {
+		t.Errorf("Pattern = %q, want %q", matchesOp.Pattern, pattern)
+	}
+	if matchesOp.IgnoreCase != ignoreCase {
+		t.Errorf("IgnoreCase = %v, want %v", matchesOp.IgnoreCase, ignoreCase)
+	}
+	if got := matchesOp.Op(); got != internal.OpMatchesType {
+		t.Errorf("Op() = %v, want %v", got, internal.OpMatchesType)
+	}
+	if got := matchesOp.Code(); got != internal.OpMatchesCode {
+		t.Errorf("Code() = %v, want %v", got, internal.OpMatchesCode)
+	}
 }
 
 func TestMatches_InvalidPattern(t *testing.T) {
@@ -112,34 +132,58 @@ func TestMatches_InvalidPattern(t *testing.T) {
 	// Invalid patterns create a matcher that always returns false
 	// (aligned with json-joy's behavior)
 	matchesOp := NewMatches(path, invalidPattern, false, nil)
-	assert.NotNil(t, matchesOp)
+	if matchesOp == nil {
+		t.Fatal("NewMatches() = nil, want non-nil")
+	}
 
 	result, _ := matchesOp.Test(map[string]any{"email": "test@example.com"})
-	assert.False(t, result)
+	if result {
+		t.Error("Test() with invalid pattern = true, want false")
+	}
 }
 
 func TestMatches_ToJSON(t *testing.T) {
 	matchesOp := NewMatches([]string{"email"}, `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, true, nil)
 
 	got, err := matchesOp.ToJSON()
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("ToJSON() failed: %v", err)
+	}
 
-	assert.Equal(t, string(internal.OpMatchesType), got.Op)
-	assert.Equal(t, "/email", got.Path)
-	assert.Equal(t, `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, got.Value)
-	assert.Equal(t, true, got.IgnoreCase)
+	if got.Op != string(internal.OpMatchesType) {
+		t.Errorf("ToJSON().Op = %q, want %q", got.Op, string(internal.OpMatchesType))
+	}
+	if got.Path != "/email" {
+		t.Errorf("ToJSON().Path = %q, want %q", got.Path, "/email")
+	}
+	if got.Value != `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$` {
+		t.Errorf("ToJSON().Value = %v, want pattern string", got.Value)
+	}
+	if got.IgnoreCase != true {
+		t.Errorf("ToJSON().IgnoreCase = %v, want true", got.IgnoreCase)
+	}
 }
 
 func TestMatches_ToCompact(t *testing.T) {
 	matchesOp := NewMatches([]string{"name"}, "john", true, nil)
 	compact, err := matchesOp.ToCompact()
-	assert.NoError(t, err)
-	assert.Equal(t, []any{internal.OpMatchesCode, []string{"name"}, "john", true}, compact)
+	if err != nil {
+		t.Errorf("ToCompact() failed: %v", err)
+	}
+	want := []any{internal.OpMatchesCode, []string{"name"}, "john", true}
+	if diff := cmp.Diff(want, compact); diff != "" {
+		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
+	}
 }
 
 func TestMatches_ToCompact_WithoutIgnoreCase(t *testing.T) {
 	matchesOp := NewMatches([]string{"name"}, "john", false, nil)
 	compact, err := matchesOp.ToCompact()
-	assert.NoError(t, err)
-	assert.Equal(t, []any{internal.OpMatchesCode, []string{"name"}, "john", false}, compact)
+	if err != nil {
+		t.Errorf("ToCompact() failed: %v", err)
+	}
+	want := []any{internal.OpMatchesCode, []string{"name"}, "john", false}
+	if diff := cmp.Diff(want, compact); diff != "" {
+		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
+	}
 }

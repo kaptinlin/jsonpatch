@@ -1,11 +1,11 @@
 package op
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestOr_Basic(t *testing.T) {
@@ -20,8 +20,12 @@ func TestOr_Basic(t *testing.T) {
 	orOp := NewOr([]string{}, []any{test1, test2})
 
 	ok, err := orOp.Test(doc)
-	require.NoError(t, err, "OR test should not fail")
-	assert.True(t, ok, "OR should pass when any operation passes")
+	if err != nil {
+		t.Fatalf("Or.Test() failed: %v", err)
+	}
+	if !ok {
+		t.Error("Or.Test() = false, want true when any operation passes")
+	}
 }
 
 func TestOr_AllFail(t *testing.T) {
@@ -36,8 +40,12 @@ func TestOr_AllFail(t *testing.T) {
 	orOp := NewOr([]string{}, []any{test1, test2})
 
 	ok, err := orOp.Test(doc)
-	require.NoError(t, err, "OR test should not fail")
-	assert.False(t, ok, "OR should fail when all operations fail")
+	if err != nil {
+		t.Fatalf("Or.Test() failed: %v", err)
+	}
+	if ok {
+		t.Error("Or.Test() = true, want false when all operations fail")
+	}
 }
 
 func TestOr_Empty(t *testing.T) {
@@ -45,8 +53,12 @@ func TestOr_Empty(t *testing.T) {
 
 	doc := map[string]any{"foo": "bar"}
 	ok, err := orOp.Test(doc)
-	require.NoError(t, err, "OR test should not fail")
-	assert.False(t, ok, "Empty OR should return false")
+	if err != nil {
+		t.Fatalf("Or.Test() failed: %v", err)
+	}
+	if ok {
+		t.Error("Or.Test() = true, want false for empty OR")
+	}
 }
 
 func TestOr_Apply(t *testing.T) {
@@ -61,8 +73,12 @@ func TestOr_Apply(t *testing.T) {
 	orOp := NewOr([]string{}, []any{test1, test2})
 
 	result, err := orOp.Apply(doc)
-	require.NoError(t, err, "OR apply should succeed when any operation passes")
-	assert.True(t, deepEqual(result.Doc, doc), "Apply should return the original document")
+	if err != nil {
+		t.Fatalf("Or.Apply() failed: %v", err)
+	}
+	if !deepEqual(result.Doc, doc) {
+		t.Error("Or.Apply() did not return the original document")
+	}
 }
 
 func TestOr_Apply_Fails(t *testing.T) {
@@ -77,8 +93,12 @@ func TestOr_Apply_Fails(t *testing.T) {
 	orOp := NewOr([]string{}, []any{test1, test2})
 
 	_, err := orOp.Apply(doc)
-	assert.Error(t, err, "OR apply should fail when all operations fail")
-	assert.ErrorIs(t, err, ErrOrTestFailed)
+	if err == nil {
+		t.Error("Or.Apply() succeeded, want error when all operations fail")
+	}
+	if !errors.Is(err, ErrOrTestFailed) {
+		t.Errorf("Or.Apply() error = %v, want %v", err, ErrOrTestFailed)
+	}
 }
 
 func TestOr_InterfaceMethods(t *testing.T) {
@@ -87,14 +107,26 @@ func TestOr_InterfaceMethods(t *testing.T) {
 
 	orOp := NewOr([]string{"test"}, []any{test1, test2})
 
-	assert.Equal(t, internal.OpOrType, orOp.Op(), "Op() should return correct operation type")
-	assert.Equal(t, internal.OpOrCode, orOp.Code(), "Code() should return correct operation code")
-	assert.Equal(t, []string{"test"}, orOp.Path(), "Path() should return correct path")
+	if got := orOp.Op(); got != internal.OpOrType {
+		t.Errorf("Op() = %v, want %v", got, internal.OpOrType)
+	}
+	if got := orOp.Code(); got != internal.OpOrCode {
+		t.Errorf("Code() = %v, want %v", got, internal.OpOrCode)
+	}
+	if diff := cmp.Diff([]string{"test"}, orOp.Path()); diff != "" {
+		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
+	}
 
 	ops := orOp.Ops()
-	assert.Len(t, ops, 2, "Ops() should return correct number of operations")
-	assert.Equal(t, test1, ops[0], "First operation should match")
-	assert.Equal(t, test2, ops[1], "Second operation should match")
+	if len(ops) != 2 {
+		t.Fatalf("len(Ops()) = %d, want 2", len(ops))
+	}
+	if ops[0] != test1 {
+		t.Error("Ops()[0] does not match first operation")
+	}
+	if ops[1] != test2 {
+		t.Error("Ops()[1] does not match second operation")
+	}
 }
 
 func TestOr_ToJSON(t *testing.T) {
@@ -104,12 +136,21 @@ func TestOr_ToJSON(t *testing.T) {
 	orOp := NewOr([]string{"test"}, []any{test1, test2})
 
 	got, err := orOp.ToJSON()
-	require.NoError(t, err, "ToJSON should not fail for valid operation")
-
-	assert.Equal(t, "or", got.Op, "JSON should contain correct op type")
-	assert.Equal(t, "/test", got.Path, "JSON should contain correct formatted path")
-	require.NotNil(t, got.Apply, "JSON should contain apply array")
-	assert.Len(t, got.Apply, 2, "JSON should contain correct number of operations")
+	if err != nil {
+		t.Fatalf("ToJSON() failed: %v", err)
+	}
+	if got.Op != "or" {
+		t.Errorf("ToJSON().Op = %q, want %q", got.Op, "or")
+	}
+	if got.Path != "/test" {
+		t.Errorf("ToJSON().Path = %q, want %q", got.Path, "/test")
+	}
+	if got.Apply == nil {
+		t.Fatal("ToJSON().Apply = nil, want non-nil")
+	}
+	if len(got.Apply) != 2 {
+		t.Errorf("len(ToJSON().Apply) = %d, want 2", len(got.Apply))
+	}
 }
 
 func TestOr_ToCompact(t *testing.T) {
@@ -119,11 +160,18 @@ func TestOr_ToCompact(t *testing.T) {
 	orOp := NewOr([]string{"test"}, []any{test1, test2})
 
 	compact, err := orOp.ToCompact()
-	require.NoError(t, err, "ToCompact should not fail for valid operation")
-
-	assert.Equal(t, internal.OpOrCode, compact[0], "First element should be operation code")
-	assert.Equal(t, []string{"test"}, compact[1], "Second element should be path")
-	assert.IsType(t, []any{}, compact[2], "Third element should be ops array")
+	if err != nil {
+		t.Fatalf("ToCompact() failed: %v", err)
+	}
+	if compact[0] != internal.OpOrCode {
+		t.Errorf("ToCompact()[0] = %v, want %v", compact[0], internal.OpOrCode)
+	}
+	if diff := cmp.Diff([]string{"test"}, compact[1]); diff != "" {
+		t.Errorf("ToCompact()[1] mismatch (-want +got):\n%s", diff)
+	}
+	if _, ok := compact[2].([]any); !ok {
+		t.Errorf("ToCompact()[2] type = %T, want []any", compact[2])
+	}
 }
 
 func TestOr_Validate(t *testing.T) {
@@ -131,11 +179,13 @@ func TestOr_Validate(t *testing.T) {
 	test2 := NewTest([]string{"baz"}, 123)
 
 	orOp := NewOr([]string{"test"}, []any{test1, test2})
-	err := orOp.Validate()
-	assert.NoError(t, err, "Valid operation should not fail validation")
+	if err := orOp.Validate(); err != nil {
+		t.Errorf("Validate() = %v, want nil for valid operation", err)
+	}
 
 	// Empty OR is valid, just returns false
 	orOp = NewOr([]string{"test"}, []any{})
-	err = orOp.Validate()
-	assert.NoError(t, err, "Empty operations are valid (though they return false)")
+	if err := orOp.Validate(); err != nil {
+		t.Errorf("Validate() = %v, want nil for empty operations", err)
+	}
 }

@@ -4,8 +4,7 @@ import (
 	"testing"
 
 	"github.com/go-json-experiment/json"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/google/go-cmp/cmp"
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/tests/data"
@@ -48,9 +47,13 @@ func TestAutomated(t *testing.T) {
 				case test.Expected != nil:
 					t.Run(testName, func(t *testing.T) {
 						result, err := jsonpatch.ApplyPatch(test.Doc, test.Patch, options)
-						require.NoError(t, err, "ApplyPatch should not fail")
+						if err != nil {
+							t.Fatalf("ApplyPatch() unexpected error: %v", err)
+						}
 
-						assert.Equal(t, test.Expected, result.Doc, "ApplyPatch result mismatch")
+						if diff := cmp.Diff(test.Expected, result.Doc); diff != "" {
+							t.Errorf("ApplyPatch() mismatch (-want +got):\n%s", diff)
+						}
 					})
 				case test.Error != "":
 					t.Run(testName, func(t *testing.T) {
@@ -66,7 +69,9 @@ func TestAutomated(t *testing.T) {
 						// If validation passed, try applying patch
 						if !validationFailed {
 							_, err := jsonpatch.ApplyPatch(test.Doc, test.Patch, options)
-							assert.Error(t, err, "Patch should have failed")
+							if err == nil {
+								t.Error("ApplyPatch() expected error, got nil")
+							}
 						}
 					})
 				default:
@@ -199,7 +204,9 @@ func TestCannotAddKeyToEmptyDocument(t *testing.T) {
 	options := jsonpatch.WithMutate(true)
 	var doc interface{}
 	_, err := jsonpatch.ApplyPatch(doc, patch, options)
-	assert.Error(t, err, "Expected error when adding key to empty document")
+	if err == nil {
+		t.Error("ApplyPatch() expected error when adding key to empty document, got nil")
+	}
 }
 
 // TestCanOverwriteEmptyDocument tests that overwriting empty document works
@@ -210,10 +217,14 @@ func TestCanOverwriteEmptyDocument(t *testing.T) {
 
 	options := jsonpatch.WithMutate(true)
 	result, err := jsonpatch.ApplyPatch(map[string]interface{}{}, patch, options)
-	require.NoError(t, err, "ApplyPatch should not fail")
+	if err != nil {
+		t.Fatalf("ApplyPatch() unexpected error: %v", err)
+	}
 
 	expected := map[string]interface{}{"foo": 123}
-	assert.Equal(t, expected, result.Doc, "ApplyPatch result mismatch")
+	if diff := cmp.Diff(expected, result.Doc); diff != "" {
+		t.Errorf("ApplyPatch() mismatch (-want +got):\n%s", diff)
+	}
 }
 
 // TestCannotAddValueToNonexistingPath tests that adding to nonexisting path fails
@@ -225,5 +236,7 @@ func TestCannotAddValueToNonexistingPath(t *testing.T) {
 
 	options := jsonpatch.WithMutate(true)
 	_, err := jsonpatch.ApplyPatch(doc, patch, options)
-	assert.Error(t, err, "Expected error when adding value to nonexisting path")
+	if err == nil {
+		t.Error("ApplyPatch() expected error when adding value to nonexisting path, got nil")
+	}
 }

@@ -3,9 +3,9 @@ package tests
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/codec/json"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
 )
 
 // TestAutomaticCodec tests automatic encoding/decoding of operations.
@@ -22,38 +22,74 @@ func TestAutomaticCodec(t *testing.T) {
 			if err != nil {
 				t.Logf("Failed to decode operation %s: %v", name, err)
 				t.Logf("Operation: %+v", operation)
-				assert.NoError(t, err)
+				if err != nil {
+					t.Errorf("Decode() error = %v", err)
+				}
 				return
 			}
-			assert.Len(t, ops, 1)
+			if len(ops) != 1 {
+				t.Errorf("Decode() returned %d ops, want 1", len(ops))
+			}
 
 			// Encode back to JSON
 			encoded, err := json.Encode(ops)
 			if err != nil {
 				t.Logf("Failed to encode operation %s: %v", name, err)
-				assert.NoError(t, err)
+				if err != nil {
+					t.Errorf("Encode() error = %v", err)
+				}
 				return
 			}
-			assert.Len(t, encoded, 1)
+			if len(encoded) != 1 {
+				t.Errorf("Encode() returned %d ops, want 1", len(encoded))
+			}
 
 			// Convert expected operation map to Operation struct for comparison
 			expectedOp := mapToOperation(operation)
 
 			// Verify round-trip consistency by comparing the struct fields
-			assert.Equal(t, expectedOp.Op, encoded[0].Op)
-			assert.Equal(t, expectedOp.Path, encoded[0].Path)
-			assert.Equal(t, expectedOp.Value, encoded[0].Value)
-			assert.Equal(t, expectedOp.From, encoded[0].From)
-			assert.Equal(t, expectedOp.Inc, encoded[0].Inc)
-			assert.Equal(t, expectedOp.Pos, encoded[0].Pos)
-			assert.Equal(t, expectedOp.Str, encoded[0].Str)
-			assert.Equal(t, expectedOp.Len, encoded[0].Len)
-			assert.Equal(t, expectedOp.Not, encoded[0].Not)
-			assert.Equal(t, expectedOp.Type, encoded[0].Type)
-			assert.Equal(t, expectedOp.IgnoreCase, encoded[0].IgnoreCase)
-			assert.Equal(t, expectedOp.Props, encoded[0].Props)
-			assert.Equal(t, expectedOp.DeleteNull, encoded[0].DeleteNull)
-			assert.Equal(t, expectedOp.OldValue, encoded[0].OldValue)
+			if got, want := encoded[0].Op, expectedOp.Op; got != want {
+				t.Errorf("Op = %v, want %v", got, want)
+			}
+			if got, want := encoded[0].Path, expectedOp.Path; got != want {
+				t.Errorf("Path = %v, want %v", got, want)
+			}
+			if diff := cmp.Diff(expectedOp.Value, encoded[0].Value); diff != "" {
+				t.Errorf("Value mismatch (-want +got):\n%s", diff)
+			}
+			if got, want := encoded[0].From, expectedOp.From; got != want {
+				t.Errorf("From = %v, want %v", got, want)
+			}
+			if got, want := encoded[0].Inc, expectedOp.Inc; got != want {
+				t.Errorf("Inc = %v, want %v", got, want)
+			}
+			if got, want := encoded[0].Pos, expectedOp.Pos; got != want {
+				t.Errorf("Pos = %v, want %v", got, want)
+			}
+			if got, want := encoded[0].Str, expectedOp.Str; got != want {
+				t.Errorf("Str = %v, want %v", got, want)
+			}
+			if got, want := encoded[0].Len, expectedOp.Len; got != want {
+				t.Errorf("Len = %v, want %v", got, want)
+			}
+			if got, want := encoded[0].Not, expectedOp.Not; got != want {
+				t.Errorf("Not = %v, want %v", got, want)
+			}
+			if diff := cmp.Diff(expectedOp.Type, encoded[0].Type); diff != "" {
+				t.Errorf("Type mismatch (-want +got):\n%s", diff)
+			}
+			if got, want := encoded[0].IgnoreCase, expectedOp.IgnoreCase; got != want {
+				t.Errorf("IgnoreCase = %v, want %v", got, want)
+			}
+			if diff := cmp.Diff(expectedOp.Props, encoded[0].Props); diff != "" {
+				t.Errorf("Props mismatch (-want +got):\n%s", diff)
+			}
+			if got, want := encoded[0].DeleteNull, expectedOp.DeleteNull; got != want {
+				t.Errorf("DeleteNull = %v, want %v", got, want)
+			}
+			if diff := cmp.Diff(expectedOp.OldValue, encoded[0].OldValue); diff != "" {
+				t.Errorf("OldValue mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
@@ -82,11 +118,15 @@ func TestCodecRoundTrip(t *testing.T) {
 
 	// Decode
 	decoded, err := json.Decode(originalOps, options)
-	assert.NoError(t, err)
+	if err != nil {
+		t.Errorf("Decode() error = %v", err)
+	}
 
 	// Encode back
 	encoded, err := json.Encode(decoded)
-	assert.NoError(t, err)
+	if err != nil {
+		t.Errorf("Encode() error = %v", err)
+	}
 
 	// Convert expected operations to Operation structs for comparison
 	expectedOps := make([]internal.Operation, len(originalOps))
@@ -95,7 +135,9 @@ func TestCodecRoundTrip(t *testing.T) {
 	}
 
 	// Should be structurally identical
-	assert.Equal(t, expectedOps, encoded)
+	if diff := cmp.Diff(expectedOps, encoded); diff != "" {
+		t.Errorf("round-trip mismatch (-want +got):\n%s", diff)
+	}
 }
 
 // mapToOperation converts a map[string]any to internal.Operation struct

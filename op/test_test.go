@@ -3,9 +3,8 @@ package op
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestTest_Basic(t *testing.T) {
@@ -17,13 +16,21 @@ func TestTest_Basic(t *testing.T) {
 	testOp := NewTest([]string{"foo"}, "bar")
 
 	ok, err := testOp.Test(doc)
-	require.NoError(t, err, "Test should not fail for valid path")
-	assert.True(t, ok, "Test should pass for equal values")
+	if err != nil {
+		t.Fatalf("Test() unexpected error: %v", err)
+	}
+	if !ok {
+		t.Error("Test() = false, want true for equal values")
+	}
 
 	testOp = NewTest([]string{"foo"}, "qux")
 	ok, err = testOp.Test(doc)
-	require.NoError(t, err, "Test should not fail for valid path")
-	assert.False(t, ok, "Test should fail for different values")
+	if err != nil {
+		t.Fatalf("Test() unexpected error: %v", err)
+	}
+	if ok {
+		t.Error("Test() = true, want false for different values")
+	}
 }
 
 func TestTest_Apply(t *testing.T) {
@@ -33,50 +40,82 @@ func TestTest_Apply(t *testing.T) {
 
 	testOp := NewTest([]string{"foo"}, "bar")
 	result, err := testOp.Apply(doc)
-	require.NoError(t, err, "Apply should succeed for matching values")
-	assert.Equal(t, doc, result.Doc, "Apply should return the original document")
+	if err != nil {
+		t.Fatalf("Apply() unexpected error: %v", err)
+	}
+	if diff := cmp.Diff(doc, result.Doc); diff != "" {
+		t.Errorf("Apply() result mismatch (-want +got):\n%s", diff)
+	}
 
 	testOp = NewTest([]string{"foo"}, "qux")
 	_, err = testOp.Apply(doc)
-	assert.Error(t, err, "Apply should fail for non-matching values")
+	if err == nil {
+		t.Error("Apply() expected error for non-matching values")
+	}
 }
 
 func TestTest_ToJSON(t *testing.T) {
 	testOp := NewTest([]string{"foo"}, "bar")
 
 	got, err := testOp.ToJSON()
-	require.NoError(t, err, "ToJSON should not fail for valid operation")
+	if err != nil {
+		t.Fatalf("ToJSON() unexpected error: %v", err)
+	}
 
-	assert.Equal(t, "test", got.Op, "JSON should contain correct op type")
-	assert.Equal(t, "/foo", got.Path, "JSON should contain correct path")
-	assert.Equal(t, "bar", got.Value, "JSON should contain correct value")
+	if got.Op != "test" {
+		t.Errorf("ToJSON().Op = %v, want %v", got.Op, "test")
+	}
+	if got.Path != "/foo" {
+		t.Errorf("ToJSON().Path = %v, want %v", got.Path, "/foo")
+	}
+	if got.Value != "bar" {
+		t.Errorf("ToJSON().Value = %v, want %v", got.Value, "bar")
+	}
 }
 
 func TestTest_ToCompact(t *testing.T) {
 	testOp := NewTest([]string{"foo"}, "bar")
 
 	compact, err := testOp.ToCompact()
-	require.NoError(t, err, "ToCompact should not fail for valid operation")
-	require.Len(t, compact, 3, "Compact format should have 3 elements")
-	assert.Equal(t, internal.OpTestCode, compact[0], "First element should be operation code")
-	assert.Equal(t, []string{"foo"}, compact[1], "Second element should be path")
-	assert.Equal(t, "bar", compact[2], "Third element should be value")
+	if err != nil {
+		t.Fatalf("ToCompact() unexpected error: %v", err)
+	}
+	if len(compact) != 3 {
+		t.Fatalf("len(ToCompact()) = %d, want %d", len(compact), 3)
+	}
+	if compact[0] != internal.OpTestCode {
+		t.Errorf("compact[0] = %v, want %v", compact[0], internal.OpTestCode)
+	}
+	if diff := cmp.Diff([]string{"foo"}, compact[1]); diff != "" {
+		t.Errorf("compact[1] mismatch (-want +got):\n%s", diff)
+	}
+	if compact[2] != "bar" {
+		t.Errorf("compact[2] = %v, want %v", compact[2], "bar")
+	}
 }
 
 func TestTest_Validate(t *testing.T) {
 	testOp := NewTest([]string{"foo"}, "bar")
-	err := testOp.Validate()
-	assert.NoError(t, err, "Valid operation should not fail validation")
+	if err := testOp.Validate(); err != nil {
+		t.Errorf("Validate() unexpected error: %v", err)
+	}
 
 	testOp = NewTest([]string{}, "bar")
-	err = testOp.Validate()
-	assert.Error(t, err, "Invalid operation should fail validation")
+	if err := testOp.Validate(); err == nil {
+		t.Error("Validate() expected error for empty path")
+	}
 }
 
 func TestTest_InterfaceMethods(t *testing.T) {
 	testOp := NewTest([]string{"foo"}, "bar")
 
-	assert.Equal(t, internal.OpTestType, testOp.Op(), "Op() should return correct operation type")
-	assert.Equal(t, internal.OpTestCode, testOp.Code(), "Code() should return correct operation code")
-	assert.Equal(t, []string{"foo"}, testOp.Path(), "Path() should return correct path")
+	if got := testOp.Op(); got != internal.OpTestType {
+		t.Errorf("Op() = %v, want %v", got, internal.OpTestType)
+	}
+	if got := testOp.Code(); got != internal.OpTestCode {
+		t.Errorf("Code() = %v, want %v", got, internal.OpTestCode)
+	}
+	if diff := cmp.Diff([]string{"foo"}, testOp.Path()); diff != "" {
+		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
+	}
 }

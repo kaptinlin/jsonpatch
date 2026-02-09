@@ -1,11 +1,11 @@
 package op
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestUndefined_Basic(t *testing.T) {
@@ -18,18 +18,30 @@ func TestUndefined_Basic(t *testing.T) {
 
 	undefinedOp := NewUndefined([]string{"qux"})
 	ok, err := undefinedOp.Test(doc)
-	require.NoError(t, err, "Undefined test should not fail")
-	assert.True(t, ok, "Undefined should return true for non-existing path")
+	if err != nil {
+		t.Fatalf("Undefined.Test(doc, /qux) failed: %v", err)
+	}
+	if !ok {
+		t.Error("Undefined.Test(doc, /qux) = false, want true for non-existing path")
+	}
 
 	undefinedOp = NewUndefined([]string{"foo"})
 	ok, err = undefinedOp.Test(doc)
-	require.NoError(t, err, "Undefined test should not fail")
-	assert.False(t, ok, "Undefined should return false for existing path")
+	if err != nil {
+		t.Fatalf("Undefined.Test(doc, /foo) failed: %v", err)
+	}
+	if ok {
+		t.Error("Undefined.Test(doc, /foo) = true, want false for existing path")
+	}
 
 	undefinedOp = NewUndefined([]string{"baz", "quux"})
 	ok, err = undefinedOp.Test(doc)
-	require.NoError(t, err, "Undefined test should not fail")
-	assert.True(t, ok, "Undefined should return true for non-existing nested path")
+	if err != nil {
+		t.Fatalf("Undefined.Test(doc, /baz/quux) failed: %v", err)
+	}
+	if !ok {
+		t.Error("Undefined.Test(doc, /baz/quux) = false, want true for non-existing nested path")
+	}
 }
 
 func TestUndefined_Not(t *testing.T) {
@@ -39,13 +51,21 @@ func TestUndefined_Not(t *testing.T) {
 
 	undefinedOp := NewUndefined([]string{"qux"})
 	ok, err := undefinedOp.Test(doc)
-	require.NoError(t, err, "Undefined test should not fail")
-	assert.True(t, ok, "undefined should return true for non-existing path")
+	if err != nil {
+		t.Fatalf("Undefined.Test(doc, /qux) failed: %v", err)
+	}
+	if !ok {
+		t.Error("Undefined.Test(doc, /qux) = false, want true for non-existing path")
+	}
 
 	undefinedOp = NewUndefined([]string{"foo"})
 	ok, err = undefinedOp.Test(doc)
-	require.NoError(t, err, "Undefined test should not fail")
-	assert.False(t, ok, "undefined should return false for existing path")
+	if err != nil {
+		t.Fatalf("Undefined.Test(doc, /foo) failed: %v", err)
+	}
+	if ok {
+		t.Error("Undefined.Test(doc, /foo) = true, want false for existing path")
+	}
 }
 
 func TestUndefined_Apply(t *testing.T) {
@@ -55,32 +75,53 @@ func TestUndefined_Apply(t *testing.T) {
 
 	undefinedOp := NewUndefined([]string{"qux"})
 	result, err := undefinedOp.Apply(doc)
-	require.NoError(t, err, "Undefined apply should succeed for non-existing path")
-	assert.True(t, deepEqual(result.Doc, doc), "Apply should return the original document")
+	if err != nil {
+		t.Fatalf("Undefined.Apply(doc, /qux) failed: %v", err)
+	}
+	if !deepEqual(result.Doc, doc) {
+		t.Error("Undefined.Apply(doc, /qux) did not return the original document")
+	}
 
 	undefinedOp = NewUndefined([]string{"foo"})
 	_, err = undefinedOp.Apply(doc)
-	assert.Error(t, err, "Undefined apply should fail for existing path")
-	assert.ErrorIs(t, err, ErrUndefinedTestFailed)
+	if err == nil {
+		t.Error("Undefined.Apply(doc, /foo) succeeded, want error for existing path")
+	}
+	if !errors.Is(err, ErrUndefinedTestFailed) {
+		t.Errorf("Undefined.Apply(doc, /foo) error = %v, want %v", err, ErrUndefinedTestFailed)
+	}
 }
 
 func TestUndefined_InterfaceMethods(t *testing.T) {
 	undefinedOp := NewUndefined([]string{"test"})
 
-	assert.Equal(t, internal.OpUndefinedType, undefinedOp.Op(), "Op() should return correct operation type")
-	assert.Equal(t, internal.OpUndefinedCode, undefinedOp.Code(), "Code() should return correct operation code")
-	assert.Equal(t, []string{"test"}, undefinedOp.Path(), "Path() should return correct path")
-	assert.False(t, undefinedOp.Not(), "Not() should return false for default operation")
+	if got := undefinedOp.Op(); got != internal.OpUndefinedType {
+		t.Errorf("Op() = %v, want %v", got, internal.OpUndefinedType)
+	}
+	if got := undefinedOp.Code(); got != internal.OpUndefinedCode {
+		t.Errorf("Code() = %v, want %v", got, internal.OpUndefinedCode)
+	}
+	if diff := cmp.Diff([]string{"test"}, undefinedOp.Path()); diff != "" {
+		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
+	}
+	if undefinedOp.Not() {
+		t.Error("Not() = true, want false for default operation")
+	}
 }
 
 func TestUndefined_ToJSON(t *testing.T) {
 	undefinedOp := NewUndefined([]string{"test"})
 
 	got, err := undefinedOp.ToJSON()
-	require.NoError(t, err, "ToJSON should not fail for valid operation")
-
-	assert.Equal(t, "undefined", got.Op, "JSON should contain correct op type")
-	assert.Equal(t, "/test", got.Path, "JSON should contain correct formatted path")
+	if err != nil {
+		t.Fatalf("ToJSON() failed: %v", err)
+	}
+	if got.Op != "undefined" {
+		t.Errorf("ToJSON().Op = %q, want %q", got.Op, "undefined")
+	}
+	if got.Path != "/test" {
+		t.Errorf("ToJSON().Path = %q, want %q", got.Path, "/test")
+	}
 }
 
 // TestUndefined_ToJSON_WithNot has been removed since undefined operation
@@ -90,19 +131,32 @@ func TestUndefined_ToCompact(t *testing.T) {
 	undefinedOp := NewUndefined([]string{"test"})
 
 	compact, err := undefinedOp.ToCompact()
-	require.NoError(t, err, "ToCompact should not fail for valid operation")
-	require.Len(t, compact, 2, "Compact format should have 2 elements")
-	assert.Equal(t, internal.OpUndefinedCode, compact[0], "First element should be operation code")
-	assert.Equal(t, []string{"test"}, compact[1], "Second element should be path")
+	if err != nil {
+		t.Fatalf("ToCompact() failed: %v", err)
+	}
+	if len(compact) != 2 {
+		t.Fatalf("len(ToCompact()) = %d, want 2", len(compact))
+	}
+	if compact[0] != internal.OpUndefinedCode {
+		t.Errorf("ToCompact()[0] = %v, want %v", compact[0], internal.OpUndefinedCode)
+	}
+	if diff := cmp.Diff([]string{"test"}, compact[1]); diff != "" {
+		t.Errorf("ToCompact()[1] mismatch (-want +got):\n%s", diff)
+	}
 }
 
 func TestUndefined_Validate(t *testing.T) {
 	undefinedOp := NewUndefined([]string{"test"})
-	err := undefinedOp.Validate()
-	assert.NoError(t, err, "Valid operation should not fail validation")
+	if err := undefinedOp.Validate(); err != nil {
+		t.Errorf("Validate() = %v, want nil for valid operation", err)
+	}
 
 	undefinedOp = NewUndefined([]string{})
-	err = undefinedOp.Validate()
-	assert.Error(t, err, "Invalid operation should fail validation")
-	assert.ErrorIs(t, err, ErrPathEmpty)
+	err := undefinedOp.Validate()
+	if err == nil {
+		t.Error("Validate() = nil, want error for empty path")
+	}
+	if !errors.Is(err, ErrPathEmpty) {
+		t.Errorf("Validate() error = %v, want %v", err, ErrPathEmpty)
+	}
 }

@@ -3,19 +3,21 @@ package internal
 import (
 	"math"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestIsValidJSONPatchType(t *testing.T) {
 	valid := []string{"string", "number", "boolean", "object", "integer", "array", "null"}
 	for _, v := range valid {
-		assert.True(t, IsValidJSONPatchType(v), "expected %q to be valid", v)
+		if !IsValidJSONPatchType(v) {
+			t.Errorf("IsValidJSONPatchType(%q) = false, want true", v)
+		}
 	}
 
 	invalid := []string{"", "unknown", "float", "map", "slice", "int"}
 	for _, v := range invalid {
-		assert.False(t, IsValidJSONPatchType(v), "expected %q to be invalid", v)
+		if IsValidJSONPatchType(v) {
+			t.Errorf("IsValidJSONPatchType(%q) = true, want false", v)
+		}
 	}
 }
 
@@ -72,7 +74,9 @@ func TestGetJSONPatchType(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, GetJSONPatchType(tt.val))
+			if got := GetJSONPatchType(tt.val); got != tt.want {
+				t.Errorf("GetJSONPatchType(%v) = %v, want %v", tt.val, got, tt.want)
+			}
 		})
 	}
 }
@@ -80,12 +84,16 @@ func TestGetJSONPatchType(t *testing.T) {
 func TestIsJSONPatchOperation(t *testing.T) {
 	valid := []string{"add", "remove", "replace", "move", "copy", "test"}
 	for _, op := range valid {
-		assert.True(t, IsJSONPatchOperation(op), "expected %q to be valid", op)
+		if !IsJSONPatchOperation(op) {
+			t.Errorf("IsJSONPatchOperation(%q) = false, want true", op)
+		}
 	}
 
 	invalid := []string{"", "inc", "flip", "and", "defined", "unknown"}
 	for _, op := range invalid {
-		assert.False(t, IsJSONPatchOperation(op), "expected %q to be invalid", op)
+		if IsJSONPatchOperation(op) {
+			t.Errorf("IsJSONPatchOperation(%q) = true, want false", op)
+		}
 	}
 }
 
@@ -96,24 +104,32 @@ func TestIsFirstOrderPredicateOperation(t *testing.T) {
 		"ends", "starts", "in", "less", "more", "matches",
 	}
 	for _, op := range valid {
-		assert.True(t, IsFirstOrderPredicateOperation(op), "expected %q to be valid", op)
+		if !IsFirstOrderPredicateOperation(op) {
+			t.Errorf("IsFirstOrderPredicateOperation(%q) = false, want true", op)
+		}
 	}
 
 	invalid := []string{"", "add", "and", "or", "not", "inc"}
 	for _, op := range invalid {
-		assert.False(t, IsFirstOrderPredicateOperation(op), "expected %q to be invalid", op)
+		if IsFirstOrderPredicateOperation(op) {
+			t.Errorf("IsFirstOrderPredicateOperation(%q) = true, want false", op)
+		}
 	}
 }
 
 func TestIsSecondOrderPredicateOperation(t *testing.T) {
 	valid := []string{"and", "or", "not"}
 	for _, op := range valid {
-		assert.True(t, IsSecondOrderPredicateOperation(op), "expected %q to be valid", op)
+		if !IsSecondOrderPredicateOperation(op) {
+			t.Errorf("IsSecondOrderPredicateOperation(%q) = false, want true", op)
+		}
 	}
 
 	invalid := []string{"", "add", "test", "defined", "inc"}
 	for _, op := range invalid {
-		assert.False(t, IsSecondOrderPredicateOperation(op), "expected %q to be invalid", op)
+		if IsSecondOrderPredicateOperation(op) {
+			t.Errorf("IsSecondOrderPredicateOperation(%q) = true, want false", op)
+		}
 	}
 }
 
@@ -124,28 +140,38 @@ func TestIsPredicateOperation(t *testing.T) {
 		"ends", "starts", "in", "less", "more", "matches",
 	}
 	for _, op := range firstOrder {
-		assert.True(t, IsPredicateOperation(op), "expected first-order %q to be valid", op)
+		if !IsPredicateOperation(op) {
+			t.Errorf("IsPredicateOperation(%q) = false, want true (first-order)", op)
+		}
 	}
 
 	secondOrder := []string{"and", "or", "not"}
 	for _, op := range secondOrder {
-		assert.True(t, IsPredicateOperation(op), "expected second-order %q to be valid", op)
+		if !IsPredicateOperation(op) {
+			t.Errorf("IsPredicateOperation(%q) = false, want true (second-order)", op)
+		}
 	}
 
 	invalid := []string{"", "add", "remove", "inc", "flip", "unknown"}
 	for _, op := range invalid {
-		assert.False(t, IsPredicateOperation(op), "expected %q to be invalid", op)
+		if IsPredicateOperation(op) {
+			t.Errorf("IsPredicateOperation(%q) = true, want false", op)
+		}
 	}
 }
 
 func TestIsJSONPatchExtendedOperation(t *testing.T) {
 	valid := []string{"str_ins", "str_del", "flip", "inc", "split", "merge", "extend"}
 	for _, op := range valid {
-		assert.True(t, IsJSONPatchExtendedOperation(op), "expected %q to be valid", op)
+		if !IsJSONPatchExtendedOperation(op) {
+			t.Errorf("IsJSONPatchExtendedOperation(%q) = false, want true", op)
+		}
 	}
 
 	invalid := []string{"", "add", "test", "and", "defined", "unknown"}
 	for _, op := range invalid {
-		assert.False(t, IsJSONPatchExtendedOperation(op), "expected %q to be invalid", op)
+		if IsJSONPatchExtendedOperation(op) {
+			t.Errorf("IsJSONPatchExtendedOperation(%q) = true, want false", op)
+		}
 	}
 }

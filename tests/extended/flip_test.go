@@ -3,9 +3,9 @@ package ops_test
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestFlipOp(t *testing.T) {
@@ -29,7 +29,9 @@ func TestFlipOp(t *testing.T) {
 			"val3": false,
 			"val4": true,
 		}
-		assert.Equal(t, expected, result)
+		if diff := cmp.Diff(expected, result); diff != "" {
+			t.Errorf("result mismatch (-want +got):\n%s", diff)
+		}
 	})
 
 	t.Run("root", func(t *testing.T) {
@@ -39,7 +41,9 @@ func TestFlipOp(t *testing.T) {
 				Path: "",
 			}
 			result := testutils.ApplyInternalOps(t, true, []internal.Operation{operation})
-			assert.Equal(t, false, result)
+			if result != false {
+				t.Errorf("result = %v, want false", result)
+			}
 		})
 
 		t.Run("flips false to true", func(t *testing.T) {
@@ -48,7 +52,9 @@ func TestFlipOp(t *testing.T) {
 				Path: "",
 			}
 			result := testutils.ApplyInternalOps(t, false, []internal.Operation{operation})
-			assert.Equal(t, true, result)
+			if result != true {
+				t.Errorf("result = %v, want true", result)
+			}
 		})
 
 		t.Run("flips truthy number to false", func(t *testing.T) {
@@ -57,7 +63,9 @@ func TestFlipOp(t *testing.T) {
 				Path: "",
 			}
 			result := testutils.ApplyInternalOps(t, 123, []internal.Operation{operation})
-			assert.Equal(t, false, result)
+			if result != false {
+				t.Errorf("result = %v, want false", result)
+			}
 		})
 
 		t.Run("flips zero to true", func(t *testing.T) {
@@ -66,7 +74,9 @@ func TestFlipOp(t *testing.T) {
 				Path: "",
 			}
 			result := testutils.ApplyInternalOps(t, 0, []internal.Operation{operation})
-			assert.Equal(t, true, result)
+			if result != true {
+				t.Errorf("result = %v, want true", result)
+			}
 		})
 	})
 
@@ -78,7 +88,9 @@ func TestFlipOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOps(t, map[string]interface{}{"foo": true}, []internal.Operation{operation})
 			expected := map[string]interface{}{"foo": false}
-			assert.Equal(t, expected, result)
+			if diff := cmp.Diff(expected, result); diff != "" {
+				t.Errorf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 
 		t.Run("flips false to true", func(t *testing.T) {
@@ -88,7 +100,9 @@ func TestFlipOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOps(t, map[string]interface{}{"foo": false}, []internal.Operation{operation})
 			expected := map[string]interface{}{"foo": true}
-			assert.Equal(t, expected, result)
+			if diff := cmp.Diff(expected, result); diff != "" {
+				t.Errorf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 
 		t.Run("treats empty arrays and objects as truthy", func(t *testing.T) {
@@ -105,7 +119,9 @@ func TestFlipOp(t *testing.T) {
 				"empty_array":  false, // empty array is truthy -> false
 				"empty_object": false, // empty object is truthy -> false
 			}
-			assert.Equal(t, expected, result)
+			if diff := cmp.Diff(expected, result); diff != "" {
+				t.Errorf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 
 		t.Run("creates value when path doesn't exist", func(t *testing.T) {
@@ -115,7 +131,9 @@ func TestFlipOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOps(t, map[string]interface{}{}, []internal.Operation{operation})
 			expected := map[string]interface{}{"newfield": true}
-			assert.Equal(t, expected, result)
+			if diff := cmp.Diff(expected, result); diff != "" {
+				t.Errorf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 	})
 
@@ -133,7 +151,9 @@ func TestFlipOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOps(t, []interface{}{true, false}, operations)
 			expected := []interface{}{false, true}
-			assert.Equal(t, expected, result)
+			if diff := cmp.Diff(expected, result); diff != "" {
+				t.Errorf("result mismatch (-want +got):\n%s", diff)
+			}
 		})
 	})
 }

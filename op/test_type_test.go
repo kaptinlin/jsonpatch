@@ -1,10 +1,11 @@
 package op
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestTestType_Apply(t *testing.T) {
@@ -111,15 +112,25 @@ func TestTestType_Apply(t *testing.T) {
 			result, err := typeOp.Apply(tt.doc)
 
 			if tt.expectError {
-				assert.Error(t, err)
-				if tt.expectedError != nil {
-					assert.ErrorIs(t, err, tt.expectedError)
+				if err == nil {
+					t.Error("Apply() succeeded, want error")
 				}
-				assert.Equal(t, internal.OpResult[any]{}, result)
+				if tt.expectedError != nil && !errors.Is(err, tt.expectedError) {
+					t.Errorf("Apply() error = %v, want %v", err, tt.expectedError)
+				}
+				if diff := cmp.Diff(internal.OpResult[any]{}, result); diff != "" {
+					t.Errorf("Apply() result mismatch (-want +got):\n%s", diff)
+				}
 			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, result)
-				assert.Equal(t, tt.doc, result.Doc)
+				if err != nil {
+					t.Errorf("Apply() failed: %v", err)
+				}
+				if result.Doc == nil {
+					t.Error("Apply() result.Doc = nil, want non-nil")
+				}
+				if diff := cmp.Diff(tt.doc, result.Doc); diff != "" {
+					t.Errorf("Apply() result.Doc mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
@@ -145,8 +156,9 @@ func TestGetTypeName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := getTypeName(tt.value)
-			assert.Equal(t, tt.expected, result)
+			if got := getTypeName(tt.value); got != tt.expected {
+				t.Errorf("getTypeName(%v) = %q, want %q", tt.value, got, tt.expected)
+			}
 		})
 	}
 }

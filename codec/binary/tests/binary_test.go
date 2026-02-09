@@ -7,8 +7,6 @@ import (
 	"github.com/kaptinlin/jsonpatch/codec/binary"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/op"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -133,12 +131,18 @@ func TestRoundtrip(t *testing.T) {
 	for _, tt := range Patches {
 		t.Run(tt.name, func(t *testing.T) {
 			encoded, err := codec.Encode(tt.patch)
-			require.NoError(t, err, "Encode should not error")
+			if err != nil {
+				t.Fatalf("Encode should not error: %v", err)
+			}
 
 			decoded, err := codec.Decode(encoded)
-			require.NoError(t, err, "Decode should not error")
+			if err != nil {
+				t.Fatalf("Decode should not error: %v", err)
+			}
 
-			assert.True(t, areOpsEqual(tt.patch, decoded), "decoded patch should equal original patch")
+			if !areOpsEqual(tt.patch, decoded) {
+				t.Error("decoded patch should equal original patch")
+			}
 		})
 	}
 }
@@ -185,47 +189,30 @@ func isOpEqual(a, b internal.Op) bool {
 }
 
 func areOperationsEqual(a, b internal.Operation) bool {
-	// Compare basic fields
 	if a.Op != b.Op || a.Path != b.Path {
 		return false
 	}
-
-	// Compare values with special handling for numbers
 	if !areValuesEqual(a.Value, b.Value) {
 		return false
 	}
-
-	// Compare other fields
 	if a.From != b.From || a.Str != b.Str || a.Type != b.Type {
 		return false
 	}
-
-	// Compare numeric fields with tolerance
 	if !areNumericEqual(a.Inc, b.Inc) {
 		return false
 	}
-
-	// Compare integer fields
 	if a.Pos != b.Pos || a.Len != b.Len {
 		return false
 	}
-
-	// Compare boolean fields
 	if a.Not != b.Not || a.IgnoreCase != b.IgnoreCase || a.DeleteNull != b.DeleteNull {
 		return false
 	}
-
-	// Compare map fields
 	if !areMapsEqual(a.Props, b.Props) {
 		return false
 	}
-
-	// Compare OldValue
 	if !areValuesEqual(a.OldValue, b.OldValue) {
 		return false
 	}
-
-	// Compare Apply operations
 	if len(a.Apply) != len(b.Apply) {
 		return false
 	}
@@ -234,17 +221,13 @@ func areOperationsEqual(a, b internal.Operation) bool {
 			return false
 		}
 	}
-
 	return true
 }
 
 func areNumericEqual(a, b float64) bool {
-	// Handle zero values
 	if a == 0 && b == 0 {
 		return true
 	}
-
-	// Simple equality check for non-zero values
 	return a == b
 }
 
@@ -266,14 +249,12 @@ func areMapsEqual(a, b map[string]any) bool {
 
 func areValuesEqual(a, b any) bool {
 	if reflect.TypeOf(a) != reflect.TypeOf(b) {
-		// Attempt numeric conversion if types are different but numeric
 		aFloat, aIsNum := op.ToFloat64(a)
 		bFloat, bIsNum := op.ToFloat64(b)
 		if aIsNum && bIsNum {
 			return aFloat == bFloat
 		}
 	}
-
 	switch aVal := a.(type) {
 	case []any:
 		bVal, ok := b.([]any)
@@ -293,10 +274,8 @@ func areValuesEqual(a, b any) bool {
 		}
 		return areMapsEqual(aVal, bVal)
 	case map[any]any:
-		// Handle comparison with map[string]any
 		bVal, ok := b.(map[string]any)
 		if !ok {
-			// If b is also map[any]any, convert both to map[string]any
 			if bVal, ok := b.(map[any]any); ok {
 				return areMapsEqual(convertMapToS(aVal), convertMapToS(bVal))
 			}

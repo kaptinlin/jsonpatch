@@ -39,7 +39,7 @@ func TestNot(t *testing.T) {
 					},
 				},
 			},
-			ShouldFail: true,
+			WantErr: true,
 			Comment:    "NOT should fail when any predicate passes",
 		},
 		{
@@ -55,7 +55,7 @@ func TestNot(t *testing.T) {
 					},
 				},
 			},
-			ShouldFail: true,
+			WantErr: true,
 			Comment:    "NOT should fail when all predicates pass",
 		},
 	}

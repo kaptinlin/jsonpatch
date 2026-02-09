@@ -5,7 +5,6 @@ import (
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/require"
 )
 
 func TestStartsOp(t *testing.T) {
@@ -18,7 +17,9 @@ func TestStartsOp(t *testing.T) {
 			}
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch("Hello world", patch, internal.WithMutate(true))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			}
 		})
 
 		t.Run("throws when string does not start with prefix", func(t *testing.T) {
@@ -29,7 +30,9 @@ func TestStartsOp(t *testing.T) {
 			}
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch("Hello world", patch, internal.WithMutate(true))
-			require.Error(t, err)
+			if err == nil {
+				t.Fatal("ApplyPatch() error = nil, want error")
+			}
 		})
 
 		t.Run("can ignore case", func(t *testing.T) {
@@ -41,7 +44,9 @@ func TestStartsOp(t *testing.T) {
 			}
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch("Hello world", patch, internal.WithMutate(true))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			}
 		})
 	})
 
@@ -54,7 +59,9 @@ func TestStartsOp(t *testing.T) {
 			}
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch(map[string]interface{}{"msg": "Hello world"}, patch, internal.WithMutate(true))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			}
 		})
 
 		t.Run("throws when string does not start with prefix", func(t *testing.T) {
@@ -65,7 +72,9 @@ func TestStartsOp(t *testing.T) {
 			}
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch(map[string]interface{}{"msg": "Hello world"}, patch, internal.WithMutate(true))
-			require.Error(t, err)
+			if err == nil {
+				t.Fatal("ApplyPatch() error = nil, want error")
+			}
 		})
 	})
 
@@ -78,7 +87,9 @@ func TestStartsOp(t *testing.T) {
 			}
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch([]interface{}{"Hello world"}, patch, internal.WithMutate(true))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			}
 		})
 
 		t.Run("throws when string does not start with prefix", func(t *testing.T) {
@@ -89,7 +100,9 @@ func TestStartsOp(t *testing.T) {
 			}
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch([]interface{}{"Hello world"}, patch, internal.WithMutate(true))
-			require.Error(t, err)
+			if err == nil {
+				t.Fatal("ApplyPatch() error = nil, want error")
+			}
 		})
 	})
 }

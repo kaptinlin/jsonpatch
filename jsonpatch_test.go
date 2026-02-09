@@ -1,15 +1,15 @@
 package jsonpatch_test
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/go-json-experiment/json"
 	"github.com/go-json-experiment/json/jsontext"
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // =============================================================================
@@ -61,15 +61,25 @@ func TestApplyPatchBasic(t *testing.T) {
 			result, err := jsonpatch.ApplyPatch(tt.doc, tt.patch, jsonpatch.WithMutate(false))
 
 			if tt.wantErr {
-				require.Error(t, err, "Expected an error but got none")
+				if err == nil {
+					t.Fatal("ApplyPatch() error = nil, want error")
+				}
 				return
 			}
 
-			require.NoError(t, err, "Unexpected error: %v", err)
+			if err != nil {
+				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			}
 
-			assert.Equal(t, tt.expected, result.Doc, "Result document should match expected")
-			assert.NotNil(t, result.Res, "Result operations should not be nil")
-			assert.Len(t, result.Res, len(tt.patch), "Number of operation results should match patch length")
+			if diff := cmp.Diff(tt.expected, result.Doc); diff != "" {
+				t.Errorf("ApplyPatch() result mismatch (-want +got):\n%s", diff)
+			}
+			if result.Res == nil {
+				t.Error("ApplyPatch() Res = nil, want non-nil")
+			}
+			if len(result.Res) != len(tt.patch) {
+				t.Errorf("ApplyPatch() len(Res) = %d, want %d", len(result.Res), len(tt.patch))
+			}
 		})
 	}
 }
@@ -119,10 +129,14 @@ func TestValidateOperation(t *testing.T) {
 			err := jsonpatch.ValidateOperation(tt.operation, false)
 
 			if tt.wantErr != nil {
-				require.Error(t, err, "Expected validation error")
-				assert.ErrorIs(t, err, tt.wantErr)
-			} else {
-				assert.NoError(t, err, "Validation should pass")
+				if err == nil {
+					t.Fatal("ValidateOperation() error = nil, want error")
+				}
+				if !errors.Is(err, tt.wantErr) {
+					t.Errorf("ValidateOperation() error = %v, want %v", err, tt.wantErr)
+				}
+			} else if err != nil {
+				t.Errorf("ValidateOperation() error = %v, want nil", err)
 			}
 		})
 	}
@@ -148,18 +162,34 @@ func TestApplyPatch_Struct(t *testing.T) {
 
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(before, patch)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("ApplyPatch() error = %v, want nil", err)
+	}
 
 	// Verify results
-	assert.Equal(t, "Jane", result.Doc.Name)
-	assert.Equal(t, "jane@example.com", result.Doc.Email)
-	assert.Equal(t, []string{"dev", "golang"}, result.Doc.Tags)
-	assert.Len(t, result.Res, 3, "Should have 3 operation results")
+	if result.Doc.Name != "Jane" {
+		t.Errorf("ApplyPatch() Name = %v, want Jane", result.Doc.Name)
+	}
+	if result.Doc.Email != "jane@example.com" {
+		t.Errorf("ApplyPatch() Email = %v, want jane@example.com", result.Doc.Email)
+	}
+	if diff := cmp.Diff([]string{"dev", "golang"}, result.Doc.Tags); diff != "" {
+		t.Errorf("ApplyPatch() Tags mismatch (-want +got):\n%s", diff)
+	}
+	if len(result.Res) != 3 {
+		t.Errorf("ApplyPatch() len(Res) = %d, want 3", len(result.Res))
+	}
 
 	// Verify original is unchanged (immutable by default)
-	assert.Equal(t, "John", before.Name)
-	assert.Empty(t, before.Email)
-	assert.Equal(t, []string{"dev"}, before.Tags)
+	if before.Name != "John" {
+		t.Errorf("original Name = %v, want John", before.Name)
+	}
+	if before.Email != "" {
+		t.Errorf("original Email = %q, want empty", before.Email)
+	}
+	if diff := cmp.Diff([]string{"dev"}, before.Tags); diff != "" {
+		t.Errorf("original Tags mismatch (-want +got):\n%s", diff)
+	}
 }
 
 // TestApplyPatch_Map tests applying patches to map types
@@ -178,18 +208,32 @@ func TestApplyPatch_Map(t *testing.T) {
 
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(before, patch)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("ApplyPatch() error = %v", err)
+	}
 
 	// Verify results
-	assert.Equal(t, "Jane", result.Doc["name"])
-	assert.Equal(t, "jane@example.com", result.Doc["email"])
-	assert.Equal(t, []any{"dev", "golang"}, result.Doc["tags"])
-	assert.Len(t, result.Res, 3, "Should have 3 operation results")
+	if got := result.Doc["name"]; got != "Jane" {
+		t.Errorf("result.Doc[name] = %v, want %v", got, "Jane")
+	}
+	if got := result.Doc["email"]; got != "jane@example.com" {
+		t.Errorf("result.Doc[email] = %v, want %v", got, "jane@example.com")
+	}
+	if diff := cmp.Diff([]any{"dev", "golang"}, result.Doc["tags"]); diff != "" {
+		t.Errorf("result.Doc[tags] mismatch (-want +got):\n%s", diff)
+	}
+	if len(result.Res) != 3 {
+		t.Errorf("len(result.Res) = %d, want %d", len(result.Res), 3)
+	}
 
 	// Verify original is unchanged (immutable by default)
-	assert.Equal(t, "John", before["name"])
+	if got := before["name"]; got != "John" {
+		t.Errorf("before[name] = %v, want %v", got, "John")
+	}
 	_, hasEmail := before["email"]
-	assert.False(t, hasEmail)
+	if hasEmail {
+		t.Error("before should not have email key")
+	}
 }
 
 // TestApplyPatch_JSONBytes tests applying patches to []byte containing JSON
@@ -205,26 +249,44 @@ func TestApplyPatch_JSONBytes(t *testing.T) {
 
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(before, patch)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("ApplyPatch() error = %v", err)
+	}
 
 	// Parse result to verify
 	var resultMap map[string]any
 	err = json.Unmarshal(result.Doc, &resultMap)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("json.Unmarshal() error = %v", err)
+	}
 
 	// Verify results
-	assert.Equal(t, "Jane", resultMap["name"])
-	assert.Equal(t, "jane@example.com", resultMap["email"])
-	assert.Equal(t, []any{"dev", "golang"}, resultMap["tags"])
-	assert.Len(t, result.Res, 3, "Should have 3 operation results")
+	if got := resultMap["name"]; got != "Jane" {
+		t.Errorf("resultMap[name] = %v, want %v", got, "Jane")
+	}
+	if got := resultMap["email"]; got != "jane@example.com" {
+		t.Errorf("resultMap[email] = %v, want %v", got, "jane@example.com")
+	}
+	if diff := cmp.Diff([]any{"dev", "golang"}, resultMap["tags"]); diff != "" {
+		t.Errorf("resultMap[tags] mismatch (-want +got):\n%s", diff)
+	}
+	if len(result.Res) != 3 {
+		t.Errorf("len(result.Res) = %d, want %d", len(result.Res), 3)
+	}
 
 	// Verify original is unchanged
 	var original map[string]any
 	err = json.Unmarshal(before, &original)
-	require.NoError(t, err)
-	assert.Equal(t, "John", original["name"])
+	if err != nil {
+		t.Fatalf("json.Unmarshal(before) error = %v", err)
+	}
+	if got := original["name"]; got != "John" {
+		t.Errorf("original[name] = %v, want %v", got, "John")
+	}
 	_, hasEmail := original["email"]
-	assert.False(t, hasEmail)
+	if hasEmail {
+		t.Error("original should not have email key")
+	}
 }
 
 // TestApplyPatch_JSONString tests applying patches to JSON strings
@@ -240,18 +302,30 @@ func TestApplyPatch_JSONString(t *testing.T) {
 
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(before, patch)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("ApplyPatch() error = %v", err)
+	}
 
 	// Parse result to verify
 	var resultMap map[string]any
 	err = json.Unmarshal([]byte(result.Doc), &resultMap)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("json.Unmarshal() error = %v", err)
+	}
 
 	// Verify results
-	assert.Equal(t, "Jane", resultMap["name"])
-	assert.Equal(t, "jane@example.com", resultMap["email"])
-	assert.Equal(t, []any{"dev", "golang"}, resultMap["tags"])
-	assert.Len(t, result.Res, 3, "Should have 3 operation results")
+	if got := resultMap["name"]; got != "Jane" {
+		t.Errorf("resultMap[name] = %v, want %v", got, "Jane")
+	}
+	if got := resultMap["email"]; got != "jane@example.com" {
+		t.Errorf("resultMap[email] = %v, want %v", got, "jane@example.com")
+	}
+	if diff := cmp.Diff([]any{"dev", "golang"}, resultMap["tags"]); diff != "" {
+		t.Errorf("resultMap[tags] mismatch (-want +got):\n%s", diff)
+	}
+	if len(result.Res) != 3 {
+		t.Errorf("len(result.Res) = %d, want %d", len(result.Res), 3)
+	}
 }
 
 // =============================================================================
@@ -293,14 +367,18 @@ func TestArrayOperations(t *testing.T) {
 
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(doc, patch)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("ApplyPatch() error = %v", err)
+	}
 
 	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
 	t.Logf("Array operations result:\n%s", string(resultJSON))
 
 	// Verify the result
 	items := result.Doc["items"].([]any)
-	assert.Len(t, items, 5, "Expected 5 items after operations")
+	if len(items) != 5 {
+		t.Errorf("len(items) = %d, want %d", len(items), 5)
+	}
 }
 
 // TestMultipleOperations demonstrates applying multiple operations
@@ -327,15 +405,21 @@ func TestMultipleOperations(t *testing.T) {
 
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(doc, patch)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("ApplyPatch() error = %v", err)
+	}
 
 	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
 	t.Logf("Multiple operations result:\n%s", string(resultJSON))
 
 	// Verify the result
 	counters := result.Doc["counters"].(map[string]any)
-	assert.Equal(t, 1, counters["a"], "Counter a should be updated")
-	assert.Equal(t, 2, counters["b"], "Counter b should be updated")
+	if got := counters["a"]; got != 1 {
+		t.Errorf("counters[a] = %v, want %v", got, 1)
+	}
+	if got := counters["b"]; got != 2 {
+		t.Errorf("counters[b] = %v, want %v", got, 2)
+	}
 }
 
 // =============================================================================
@@ -356,11 +440,17 @@ func TestApplyPatch_WithMutate(t *testing.T) {
 
 	// Apply patch with mutate=true
 	result, err := jsonpatch.ApplyPatch(original, patch, jsonpatch.WithMutate(true))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("ApplyPatch() error = %v", err)
+	}
 
 	// Verify results
-	assert.Equal(t, "Jane", result.Doc["name"])
-	assert.Len(t, result.Res, 1, "Should have 1 operation result")
+	if got := result.Doc["name"]; got != "Jane" {
+		t.Errorf("result.Doc[name] = %v, want %v", got, "Jane")
+	}
+	if len(result.Res) != 1 {
+		t.Errorf("len(result.Res) = %d, want %d", len(result.Res), 1)
+	}
 }
 
 // =============================================================================
@@ -416,7 +506,9 @@ func TestComplexDocument(t *testing.T) {
 
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(doc, patch)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("ApplyPatch() error = %v", err)
+	}
 
 	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
 	t.Logf("Complex document result:\n%s", string(resultJSON))
@@ -427,10 +519,14 @@ func TestComplexDocument(t *testing.T) {
 	engineering := departments[0].(map[string]any)
 	employees := engineering["employees"].([]any)
 
-	assert.Len(t, employees, 3, "Should have 3 employees after adding Charlie")
+	if len(employees) != 3 {
+		t.Errorf("len(employees) = %d, want %d", len(employees), 3)
+	}
 
 	bob := employees[1].(map[string]any)
-	assert.Equal(t, "Senior Manager", bob["role"], "Bob should be promoted to Senior Manager")
+	if got := bob["role"]; got != "Senior Manager" {
+		t.Errorf("bob[role] = %v, want %v", got, "Senior Manager")
+	}
 }
 
 // =============================================================================
@@ -471,16 +567,24 @@ func TestSpecialCharacters(t *testing.T) {
 
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(doc, patch)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("ApplyPatch() error = %v", err)
+	}
 
 	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
 	t.Logf("Special characters result:\n%s", string(resultJSON))
 
 	// Verify the updates
 	resultMap := result.Doc
-	assert.Equal(t, "updated tilde", resultMap["with~tilde"], "Tilde key should be updated")
-	assert.Equal(t, "updated slash", resultMap["with/slash"], "Slash key should be updated")
-	assert.Equal(t, "updated empty", resultMap[""], "Empty key should be updated")
+	if got := resultMap["with~tilde"]; got != "updated tilde" {
+		t.Errorf("resultMap[with~tilde] = %v, want %v", got, "updated tilde")
+	}
+	if got := resultMap["with/slash"]; got != "updated slash" {
+		t.Errorf("resultMap[with/slash] = %v, want %v", got, "updated slash")
+	}
+	if got := resultMap[""]; got != "updated empty" {
+		t.Errorf("resultMap[] = %v, want %v", got, "updated empty")
+	}
 }
 
 // =============================================================================
@@ -506,8 +610,12 @@ func TestErrorHandling(t *testing.T) {
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(doc, patch)
 
-	assert.Error(t, err, "Expected error for nonexistent path")
-	assert.Nil(t, result, "Result should be nil on error")
+	if err == nil {
+		t.Error("Expected error for nonexistent path")
+	}
+	if result != nil {
+		t.Error("Result should be nil on error")
+	}
 	t.Logf("Expected error: %v", err)
 }
 
@@ -520,7 +628,9 @@ func TestApplyPatch_Errors(t *testing.T) {
 		}
 
 		_, err := jsonpatch.ApplyPatch(invalidJSON, patch)
-		assert.Error(t, err)
+		if err == nil {
+			t.Error("expected error for invalid JSON bytes")
+		}
 	})
 
 	t.Run("invalid JSON string", func(t *testing.T) {
@@ -530,7 +640,9 @@ func TestApplyPatch_Errors(t *testing.T) {
 		}
 
 		_, err := jsonpatch.ApplyPatch(invalidJSON, patch)
-		assert.Error(t, err)
+		if err == nil {
+			t.Error("expected error for invalid JSON string")
+		}
 		// Note: Invalid JSON strings are now treated as primitive strings,
 		// so the error comes from trying to apply path operations to a string
 		// We only check that an error occurred, not the specific message
@@ -543,7 +655,9 @@ func TestApplyPatch_Errors(t *testing.T) {
 		}
 
 		_, err := jsonpatch.ApplyPatch(doc, patch)
-		assert.Error(t, err)
+		if err == nil {
+			t.Error("expected error for invalid patch operation")
+		}
 	})
 }
 

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
-	"github.com/stretchr/testify/assert"
 )
 
 // TypeScriptTestCase represents a test case from TypeScript implementation
@@ -15,7 +15,7 @@ type TypeScriptTestCase struct {
 	Doc        interface{}           `json:"doc"`
 	Patch      []jsonpatch.Operation `json:"patch"`
 	Expected   interface{}           `json:"expected,omitempty"`
-	ShouldFail bool                  `json:"shouldFail,omitempty"`
+	WantErr    bool                  `json:"shouldFail,omitempty"`
 	Comment    string                `json:"comment,omitempty"`
 	Source     string                `json:"source,omitempty"` // Which TypeScript file this came from
 }
@@ -27,11 +27,13 @@ func TestTypeScriptParity(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			if tc.ShouldFail {
+			if tc.WantErr {
 				_ = testutils.ApplyOperationsWithError(t, tc.Doc, tc.Patch)
 			} else {
 				result := testutils.ApplyOperations(t, tc.Doc, tc.Patch)
-				assert.Equal(t, tc.Expected, result, tc.Comment)
+				if diff := cmp.Diff(tc.Expected, result); diff != "" {
+					t.Errorf("ApplyOperations() mismatch (-want +got):\n%s\n%s", diff, tc.Comment)
+				}
 			}
 		})
 	}
@@ -86,8 +88,8 @@ func TestBasicOperationParity(t *testing.T) {
 			Patch: []jsonpatch.Operation{
 				{Op: "test", Path: "/foo", Value: "baz"},
 			},
-			ShouldFail: true,
-			Comment:    "Test should fail when values don't match",
+			WantErr: true,
+			Comment: "Test should fail when values don't match",
 			Source:     "typescript:test.spec.ts",
 		},
 		{
@@ -182,7 +184,7 @@ func TestPredicateOperationParity(t *testing.T) {
 			Patch: []jsonpatch.Operation{
 				{Op: "contains", Path: "/text", Value: "xyz"},
 			},
-			ShouldFail: true,
+			WantErr: true,
 			Comment:    "Contains should fail when substring doesn't exist",
 			Source:     "typescript:predicates.spec.ts",
 		},
@@ -202,7 +204,7 @@ func TestPredicateOperationParity(t *testing.T) {
 			Patch: []jsonpatch.Operation{
 				{Op: "type", Path: "/value", Value: "number"},
 			},
-			ShouldFail: true,
+			WantErr: true,
 			Comment:    "Type check should fail for incorrect type",
 			Source:     "typescript:type.spec.ts",
 		},
@@ -278,7 +280,7 @@ func TestErrorHandlingParity(t *testing.T) {
 			Patch: []jsonpatch.Operation{
 				{Op: "remove", Path: "/nonexistent"},
 			},
-			ShouldFail: true,
+			WantErr: true,
 			Comment:    "Should fail when path doesn't exist",
 			Source:     "typescript:errors.spec.ts",
 		},
@@ -288,7 +290,7 @@ func TestErrorHandlingParity(t *testing.T) {
 			Patch: []jsonpatch.Operation{
 				{Op: "remove", Path: "/5"},
 			},
-			ShouldFail: true,
+			WantErr: true,
 			Comment:    "Should fail for out-of-bounds array index",
 			Source:     "typescript:errors.spec.ts",
 		},
@@ -298,7 +300,7 @@ func TestErrorHandlingParity(t *testing.T) {
 			Patch: []jsonpatch.Operation{
 				{Op: "inc", Path: "/value", Inc: 1},
 			},
-			ShouldFail: true,
+			WantErr: true,
 			Comment:    "Should fail when operation type doesn't match value type",
 			Source:     "typescript:errors.spec.ts",
 		},
@@ -338,7 +340,7 @@ func TestSecondOrderPredicateParity(t *testing.T) {
 					},
 				},
 			},
-			ShouldFail: true,
+			WantErr: true,
 			Comment:    "NOT should fail when inner predicate succeeds",
 			Source:     "typescript:second-order-predicates.spec.ts",
 		},
@@ -429,7 +431,7 @@ func getErrorHandlingTestCases() []TypeScriptTestCase {
 			Name:       "error_path_not_found",
 			Doc:        map[string]interface{}{"a": 1},
 			Patch:      []jsonpatch.Operation{{Op: "test", Path: "/b", Value: 1}},
-			ShouldFail: true,
+			WantErr: true,
 			Comment:    "Path not found error",
 			Source:     "typescript:errors.spec.ts",
 		},
@@ -466,7 +468,7 @@ func convertToMultiOpTestCases(tsCases []TypeScriptTestCase) []testutils.MultiOp
 			Doc:        tc.Doc,
 			Operations: tc.Patch,
 			Expected:   tc.Expected,
-			ShouldFail: tc.ShouldFail,
+			WantErr: tc.WantErr,
 			Comment:    fmt.Sprintf("%s (Source: %s)", tc.Comment, tc.Source),
 		})
 	}
@@ -480,7 +482,7 @@ func BenchmarkTypeScriptParity(b *testing.B) {
 	b.ResetTimer()
 	for b.Loop() {
 		for _, tc := range testCases {
-			if !tc.ShouldFail {
+			if !tc.WantErr {
 				_, err := jsonpatch.ApplyPatch(tc.Doc, tc.Patch, jsonpatch.WithMutate(true))
 				if err != nil {
 					b.Errorf("Operation %s failed: %v", tc.Name, err)

@@ -8,8 +8,6 @@ import (
 	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
 	jsonsamples "github.com/kaptinlin/jsonpatch/codec/json/tests"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // Unsupported composite operations in binary codec for now.
@@ -45,18 +43,26 @@ func TestAutomaticRoundtrip(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Step 1: JSON -> Op (json codec)
 			jsonOps, err := jsoncodec.Decode([]map[string]any{opMap}, options)
-			require.NoError(t, err, "json Decode should not error")
+			if err != nil {
+				t.Fatalf("json Decode should not error: %v", err)
+			}
 
 			// Step 2: Op -> Binary bytes
 			encoded, err := binCodec.Encode(jsonOps)
-			require.NoError(t, err, "binary Encode should not error")
+			if err != nil {
+				t.Fatalf("binary Encode should not error: %v", err)
+			}
 
 			// Step 3: Binary bytes -> Op
 			decodedOps, err := binCodec.Decode(encoded)
-			require.NoError(t, err, "binary Decode should not error")
+			if err != nil {
+				t.Fatalf("binary Decode should not error: %v", err)
+			}
 
 			// Step 4: Validate equality between original decoded ops and binary roundtrip
-			assert.True(t, areOpsEqual(jsonOps, decodedOps), "roundtrip should preserve ops equality")
+			if !areOpsEqual(jsonOps, decodedOps) {
+				t.Error("roundtrip should preserve ops equality")
+			}
 		})
 	}
 }

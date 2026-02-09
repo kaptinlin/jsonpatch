@@ -3,9 +3,8 @@ package op
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestInc_Apply(t *testing.T) {
@@ -102,18 +101,28 @@ func TestInc_Apply(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			incOp := NewInc(tt.path, tt.inc)
 			docCopy, err := DeepClone(tt.doc)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("DeepClone() error: %v", err)
+			}
 
 			result, err := incOp.Apply(docCopy)
 
 			if tt.wantErr {
-				assert.Error(t, err)
+				if err == nil {
+					t.Error("Apply() expected error, got nil")
+				}
 				return
 			}
 
-			require.NoError(t, err)
-			assert.Equal(t, tt.expected, result.Doc)
-			assert.Equal(t, tt.oldValue, result.Old)
+			if err != nil {
+				t.Fatalf("Apply() unexpected error: %v", err)
+			}
+			if diff := cmp.Diff(tt.expected, result.Doc); diff != "" {
+				t.Errorf("Apply() Doc mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.oldValue, result.Old); diff != "" {
+				t.Errorf("Apply() Old mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
@@ -122,18 +131,34 @@ func TestInc_Constructor(t *testing.T) {
 	path := []string{"user", "score"}
 	inc := 3.5
 	incOp := NewInc(path, inc)
-	assert.Equal(t, path, incOp.path)
-	assert.Equal(t, inc, incOp.Inc)
-	assert.Equal(t, internal.OpIncType, incOp.Op())
-	assert.Equal(t, internal.OpIncCode, incOp.Code())
+	if diff := cmp.Diff(path, incOp.path); diff != "" {
+		t.Errorf("NewInc() path mismatch (-want +got):\n%s", diff)
+	}
+	if incOp.Inc != inc {
+		t.Errorf("NewInc() Inc = %v, want %v", incOp.Inc, inc)
+	}
+	if got := incOp.Op(); got != internal.OpIncType {
+		t.Errorf("Op() = %v, want %v", got, internal.OpIncType)
+	}
+	if got := incOp.Code(); got != internal.OpIncCode {
+		t.Errorf("Code() = %v, want %v", got, internal.OpIncCode)
+	}
 }
 
 func TestInc_ToJSON(t *testing.T) {
 	incOp := NewInc([]string{"count"}, 5.5)
 	got, err := incOp.ToJSON()
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("ToJSON() error: %v", err)
+	}
 
-	assert.Equal(t, "inc", got.Op)
-	assert.Equal(t, "/count", got.Path)
-	assert.Equal(t, 5.5, got.Inc)
+	if got.Op != "inc" {
+		t.Errorf("ToJSON() Op = %q, want %q", got.Op, "inc")
+	}
+	if got.Path != "/count" {
+		t.Errorf("ToJSON() Path = %q, want %q", got.Path, "/count")
+	}
+	if got.Inc != 5.5 {
+		t.Errorf("ToJSON() Inc = %v, want %v", got.Inc, 5.5)
+	}
 }
