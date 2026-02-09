@@ -1,7 +1,6 @@
 package op
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch/internal"
@@ -115,7 +114,7 @@ func TestOpStarts_Apply(t *testing.T) {
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.expectedError != nil {
-					assert.True(t, errors.Is(err, tt.expectedError))
+					assert.ErrorIs(t, err, tt.expectedError)
 				}
 				// Check that result is empty when error occurs
 				assert.Equal(t, internal.OpResult[any]{}, result)

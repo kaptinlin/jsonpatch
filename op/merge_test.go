@@ -164,17 +164,7 @@ func TestOpMerge_Apply(t *testing.T) {
 	}
 }
 
-func TestOpMerge_Op(t *testing.T) {
-	op := NewMerge([]string{"lines"}, 0, nil)
-	assert.Equal(t, internal.OpMergeType, op.Op())
-}
-
-func TestOpMerge_Code(t *testing.T) {
-	op := NewMerge([]string{"lines"}, 0, nil)
-	assert.Equal(t, internal.OpMergeCode, op.Code())
-}
-
-func TestOpMerge_NewOpMerge(t *testing.T) {
+func TestOpMerge_Constructor(t *testing.T) {
 	path := []string{"user", "tags"}
 	pos := 1.0
 	props := map[string]any{"type": "merge"}

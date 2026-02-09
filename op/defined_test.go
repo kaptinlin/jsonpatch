@@ -81,17 +81,11 @@ func TestOpDefined_ToJSON(t *testing.T) {
 func TestOpDefined_ToCompact(t *testing.T) {
 	definedOp := NewDefined([]string{"test"})
 
-	// Test verbose format
 	compact, err := definedOp.ToCompact()
 	require.NoError(t, err, "ToCompact should not fail for valid operation")
 	require.Len(t, compact, 2, "Compact format should have 2 elements")
 	assert.Equal(t, internal.OpDefinedCode, compact[0], "First element should be operation code")
 	assert.Equal(t, []string{"test"}, compact[1], "Second element should be path")
-
-	// Test non-verbose format
-	compact, err = definedOp.ToCompact()
-	require.NoError(t, err, "ToCompact should not fail for valid operation")
-	require.Len(t, compact, 2, "Compact format should have 2 elements")
 }
 
 func TestOpDefined_Validate(t *testing.T) {

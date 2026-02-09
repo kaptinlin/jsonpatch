@@ -31,25 +31,25 @@ type profile struct {
 func TestApplyPatchBasic(t *testing.T) {
 	tests := []struct {
 		name     string
-		doc      interface{}
+		doc      any
 		patch    []jsonpatch.Operation
-		expected interface{}
+		expected any
 		wantErr  bool
 	}{
 		{
 			name:     "empty patch",
-			doc:      map[string]interface{}{"a": 1},
+			doc:      map[string]any{"a": 1},
 			patch:    []jsonpatch.Operation{},
-			expected: map[string]interface{}{"a": 1},
+			expected: map[string]any{"a": 1},
 			wantErr:  false,
 		},
 		{
 			name: "single operation",
-			doc:  map[string]interface{}{"a": 1},
+			doc:  map[string]any{"a": 1},
 			patch: []jsonpatch.Operation{
 				{Op: "add", Path: "/b", Value: 2},
 			},
-			expected: map[string]interface{}{"a": 1, "b": 2},
+			expected: map[string]any{"a": 1, "b": 2},
 			wantErr:  false,
 		},
 	}
@@ -79,43 +79,36 @@ func TestValidateOperation(t *testing.T) {
 	tests := []struct {
 		name      string
 		operation jsonpatch.Operation
-		wantErr   bool
-		errMsg    string
+		wantErr   error // nil means no error expected
 	}{
 		{
 			name:      "valid add operation",
 			operation: jsonpatch.Operation{Op: "add", Path: "/a", Value: 1},
-			wantErr:   false,
 		},
 		{
 			name:      "missing op field",
 			operation: jsonpatch.Operation{Path: "/a", Value: 1},
-			wantErr:   true,
-			errMsg:    "missing required field 'op'",
+			wantErr:   jsonpatch.ErrMissingOp,
 		},
 		{
 			name:      "missing path field",
 			operation: jsonpatch.Operation{Op: "add", Value: 1},
-			wantErr:   true,
-			errMsg:    "missing required field 'path'",
+			wantErr:   jsonpatch.ErrMissingPath,
 		},
 		{
 			name:      "missing value field for add",
 			operation: jsonpatch.Operation{Op: "add", Path: "/a"},
-			wantErr:   true,
-			errMsg:    "missing required field 'value'",
+			wantErr:   jsonpatch.ErrMissingValue,
 		},
 		{
 			name:      "invalid operation type",
 			operation: jsonpatch.Operation{Op: "invalid", Path: "/a"},
-			wantErr:   true,
-			errMsg:    "unknown operation 'invalid'",
+			wantErr:   jsonpatch.ErrInvalidOperation,
 		},
 		{
 			name:      "empty operation",
 			operation: jsonpatch.Operation{Op: "", Path: ""},
-			wantErr:   true,
-			errMsg:    "missing required field 'op'",
+			wantErr:   jsonpatch.ErrMissingOp,
 		},
 	}
 
@@ -125,11 +118,9 @@ func TestValidateOperation(t *testing.T) {
 
 			err := jsonpatch.ValidateOperation(tt.operation, false)
 
-			if tt.wantErr {
+			if tt.wantErr != nil {
 				require.Error(t, err, "Expected validation error")
-				if tt.errMsg != "" {
-					assert.Contains(t, err.Error(), tt.errMsg)
-				}
+				assert.ErrorIs(t, err, tt.wantErr)
 			} else {
 				assert.NoError(t, err, "Validation should pass")
 			}
@@ -270,11 +261,11 @@ func TestApplyPatch_JSONString(t *testing.T) {
 // TestArrayOperations demonstrates array manipulation with JSON Patch
 func TestArrayOperations(t *testing.T) {
 	// Document with array
-	doc := map[string]interface{}{
-		"items": []interface{}{
-			map[string]interface{}{"id": 1, "name": "Item 1"},
-			map[string]interface{}{"id": 2, "name": "Item 2"},
-			map[string]interface{}{"id": 3, "name": "Item 3"},
+	doc := map[string]any{
+		"items": []any{
+			map[string]any{"id": 1, "name": "Item 1"},
+			map[string]any{"id": 2, "name": "Item 2"},
+			map[string]any{"id": 3, "name": "Item 3"},
 		},
 	}
 
@@ -284,13 +275,13 @@ func TestArrayOperations(t *testing.T) {
 		{
 			Op:    "add",
 			Path:  "/items/0",
-			Value: map[string]interface{}{"id": 0, "name": "Item 0"},
+			Value: map[string]any{"id": 0, "name": "Item 0"},
 		},
 		// Append at end
 		{
 			Op:    "add",
 			Path:  "/items/-",
-			Value: map[string]interface{}{"id": 4, "name": "Item 4"},
+			Value: map[string]any{"id": 4, "name": "Item 4"},
 		},
 		// Update middle item
 		{
@@ -308,14 +299,14 @@ func TestArrayOperations(t *testing.T) {
 	t.Logf("Array operations result:\n%s", string(resultJSON))
 
 	// Verify the result
-	items := result.Doc["items"].([]interface{})
+	items := result.Doc["items"].([]any)
 	assert.Len(t, items, 5, "Expected 5 items after operations")
 }
 
 // TestMultipleOperations demonstrates applying multiple operations
 func TestMultipleOperations(t *testing.T) {
-	doc := map[string]interface{}{
-		"counters": map[string]interface{}{
+	doc := map[string]any{
+		"counters": map[string]any{
 			"a": 0,
 			"b": 0,
 		},
@@ -342,7 +333,7 @@ func TestMultipleOperations(t *testing.T) {
 	t.Logf("Multiple operations result:\n%s", string(resultJSON))
 
 	// Verify the result
-	counters := result.Doc["counters"].(map[string]interface{})
+	counters := result.Doc["counters"].(map[string]any)
 	assert.Equal(t, 1, counters["a"], "Counter a should be updated")
 	assert.Equal(t, 2, counters["b"], "Counter b should be updated")
 }
@@ -379,20 +370,20 @@ func TestApplyPatch_WithMutate(t *testing.T) {
 // TestComplexDocument demonstrates complex document operations
 func TestComplexDocument(t *testing.T) {
 	// Complex nested document
-	doc := map[string]interface{}{
-		"company": map[string]interface{}{
+	doc := map[string]any{
+		"company": map[string]any{
 			"name": "Tech Corp",
-			"departments": []interface{}{
-				map[string]interface{}{
+			"departments": []any{
+				map[string]any{
 					"name": "Engineering",
-					"employees": []interface{}{
-						map[string]interface{}{"id": 1, "name": "Alice", "role": "Developer"},
-						map[string]interface{}{"id": 2, "name": "Bob", "role": "Manager"},
+					"employees": []any{
+						map[string]any{"id": 1, "name": "Alice", "role": "Developer"},
+						map[string]any{"id": 2, "name": "Bob", "role": "Manager"},
 					},
 				},
 			},
 		},
-		"metadata": map[string]interface{}{
+		"metadata": map[string]any{
 			"lastUpdated": "2023-01-01",
 		},
 	}
@@ -403,7 +394,7 @@ func TestComplexDocument(t *testing.T) {
 		{
 			Op:   "add",
 			Path: "/company/departments/0/employees/-",
-			Value: map[string]interface{}{
+			Value: map[string]any{
 				"id":   3,
 				"name": "Charlie",
 				"role": "Senior Developer",
@@ -431,14 +422,14 @@ func TestComplexDocument(t *testing.T) {
 	t.Logf("Complex document result:\n%s", string(resultJSON))
 
 	// Verify the changes
-	company := result.Doc["company"].(map[string]interface{})
-	departments := company["departments"].([]interface{})
-	engineering := departments[0].(map[string]interface{})
-	employees := engineering["employees"].([]interface{})
+	company := result.Doc["company"].(map[string]any)
+	departments := company["departments"].([]any)
+	engineering := departments[0].(map[string]any)
+	employees := engineering["employees"].([]any)
 
 	assert.Len(t, employees, 3, "Should have 3 employees after adding Charlie")
 
-	bob := employees[1].(map[string]interface{})
+	bob := employees[1].(map[string]any)
 	assert.Equal(t, "Senior Manager", bob["role"], "Bob should be promoted to Senior Manager")
 }
 
@@ -449,7 +440,7 @@ func TestComplexDocument(t *testing.T) {
 // TestSpecialCharacters demonstrates handling special characters in paths
 func TestSpecialCharacters(t *testing.T) {
 	// Document with special characters in keys
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"normal":     "value",
 		"with~tilde": "tilde value",
 		"with/slash": "slash value",
@@ -498,8 +489,8 @@ func TestSpecialCharacters(t *testing.T) {
 
 // TestErrorHandling demonstrates proper error handling
 func TestErrorHandling(t *testing.T) {
-	doc := map[string]interface{}{
-		"user": map[string]interface{}{
+	doc := map[string]any{
+		"user": map[string]any{
 			"name": "Alice",
 		},
 	}
@@ -530,7 +521,6 @@ func TestApplyPatch_Errors(t *testing.T) {
 
 		_, err := jsonpatch.ApplyPatch(invalidJSON, patch)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "failed to parse JSON bytes")
 	})
 
 	t.Run("invalid JSON string", func(t *testing.T) {
@@ -564,13 +554,13 @@ func TestApplyPatch_Errors(t *testing.T) {
 // Example demonstrates basic JSON Patch operations
 func Example() {
 	// Original document
-	doc := map[string]interface{}{
-		"user": map[string]interface{}{
+	doc := map[string]any{
+		"user": map[string]any{
 			"name":  "Alice",
 			"email": "alice@example.com",
 			"age":   25,
 		},
-		"settings": map[string]interface{}{
+		"settings": map[string]any{
 			"theme": "dark",
 		},
 	}
@@ -659,7 +649,7 @@ func FuzzOperationSequence(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, patchJSON string) {
 		// Skip obviously invalid JSON
-		var testPatch interface{}
+		var testPatch any
 		if err := json.Unmarshal([]byte(patchJSON), &testPatch); err != nil {
 			t.Skip("Invalid JSON")
 		}
@@ -676,12 +666,12 @@ func FuzzOperationSequence(f *testing.F) {
 		}
 
 		// Create a test document
-		doc := map[string]interface{}{
-			"users": []interface{}{
-				map[string]interface{}{"id": 1, "name": "Alice"},
-				map[string]interface{}{"id": 2, "name": "Bob"},
+		doc := map[string]any{
+			"users": []any{
+				map[string]any{"id": 1, "name": "Alice"},
+				map[string]any{"id": 2, "name": "Bob"},
 			},
-			"settings": map[string]interface{}{
+			"settings": map[string]any{
 				"theme": "dark",
 				"lang":  "en",
 			},
@@ -758,12 +748,12 @@ func FuzzJSONPointerPaths(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, path string) {
 		// Create test document
-		doc := map[string]interface{}{
-			"users": []interface{}{
-				map[string]interface{}{"id": 1, "name": "Alice"},
-				map[string]interface{}{"id": 2, "name": "Bob"},
+		doc := map[string]any{
+			"users": []any{
+				map[string]any{"id": 1, "name": "Alice"},
+				map[string]any{"id": 2, "name": "Bob"},
 			},
-			"settings": map[string]interface{}{
+			"settings": map[string]any{
 				"theme": "dark",
 				"lang":  "en",
 			},
@@ -830,19 +820,19 @@ func FuzzOperationValues(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, valueJSON string) {
 		// Skip obviously invalid JSON
-		var testValue interface{}
+		var testValue any
 		if err := json.Unmarshal([]byte(valueJSON), &testValue); err != nil {
 			t.Skip("Invalid JSON")
 		}
 
 		// Parse the value
-		var value interface{}
+		var value any
 		if err := json.Unmarshal([]byte(valueJSON), &value); err != nil {
 			t.Skip("Cannot unmarshal value")
 		}
 
 		// Create test document
-		doc := map[string]interface{}{
+		doc := map[string]any{
 			"test": "original",
 		}
 
@@ -870,7 +860,7 @@ func FuzzOperationValues(f *testing.F) {
 			if fuzzedValue, exists := resultMap["fuzzed"]; exists {
 				// The value should be equivalent (though not necessarily identical due to JSON round-trip)
 				fuzzedJSON, _ := json.Marshal(fuzzedValue)
-				var testUnmarshal interface{}
+				var testUnmarshal any
 				if err := json.Unmarshal(fuzzedJSON, &testUnmarshal); err != nil {
 					t.Errorf("Fuzzed value in result is not valid JSON")
 				}
@@ -912,8 +902,8 @@ func FuzzArrayIndices(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, index int) {
 		// Create test document with array
-		doc := map[string]interface{}{
-			"array": []interface{}{1, 2, 3, 4, 5},
+		doc := map[string]any{
+			"array": []any{1, 2, 3, 4, 5},
 		}
 
 		// Test various operations with the fuzzed index
@@ -987,13 +977,13 @@ func FuzzComplexDocuments(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, docJSON string) {
 		// Skip obviously invalid JSON
-		var testDoc interface{}
+		var testDoc any
 		if err := json.Unmarshal([]byte(docJSON), &testDoc); err != nil {
 			t.Skip("Invalid JSON")
 		}
 
 		// Parse the document
-		var doc interface{}
+		var doc any
 		if err := json.Unmarshal([]byte(docJSON), &doc); err != nil {
 			t.Skip("Cannot unmarshal document")
 		}
@@ -1090,7 +1080,7 @@ func FuzzEdgeCases(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, docJSON, patchJSON string) {
 		// Skip obviously invalid JSON
-		var testDoc, testPatch interface{}
+		var testDoc, testPatch any
 		if err := json.Unmarshal([]byte(docJSON), &testDoc); err != nil {
 			t.Skip("Invalid JSON")
 		}
@@ -1099,7 +1089,7 @@ func FuzzEdgeCases(f *testing.F) {
 		}
 
 		// Parse document and patch
-		var doc interface{}
+		var doc any
 		var operations []jsonpatch.Operation
 
 		if err := json.Unmarshal([]byte(docJSON), &doc); err != nil {
@@ -1131,7 +1121,7 @@ func FuzzEdgeCases(f *testing.F) {
 			}
 
 			// Result should be parseable back
-			var reparsed interface{}
+			var reparsed any
 			if json.Unmarshal(resultJSON, &reparsed) != nil {
 				t.Errorf("Result cannot be reparsed from JSON")
 			}

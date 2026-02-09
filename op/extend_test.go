@@ -128,17 +128,7 @@ func TestOpExtend_Apply(t *testing.T) {
 	}
 }
 
-func TestOpExtend_Op(t *testing.T) {
-	op := NewExtend([]string{"user"}, map[string]any{"age": 30}, false)
-	assert.Equal(t, internal.OpExtendType, op.Op())
-}
-
-func TestOpExtend_Code(t *testing.T) {
-	op := NewExtend([]string{"user"}, map[string]any{"age": 30}, false)
-	assert.Equal(t, internal.OpExtendCode, op.Code())
-}
-
-func TestOpExtend_NewOpExtend(t *testing.T) {
+func TestOpExtend_Constructor(t *testing.T) {
 	path := []string{"user", "profile"}
 	props := map[string]any{"age": 30, "city": "NYC"}
 	deleteNull := true

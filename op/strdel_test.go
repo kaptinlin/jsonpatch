@@ -164,17 +164,7 @@ func TestOpStrDel_Apply(t *testing.T) {
 	}
 }
 
-func TestOpStrDel_Op(t *testing.T) {
-	op := NewStrDel([]string{"text"}, 1.0, 1.0)
-	assert.Equal(t, internal.OpStrDelType, op.Op())
-}
-
-func TestOpStrDel_Code(t *testing.T) {
-	op := NewStrDel([]string{"text"}, 1.0, 1.0)
-	assert.Equal(t, internal.OpStrDelCode, op.Code())
-}
-
-func TestOpStrDel_NewOpStrDel(t *testing.T) {
+func TestOpStrDel_Constructor(t *testing.T) {
 	path := []string{"user", "bio"}
 	pos := 2.0
 	length := 3.0

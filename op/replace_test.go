@@ -130,18 +130,12 @@ func TestOpReplace_ToJSON(t *testing.T) {
 func TestOpReplace_ToCompact(t *testing.T) {
 	replaceOp := NewReplace([]string{"test"}, "value")
 
-	// Test verbose format
 	compact, err := replaceOp.ToCompact()
 	require.NoError(t, err, "ToCompact should not fail for valid operation")
 	require.Len(t, compact, 3, "Compact format should have 3 elements")
 	assert.Equal(t, internal.OpReplaceCode, compact[0], "First element should be operation code")
 	assert.Equal(t, []string{"test"}, compact[1], "Second element should be path")
 	assert.Equal(t, "value", compact[2], "Third element should be value")
-
-	// Test non-verbose format
-	compact, err = replaceOp.ToCompact()
-	require.NoError(t, err, "ToCompact should not fail for valid operation")
-	require.Len(t, compact, 3, "Compact format should have 3 elements")
 }
 
 func TestOpReplace_Validate(t *testing.T) {

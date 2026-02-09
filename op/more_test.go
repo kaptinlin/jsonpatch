@@ -1,7 +1,6 @@
 package op
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch/internal"
@@ -85,7 +84,7 @@ func TestOpMore_Basic(t *testing.T) {
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.expectedError != nil {
-					assert.True(t, errors.Is(err, tt.expectedError))
+					assert.ErrorIs(t, err, tt.expectedError)
 				}
 				assert.Equal(t, internal.OpResult[any]{}, result)
 			} else {

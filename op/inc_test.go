@@ -118,17 +118,7 @@ func TestOpInc_Apply(t *testing.T) {
 	}
 }
 
-func TestOpInc_Op(t *testing.T) {
-	op := NewInc([]string{"count"}, 1)
-	assert.Equal(t, internal.OpIncType, op.Op())
-}
-
-func TestOpInc_Code(t *testing.T) {
-	op := NewInc([]string{"count"}, 1)
-	assert.Equal(t, internal.OpIncCode, op.Code())
-}
-
-func TestOpInc_NewOpInc(t *testing.T) {
+func TestOpInc_Constructor(t *testing.T) {
 	path := []string{"user", "score"}
 	inc := 3.5
 	op := NewInc(path, inc)

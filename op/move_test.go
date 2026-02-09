@@ -144,18 +144,12 @@ func TestOpMove_ToJSON(t *testing.T) {
 func TestOpMove_ToCompact(t *testing.T) {
 	moveOp := NewMove([]string{"target"}, []string{"source"})
 
-	// Test verbose format
 	compact, err := moveOp.ToCompact()
 	require.NoError(t, err, "ToCompact should not fail for valid operation")
 	require.Len(t, compact, 3, "Compact format should have 3 elements")
 	assert.Equal(t, internal.OpMoveCode, compact[0], "First element should be operation code")
 	assert.Equal(t, []string{"target"}, compact[1], "Second element should be path")
 	assert.Equal(t, []string{"source"}, compact[2], "Third element should be from path")
-
-	// Test non-verbose format
-	compact, err = moveOp.ToCompact()
-	require.NoError(t, err, "ToCompact should not fail for valid operation")
-	require.Len(t, compact, 3, "Compact format should have 3 elements")
 }
 
 func TestOpMove_Validate(t *testing.T) {

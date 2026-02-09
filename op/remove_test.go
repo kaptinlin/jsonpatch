@@ -126,17 +126,11 @@ func TestOpRemove_ToJSON(t *testing.T) {
 func TestOpRemove_ToCompact(t *testing.T) {
 	removeOp := NewRemove([]string{"test"})
 
-	// Test verbose format
 	compact, err := removeOp.ToCompact()
 	require.NoError(t, err, "ToCompact should not fail for valid operation")
 	require.Len(t, compact, 2, "Compact format should have 2 elements")
 	assert.Equal(t, internal.OpRemoveCode, compact[0], "First element should be operation code")
 	assert.Equal(t, []string{"test"}, compact[1], "Second element should be path")
-
-	// Test non-verbose format
-	compact, err = removeOp.ToCompact()
-	require.NoError(t, err, "ToCompact should not fail for valid operation")
-	require.Len(t, compact, 2, "Compact format should have 2 elements")
 }
 
 func TestOpRemove_Validate(t *testing.T) {

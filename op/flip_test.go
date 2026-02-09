@@ -159,17 +159,7 @@ func TestOpFlip_Apply(t *testing.T) {
 	}
 }
 
-func TestOpFlip_Op(t *testing.T) {
-	op := NewFlip([]string{"flag"})
-	assert.Equal(t, internal.OpFlipType, op.Op())
-}
-
-func TestOpFlip_Code(t *testing.T) {
-	op := NewFlip([]string{"flag"})
-	assert.Equal(t, internal.OpFlipCode, op.Code())
-}
-
-func TestOpFlip_NewOpFlip(t *testing.T) {
+func TestOpFlip_Constructor(t *testing.T) {
 	path := []string{"user", "active"}
 	op := NewFlip(path)
 

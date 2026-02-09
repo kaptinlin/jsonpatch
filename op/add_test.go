@@ -85,11 +85,6 @@ func TestOpAdd_ToCompact(t *testing.T) {
 	assert.Equal(t, internal.OpAddCode, compact[0], "First element should be operation code")
 	assert.Equal(t, []string{"foo"}, compact[1], "Second element should be path")
 	assert.Equal(t, "bar", compact[2], "Third element should be value")
-
-	// Test non-verbose format
-	compact, err = op.ToCompact()
-	require.NoError(t, err, "ToCompact should not fail for valid operation")
-	require.Len(t, compact, 3, "Compact format should have 3 elements")
 }
 
 func TestOpAdd_Validate(t *testing.T) {

@@ -122,17 +122,13 @@ func TestOpOr_ToJSON(t *testing.T) {
 
 	orOp := NewOr([]string{"test"}, []any{test1, test2})
 
-	json, err := orOp.ToJSON()
+	jsonOp, err := orOp.ToJSON()
 	require.NoError(t, err, "ToJSON should not fail for valid operation")
-	jsonMap := json
 
-	assert.Equal(t, "or", jsonMap.Op, "JSON should contain correct op type")
-	assert.Equal(t, "/test", jsonMap.Path, "JSON should contain correct formatted path")
-
-	// Check apply array
-	apply := jsonMap.Apply
-	require.NotNil(t, apply, "JSON should contain apply array")
-	assert.Len(t, apply, 2, "JSON should contain correct number of operations")
+	assert.Equal(t, "or", jsonOp.Op, "JSON should contain correct op type")
+	assert.Equal(t, "/test", jsonOp.Path, "JSON should contain correct formatted path")
+	require.NotNil(t, jsonOp.Apply, "JSON should contain apply array")
+	assert.Len(t, jsonOp.Apply, 2, "JSON should contain correct number of operations")
 }
 
 func TestOpOr_ToCompact(t *testing.T) {
@@ -143,11 +139,10 @@ func TestOpOr_ToCompact(t *testing.T) {
 
 	compact, err := orOp.ToCompact()
 	require.NoError(t, err, "ToCompact should not fail for valid operation")
-	compactArr := compact
 
-	assert.Equal(t, internal.OpOrCode, compactArr[0], "First element should be operation code")
-	assert.Equal(t, []string{"test"}, compactArr[1], "Second element should be path")
-	assert.IsType(t, []any{}, compactArr[2], "Third element should be ops array")
+	assert.Equal(t, internal.OpOrCode, compact[0], "First element should be operation code")
+	assert.Equal(t, []string{"test"}, compact[1], "Second element should be path")
+	assert.IsType(t, []any{}, compact[2], "Third element should be ops array")
 }
 
 func TestOpOr_Validate(t *testing.T) {

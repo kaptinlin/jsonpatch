@@ -146,17 +146,7 @@ func TestOpStrIns_Apply(t *testing.T) {
 	}
 }
 
-func TestOpStrIns_Op(t *testing.T) {
-	op := NewStrIns([]string{"text"}, 1.0, "-")
-	assert.Equal(t, internal.OpStrInsType, op.Op())
-}
-
-func TestOpStrIns_Code(t *testing.T) {
-	op := NewStrIns([]string{"text"}, 1.0, "-")
-	assert.Equal(t, internal.OpStrInsCode, op.Code())
-}
-
-func TestOpStrIns_NewStrIns(t *testing.T) {
+func TestOpStrIns_Constructor(t *testing.T) {
 	path := []string{"user", "bio"}
 	pos := 2.0
 	str := "abc"

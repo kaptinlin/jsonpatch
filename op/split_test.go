@@ -157,17 +157,7 @@ func TestOpSplit_Apply(t *testing.T) {
 	}
 }
 
-func TestOpSplit_Op(t *testing.T) {
-	op := NewSplit([]string{"text"}, 1, nil)
-	assert.Equal(t, internal.OpSplitType, op.Op())
-}
-
-func TestOpSplit_Code(t *testing.T) {
-	op := NewSplit([]string{"text"}, 1, nil)
-	assert.Equal(t, internal.OpSplitCode, op.Code())
-}
-
-func TestOpSplit_NewOpSplit(t *testing.T) {
+func TestOpSplit_Constructor(t *testing.T) {
 	path := []string{"user", "bio"}
 	pos := 2.0
 	props := map[string]any{"type": "split"}
