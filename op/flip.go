@@ -41,9 +41,8 @@ func (f *FlipOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if err != nil {
 		// Path doesn't exist: treat as undefined (false), flip to true
 		value = nil
-	} else {
-		oldValue = value
 	}
+	oldValue = value
 
 	flipped := flipValue(value)
 

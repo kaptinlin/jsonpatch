@@ -37,6 +37,11 @@ func (ts *TestStringOperation) Code() int {
 	return internal.OpTestStringCode
 }
 
+// Not returns whether this operation is a negation predicate.
+func (ts *TestStringOperation) Not() bool {
+	return ts.NotFlag
+}
+
 // Test evaluates the test string predicate condition.
 func (ts *TestStringOperation) Test(doc any) (bool, error) {
 	val, err := getValue(doc, ts.Path())
@@ -143,11 +148,6 @@ func (ts *TestStringOperation) ToCompact() (internal.CompactOperation, error) {
 	return internal.CompactOperation{internal.OpTestStringCode, ts.Path(), ts.Str}, nil
 }
 
-// Not returns whether this operation is a negation predicate.
-func (ts *TestStringOperation) Not() bool {
-	return ts.NotFlag
-}
-
 // Validate validates the test string operation.
 func (ts *TestStringOperation) Validate() error {
 	if len(ts.Path()) == 0 {
@@ -155,4 +155,3 @@ func (ts *TestStringOperation) Validate() error {
 	}
 	return nil
 }
-

@@ -1,8 +1,6 @@
 package op
 
-import (
-	"github.com/kaptinlin/jsonpatch/internal"
-)
+import "github.com/kaptinlin/jsonpatch/internal"
 
 // MoveOperation represents a move operation that moves a value from one path to another.
 type MoveOperation struct {

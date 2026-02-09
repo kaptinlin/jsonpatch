@@ -1,8 +1,6 @@
 package op
 
-import (
-	"github.com/kaptinlin/jsonpatch/internal"
-)
+import "github.com/kaptinlin/jsonpatch/internal"
 
 // RemoveOperation represents a remove operation that removes a value at a specified path.
 type RemoveOperation struct {

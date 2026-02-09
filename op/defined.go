@@ -1,8 +1,6 @@
 package op
 
-import (
-	"github.com/kaptinlin/jsonpatch/internal"
-)
+import "github.com/kaptinlin/jsonpatch/internal"
 
 // DefinedOperation represents a test operation that checks if a path is defined.
 type DefinedOperation struct {

@@ -1,8 +1,6 @@
 package op
 
-import (
-	"github.com/kaptinlin/jsonpatch/internal"
-)
+import "github.com/kaptinlin/jsonpatch/internal"
 
 // UndefinedOperation represents an undefined operation that checks if a path doesn't exist.
 type UndefinedOperation struct {

@@ -40,6 +40,31 @@ func (tl *TestStringLenOperation) Code() int {
 	return internal.OpTestStringLenCode
 }
 
+// Not returns whether this is a negation predicate.
+func (tl *TestStringLenOperation) Not() bool {
+	return tl.NotFlag
+}
+
+// Test tests the string length condition on the document.
+func (tl *TestStringLenOperation) Test(doc any) (bool, error) {
+	// Get the value at the path
+	value, err := getValue(doc, tl.Path())
+	if err != nil {
+		//nolint:nilerr // intentional: path not found means test fails
+		return false, nil
+	}
+
+	// Convert value to string
+	str, ok := extractString(value)
+	if !ok {
+		return false, nil
+	}
+
+	length := int(tl.Length)
+	lengthMatches := len(str) >= length
+	return tl.NotFlag != lengthMatches, nil
+}
+
 // Apply applies the test string length operation to the document.
 func (tl *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get the value at the path
@@ -101,31 +126,4 @@ func (tl *TestStringLenOperation) Validate() error {
 		return ErrLengthNegative
 	}
 	return nil
-}
-
-// Test tests the string length condition on the document.
-func (tl *TestStringLenOperation) Test(doc any) (bool, error) {
-	// Get the value at the path
-	value, err := getValue(doc, tl.Path())
-	if err != nil {
-		// For JSON Patch test operations, path not found means test fails (returns false)
-		// This is correct JSON Patch semantics - returning nil error with false result
-		//nolint:nilerr // This is intentional behavior for test operations
-		return false, nil
-	}
-
-	// Convert value to string
-	str, ok := extractString(value)
-	if !ok {
-		return false, nil // Return false if not string or byte slice
-	}
-
-	length := int(tl.Length)
-	lengthMatches := len(str) >= length
-	return tl.NotFlag != lengthMatches, nil
-}
-
-// Not returns whether this is a negation predicate.
-func (tl *TestStringLenOperation) Not() bool {
-	return tl.NotFlag
 }

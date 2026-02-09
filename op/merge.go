@@ -144,8 +144,6 @@ func (mg *MergeOperation) mergeElements(one, two any) any {
 	return []any{one, two}
 }
 
-// Old methods removed - now using pkg/slate functions
-
 // ToJSON serializes the operation to JSON format.
 func (mg *MergeOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{

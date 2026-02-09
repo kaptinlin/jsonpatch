@@ -1,8 +1,6 @@
 package op
 
-import (
-	"github.com/kaptinlin/jsonpatch/internal"
-)
+import "github.com/kaptinlin/jsonpatch/internal"
 
 // SplitOperation represents a string split operation.
 // path: target path
@@ -183,8 +181,6 @@ func (sp *SplitOperation) splitNumber(n float64) []any {
 	}
 	return []any{pos, n - pos}
 }
-
-// Old Slate-specific split methods removed - now using pkg/slate functions
 
 // ToJSON serializes the operation to JSON format.
 func (sp *SplitOperation) ToJSON() (internal.Operation, error) {

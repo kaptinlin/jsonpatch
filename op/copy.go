@@ -1,8 +1,6 @@
 package op
 
-import (
-	"github.com/kaptinlin/jsonpatch/internal"
-)
+import "github.com/kaptinlin/jsonpatch/internal"
 
 // CopyOperation represents a copy operation that copies a value from one path to another.
 type CopyOperation struct {
