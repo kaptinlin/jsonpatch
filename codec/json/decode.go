@@ -12,8 +12,43 @@ import (
 	"github.com/kaptinlin/jsonpointer"
 )
 
+// --- Public API ---
+
+// Decode converts JSON operations to Op instances.
+func Decode(operations []map[string]any, options internal.JSONPatchOptions) ([]internal.Op, error) {
+	ops := make([]internal.Op, 0, len(operations))
+	for _, operation := range operations {
+		o, err := OperationToOp(operation, options)
+		if err != nil {
+			return nil, err
+		}
+		ops = append(ops, o)
+	}
+	return ops, nil
+}
+
+// DecodeOperations converts Operation structs to Op instances.
+func DecodeOperations(operations []internal.Operation, options internal.JSONPatchOptions) ([]internal.Op, error) {
+	operationMaps := make([]map[string]any, len(operations))
+	for i, o := range operations {
+		operationMaps[i] = toMap(o)
+	}
+	return Decode(operationMaps, options)
+}
+
+// DecodeJSON converts JSON bytes to Op instances.
+func DecodeJSON(data []byte, options internal.JSONPatchOptions) ([]internal.Op, error) {
+	var operations []map[string]any
+	if err := json.Unmarshal(data, &operations); err != nil {
+		return nil, err
+	}
+	return Decode(operations, options)
+}
+
+// --- Header parsing ---
+
 // parseOpHeader extracts and validates the common "op" and "path" fields
-// from an operation map. Returns the op type, raw path string, and parsed path tokens.
+// from an operation map.
 func parseOpHeader(operation map[string]any) (opType, pathStr string, path []string, err error) {
 	opType, ok := operation["op"].(string)
 	if !ok {
@@ -31,6 +66,8 @@ func parseOpHeader(operation map[string]any) (opType, pathStr string, path []str
 
 	return opType, pathStr, jsonpointer.Parse(pathStr), nil
 }
+
+// --- Operation dispatching ---
 
 // OperationToOp converts a JSON operation map to an Op instance.
 func OperationToOp(operation map[string]any, options internal.JSONPatchOptions) (internal.Op, error) {
@@ -51,6 +88,18 @@ func OperationToOp(operation map[string]any, options internal.JSONPatchOptions) 
 	}
 }
 
+// OperationToPredicateOp converts a JSON operation map to a PredicateOp instance.
+func OperationToPredicateOp(operation map[string]any, options internal.JSONPatchOptions) (internal.Op, error) {
+	opType, pathStr, path, err := parseOpHeader(operation)
+	if err != nil {
+		return nil, err
+	}
+	return parsePredicateOp(opType, path, pathStr, operation, options)
+}
+
+// --- Core operations (RFC 6902) ---
+
+// parseCoreOp decodes standard JSON Patch (RFC 6902) operations.
 func parseCoreOp(opType string, path []string, operation map[string]any) (internal.Op, error) {
 	switch opType {
 	case "add":
@@ -58,11 +107,13 @@ func parseCoreOp(opType string, path []string, operation map[string]any) (intern
 			return nil, ErrAddOpMissingValue
 		}
 		return op.NewAdd(path, operation["value"]), nil
+
 	case "remove":
 		if oldValue, ok := operation["oldValue"]; ok {
 			return op.NewRemoveWithOldValue(path, oldValue), nil
 		}
 		return op.NewRemove(path), nil
+
 	case "replace":
 		if _, ok := operation["value"]; !ok {
 			return nil, ErrReplaceOpMissingValue
@@ -71,27 +122,34 @@ func parseCoreOp(opType string, path []string, operation map[string]any) (intern
 			return op.NewReplaceWithOldValue(path, operation["value"], oldValue), nil
 		}
 		return op.NewReplace(path, operation["value"]), nil
+
 	case "move":
 		fromStr, ok := operation["from"].(string)
 		if !ok {
 			return nil, ErrMoveOpMissingFrom
 		}
 		return op.NewMove(path, jsonpointer.Parse(fromStr)), nil
+
 	case "copy":
 		fromStr, ok := operation["from"].(string)
 		if !ok {
 			return nil, ErrCopyOpMissingFrom
 		}
 		return op.NewCopy(path, jsonpointer.Parse(fromStr)), nil
+
 	default:
 		return nil, ErrCodecOpUnknown
 	}
 }
 
+// --- Extended operations ---
+
+// parseExtendedOp decodes extended operations (flip, inc, str_ins, str_del, split, merge, extend).
 func parseExtendedOp(opType string, path []string, operation map[string]any) (internal.Op, error) {
 	switch opType {
 	case "flip":
 		return op.NewFlip(path), nil
+
 	case "inc":
 		incField, hasInc := operation["inc"]
 		if !hasInc {
@@ -102,6 +160,7 @@ func parseExtendedOp(opType string, path []string, operation map[string]any) (in
 			return nil, ErrIncOpInvalidType
 		}
 		return op.NewInc(path, incVal), nil
+
 	case "str_ins":
 		posVal, hasPosField := operation["pos"]
 		if !hasPosField {
@@ -116,6 +175,7 @@ func parseExtendedOp(opType string, path []string, operation map[string]any) (in
 			return nil, ErrStrInsOpMissingStr
 		}
 		return op.NewStrIns(path, pos, str), nil
+
 	case "str_del":
 		posVal, hasPosField := operation["pos"]
 		if !hasPosField {
@@ -125,7 +185,6 @@ func parseExtendedOp(opType string, path []string, operation map[string]any) (in
 		if !ok {
 			return nil, ErrStrDelOpMissingPos
 		}
-		// str_del can have either str or len parameter
 		if str, ok := operation["str"].(string); ok && str != "" {
 			return op.NewStrDelWithStr(path, pos, str), nil
 		}
@@ -133,6 +192,7 @@ func parseExtendedOp(opType string, path []string, operation map[string]any) (in
 			return op.NewStrDel(path, pos, lenVal), nil
 		}
 		return nil, ErrStrDelOpMissingFields
+
 	case "split":
 		posVal, hasPosField := operation["pos"]
 		if !hasPosField {
@@ -143,6 +203,7 @@ func parseExtendedOp(opType string, path []string, operation map[string]any) (in
 			return nil, ErrSplitOpMissingPos
 		}
 		return op.NewSplit(path, pos, operation["props"]), nil
+
 	case "merge":
 		props := make(map[string]any)
 		if p, ok := operation["props"].(map[string]any); ok {
@@ -153,6 +214,7 @@ func parseExtendedOp(opType string, path []string, operation map[string]any) (in
 			pos = posVal
 		}
 		return op.NewMerge(path, pos, props), nil
+
 	case "extend":
 		props, ok := operation["props"].(map[string]any)
 		if !ok {
@@ -160,29 +222,16 @@ func parseExtendedOp(opType string, path []string, operation map[string]any) (in
 		}
 		deleteNull, _ := operation["deleteNull"].(bool)
 		return op.NewExtend(path, props, deleteNull), nil
+
 	default:
 		return nil, ErrCodecOpUnknown
 	}
 }
 
-func parseNotOp(path []string, pathStr string, operation map[string]any, options internal.JSONPatchOptions) (internal.Op, error) {
-	apply, ok := operation["apply"].([]any)
-	if !ok {
-		return nil, ErrNotOpMissingApply
-	}
-	if len(apply) == 0 {
-		return nil, ErrNotOpRequiresOperand
-	}
-	predicateOps, err := decodeCompositePredicates(apply, jsonpointer.Parse(pathStr), options)
-	if err != nil {
-		return nil, err
-	}
-	return op.NewNotMultiple(path, predicateOps), nil
-}
+// --- Predicate operations ---
 
-// parsePredicateOp converts a JSON operation map to a predicate Op instance.
-// It handles test, defined, undefined, type checks, string tests, comparisons,
-// and composite operations (and, or, not).
+// parsePredicateOp decodes JSON Predicate operations including test, type checks,
+// string tests, comparisons, and composite operations (and, or, not).
 func parsePredicateOp(opType string, path []string, pathStr string, operation map[string]any, options internal.JSONPatchOptions) (internal.Op, error) {
 	switch opType {
 	case "test":
@@ -195,22 +244,29 @@ func parsePredicateOp(opType string, path []string, pathStr string, operation ma
 			testOp.NotFlag = true
 		}
 		return testOp, nil
+
 	case "defined":
 		return op.NewDefined(path), nil
+
 	case "undefined":
 		return op.NewUndefined(path), nil
+
 	case "type":
 		value, ok := operation["value"].(string)
 		if !ok {
 			return nil, ErrTypeOpMissingValue
 		}
 		return op.NewType(path, value), nil
+
 	case "test_type":
 		return parseTestType(path, operation)
+
 	case "test_string":
 		return parseTestString(path, operation)
+
 	case "test_string_len":
 		return parseTestStringLen(path, operation)
+
 	case "contains":
 		value, hasValue := operation["value"]
 		if !hasValue {
@@ -220,43 +276,50 @@ func parsePredicateOp(opType string, path []string, pathStr string, operation ma
 		if !ok {
 			return nil, op.ErrContainsValueMustBeString
 		}
-		return op.NewContainsWithIgnoreCase(path, stringValue, getBoolField(operation, "ignore_case")), nil
+		return op.NewContainsWithIgnoreCase(path, stringValue, boolField(operation, "ignore_case")), nil
+
 	case "ends":
 		value, ok := operation["value"].(string)
 		if !ok {
 			return nil, ErrEndsOpMissingValue
 		}
-		return op.NewEndsWithIgnoreCase(path, value, getBoolField(operation, "ignore_case")), nil
+		return op.NewEndsWithIgnoreCase(path, value, boolField(operation, "ignore_case")), nil
+
 	case "starts":
 		value, ok := operation["value"].(string)
 		if !ok {
 			return nil, ErrStartsOpMissingValue
 		}
-		return op.NewStartsWithIgnoreCase(path, value, getBoolField(operation, "ignore_case")), nil
+		return op.NewStartsWithIgnoreCase(path, value, boolField(operation, "ignore_case")), nil
+
 	case "matches":
 		value, ok := operation["value"].(string)
 		if !ok {
 			return nil, ErrMatchesOpMissingValue
 		}
-		return op.NewMatches(path, value, getBoolField(operation, "ignore_case"), options.CreateMatcher), nil
+		return op.NewMatches(path, value, boolField(operation, "ignore_case"), options.CreateMatcher), nil
+
 	case "in":
 		value := operation["value"]
 		if values, ok := value.([]any); ok {
 			return op.NewIn(path, values), nil
 		}
 		return op.NewIn(path, []any{value}), nil
+
 	case "less":
 		value, ok := op.ToFloat64(operation["value"])
 		if !ok {
 			return nil, ErrLessOpMissingValue
 		}
 		return op.NewLess(path, value), nil
+
 	case "more":
 		value, ok := op.ToFloat64(operation["value"])
 		if !ok {
 			return nil, ErrMoreOpMissingValue
 		}
 		return op.NewMore(path, value), nil
+
 	case "and":
 		apply, ok := operation["apply"].([]any)
 		if !ok {
@@ -267,6 +330,7 @@ func parsePredicateOp(opType string, path []string, pathStr string, operation ma
 			return nil, err
 		}
 		return op.NewAnd(path, predicateOps), nil
+
 	case "or":
 		apply, ok := operation["apply"].([]any)
 		if !ok {
@@ -277,15 +341,20 @@ func parsePredicateOp(opType string, path []string, pathStr string, operation ma
 			return nil, err
 		}
 		return op.NewOr(path, predicateOps), nil
+
 	case "not":
 		return parsePredicateNot(pathStr, operation, options)
+
 	default:
 		return nil, ErrCodecOpUnknown
 	}
 }
 
+// --- Predicate sub-parsers ---
+
+// parseTestType decodes a test_type operation supporting both single and multiple types.
 func parseTestType(path []string, operation map[string]any) (internal.Op, error) {
-	// First check for "type" field (standard), then fall back to "value" field (compatibility)
+	// Check "type" field first (standard), then fall back to "value" field (compatibility).
 	typeField := operation["type"]
 	if typeField == nil {
 		typeField = operation["value"]
@@ -328,6 +397,7 @@ func parseTestType(path []string, operation map[string]any) (internal.Op, error)
 	}
 }
 
+// parseTestString decodes a test_string operation.
 func parseTestString(path []string, operation map[string]any) (internal.Op, error) {
 	str, ok := operation["str"].(string)
 	if !ok {
@@ -346,6 +416,7 @@ func parseTestString(path []string, operation map[string]any) (internal.Op, erro
 	return op.NewTestString(path, str), nil
 }
 
+// parseTestStringLen decodes a test_string_len operation.
 func parseTestStringLen(path []string, operation map[string]any) (internal.Op, error) {
 	lenVal, ok := op.ToFloat64(operation["len"])
 	if !ok {
@@ -358,6 +429,25 @@ func parseTestStringLen(path []string, operation map[string]any) (internal.Op, e
 	return op.NewTestStringLen(path, lenVal), nil
 }
 
+// --- Composite operations (and, or, not) ---
+
+// parseNotOp decodes a top-level not operation with multiple predicates.
+func parseNotOp(path []string, pathStr string, operation map[string]any, options internal.JSONPatchOptions) (internal.Op, error) {
+	apply, ok := operation["apply"].([]any)
+	if !ok {
+		return nil, ErrNotOpMissingApply
+	}
+	if len(apply) == 0 {
+		return nil, ErrNotOpRequiresOperand
+	}
+	predicateOps, err := decodeCompositePredicates(apply, jsonpointer.Parse(pathStr), options)
+	if err != nil {
+		return nil, err
+	}
+	return op.NewNotMultiple(path, predicateOps), nil
+}
+
+// parsePredicateNot decodes a not predicate with a single operand.
 func parsePredicateNot(pathStr string, operation map[string]any, options internal.JSONPatchOptions) (internal.Op, error) {
 	apply, ok := operation["apply"].([]any)
 	if !ok {
@@ -370,7 +460,7 @@ func parsePredicateNot(pathStr string, operation map[string]any, options interna
 	if !ok {
 		return nil, ErrNotOpRequiresValidOperand
 	}
-	// Merge paths
+
 	subPath := ""
 	if sp, ok := applyMap["path"].(string); ok {
 		subPath = sp
@@ -389,22 +479,9 @@ func parsePredicateNot(pathStr string, operation map[string]any, options interna
 	return op.NewNot(predicateOp), nil
 }
 
-// OperationToPredicateOp converts a JSON operation map to a PredicateOp instance.
-func OperationToPredicateOp(operation map[string]any, options internal.JSONPatchOptions) (internal.Op, error) {
-	opType, pathStr, path, err := parseOpHeader(operation)
-	if err != nil {
-		return nil, err
-	}
-	return parsePredicateOp(opType, path, pathStr, operation, options)
-}
-
 // decodeCompositePredicates decodes an array of sub-operations for and/or/not operations.
 // It handles path merging and recursive predicate decoding.
-func decodeCompositePredicates(
-	apply []any,
-	basePath jsonpointer.Path,
-	options internal.JSONPatchOptions,
-) ([]any, error) {
+func decodeCompositePredicates(apply []any, basePath jsonpointer.Path, options internal.JSONPatchOptions) ([]any, error) {
 	predicateOps := make([]any, 0, len(apply))
 	for _, subOp := range apply {
 		subOpMap, ok := subOp.(map[string]any)
@@ -427,8 +504,10 @@ func decodeCompositePredicates(
 	return predicateOps, nil
 }
 
-// getBoolField extracts a boolean field from an operation map with a default of false.
-func getBoolField(operation map[string]any, field string) bool {
+// --- Helper functions ---
+
+// boolField extracts a boolean field from an operation map with a default of false.
+func boolField(operation map[string]any, field string) bool {
 	v, _ := operation[field].(bool)
 	return v
 }
@@ -440,7 +519,6 @@ func mergePaths(basePath, subPath jsonpointer.Path) jsonpointer.Path {
 	if len(subPath) == 0 {
 		return basePath
 	}
-
 	if slices.Equal(basePath, subPath) {
 		return subPath
 	}
@@ -451,6 +529,8 @@ func mergePaths(basePath, subPath jsonpointer.Path) jsonpointer.Path {
 	return result
 }
 
+// --- Map conversion ---
+
 // toMap converts an internal.Operation struct to a map for decoding.
 func toMap(o internal.Operation) map[string]any {
 	m := make(map[string]any, 8)
@@ -458,7 +538,7 @@ func toMap(o internal.Operation) map[string]any {
 	m["op"] = o.Op
 	m["path"] = o.Path
 
-	// Value field - include for operations that require it (even nil is valid)
+	// Value field - include for operations that require it (even nil is valid).
 	if o.Value != nil || o.Op == "add" || o.Op == "replace" || o.Op == "test" {
 		m["value"] = o.Value
 	}
@@ -466,7 +546,7 @@ func toMap(o internal.Operation) map[string]any {
 		m["from"] = o.From
 	}
 
-	// Numeric fields without omitempty: 0 is a valid value
+	// Numeric fields without omitempty: 0 is a valid value.
 	m["inc"] = o.Inc
 	m["pos"] = float64(o.Pos)
 	m["str"] = o.Str
@@ -540,35 +620,4 @@ func nestedToMap(o internal.Operation) map[string]any {
 	}
 
 	return m
-}
-
-// Decode converts JSON operations to Op instances.
-func Decode(operations []map[string]any, options internal.JSONPatchOptions) ([]internal.Op, error) {
-	ops := make([]internal.Op, 0, len(operations))
-	for _, operation := range operations {
-		o, err := OperationToOp(operation, options)
-		if err != nil {
-			return nil, err
-		}
-		ops = append(ops, o)
-	}
-	return ops, nil
-}
-
-// DecodeOperations converts Operation structs to Op instances.
-func DecodeOperations(operations []internal.Operation, options internal.JSONPatchOptions) ([]internal.Op, error) {
-	operationMaps := make([]map[string]any, len(operations))
-	for i, o := range operations {
-		operationMaps[i] = toMap(o)
-	}
-	return Decode(operationMaps, options)
-}
-
-// DecodeJSON converts JSON bytes to Op instances.
-func DecodeJSON(data []byte, options internal.JSONPatchOptions) ([]internal.Op, error) {
-	var operations []map[string]any
-	if err := json.Unmarshal(data, &operations); err != nil {
-		return nil, err
-	}
-	return Decode(operations, options)
 }
