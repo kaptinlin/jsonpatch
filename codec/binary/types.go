@@ -3,8 +3,9 @@ package binary
 import (
 	"bytes"
 
-	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/tinylib/msgp/msgp"
+
+	"github.com/kaptinlin/jsonpatch/internal"
 )
 
 // Codec encodes and decodes JSON Patch operations in MessagePack binary format.

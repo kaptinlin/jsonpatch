@@ -3,9 +3,10 @@ package binary
 import (
 	"fmt"
 
+	"github.com/tinylib/msgp/msgp"
+
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/op"
-	"github.com/tinylib/msgp/msgp"
 )
 
 // encodeOps writes the operation count followed by each encoded operation.
