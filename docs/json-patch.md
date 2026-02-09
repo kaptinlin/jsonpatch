@@ -14,7 +14,7 @@ This document covers all [JSON Patch (RFC 6902)][json-patch] operations:
 ```go
 import "github.com/kaptinlin/jsonpatch"
 
-doc := map[string]interface{}{
+doc := map[string]any{
     "name": "Alice",
     "age":  25,
 }
@@ -88,7 +88,7 @@ Copy values to new locations.
 
 ### Test Operation
 
-Test if values match expectations. Supports optional `not` flag for inverted tests.
+Test if values match expectations. Supports optional `Not` flag for inverted tests.
 
 ```go
 // Test equality
@@ -130,8 +130,7 @@ patch := []jsonpatch.Operation{
 ```go
 var patch []jsonpatch.Operation
 
-// Update multiple fields
-for i := 0; i < 3; i++ {
+for i := range 3 {
     patch = append(patch, jsonpatch.Operation{
         Op:    "replace",
         Path:  fmt.Sprintf("/items/%d/status", i),
@@ -145,7 +144,7 @@ result, err := jsonpatch.ApplyPatch(doc, patch)
 ## Options
 
 ```go
-// Default: creates a copy
+// Default: creates a deep copy (immutable)
 result, err := jsonpatch.ApplyPatch(doc, patch)
 
 // Mutate original document for better performance

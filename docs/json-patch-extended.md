@@ -2,24 +2,24 @@
 
 This document covers extended operations beyond the standard JSON Patch (RFC 6902) specification:
 
-- `str_ins` - String insertion for text editing
-- `str_del` - String deletion with position and length/substring
-- `inc` - Increment numeric values
-- `flip` - Boolean toggling
-- `split` - Object splitting operations
-- `merge` - Object merging operations
-- `extend` - Object extension with property merging
+- `str_ins` - String insertion at a specific position
+- `str_del` - String deletion by position and length or substring
+- `inc` - Increment/decrement numeric values
+- `flip` - Toggle boolean values
+- `split` - Split values at a position
+- `merge` - Merge adjacent array elements
+- `extend` - Extend objects with additional properties
 
 ## Basic Usage
 
 ```go
 import "github.com/kaptinlin/jsonpatch"
 
-doc := map[string]interface{}{
+doc := map[string]any{
     "content": "Hello World",
     "counter": 10,
     "active":  false,
-    "config": map[string]interface{}{
+    "config": map[string]any{
         "theme": "dark",
         "lang":  "en",
     },
@@ -29,7 +29,7 @@ patch := []jsonpatch.Operation{
     {Op: "str_ins", Path: "/content", Pos: 6, Str: "Beautiful "},
     {Op: "inc", Path: "/counter", Inc: 5},
     {Op: "flip", Path: "/active"},
-    {Op: "extend", Path: "/config", Props: map[string]interface{}{
+    {Op: "extend", Path: "/config", Props: map[string]any{
         "version": "1.0",
         "debug":   true,
     }},
@@ -57,7 +57,7 @@ Insert text at a specific position within a string.
 // Insert in middle
 {Op: "str_ins", Path: "/text", Pos: 6, Str: "Beautiful "}
 
-// Insert at end
+// Insert at end (use the string length as position)
 {Op: "str_ins", Path: "/text", Pos: 11, Str: "!"}
 ```
 
@@ -69,10 +69,10 @@ Delete text from strings using position and length or substring matching.
 // Delete by position and length
 {Op: "str_del", Path: "/text", Pos: 6, Len: 10}
 
-// Delete by substring
+// Delete by substring at position
 {Op: "str_del", Path: "/text", Pos: 6, Str: "Beautiful "}
 
-// Delete from position to end
+// Delete from position to end (use a large length value)
 {Op: "str_del", Path: "/text", Pos: 5, Len: 100}
 ```
 
@@ -114,30 +114,28 @@ Toggle boolean values.
 Add properties to an object without replacing existing ones.
 
 ```go
-{Op: "extend", Path: "/config", Props: {
+{Op: "extend", Path: "/config", Props: map[string]any{
     "version": "1.0",
-    "debug": true
-}}
-```
-
-### Merge
-
-Merge objects, replacing existing properties.
-
-```go
-{Op: "merge", Path: "/settings", Props: {
-    "theme": "light",
-    "language": "zh"
+    "debug":   true,
 }}
 ```
 
 ### Split
 
-Split an object into multiple properties.
+Split a value at a specified position. Works with strings, numbers, and Slate.js-style nodes.
 
 ```go
-// Split object properties to parent level
-{Op: "split", Path: "/user/address", Props: ["street", "city", "zip"]}
+// Split at position
+{Op: "split", Path: "/items/0", Pos: 5}
+```
+
+### Merge
+
+Merge adjacent array elements. The `Pos` field specifies the number of elements to merge.
+
+```go
+// Merge adjacent elements
+{Op: "merge", Path: "/items/1", Pos: 1}
 ```
 
 ## Common Patterns
@@ -148,10 +146,8 @@ Split an object into multiple properties.
 patch := []jsonpatch.Operation{
     // Insert prefix
     {Op: "str_ins", Path: "/title", Pos: 0, Str: "[DRAFT] "},
-    // Append suffix
-    {Op: "str_ins", Path: "/title", Pos: -1, Str: " - Updated"},
-    // Remove unwanted text
-    {Op: "str_del", Path: "/content", Str: "TODO: "},
+    // Remove unwanted text by position and length
+    {Op: "str_del", Path: "/content", Pos: 0, Len: 6},
 }
 ```
 
@@ -174,29 +170,10 @@ patch := []jsonpatch.Operation{
 patch := []jsonpatch.Operation{
     // Toggle feature flag
     {Op: "flip", Path: "/features/newUI"},
-    // Add new settings
-    {Op: "extend", Path: "/settings", Props: {
+    // Add new settings without overwriting existing ones
+    {Op: "extend", Path: "/settings", Props: map[string]any{
         "autoSave": true,
-        "timeout": 30
-    }},
-    // Merge user preferences
-    {Op: "merge", Path: "/preferences", Props: {
-        "theme": "dark",
-        "language": "en"
-    }},
-}
-```
-
-### Data Transformation
-
-```go
-patch := []jsonpatch.Operation{
-    // Split address into separate fields
-    {Op: "split", Path: "/user/fullAddress", Props: ["street", "city", "country"]},
-    // Merge contact info
-    {Op: "merge", Path: "/user", Props: {
-        "email": "user@example.com",
-        "phone": "+1234567890"
+        "timeout":  30,
     }},
 }
 ```
@@ -206,26 +183,26 @@ patch := []jsonpatch.Operation{
 ### Blog Post Editor
 
 ```go
-doc := map[string]interface{}{
+doc := map[string]any{
     "title":   "My Blog Post",
     "content": "This is the content.",
-    "stats":   map[string]interface{}{"views": 0, "likes": 0},
+    "stats":   map[string]any{"views": 0, "likes": 0},
     "draft":   true,
 }
 
 patch := []jsonpatch.Operation{
     // Update title
     {Op: "str_ins", Path: "/title", Pos: 0, Str: "[Updated] "},
-    // Add content
-    {Op: "str_ins", Path: "/content", Pos: -1, Str: " More content added."},
+    // Append to content
+    {Op: "str_ins", Path: "/content", Pos: 20, Str: " More content added."},
     // Increment views
     {Op: "inc", Path: "/stats/views", Inc: 1},
-    // Publish
+    // Publish (toggle draft)
     {Op: "flip", Path: "/draft"},
     // Add metadata
-    {Op: "extend", Path: "/", Props: {
+    {Op: "extend", Path: "/", Props: map[string]any{
         "publishedAt": "2024-01-01T00:00:00Z",
-        "author": "John Doe"
+        "author":      "John Doe",
     }},
 }
 ```
@@ -233,27 +210,27 @@ patch := []jsonpatch.Operation{
 ### User Profile Update
 
 ```go
-doc := map[string]interface{}{
-    "user": map[string]interface{}{
+doc := map[string]any{
+    "user": map[string]any{
         "name": "John",
-        "settings": map[string]interface{}{
+        "settings": map[string]any{
             "theme": "light",
         },
     },
-    "stats": map[string]interface{}{
+    "stats": map[string]any{
         "loginCount": 5,
     },
 }
 
 patch := []jsonpatch.Operation{
-    // Update name
-    {Op: "str_ins", Path: "/user/name", Pos: -1, Str: " Doe"},
+    // Append to name
+    {Op: "str_ins", Path: "/user/name", Pos: 4, Str: " Doe"},
     // Increment login count
     {Op: "inc", Path: "/stats/loginCount", Inc: 1},
-    // Merge new settings
-    {Op: "merge", Path: "/user/settings", Props: {
+    // Add new settings
+    {Op: "extend", Path: "/user/settings", Props: map[string]any{
         "notifications": true,
-        "language": "en"
+        "language":      "en",
     }},
 }
 ```
@@ -261,8 +238,8 @@ patch := []jsonpatch.Operation{
 ### E-commerce Operations
 
 ```go
-doc := map[string]interface{}{
-    "product": map[string]interface{}{
+doc := map[string]any{
+    "product": map[string]any{
         "name":  "Laptop",
         "price": 999.99,
         "stock": 10,
@@ -278,9 +255,9 @@ patch := []jsonpatch.Operation{
     // Enable sale
     {Op: "flip", Path: "/sale"},
     // Add sale info
-    {Op: "extend", Path: "/product", Props: {
+    {Op: "extend", Path: "/product", Props: map[string]any{
         "salePrice": 899.99,
-        "discount": "10%"
+        "discount":  "10%",
     }},
 }
 ```
