@@ -4,76 +4,10 @@ import (
 	"fmt"
 
 	"github.com/go-json-experiment/json"
+
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/op"
 	"github.com/kaptinlin/jsonpointer"
-)
-
-// Lookup tables for opcode resolution.
-var (
-	numericToOpType = map[int]internal.OpType{
-		0:  internal.OpAddType,
-		1:  internal.OpRemoveType,
-		2:  internal.OpReplaceType,
-		3:  internal.OpCopyType,
-		4:  internal.OpMoveType,
-		5:  internal.OpTestType,
-		6:  internal.OpStrInsType,
-		7:  internal.OpStrDelType,
-		8:  internal.OpFlipType,
-		9:  internal.OpIncType,
-		10: internal.OpSplitType,
-		11: internal.OpMergeType,
-		12: internal.OpExtendType,
-		30: internal.OpContainsType,
-		31: internal.OpDefinedType,
-		32: internal.OpEndsType,
-		33: internal.OpInType,
-		34: internal.OpLessType,
-		35: internal.OpMatchesType,
-		36: internal.OpMoreType,
-		37: internal.OpStartsType,
-		38: internal.OpUndefinedType,
-		39: internal.OpTestTypeType,
-		40: internal.OpTestStringType,
-		41: internal.OpTestStringLenType,
-		42: internal.OpTypeType,
-		43: internal.OpAndType,
-		44: internal.OpNotType,
-		45: internal.OpOrType,
-	}
-
-	stringToOpType = map[string]internal.OpType{
-		"add":             internal.OpAddType,
-		"remove":          internal.OpRemoveType,
-		"replace":         internal.OpReplaceType,
-		"copy":            internal.OpCopyType,
-		"move":            internal.OpMoveType,
-		"test":            internal.OpTestType,
-		"str_ins":         internal.OpStrInsType,
-		"str_del":         internal.OpStrDelType,
-		"flip":            internal.OpFlipType,
-		"inc":             internal.OpIncType,
-		"split":           internal.OpSplitType,
-		"merge":           internal.OpMergeType,
-		"extend":          internal.OpExtendType,
-		"contains":        internal.OpContainsType,
-		"defined":         internal.OpDefinedType,
-		"ends":            internal.OpEndsType,
-		"in":              internal.OpInType,
-		"less":            internal.OpLessType,
-		"matches":         internal.OpMatchesType,
-		"more":            internal.OpMoreType,
-		"starts":          internal.OpStartsType,
-		"undefined":       internal.OpUndefinedType,
-		"test_type":       internal.OpTestTypeType,
-		"test_string":     internal.OpTestStringType,
-		"test_string_len": internal.OpTestStringLenType,
-		"type":            internal.OpTypeType,
-		"and":             internal.OpAndType,
-		"not":             internal.OpNotType,
-		"or":              internal.OpOrType,
-	}
 )
 
 // Decoder decodes compact format operations.
@@ -438,8 +372,6 @@ func parseCompositeOp(opType internal.OpType, path []string, raw Op) (internal.O
 	}
 }
 
-// Helper functions
-
 // requireFromPath extracts and validates the "from" path at index 2.
 func requireFromPath(raw Op, errMissing, errNotString error) ([]string, error) {
 	if len(raw) < 3 {
@@ -501,100 +433,10 @@ func parsePredicateOps(value any) ([]any, error) {
 	return result, nil
 }
 
-// resolveOpType determines the operation type from the opcode.
-func resolveOpType(opcode any) (internal.OpType, error) {
-	if s, ok := opcode.(string); ok {
-		if opType, exists := stringToOpType[s]; exists {
-			return opType, nil
-		}
-		return "", fmt.Errorf("%w: %s", ErrUnknownStringCode, s)
-	}
-
-	var code int
-	switch v := opcode.(type) {
-	case int:
-		code = v
-	case float64:
-		code = int(v)
-	case Code:
-		code = int(v)
-	default:
-		return "", fmt.Errorf("%w: %T", ErrInvalidCodeType, opcode)
-	}
-
-	if opType, exists := numericToOpType[code]; exists {
-		return opType, nil
-	}
-	return "", fmt.Errorf("%w: %d", ErrUnknownNumericCode, code)
-}
-
 // parsePath converts a JSON pointer string to a path slice.
 func parsePath(s string) []string {
 	if s == "" {
 		return []string{}
 	}
 	return []string(jsonpointer.Parse(s))
-}
-
-// Type conversion utilities
-
-// boolAt safely extracts a bool value at the given index, returning false if absent.
-func boolAt(raw Op, index int) bool {
-	if len(raw) <= index {
-		return false
-	}
-	return toBool(raw[index])
-}
-
-// float64At safely extracts a float64 value at the given index.
-func float64At(raw Op, index int) (float64, error) {
-	if len(raw) <= index {
-		return 0, nil
-	}
-	return toFloat64(raw[index])
-}
-
-// toBool converts a value to bool.
-func toBool(v any) bool {
-	switch val := v.(type) {
-	case bool:
-		return val
-	case float64:
-		return val != 0
-	case int:
-		return val != 0
-	default:
-		return false
-	}
-}
-
-// toFloat64 converts a value to float64.
-func toFloat64(v any) (float64, error) {
-	switch val := v.(type) {
-	case float64:
-		return val, nil
-	case int:
-		return float64(val), nil
-	case int64:
-		return float64(val), nil
-	default:
-		return 0, ErrNotFloat64
-	}
-}
-
-// toStringSlice converts a value to []string.
-func toStringSlice(v any) ([]string, error) {
-	arr, ok := v.([]any)
-	if !ok {
-		return nil, ErrExpectedArray
-	}
-	result := make([]string, len(arr))
-	for i, item := range arr {
-		s, ok := item.(string)
-		if !ok {
-			return nil, ErrExpectedString
-		}
-		result[i] = s
-	}
-	return result, nil
 }

@@ -3,9 +3,7 @@
 // space required for encoding while maintaining readability.
 package compact
 
-import (
-	"github.com/kaptinlin/jsonpatch/internal"
-)
+import "github.com/kaptinlin/jsonpatch/internal"
 
 // Code represents a numeric operation code in compact format.
 type Code int
