@@ -11,13 +11,13 @@ import (
 
 // TypeScriptTestCase represents a test case from TypeScript implementation
 type TypeScriptTestCase struct {
-	Name       string                `json:"name"`
-	Doc        interface{}           `json:"doc"`
-	Patch      []jsonpatch.Operation `json:"patch"`
-	Expected   interface{}           `json:"expected,omitempty"`
-	WantErr    bool                  `json:"shouldFail,omitempty"`
-	Comment    string                `json:"comment,omitempty"`
-	Source     string                `json:"source,omitempty"` // Which TypeScript file this came from
+	Name     string                `json:"name"`
+	Doc      interface{}           `json:"doc"`
+	Patch    []jsonpatch.Operation `json:"patch"`
+	Expected interface{}           `json:"expected,omitempty"`
+	WantErr  bool                  `json:"shouldFail,omitempty"`
+	Comment  string                `json:"comment,omitempty"`
+	Source   string                `json:"source,omitempty"` // Which TypeScript file this came from
 }
 
 // TestTypeScriptParity verifies that our Go implementation behaves consistently with TypeScript
@@ -92,7 +92,7 @@ func TestBasicOperationParity(t *testing.T) {
 			},
 			WantErr: true,
 			Comment: "Test should fail when values don't match",
-			Source:     "typescript:test.spec.ts",
+			Source:  "typescript:test.spec.ts",
 		},
 		{
 			Name: "copy_operation",
@@ -187,8 +187,8 @@ func TestPredicateOperationParity(t *testing.T) {
 				{Op: "contains", Path: "/text", Value: "xyz"},
 			},
 			WantErr: true,
-			Comment:    "Contains should fail when substring doesn't exist",
-			Source:     "typescript:predicates.spec.ts",
+			Comment: "Contains should fail when substring doesn't exist",
+			Source:  "typescript:predicates.spec.ts",
 		},
 		{
 			Name: "type_check_number",
@@ -207,8 +207,8 @@ func TestPredicateOperationParity(t *testing.T) {
 				{Op: "type", Path: "/value", Value: "number"},
 			},
 			WantErr: true,
-			Comment:    "Type check should fail for incorrect type",
-			Source:     "typescript:type.spec.ts",
+			Comment: "Type check should fail for incorrect type",
+			Source:  "typescript:type.spec.ts",
 		},
 		{
 			Name: "less_than_check",
@@ -283,8 +283,8 @@ func TestErrorHandlingParity(t *testing.T) {
 				{Op: "remove", Path: "/nonexistent"},
 			},
 			WantErr: true,
-			Comment:    "Should fail when path doesn't exist",
-			Source:     "typescript:errors.spec.ts",
+			Comment: "Should fail when path doesn't exist",
+			Source:  "typescript:errors.spec.ts",
 		},
 		{
 			Name: "invalid_array_index",
@@ -293,8 +293,8 @@ func TestErrorHandlingParity(t *testing.T) {
 				{Op: "remove", Path: "/5"},
 			},
 			WantErr: true,
-			Comment:    "Should fail for out-of-bounds array index",
-			Source:     "typescript:errors.spec.ts",
+			Comment: "Should fail for out-of-bounds array index",
+			Source:  "typescript:errors.spec.ts",
 		},
 		{
 			Name: "type_mismatch_operation",
@@ -303,8 +303,8 @@ func TestErrorHandlingParity(t *testing.T) {
 				{Op: "inc", Path: "/value", Inc: 1},
 			},
 			WantErr: true,
-			Comment:    "Should fail when operation type doesn't match value type",
-			Source:     "typescript:errors.spec.ts",
+			Comment: "Should fail when operation type doesn't match value type",
+			Source:  "typescript:errors.spec.ts",
 		},
 	}
 
@@ -343,8 +343,8 @@ func TestSecondOrderPredicateParity(t *testing.T) {
 				},
 			},
 			WantErr: true,
-			Comment:    "NOT should fail when inner predicate succeeds",
-			Source:     "typescript:second-order-predicates.spec.ts",
+			Comment: "NOT should fail when inner predicate succeeds",
+			Source:  "typescript:second-order-predicates.spec.ts",
 		},
 	}
 
@@ -430,12 +430,12 @@ func getExtendedOperationTestCases() []TypeScriptTestCase {
 func getErrorHandlingTestCases() []TypeScriptTestCase {
 	return []TypeScriptTestCase{
 		{
-			Name:       "error_path_not_found",
-			Doc:        map[string]interface{}{"a": 1},
-			Patch:      []jsonpatch.Operation{{Op: "test", Path: "/b", Value: 1}},
+			Name:    "error_path_not_found",
+			Doc:     map[string]interface{}{"a": 1},
+			Patch:   []jsonpatch.Operation{{Op: "test", Path: "/b", Value: 1}},
 			WantErr: true,
-			Comment:    "Path not found error",
-			Source:     "typescript:errors.spec.ts",
+			Comment: "Path not found error",
+			Source:  "typescript:errors.spec.ts",
 		},
 	}
 }
@@ -470,7 +470,7 @@ func convertToMultiOpTestCases(tsCases []TypeScriptTestCase) []testutils.MultiOp
 			Doc:        tc.Doc,
 			Operations: tc.Patch,
 			Expected:   tc.Expected,
-			WantErr: tc.WantErr,
+			WantErr:    tc.WantErr,
 			Comment:    fmt.Sprintf("%s (Source: %s)", tc.Comment, tc.Source),
 		})
 	}

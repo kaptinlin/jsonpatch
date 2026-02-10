@@ -358,4 +358,3 @@ func decodeValue(r *msgp.Reader) (any, error) {
 	}
 	return normalizeMap(v), nil
 }
-

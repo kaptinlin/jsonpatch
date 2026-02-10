@@ -40,7 +40,7 @@ func TestAnd(t *testing.T) {
 				},
 			},
 			WantErr: true,
-			Comment:    "AND should fail when any predicate fails",
+			Comment: "AND should fail when any predicate fails",
 		},
 	}
 

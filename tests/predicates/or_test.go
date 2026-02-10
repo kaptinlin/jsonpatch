@@ -56,7 +56,7 @@ func TestOr(t *testing.T) {
 				},
 			},
 			WantErr: true,
-			Comment:    "OR should fail when all predicates fail",
+			Comment: "OR should fail when all predicates fail",
 		},
 	}
 

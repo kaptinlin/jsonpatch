@@ -33,18 +33,18 @@ var (
 
 // Errors for predicate operation decoding.
 var (
-	ErrTypeOpMissingValue       = errors.New("type operation missing string 'value' field")
-	ErrTestTypeOpMissingType    = errors.New("test_type operation missing 'type' field")
-	ErrTestStringOpMissingStr   = errors.New("test_string operation missing 'str' field")
+	ErrTypeOpMissingValue        = errors.New("type operation missing string 'value' field")
+	ErrTestTypeOpMissingType     = errors.New("test_type operation missing 'type' field")
+	ErrTestStringOpMissingStr    = errors.New("test_string operation missing 'str' field")
 	ErrTestStringLenOpMissingLen = errors.New("test_string_len operation missing 'len' field")
-	ErrContainsOpMissingValue   = errors.New("contains operation missing 'value' field")
-	ErrEndsOpMissingValue       = errors.New("ends operation missing 'value' field")
-	ErrStartsOpMissingValue     = errors.New("starts operation missing 'value' field")
-	ErrMatchesOpMissingValue    = errors.New("matches operation missing 'value' field")
-	ErrLessOpMissingValue       = errors.New("less operation missing 'value' field")
-	ErrMoreOpMissingValue       = errors.New("more operation missing 'value' field")
-	ErrInvalidType              = errors.New("invalid type")
-	ErrEmptyTypeList            = errors.New("empty type list")
+	ErrContainsOpMissingValue    = errors.New("contains operation missing 'value' field")
+	ErrEndsOpMissingValue        = errors.New("ends operation missing 'value' field")
+	ErrStartsOpMissingValue      = errors.New("starts operation missing 'value' field")
+	ErrMatchesOpMissingValue     = errors.New("matches operation missing 'value' field")
+	ErrLessOpMissingValue        = errors.New("less operation missing 'value' field")
+	ErrMoreOpMissingValue        = errors.New("more operation missing 'value' field")
+	ErrInvalidType               = errors.New("invalid type")
+	ErrEmptyTypeList             = errors.New("empty type list")
 )
 
 // Errors for composite operation decoding.
