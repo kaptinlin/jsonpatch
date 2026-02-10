@@ -9,7 +9,6 @@ import (
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
 )
 
-// TestEmptyDocumentHandling tests edge cases with empty/undefined documents
 // Ported from TypeScript: patch.scenarious.spec.ts
 func TestEmptyDocumentHandling(t *testing.T) {
 	t.Run("cannot add key to empty document", func(t *testing.T) {
@@ -35,7 +34,6 @@ func TestEmptyDocumentHandling(t *testing.T) {
 	})
 }
 
-// TestNumberTypeCoercion tests number type handling edge cases
 func TestNumberTypeCoercion(t *testing.T) {
 	t.Run("inc operation with boolean values", func(t *testing.T) {
 		doc := map[string]interface{}{
@@ -82,7 +80,6 @@ func TestNumberTypeCoercion(t *testing.T) {
 	})
 }
 
-// TestArrayBoundaryConditions tests array operations at boundaries
 func TestArrayBoundaryConditions(t *testing.T) {
 	t.Run("add to array at exact length", func(t *testing.T) {
 		doc := []interface{}{1, 2, 3}
@@ -118,7 +115,6 @@ func TestArrayBoundaryConditions(t *testing.T) {
 	})
 }
 
-// TestStringOperationEdgeCases tests string manipulation edge cases
 func TestStringOperationEdgeCases(t *testing.T) {
 	t.Run("str_ins at string beginning", func(t *testing.T) {
 		doc := map[string]interface{}{"text": "world"}

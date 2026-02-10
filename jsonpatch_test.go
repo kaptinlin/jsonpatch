@@ -19,7 +19,6 @@ type profile struct {
 	Tags  []string `json:"tags"`
 }
 
-// TestApplyPatchBasic tests basic ApplyPatch functionality
 func TestApplyPatchBasic(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -76,7 +75,6 @@ func TestApplyPatchBasic(t *testing.T) {
 	}
 }
 
-// TestValidateOperation tests operation validation
 func TestValidateOperation(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -134,7 +132,6 @@ func TestValidateOperation(t *testing.T) {
 	}
 }
 
-// TestApplyPatch_Struct tests applying patches to struct types
 func TestApplyPatch_Struct(t *testing.T) {
 	// Test data
 	before := profile{
@@ -180,7 +177,6 @@ func TestApplyPatch_Struct(t *testing.T) {
 	}
 }
 
-// TestApplyPatch_Map tests applying patches to map types
 func TestApplyPatch_Map(t *testing.T) {
 	// Test data
 	before := map[string]any{
@@ -224,7 +220,6 @@ func TestApplyPatch_Map(t *testing.T) {
 	}
 }
 
-// TestApplyPatch_JSONBytes tests applying patches to []byte containing JSON
 func TestApplyPatch_JSONBytes(t *testing.T) {
 	// Test data
 	before := []byte(`{"name":"John","tags":["dev"]}`)
@@ -277,7 +272,6 @@ func TestApplyPatch_JSONBytes(t *testing.T) {
 	}
 }
 
-// TestApplyPatch_JSONString tests applying patches to JSON strings
 func TestApplyPatch_JSONString(t *testing.T) {
 	// Test data
 	before := `{"name":"John","tags":["dev"]}`
@@ -316,7 +310,6 @@ func TestApplyPatch_JSONString(t *testing.T) {
 	}
 }
 
-// TestArrayOperations demonstrates array manipulation with JSON Patch
 func TestArrayOperations(t *testing.T) {
 	// Document with array
 	doc := map[string]any{
@@ -365,7 +358,6 @@ func TestArrayOperations(t *testing.T) {
 	}
 }
 
-// TestMultipleOperations demonstrates applying multiple operations
 func TestMultipleOperations(t *testing.T) {
 	doc := map[string]any{
 		"counters": map[string]any{
@@ -406,7 +398,6 @@ func TestMultipleOperations(t *testing.T) {
 	}
 }
 
-// TestApplyPatch_WithMutate tests the mutate option
 func TestApplyPatch_WithMutate(t *testing.T) {
 	// Test data - using map for easier mutation testing
 	original := map[string]any{
@@ -433,7 +424,6 @@ func TestApplyPatch_WithMutate(t *testing.T) {
 	}
 }
 
-// TestComplexDocument demonstrates complex document operations
 func TestComplexDocument(t *testing.T) {
 	// Complex nested document
 	doc := map[string]any{
@@ -505,7 +495,6 @@ func TestComplexDocument(t *testing.T) {
 	}
 }
 
-// TestSpecialCharacters demonstrates handling special characters in paths
 func TestSpecialCharacters(t *testing.T) {
 	// Document with special characters in keys
 	doc := map[string]any{
@@ -559,7 +548,6 @@ func TestSpecialCharacters(t *testing.T) {
 	}
 }
 
-// TestErrorHandling demonstrates proper error handling
 func TestErrorHandling(t *testing.T) {
 	doc := map[string]any{
 		"user": map[string]any{
@@ -587,7 +575,6 @@ func TestErrorHandling(t *testing.T) {
 	t.Logf("Expected error: %v", err)
 }
 
-// TestApplyPatch_Errors tests error handling for different input types
 func TestApplyPatch_Errors(t *testing.T) {
 	t.Run("invalid JSON bytes", func(t *testing.T) {
 		invalidJSON := []byte(`{invalid json}`)
@@ -629,7 +616,6 @@ func TestApplyPatch_Errors(t *testing.T) {
 	})
 }
 
-// Example demonstrates basic JSON Patch operations
 func Example() {
 	// Original document
 	doc := map[string]any{
@@ -691,7 +677,6 @@ func Example() {
 	// }
 }
 
-// FuzzOperationSequence performs fuzz testing on operation sequences
 func FuzzOperationSequence(f *testing.F) {
 	// Seed with some basic operation sequences
 	seeds := []string{
@@ -788,7 +773,6 @@ func FuzzOperationSequence(f *testing.F) {
 	})
 }
 
-// FuzzJSONPointerPaths performs fuzz testing on JSON Pointer paths
 func FuzzJSONPointerPaths(f *testing.F) {
 	// Seed with various path patterns
 	seeds := []string{
@@ -861,7 +845,6 @@ func FuzzJSONPointerPaths(f *testing.F) {
 	})
 }
 
-// FuzzOperationValues performs fuzz testing on operation values
 func FuzzOperationValues(f *testing.F) {
 	// Seed with various value types
 	seeds := []string{
@@ -963,7 +946,6 @@ func FuzzOperationValues(f *testing.F) {
 	})
 }
 
-// FuzzArrayIndices performs fuzz testing on array indices
 func FuzzArrayIndices(f *testing.F) {
 	// Seed with various array indices
 	seeds := []int{
@@ -1029,7 +1011,6 @@ func FuzzArrayIndices(f *testing.F) {
 	})
 }
 
-// FuzzComplexDocuments performs fuzz testing on complex document structures
 func FuzzComplexDocuments(f *testing.F) {
 	// Seed with various document structures
 	seeds := []string{
@@ -1117,7 +1098,6 @@ func FuzzComplexDocuments(f *testing.F) {
 	})
 }
 
-// FuzzEdgeCases performs fuzz testing on edge cases and special conditions
 func FuzzEdgeCases(f *testing.F) {
 	// Seed with edge case scenarios
 	seeds := []struct {

@@ -7,7 +7,6 @@ import (
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
 )
 
-// TestNegation tests predicate negation using the "not" flag
 func TestNegation(t *testing.T) {
 	testCases := []testutils.TestCase{
 		{

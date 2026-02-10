@@ -7,7 +7,6 @@ import (
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
 )
 
-// TestAnd tests the AND second-order predicate operation
 func TestAnd(t *testing.T) {
 	testCases := []testutils.MultiOperationTestCase{
 		{

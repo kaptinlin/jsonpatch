@@ -10,7 +10,6 @@ import (
 	"github.com/kaptinlin/jsonpatch"
 )
 
-// TestMutateOptionFunctionality tests the complete functionality of the Mutate option
 func TestMutateOptionFunctionality(t *testing.T) {
 	t.Run("Mutate False - Document Preservation", func(t *testing.T) {
 		// Test that Mutate: false preserves the original document
@@ -295,7 +294,6 @@ func TestMutateOptionFunctionality(t *testing.T) {
 	})
 }
 
-// TestMutatePerformanceCharacteristics tests performance aspects
 func TestMutatePerformanceCharacteristics(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping performance test in short mode")
@@ -386,7 +384,6 @@ func createLargeDocument(size int) map[string]interface{} {
 	return doc
 }
 
-// BenchmarkMutateVsClone benchmarks the performance difference
 func BenchmarkMutateVsClone(b *testing.B) {
 	patch := []jsonpatch.Operation{
 		{Op: "replace", Path: "/field_500", Value: "modified"},

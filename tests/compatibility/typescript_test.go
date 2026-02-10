@@ -39,7 +39,6 @@ func TestTypeScriptParity(t *testing.T) {
 	}
 }
 
-// TestBasicOperationParity tests basic JSON Patch operations against TypeScript behavior
 func TestBasicOperationParity(t *testing.T) {
 	testCases := []TypeScriptTestCase{
 		{
@@ -117,7 +116,6 @@ func TestBasicOperationParity(t *testing.T) {
 	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
 }
 
-// TestArrayOperationParity tests array operations against TypeScript behavior
 func TestArrayOperationParity(t *testing.T) {
 	testCases := []TypeScriptTestCase{
 		{
@@ -165,7 +163,6 @@ func TestArrayOperationParity(t *testing.T) {
 	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
 }
 
-// TestPredicateOperationParity tests predicate operations against TypeScript behavior
 func TestPredicateOperationParity(t *testing.T) {
 	testCases := []TypeScriptTestCase{
 		{
@@ -233,7 +230,6 @@ func TestPredicateOperationParity(t *testing.T) {
 	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
 }
 
-// TestExtendedOperationParity tests extended operations against TypeScript behavior
 func TestExtendedOperationParity(t *testing.T) {
 	testCases := []TypeScriptTestCase{
 		{
@@ -271,7 +267,6 @@ func TestExtendedOperationParity(t *testing.T) {
 	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
 }
 
-// TestErrorHandlingParity tests error handling consistency with TypeScript
 func TestErrorHandlingParity(t *testing.T) {
 	testCases := []TypeScriptTestCase{
 		{
@@ -309,7 +304,6 @@ func TestErrorHandlingParity(t *testing.T) {
 	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
 }
 
-// TestSecondOrderPredicateParity tests working second-order predicates
 func TestSecondOrderPredicateParity(t *testing.T) {
 	testCases := []TypeScriptTestCase{
 		{
@@ -475,7 +469,6 @@ func convertToMultiOpTestCases(tsCases []TypeScriptTestCase) []testutils.MultiOp
 	return multiOpCases
 }
 
-// BenchmarkTypeScriptParity benchmarks the parity test suite
 func BenchmarkTypeScriptParity(b *testing.B) {
 	testCases := getKnownWorkingTestCases()
 

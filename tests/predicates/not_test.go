@@ -7,7 +7,6 @@ import (
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
 )
 
-// TestNot tests the NOT second-order predicate operation
 func TestNot(t *testing.T) {
 	testCases := []testutils.MultiOperationTestCase{
 		{

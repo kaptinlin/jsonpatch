@@ -10,7 +10,6 @@ import (
 	"github.com/kaptinlin/jsonpatch/tests/data"
 )
 
-// TestAutomated runs automated tests for JSON Patch operations
 func TestAutomated(t *testing.T) {
 	// Use test suites from Go data files instead of JSON
 	testSuites := []AutomatedTestSuite{
@@ -195,7 +194,6 @@ func convertPatch(patch []map[string]any) []jsonpatch.Operation {
 // Additional scenario tests from patch_scenarios_test.go
 // Original TypeScript: .reference/json-joy/src/json-patch/__tests__/patch.scenarious.spec.ts
 
-// TestCannotAddKeyToEmptyDocument tests that adding key to empty document fails
 func TestCannotAddKeyToEmptyDocument(t *testing.T) {
 	patch := []jsonpatch.Operation{
 		{Op: "add", Path: "/foo", Value: 123},
@@ -209,7 +207,6 @@ func TestCannotAddKeyToEmptyDocument(t *testing.T) {
 	}
 }
 
-// TestCanOverwriteEmptyDocument tests that overwriting empty document works
 func TestCanOverwriteEmptyDocument(t *testing.T) {
 	patch := []jsonpatch.Operation{
 		{Op: "add", Path: "/foo", Value: 123},
@@ -227,7 +224,6 @@ func TestCanOverwriteEmptyDocument(t *testing.T) {
 	}
 }
 
-// TestCannotAddValueToNonexistingPath tests that adding to nonexisting path fails
 func TestCannotAddValueToNonexistingPath(t *testing.T) {
 	doc := map[string]interface{}{"foo": 123}
 	patch := []jsonpatch.Operation{

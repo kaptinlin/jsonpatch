@@ -8,7 +8,6 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// TestAutomaticCodec tests automatic encoding/decoding of operations.
 // This test matches the TypeScript automatic.spec.ts
 func TestAutomaticCodec(t *testing.T) {
 	// Configure options for testing

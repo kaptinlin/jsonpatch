@@ -7,7 +7,6 @@ import (
 	"github.com/kaptinlin/jsonpatch"
 )
 
-// BenchmarkBasicOperations benchmarks fundamental JSON Patch operations
 func BenchmarkBasicOperations(b *testing.B) {
 	testCases := []struct {
 		name string
@@ -73,7 +72,6 @@ func BenchmarkBasicOperations(b *testing.B) {
 	}
 }
 
-// BenchmarkExtendedOperations benchmarks extended JSON Patch operations
 func BenchmarkExtendedOperations(b *testing.B) {
 	testCases := []struct {
 		name string
@@ -133,7 +131,6 @@ func BenchmarkExtendedOperations(b *testing.B) {
 	}
 }
 
-// BenchmarkPredicateOperations benchmarks JSON Predicate operations
 func BenchmarkPredicateOperations(b *testing.B) {
 	testCases := []struct {
 		name string
@@ -199,7 +196,6 @@ func BenchmarkPredicateOperations(b *testing.B) {
 	}
 }
 
-// BenchmarkSecondOrderPredicates benchmarks second-order predicate operations
 func BenchmarkSecondOrderPredicates(b *testing.B) {
 	testCases := []struct {
 		name string
@@ -266,7 +262,6 @@ func BenchmarkSecondOrderPredicates(b *testing.B) {
 	}
 }
 
-// BenchmarkComplexDocument benchmarks operations on complex documents
 func BenchmarkComplexDocument(b *testing.B) {
 	complexDoc := map[string]interface{}{
 		"users": []interface{}{

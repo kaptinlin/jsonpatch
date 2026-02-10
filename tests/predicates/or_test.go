@@ -7,7 +7,6 @@ import (
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
 )
 
-// TestOr tests the OR second-order predicate operation
 func TestOr(t *testing.T) {
 	testCases := []testutils.MultiOperationTestCase{
 		{
