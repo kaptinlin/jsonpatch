@@ -8,6 +8,7 @@ import (
 )
 
 func TestTest_Basic(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
@@ -34,6 +35,7 @@ func TestTest_Basic(t *testing.T) {
 }
 
 func TestTest_Apply(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 	}
@@ -55,6 +57,7 @@ func TestTest_Apply(t *testing.T) {
 }
 
 func TestTest_ToJSON(t *testing.T) {
+	t.Parallel()
 	testOp := NewTest([]string{"foo"}, "bar")
 
 	got, err := testOp.ToJSON()
@@ -74,6 +77,7 @@ func TestTest_ToJSON(t *testing.T) {
 }
 
 func TestTest_ToCompact(t *testing.T) {
+	t.Parallel()
 	testOp := NewTest([]string{"foo"}, "bar")
 
 	compact, err := testOp.ToCompact()
@@ -95,6 +99,7 @@ func TestTest_ToCompact(t *testing.T) {
 }
 
 func TestTest_Validate(t *testing.T) {
+	t.Parallel()
 	testOp := NewTest([]string{"foo"}, "bar")
 	if err := testOp.Validate(); err != nil {
 		t.Errorf("Validate() unexpected error: %v", err)
@@ -107,6 +112,7 @@ func TestTest_Validate(t *testing.T) {
 }
 
 func TestTest_InterfaceMethods(t *testing.T) {
+	t.Parallel()
 	testOp := NewTest([]string{"foo"}, "bar")
 
 	if got := testOp.Op(); got != internal.OpTestType {

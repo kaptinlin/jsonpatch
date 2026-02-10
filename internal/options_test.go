@@ -3,6 +3,7 @@ package internal
 import "testing"
 
 func TestWithMutate(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		val  bool
@@ -12,6 +13,7 @@ func TestWithMutate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			var opts Options
 			WithMutate(tt.val)(&opts)
 			if opts.Mutate != tt.val {
@@ -23,6 +25,7 @@ func TestWithMutate(t *testing.T) {
 }
 
 func TestWithMatcher(t *testing.T) {
+	t.Parallel()
 	called := false
 	matcher := func(_ string, _ bool) RegexMatcher {
 		called = true

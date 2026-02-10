@@ -9,8 +9,11 @@ import (
 )
 
 func TestMatchesOp(t *testing.T) {
+	t.Parallel()
 	t.Run("root", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
+			t.Parallel()
 			op := jsonpatch.Operation{
 				Op:    "matches",
 				Path:  "",
@@ -27,6 +30,7 @@ func TestMatchesOp(t *testing.T) {
 		})
 
 		t.Run("fails when does not match the string", func(t *testing.T) {
+			t.Parallel()
 			op := jsonpatch.Operation{
 				Op:    "matches",
 				Path:  "",
@@ -43,6 +47,7 @@ func TestMatchesOp(t *testing.T) {
 		})
 
 		t.Run("succeeds with case insensitive matching", func(t *testing.T) {
+			t.Parallel()
 			op := jsonpatch.Operation{
 				Op:         "matches",
 				Path:       "",
@@ -60,6 +65,7 @@ func TestMatchesOp(t *testing.T) {
 		})
 
 		t.Run("fails with case sensitive matching", func(t *testing.T) {
+			t.Parallel()
 			op := jsonpatch.Operation{
 				Op:         "matches",
 				Path:       "",
@@ -75,7 +81,9 @@ func TestMatchesOp(t *testing.T) {
 	})
 
 	t.Run("nested path", func(t *testing.T) {
+		t.Parallel()
 		t.Run("matches email pattern", func(t *testing.T) {
+			t.Parallel()
 			doc := map[string]interface{}{
 				"email": "user@example.com",
 			}
@@ -95,6 +103,7 @@ func TestMatchesOp(t *testing.T) {
 		})
 
 		t.Run("fails with invalid email pattern", func(t *testing.T) {
+			t.Parallel()
 			doc := map[string]interface{}{
 				"email": "invalid-email",
 			}
@@ -111,6 +120,7 @@ func TestMatchesOp(t *testing.T) {
 		})
 
 		t.Run("matches phone number pattern", func(t *testing.T) {
+			t.Parallel()
 			doc := map[string]interface{}{
 				"phone": "123-456-7890",
 			}
@@ -131,7 +141,9 @@ func TestMatchesOp(t *testing.T) {
 	})
 
 	t.Run("array element", func(t *testing.T) {
+		t.Parallel()
 		t.Run("matches string in array", func(t *testing.T) {
+			t.Parallel()
 			doc := map[string]interface{}{
 				"items": []interface{}{"apple", "banana", "cherry"},
 			}
@@ -153,7 +165,9 @@ func TestMatchesOp(t *testing.T) {
 	})
 
 	t.Run("complex patterns", func(t *testing.T) {
+		t.Parallel()
 		t.Run("matches URL pattern", func(t *testing.T) {
+			t.Parallel()
 			doc := map[string]interface{}{
 				"website": "https://example.com",
 			}
@@ -173,6 +187,7 @@ func TestMatchesOp(t *testing.T) {
 		})
 
 		t.Run("matches UUID pattern", func(t *testing.T) {
+			t.Parallel()
 			doc := map[string]interface{}{
 				"id": "123e4567-e89b-12d3-a456-426614174000",
 			}
@@ -193,7 +208,9 @@ func TestMatchesOp(t *testing.T) {
 	})
 
 	t.Run("edge cases", func(t *testing.T) {
+		t.Parallel()
 		t.Run("empty pattern matches empty string", func(t *testing.T) {
+			t.Parallel()
 			op := jsonpatch.Operation{
 				Op:    "matches",
 				Path:  "",
@@ -210,6 +227,7 @@ func TestMatchesOp(t *testing.T) {
 		})
 
 		t.Run("dot matches any character", func(t *testing.T) {
+			t.Parallel()
 			op := jsonpatch.Operation{
 				Op:    "matches",
 				Path:  "",
@@ -226,6 +244,7 @@ func TestMatchesOp(t *testing.T) {
 		})
 
 		t.Run("fails on non-string value", func(t *testing.T) {
+			t.Parallel()
 			doc := map[string]interface{}{
 				"number": 123,
 			}
@@ -245,6 +264,7 @@ func TestMatchesOp(t *testing.T) {
 		})
 
 		t.Run("fails on missing path", func(t *testing.T) {
+			t.Parallel()
 			doc := map[string]interface{}{
 				"field": "value",
 			}

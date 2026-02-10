@@ -10,7 +10,9 @@ import (
 )
 
 func TestStrDelOp(t *testing.T) {
+	t.Parallel()
 	t.Run("deletes characters from the beginning", func(t *testing.T) {
+		t.Parallel()
 		operation := internal.Operation{
 			Op:   "str_del",
 			Path: "",
@@ -24,6 +26,7 @@ func TestStrDelOp(t *testing.T) {
 	})
 
 	t.Run("deletes characters from the end", func(t *testing.T) {
+		t.Parallel()
 		operation := internal.Operation{
 			Op:   "str_del",
 			Path: "",
@@ -37,6 +40,7 @@ func TestStrDelOp(t *testing.T) {
 	})
 
 	t.Run("deletes characters from the middle", func(t *testing.T) {
+		t.Parallel()
 		operation := internal.Operation{
 			Op:   "str_del",
 			Path: "",
@@ -50,6 +54,7 @@ func TestStrDelOp(t *testing.T) {
 	})
 
 	t.Run("can delete multiple times", func(t *testing.T) {
+		t.Parallel()
 		operations := []internal.Operation{
 			{
 				Op:   "str_del",
@@ -79,7 +84,9 @@ func TestStrDelOp(t *testing.T) {
 	})
 
 	t.Run("root", func(t *testing.T) {
+		t.Parallel()
 		t.Run("deletes entire string", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "str_del",
 				Path: "",
@@ -94,7 +101,9 @@ func TestStrDelOp(t *testing.T) {
 	})
 
 	t.Run("object", func(t *testing.T) {
+		t.Parallel()
 		t.Run("deletes characters from the beginning", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "str_del",
 				Path: "/msg",
@@ -109,6 +118,7 @@ func TestStrDelOp(t *testing.T) {
 		})
 
 		t.Run("deletes characters from the end", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "str_del",
 				Path: "/msg",
@@ -123,6 +133,7 @@ func TestStrDelOp(t *testing.T) {
 		})
 
 		t.Run("deletes characters from the middle", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "str_del",
 				Path: "/msg",
@@ -137,6 +148,7 @@ func TestStrDelOp(t *testing.T) {
 		})
 
 		t.Run("negative position counts from end", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "str_del",
 				Path: "/msg",
@@ -152,7 +164,9 @@ func TestStrDelOp(t *testing.T) {
 	})
 
 	t.Run("array", func(t *testing.T) {
+		t.Parallel()
 		t.Run("deletes characters from the beginning", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "str_del",
 				Path: "/0",
@@ -167,6 +181,7 @@ func TestStrDelOp(t *testing.T) {
 		})
 
 		t.Run("deletes characters from the end", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "str_del",
 				Path: "/0",
@@ -181,6 +196,7 @@ func TestStrDelOp(t *testing.T) {
 		})
 
 		t.Run("deletes characters from the middle", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "str_del",
 				Path: "/0",

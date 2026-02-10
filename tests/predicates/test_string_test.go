@@ -8,8 +8,11 @@ import (
 )
 
 func TestTestString(t *testing.T) {
+	t.Parallel()
 	t.Run("root", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:   "test_string",
 				Path: "",
@@ -20,6 +23,7 @@ func TestTestString(t *testing.T) {
 		})
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:   "test_string",
 				Path: "",
@@ -40,7 +44,9 @@ func TestTestString(t *testing.T) {
 	})
 
 	t.Run("object", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
+			t.Parallel()
 			obj := map[string]interface{}{"a": "b", "test": "foo bar"}
 			op := internal.Operation{
 				Op:   "test_string",
@@ -52,6 +58,7 @@ func TestTestString(t *testing.T) {
 		})
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
+			t.Parallel()
 			obj := map[string]interface{}{"test": "foo bar"}
 			op := internal.Operation{
 				Op:   "test_string",
@@ -64,7 +71,9 @@ func TestTestString(t *testing.T) {
 	})
 
 	t.Run("array", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
+			t.Parallel()
 			obj := map[string]interface{}{"a": "b", "test": []interface{}{"foo bar"}}
 			op := internal.Operation{
 				Op:   "test_string",
@@ -76,6 +85,7 @@ func TestTestString(t *testing.T) {
 		})
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
+			t.Parallel()
 			obj := map[string]interface{}{"test": []interface{}{"foo bar"}}
 			op := internal.Operation{
 				Op:   "test_string",

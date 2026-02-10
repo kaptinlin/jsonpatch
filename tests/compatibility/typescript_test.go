@@ -22,11 +22,13 @@ type TypeScriptTestCase struct {
 
 // TestTypeScriptParity verifies that our Go implementation behaves consistently with TypeScript
 func TestTypeScriptParity(t *testing.T) {
+	t.Parallel()
 	// Load test cases from known working operations
 	testCases := getKnownWorkingTestCases()
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
 			if tc.WantErr {
 				_ = testutils.ApplyOperationsWithError(t, tc.Doc, tc.Patch)
 			} else {
@@ -40,6 +42,7 @@ func TestTypeScriptParity(t *testing.T) {
 }
 
 func TestBasicOperationParity(t *testing.T) {
+	t.Parallel()
 	testCases := []TypeScriptTestCase{
 		{
 			Name: "add_to_object",
@@ -117,6 +120,7 @@ func TestBasicOperationParity(t *testing.T) {
 }
 
 func TestArrayOperationParity(t *testing.T) {
+	t.Parallel()
 	testCases := []TypeScriptTestCase{
 		{
 			Name: "add_to_array_end",
@@ -164,6 +168,7 @@ func TestArrayOperationParity(t *testing.T) {
 }
 
 func TestPredicateOperationParity(t *testing.T) {
+	t.Parallel()
 	testCases := []TypeScriptTestCase{
 		{
 			Name: "contains_successful",
@@ -231,6 +236,7 @@ func TestPredicateOperationParity(t *testing.T) {
 }
 
 func TestExtendedOperationParity(t *testing.T) {
+	t.Parallel()
 	testCases := []TypeScriptTestCase{
 		{
 			Name: "inc_operation",
@@ -268,6 +274,7 @@ func TestExtendedOperationParity(t *testing.T) {
 }
 
 func TestErrorHandlingParity(t *testing.T) {
+	t.Parallel()
 	testCases := []TypeScriptTestCase{
 		{
 			Name: "path_not_found",
@@ -305,6 +312,7 @@ func TestErrorHandlingParity(t *testing.T) {
 }
 
 func TestSecondOrderPredicateParity(t *testing.T) {
+	t.Parallel()
 	testCases := []TypeScriptTestCase{
 		{
 			Name: "not_predicate_success",

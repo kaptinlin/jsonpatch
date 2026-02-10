@@ -8,8 +8,11 @@ import (
 )
 
 func TestLessOp(t *testing.T) {
+	t.Parallel()
 	t.Run("root", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when value is lower than requested", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "less",
 				Path:  "",
@@ -23,6 +26,7 @@ func TestLessOp(t *testing.T) {
 		})
 
 		t.Run("fails when value is not lower than requested", func(t *testing.T) {
+			t.Parallel()
 			op1 := internal.Operation{
 				Op:    "less",
 				Path:  "",

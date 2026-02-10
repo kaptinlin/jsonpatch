@@ -9,6 +9,7 @@ import (
 )
 
 func TestMatches_Basic(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name          string
 		doc           any
@@ -72,6 +73,7 @@ func TestMatches_Basic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			matchesOp := NewMatches(tt.path, tt.pattern, tt.ignoreCase, nil)
 
 			result, err := matchesOp.Apply(tt.doc)
@@ -102,6 +104,7 @@ func TestMatches_Basic(t *testing.T) {
 }
 
 func TestMatches_Constructor(t *testing.T) {
+	t.Parallel()
 	path := []string{"email"}
 	pattern := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	ignoreCase := false
@@ -126,6 +129,7 @@ func TestMatches_Constructor(t *testing.T) {
 }
 
 func TestMatches_InvalidPattern(t *testing.T) {
+	t.Parallel()
 	path := []string{"email"}
 	invalidPattern := `[invalid-regex`
 
@@ -143,6 +147,7 @@ func TestMatches_InvalidPattern(t *testing.T) {
 }
 
 func TestMatches_ToJSON(t *testing.T) {
+	t.Parallel()
 	matchesOp := NewMatches([]string{"email"}, `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, true, nil)
 
 	got, err := matchesOp.ToJSON()
@@ -165,6 +170,7 @@ func TestMatches_ToJSON(t *testing.T) {
 }
 
 func TestMatches_ToCompact(t *testing.T) {
+	t.Parallel()
 	matchesOp := NewMatches([]string{"name"}, "john", true, nil)
 	compact, err := matchesOp.ToCompact()
 	if err != nil {
@@ -177,6 +183,7 @@ func TestMatches_ToCompact(t *testing.T) {
 }
 
 func TestMatches_ToCompact_WithoutIgnoreCase(t *testing.T) {
+	t.Parallel()
 	matchesOp := NewMatches([]string{"name"}, "john", false, nil)
 	compact, err := matchesOp.ToCompact()
 	if err != nil {

@@ -11,6 +11,7 @@ import (
 )
 
 func TestAutomated(t *testing.T) {
+	t.Parallel()
 	// Use test suites from Go data files instead of JSON
 	testSuites := []AutomatedTestSuite{
 		{
@@ -25,6 +26,7 @@ func TestAutomated(t *testing.T) {
 
 	for _, suite := range testSuites {
 		t.Run(suite.Name, func(t *testing.T) {
+			t.Parallel()
 			for _, test := range suite.Tests {
 				if test.Disabled {
 					continue
@@ -45,6 +47,7 @@ func TestAutomated(t *testing.T) {
 				switch {
 				case test.Expected != nil:
 					t.Run(testName, func(t *testing.T) {
+						t.Parallel()
 						result, err := jsonpatch.ApplyPatch(test.Doc, test.Patch, options)
 						if err != nil {
 							t.Fatalf("ApplyPatch() unexpected error: %v", err)
@@ -56,6 +59,7 @@ func TestAutomated(t *testing.T) {
 					})
 				case test.Error != "":
 					t.Run(testName, func(t *testing.T) {
+						t.Parallel()
 						// First validate operations
 						validationFailed := false
 						for _, op := range test.Patch {
@@ -75,6 +79,7 @@ func TestAutomated(t *testing.T) {
 					})
 				default:
 					t.Run(testName, func(t *testing.T) {
+						t.Parallel()
 						t.Fatalf("Invalid test case: %+v", test)
 					})
 				}
@@ -195,6 +200,7 @@ func convertPatch(patch []map[string]any) []jsonpatch.Operation {
 // Original TypeScript: .reference/json-joy/src/json-patch/__tests__/patch.scenarious.spec.ts
 
 func TestCannotAddKeyToEmptyDocument(t *testing.T) {
+	t.Parallel()
 	patch := []jsonpatch.Operation{
 		{Op: "add", Path: "/foo", Value: 123},
 	}
@@ -208,6 +214,7 @@ func TestCannotAddKeyToEmptyDocument(t *testing.T) {
 }
 
 func TestCanOverwriteEmptyDocument(t *testing.T) {
+	t.Parallel()
 	patch := []jsonpatch.Operation{
 		{Op: "add", Path: "/foo", Value: 123},
 	}
@@ -225,6 +232,7 @@ func TestCanOverwriteEmptyDocument(t *testing.T) {
 }
 
 func TestCannotAddValueToNonexistingPath(t *testing.T) {
+	t.Parallel()
 	doc := map[string]interface{}{"foo": 123}
 	patch := []jsonpatch.Operation{
 		{Op: "add", Path: "/foo/bar/baz", Value: "test"},

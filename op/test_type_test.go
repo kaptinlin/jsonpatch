@@ -9,6 +9,7 @@ import (
 )
 
 func TestTestType_Apply(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name          string
 		doc           any
@@ -108,6 +109,7 @@ func TestTestType_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			typeOp := NewTestType(tt.path, tt.expectedType)
 			result, err := typeOp.Apply(tt.doc)
 
@@ -137,6 +139,7 @@ func TestTestType_Apply(t *testing.T) {
 }
 
 func TestGetTypeName(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		value    any
@@ -156,6 +159,7 @@ func TestGetTypeName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := getTypeName(tt.value); got != tt.expected {
 				t.Errorf("getTypeName(%v) = %q, want %q", tt.value, got, tt.expected)
 			}

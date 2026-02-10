@@ -3,6 +3,7 @@ package internal
 import "testing"
 
 func TestIsJSONPatchOperation(t *testing.T) {
+	t.Parallel()
 	valid := []string{"add", "remove", "replace", "move", "copy", "test"}
 	for _, op := range valid {
 		if !IsJSONPatchOperation(op) {
@@ -19,6 +20,7 @@ func TestIsJSONPatchOperation(t *testing.T) {
 }
 
 func TestIsFirstOrderPredicateOperation(t *testing.T) {
+	t.Parallel()
 	valid := []string{
 		"test", "defined", "undefined", "test_type",
 		"test_string", "test_string_len", "contains",
@@ -39,6 +41,7 @@ func TestIsFirstOrderPredicateOperation(t *testing.T) {
 }
 
 func TestIsSecondOrderPredicateOperation(t *testing.T) {
+	t.Parallel()
 	valid := []string{"and", "or", "not"}
 	for _, op := range valid {
 		if !IsSecondOrderPredicateOperation(op) {
@@ -55,6 +58,7 @@ func TestIsSecondOrderPredicateOperation(t *testing.T) {
 }
 
 func TestIsPredicateOperation(t *testing.T) {
+	t.Parallel()
 	firstOrder := []string{
 		"test", "defined", "undefined", "test_type",
 		"test_string", "test_string_len", "contains",
@@ -82,6 +86,7 @@ func TestIsPredicateOperation(t *testing.T) {
 }
 
 func TestIsJSONPatchExtendedOperation(t *testing.T) {
+	t.Parallel()
 	valid := []string{"str_ins", "str_del", "flip", "inc", "split", "merge", "extend"}
 	for _, op := range valid {
 		if !IsJSONPatchExtendedOperation(op) {

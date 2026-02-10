@@ -8,8 +8,11 @@ import (
 )
 
 func TestContainsOp(t *testing.T) {
+	t.Parallel()
 	t.Run("root", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "contains",
 				Path:  "",
@@ -19,6 +22,7 @@ func TestContainsOp(t *testing.T) {
 		})
 
 		t.Run("succeeds when matches start of the string", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "contains",
 				Path:  "",
@@ -28,6 +32,7 @@ func TestContainsOp(t *testing.T) {
 		})
 
 		t.Run("can ignore case", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:         "contains",
 				Path:       "",
@@ -38,6 +43,7 @@ func TestContainsOp(t *testing.T) {
 		})
 
 		t.Run("throws when case does not match", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "contains",
 				Path:  "",
@@ -47,6 +53,7 @@ func TestContainsOp(t *testing.T) {
 		})
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "contains",
 				Path:  "",
@@ -57,7 +64,9 @@ func TestContainsOp(t *testing.T) {
 	})
 
 	t.Run("object", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
+			t.Parallel()
 			obj := map[string]interface{}{"foo": "foo bar"}
 			op := internal.Operation{
 				Op:    "contains",
@@ -68,6 +77,7 @@ func TestContainsOp(t *testing.T) {
 		})
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
+			t.Parallel()
 			obj := map[string]interface{}{"foo": "foo bar"}
 			op := internal.Operation{
 				Op:    "contains",
@@ -79,7 +89,9 @@ func TestContainsOp(t *testing.T) {
 	})
 
 	t.Run("array", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
+			t.Parallel()
 			arr := []interface{}{"foo bar"}
 			op := internal.Operation{
 				Op:    "contains",
@@ -90,6 +102,7 @@ func TestContainsOp(t *testing.T) {
 		})
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
+			t.Parallel()
 			arr := []interface{}{"foo bar"}
 			op := internal.Operation{
 				Op:    "contains",

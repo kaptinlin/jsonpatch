@@ -9,6 +9,7 @@ import (
 )
 
 func TestBasicOperationsNumericCodes(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		op       internal.Op
@@ -48,6 +49,7 @@ func TestBasicOperationsNumericCodes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			// Test encoding
 			encoder := compact.NewEncoder()
 			encoded, err := encoder.Encode(tt.op)
@@ -98,6 +100,7 @@ func TestBasicOperationsNumericCodes(t *testing.T) {
 }
 
 func TestStringOpcodes(t *testing.T) {
+	t.Parallel()
 	addOp := op.NewAdd([]string{"foo"}, "bar")
 
 	// Test with string opcodes
@@ -129,6 +132,7 @@ func TestStringOpcodes(t *testing.T) {
 }
 
 func TestSliceOperations(t *testing.T) {
+	t.Parallel()
 	ops := []internal.Op{
 		op.NewAdd([]string{"foo"}, "bar"),
 		op.NewRemove([]string{"baz"}),
@@ -163,6 +167,7 @@ func TestSliceOperations(t *testing.T) {
 }
 
 func TestJSONMarshaling(t *testing.T) {
+	t.Parallel()
 	ops := []internal.Op{
 		op.NewAdd([]string{"foo"}, "bar"),
 		op.NewRemove([]string{"baz"}),

@@ -6,6 +6,7 @@ import (
 )
 
 func TestIsValidJSONPatchType(t *testing.T) {
+	t.Parallel()
 	valid := []string{
 		"string", "number", "boolean",
 		"object", "integer", "array", "null",
@@ -25,6 +26,7 @@ func TestIsValidJSONPatchType(t *testing.T) {
 }
 
 func TestGetJSONPatchType(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		val  any
@@ -77,6 +79,7 @@ func TestGetJSONPatchType(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := GetJSONPatchType(tt.val); got != tt.want {
 				t.Errorf("GetJSONPatchType(%v) = %v, want %v", tt.val, got, tt.want)
 			}

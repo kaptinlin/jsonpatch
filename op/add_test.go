@@ -10,6 +10,7 @@ import (
 )
 
 func TestAdd_Basic(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 	}
@@ -46,6 +47,7 @@ func TestAdd_Basic(t *testing.T) {
 }
 
 func TestAdd_ReplaceExisting(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 	}
@@ -67,6 +69,7 @@ func TestAdd_ReplaceExisting(t *testing.T) {
 }
 
 func TestAdd_InterfaceMethods(t *testing.T) {
+	t.Parallel()
 	addOp := NewAdd([]string{"foo"}, "bar")
 
 	if got := addOp.Op(); got != internal.OpAddType {
@@ -81,6 +84,7 @@ func TestAdd_InterfaceMethods(t *testing.T) {
 }
 
 func TestAdd_ToJSON(t *testing.T) {
+	t.Parallel()
 	addOp := NewAdd([]string{"foo", "bar"}, "baz")
 
 	got, err := addOp.ToJSON()
@@ -100,6 +104,7 @@ func TestAdd_ToJSON(t *testing.T) {
 }
 
 func TestAdd_ToCompact(t *testing.T) {
+	t.Parallel()
 	addOp := NewAdd([]string{"foo"}, "bar")
 
 	compact, err := addOp.ToCompact()
@@ -121,6 +126,7 @@ func TestAdd_ToCompact(t *testing.T) {
 }
 
 func TestAdd_Validate(t *testing.T) {
+	t.Parallel()
 	addOp := NewAdd([]string{"foo"}, "bar")
 	if err := addOp.Validate(); err != nil {
 		t.Errorf("Validate() unexpected error: %v", err)
@@ -137,6 +143,7 @@ func TestAdd_Validate(t *testing.T) {
 }
 
 func TestAdd_Constructor(t *testing.T) {
+	t.Parallel()
 	path := []string{"foo", "bar"}
 	value := "baz"
 

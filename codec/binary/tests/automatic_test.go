@@ -18,6 +18,7 @@ var unsupportedOps = map[string]struct{}{
 }
 
 func TestAutomaticRoundtrip(t *testing.T) {
+	t.Parallel()
 	binCodec := binary.Codec{}
 	options := internal.JSONPatchOptions{CreateMatcher: jsonpatch.CreateMatcherDefault}
 
@@ -41,6 +42,7 @@ func TestAutomaticRoundtrip(t *testing.T) {
 		}
 
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// Step 1: JSON -> Op (json codec)
 			jsonOps, err := jsoncodec.Decode([]map[string]any{opMap}, options)
 			if err != nil {

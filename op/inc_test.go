@@ -8,6 +8,7 @@ import (
 )
 
 func TestInc_Apply(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		path     []string
@@ -99,6 +100,7 @@ func TestInc_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			incOp := NewInc(tt.path, tt.inc)
 			docCopy, err := DeepClone(tt.doc)
 			if err != nil {
@@ -128,6 +130,7 @@ func TestInc_Apply(t *testing.T) {
 }
 
 func TestInc_Constructor(t *testing.T) {
+	t.Parallel()
 	path := []string{"user", "score"}
 	inc := 3.5
 	incOp := NewInc(path, inc)
@@ -146,6 +149,7 @@ func TestInc_Constructor(t *testing.T) {
 }
 
 func TestInc_ToJSON(t *testing.T) {
+	t.Parallel()
 	incOp := NewInc([]string{"count"}, 5.5)
 	got, err := incOp.ToJSON()
 	if err != nil {

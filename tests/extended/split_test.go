@@ -9,8 +9,11 @@ import (
 )
 
 func TestSplitOp(t *testing.T) {
+	t.Parallel()
 	t.Run("Slate.js examples", func(t *testing.T) {
+		t.Parallel()
 		t.Run("split a single 'ab' paragraphs into two", func(t *testing.T) {
+			t.Parallel()
 			state := []interface{}{
 				map[string]interface{}{
 					"children": []interface{}{
@@ -49,6 +52,7 @@ func TestSplitOp(t *testing.T) {
 		})
 
 		t.Run("split two element blocks into one", func(t *testing.T) {
+			t.Parallel()
 			state := []interface{}{
 				map[string]interface{}{
 					"children": []interface{}{
@@ -95,8 +99,11 @@ func TestSplitOp(t *testing.T) {
 	})
 
 	t.Run("root", func(t *testing.T) {
+		t.Parallel()
 		t.Run("string", func(t *testing.T) {
+			t.Parallel()
 			t.Run("can split string in two", func(t *testing.T) {
+				t.Parallel()
 				var state interface{} = "1234"
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 2},
@@ -112,6 +119,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("can split string in two at pos=1", func(t *testing.T) {
+				t.Parallel()
 				var state interface{} = "1234"
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 1},
@@ -127,6 +135,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("can split string in two from beginning", func(t *testing.T) {
+				t.Parallel()
 				var state interface{} = "1234"
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 0},
@@ -142,6 +151,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("can split string in two from end", func(t *testing.T) {
+				t.Parallel()
 				var state interface{} = "1234"
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 4},
@@ -157,6 +167,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("can split string in two when pos is greater than string length", func(t *testing.T) {
+				t.Parallel()
 				var state interface{} = "12345"
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 99999},
@@ -172,6 +183,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("takes characters from end if pos is negative", func(t *testing.T) {
+				t.Parallel()
 				var state interface{} = "12345"
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: -1},
@@ -187,6 +199,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("takes characters from end if pos is negative - 2", func(t *testing.T) {
+				t.Parallel()
 				var state interface{} = "12345"
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: -2},
@@ -202,6 +215,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("when negative pos overflows, first element is empty", func(t *testing.T) {
+				t.Parallel()
 				var state interface{} = "12345"
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: -7},
@@ -218,7 +232,9 @@ func TestSplitOp(t *testing.T) {
 		})
 
 		t.Run("SlateTextNode", func(t *testing.T) {
+			t.Parallel()
 			t.Run("splits simple SlateTextNode", func(t *testing.T) {
+				t.Parallel()
 				var state interface{} = map[string]interface{}{
 					"text": "foo bar",
 				}
@@ -239,6 +255,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("preserves text node attributes", func(t *testing.T) {
+				t.Parallel()
 				var state interface{} = map[string]interface{}{
 					"text": "foo bar",
 					"foo":  "bar",
@@ -260,6 +277,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("can add custom attributes", func(t *testing.T) {
+				t.Parallel()
 				var state interface{} = map[string]interface{}{
 					"text": "foo bar",
 					"foo":  "bar",
@@ -281,6 +299,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("custom attributes can overwrite node attributes", func(t *testing.T) {
+				t.Parallel()
 				var state interface{} = map[string]interface{}{
 					"text": "foo bar",
 					"foo":  "bar",
@@ -303,7 +322,9 @@ func TestSplitOp(t *testing.T) {
 		})
 
 		t.Run("SlateElementNode", func(t *testing.T) {
+			t.Parallel()
 			t.Run("splits simple node", func(t *testing.T) {
+				t.Parallel()
 				var state interface{} = map[string]interface{}{
 					"children": []interface{}{
 						map[string]interface{}{"text": "foo"},
@@ -337,6 +358,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("can provide custom attributes", func(t *testing.T) {
+				t.Parallel()
 				var state interface{} = map[string]interface{}{
 					"children": []interface{}{
 						map[string]interface{}{"text": "foo"},
@@ -372,6 +394,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("carries over node attributes", func(t *testing.T) {
+				t.Parallel()
 				var state interface{} = map[string]interface{}{
 					"a": 1,
 					"children": []interface{}{
@@ -410,6 +433,7 @@ func TestSplitOp(t *testing.T) {
 			})
 
 			t.Run("can overwrite node attributes", func(t *testing.T) {
+				t.Parallel()
 				var state interface{} = map[string]interface{}{
 					"a": 1,
 					"c": 3,
@@ -453,7 +477,9 @@ func TestSplitOp(t *testing.T) {
 	})
 
 	t.Run("object", func(t *testing.T) {
+		t.Parallel()
 		t.Run("can split string in two", func(t *testing.T) {
+			t.Parallel()
 			state := map[string]interface{}{"foo": "ab"}
 			operations := []internal.Operation{
 				{Op: "split", Path: "/foo", Pos: 1},
@@ -469,6 +495,7 @@ func TestSplitOp(t *testing.T) {
 		})
 
 		t.Run("if attribute are specified, wraps strings into nodes", func(t *testing.T) {
+			t.Parallel()
 			state := map[string]interface{}{"foo": "ab"}
 			operations := []internal.Operation{
 				{Op: "split", Path: "/foo", Pos: 1, Props: map[string]interface{}{"z": "x"}},
@@ -489,6 +516,7 @@ func TestSplitOp(t *testing.T) {
 		})
 
 		t.Run("splits SlateTextNode", func(t *testing.T) {
+			t.Parallel()
 			state := map[string]interface{}{"foo": map[string]interface{}{"text": "777"}}
 			operations := []internal.Operation{
 				{Op: "split", Path: "/foo", Pos: 1, Props: map[string]interface{}{"z": "x"}},
@@ -509,6 +537,7 @@ func TestSplitOp(t *testing.T) {
 		})
 
 		t.Run("crates a tuple if target is a boolean value", func(t *testing.T) {
+			t.Parallel()
 			state := map[string]interface{}{"foo": true}
 			operations := []internal.Operation{
 				{Op: "split", Path: "/foo", Pos: 1},
@@ -524,6 +553,7 @@ func TestSplitOp(t *testing.T) {
 		})
 
 		t.Run("divides number into two haves if target is a number", func(t *testing.T) {
+			t.Parallel()
 			state := map[string]interface{}{"foo": 10}
 			operations := []internal.Operation{
 				{Op: "split", Path: "/foo", Pos: 9},
@@ -540,7 +570,9 @@ func TestSplitOp(t *testing.T) {
 	})
 
 	t.Run("array", func(t *testing.T) {
+		t.Parallel()
 		t.Run("splits SlateElementNode into two", func(t *testing.T) {
+			t.Parallel()
 			state := []interface{}{1, map[string]interface{}{"children": []interface{}{map[string]interface{}{"text": "a"}, map[string]interface{}{"text": "b"}}}, 2}
 			operations := []internal.Operation{
 				{Op: "split", Path: "/1", Pos: 0},
@@ -556,6 +588,7 @@ func TestSplitOp(t *testing.T) {
 		})
 
 		t.Run("adds custom props and preserves node props", func(t *testing.T) {
+			t.Parallel()
 			state := []interface{}{1, map[string]interface{}{"foo": "bar", "children": []interface{}{map[string]interface{}{"text": "a"}, map[string]interface{}{"text": "b"}}}, 2}
 			operations := []internal.Operation{
 				{Op: "split", Path: "/1", Pos: 0, Props: map[string]interface{}{"a": "b"}},

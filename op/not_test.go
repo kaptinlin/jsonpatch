@@ -9,6 +9,7 @@ import (
 )
 
 func TestNot_Basic(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 	}
@@ -26,6 +27,7 @@ func TestNot_Basic(t *testing.T) {
 }
 
 func TestNot_Negation(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 	}
@@ -43,6 +45,7 @@ func TestNot_Negation(t *testing.T) {
 }
 
 func TestNot_Apply(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 	}
@@ -60,6 +63,7 @@ func TestNot_Apply(t *testing.T) {
 }
 
 func TestNot_Apply_Fails(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 	}
@@ -77,6 +81,7 @@ func TestNot_Apply_Fails(t *testing.T) {
 }
 
 func TestNot_InterfaceMethods(t *testing.T) {
+	t.Parallel()
 	testOp := NewTest([]string{"foo"}, "bar")
 	notOp := NewNot(testOp)
 
@@ -100,6 +105,7 @@ func TestNot_InterfaceMethods(t *testing.T) {
 }
 
 func TestNot_ToJSON(t *testing.T) {
+	t.Parallel()
 	test1 := NewTest([]string{"foo"}, "bar")
 	notOp := NewNot(test1)
 
@@ -119,6 +125,7 @@ func TestNot_ToJSON(t *testing.T) {
 }
 
 func TestNot_ToCompact(t *testing.T) {
+	t.Parallel()
 	test1 := NewTest([]string{"foo"}, "bar")
 	notOp := NewNot(test1)
 
@@ -141,6 +148,7 @@ func TestNot_ToCompact(t *testing.T) {
 }
 
 func TestNot_Validate(t *testing.T) {
+	t.Parallel()
 	testOp := NewTest([]string{"foo"}, "bar")
 
 	notOp := NewNot(testOp)

@@ -9,6 +9,7 @@ import (
 )
 
 func TestUndefined_Basic(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": map[string]any{
@@ -45,6 +46,7 @@ func TestUndefined_Basic(t *testing.T) {
 }
 
 func TestUndefined_Not(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 	}
@@ -69,6 +71,7 @@ func TestUndefined_Not(t *testing.T) {
 }
 
 func TestUndefined_Apply(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 	}
@@ -93,6 +96,7 @@ func TestUndefined_Apply(t *testing.T) {
 }
 
 func TestUndefined_InterfaceMethods(t *testing.T) {
+	t.Parallel()
 	undefinedOp := NewUndefined([]string{"test"})
 
 	if got := undefinedOp.Op(); got != internal.OpUndefinedType {
@@ -110,6 +114,7 @@ func TestUndefined_InterfaceMethods(t *testing.T) {
 }
 
 func TestUndefined_ToJSON(t *testing.T) {
+	t.Parallel()
 	undefinedOp := NewUndefined([]string{"test"})
 
 	got, err := undefinedOp.ToJSON()
@@ -128,6 +133,7 @@ func TestUndefined_ToJSON(t *testing.T) {
 // no longer supports direct negation. Use second-order predicate "not" for negation.
 
 func TestUndefined_ToCompact(t *testing.T) {
+	t.Parallel()
 	undefinedOp := NewUndefined([]string{"test"})
 
 	compact, err := undefinedOp.ToCompact()
@@ -146,6 +152,7 @@ func TestUndefined_ToCompact(t *testing.T) {
 }
 
 func TestUndefined_Validate(t *testing.T) {
+	t.Parallel()
 	undefinedOp := NewUndefined([]string{"test"})
 	if err := undefinedOp.Validate(); err != nil {
 		t.Errorf("Validate() = %v, want nil for valid operation", err)

@@ -8,9 +8,13 @@ import (
 )
 
 func TestTestStringLenOp(t *testing.T) {
+	t.Parallel()
 	t.Run("root", func(t *testing.T) {
+		t.Parallel()
 		t.Run("positive", func(t *testing.T) {
+			t.Parallel()
 			t.Run("succeeds when target is longer than requested", func(t *testing.T) {
+				t.Parallel()
 				op := internal.Operation{
 					Op:   "test_string_len",
 					Path: "",
@@ -20,6 +24,7 @@ func TestTestStringLenOp(t *testing.T) {
 			})
 
 			t.Run("succeeds when target length is equal to requested length", func(t *testing.T) {
+				t.Parallel()
 				op := internal.Operation{
 					Op:   "test_string_len",
 					Path: "",
@@ -29,6 +34,7 @@ func TestTestStringLenOp(t *testing.T) {
 			})
 
 			t.Run("throws when requested length is larger than target", func(t *testing.T) {
+				t.Parallel()
 				op := internal.Operation{
 					Op:   "test_string_len",
 					Path: "",
@@ -39,7 +45,9 @@ func TestTestStringLenOp(t *testing.T) {
 		})
 
 		t.Run("negative", func(t *testing.T) {
+			t.Parallel()
 			t.Run("throw when target is longer than requested", func(t *testing.T) {
+				t.Parallel()
 				op := internal.Operation{
 					Op:   "test_string_len",
 					Path: "",
@@ -50,6 +58,7 @@ func TestTestStringLenOp(t *testing.T) {
 			})
 
 			t.Run("throws when target length is equal to requested length", func(t *testing.T) {
+				t.Parallel()
 				op := internal.Operation{
 					Op:   "test_string_len",
 					Path: "",
@@ -60,6 +69,7 @@ func TestTestStringLenOp(t *testing.T) {
 			})
 
 			t.Run("succeeds when requested length is larger than target", func(t *testing.T) {
+				t.Parallel()
 				op := internal.Operation{
 					Op:   "test_string_len",
 					Path: "",
@@ -72,8 +82,11 @@ func TestTestStringLenOp(t *testing.T) {
 	})
 
 	t.Run("object", func(t *testing.T) {
+		t.Parallel()
 		t.Run("positive", func(t *testing.T) {
+			t.Parallel()
 			t.Run("succeeds when target is longer than requested", func(t *testing.T) {
+				t.Parallel()
 				obj := map[string]interface{}{"a": "b"}
 				op := internal.Operation{
 					Op:   "test_string_len",
@@ -91,6 +104,7 @@ func TestTestStringLenOp(t *testing.T) {
 			})
 
 			t.Run("throws when target is shorter than requested", func(t *testing.T) {
+				t.Parallel()
 				obj := map[string]interface{}{"a": "b"}
 				op := internal.Operation{
 					Op:   "test_string_len",
@@ -112,8 +126,11 @@ func TestTestStringLenOp(t *testing.T) {
 	})
 
 	t.Run("array", func(t *testing.T) {
+		t.Parallel()
 		t.Run("positive", func(t *testing.T) {
+			t.Parallel()
 			t.Run("succeeds when target is longer than requested", func(t *testing.T) {
+				t.Parallel()
 				obj := map[string]interface{}{"a": []interface{}{"b"}}
 				op := internal.Operation{
 					Op:   "test_string_len",
@@ -131,6 +148,7 @@ func TestTestStringLenOp(t *testing.T) {
 			})
 
 			t.Run("throws when target is shorter than requested", func(t *testing.T) {
+				t.Parallel()
 				obj := map[string]interface{}{"a": []interface{}{"b"}}
 				op := internal.Operation{
 					Op:   "test_string_len",

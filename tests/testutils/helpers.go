@@ -119,6 +119,7 @@ type MultiOperationTestCase struct {
 func RunTestCase(t *testing.T, tc TestCase) {
 	t.Helper()
 	t.Run(tc.Name, func(t *testing.T) {
+		t.Parallel()
 		if tc.WantErr {
 			_ = ApplyOperationWithError(t, tc.Doc, tc.Operation)
 		} else {
@@ -134,6 +135,7 @@ func RunTestCase(t *testing.T, tc TestCase) {
 func RunMultiOperationTestCase(t *testing.T, tc MultiOperationTestCase) {
 	t.Helper()
 	t.Run(tc.Name, func(t *testing.T) {
+		t.Parallel()
 		if tc.WantErr {
 			_ = ApplyOperationsWithError(t, tc.Doc, tc.Operations)
 		} else {

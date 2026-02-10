@@ -8,6 +8,7 @@ import (
 )
 
 func TestFlip_Apply(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		path     []string
@@ -138,6 +139,7 @@ func TestFlip_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			flipOp := NewFlip(tt.path)
 
 			docCopy, err := DeepClone(tt.doc)
@@ -168,6 +170,7 @@ func TestFlip_Apply(t *testing.T) {
 }
 
 func TestFlip_Constructor(t *testing.T) {
+	t.Parallel()
 	path := []string{"user", "active"}
 	flipOp := NewFlip(path)
 
@@ -183,6 +186,7 @@ func TestFlip_Constructor(t *testing.T) {
 }
 
 func TestFlip_ComplexTypes(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		value    any
@@ -200,6 +204,7 @@ func TestFlip_ComplexTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			flipOp := NewFlip([]string{"value"})
 			doc := map[string]any{"value": tt.value}
 

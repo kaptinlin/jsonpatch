@@ -8,6 +8,7 @@ import (
 )
 
 func TestStrDel_Apply(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		path     []string
@@ -145,6 +146,7 @@ func TestStrDel_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			strDelOp := NewStrDel(tt.path, tt.pos, tt.length)
 			docCopy, err := DeepClone(tt.doc)
 			if err != nil {
@@ -174,6 +176,7 @@ func TestStrDel_Apply(t *testing.T) {
 }
 
 func TestStrDel_Constructor(t *testing.T) {
+	t.Parallel()
 	path := []string{"user", "bio"}
 	pos := 2.0
 	length := 3.0

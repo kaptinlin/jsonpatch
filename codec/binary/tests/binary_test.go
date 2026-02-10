@@ -127,9 +127,11 @@ func mustNewMatchesOperation(path []string, pattern string, ignoreCase bool) *op
 }
 
 func TestRoundtrip(t *testing.T) {
+	t.Parallel()
 	codec := binary.Codec{}
 	for _, tt := range Patches {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			encoded, err := codec.Encode(tt.patch)
 			if err != nil {
 				t.Fatalf("Encode should not error: %v", err)

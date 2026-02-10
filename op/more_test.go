@@ -9,6 +9,7 @@ import (
 )
 
 func TestMore_Basic(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name          string
 		doc           any
@@ -78,6 +79,7 @@ func TestMore_Basic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			moreOp := NewMore(tt.path, tt.value)
 			result, err := moreOp.Apply(tt.doc)
 
@@ -107,6 +109,7 @@ func TestMore_Basic(t *testing.T) {
 }
 
 func TestMore_Constructor(t *testing.T) {
+	t.Parallel()
 	path := []string{"age"}
 	value := 18.0
 
@@ -126,6 +129,7 @@ func TestMore_Constructor(t *testing.T) {
 }
 
 func TestMore_ToJSON(t *testing.T) {
+	t.Parallel()
 	moreOp := NewMore([]string{"age"}, 18.0)
 	got, err := moreOp.ToJSON()
 
@@ -144,6 +148,7 @@ func TestMore_ToJSON(t *testing.T) {
 }
 
 func TestMore_ToCompact(t *testing.T) {
+	t.Parallel()
 	moreOp := NewMore([]string{"age"}, 18.0)
 	compact, err := moreOp.ToCompact()
 	if err != nil {

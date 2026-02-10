@@ -8,8 +8,11 @@ import (
 )
 
 func TestTypeOp(t *testing.T) {
+	t.Parallel()
 	t.Run("root", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when type matches", func(t *testing.T) {
+			t.Parallel()
 			tests := []struct {
 				value interface{}
 				typ   string
@@ -33,6 +36,7 @@ func TestTypeOp(t *testing.T) {
 		})
 
 		t.Run("throws when type does not match", func(t *testing.T) {
+			t.Parallel()
 			tests := []struct {
 				value interface{}
 				typ   string
@@ -57,7 +61,9 @@ func TestTypeOp(t *testing.T) {
 	})
 
 	t.Run("object", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when type matches", func(t *testing.T) {
+			t.Parallel()
 			tests := []struct {
 				obj map[string]interface{}
 				typ string
@@ -81,6 +87,7 @@ func TestTypeOp(t *testing.T) {
 		})
 
 		t.Run("throws when type does not match", func(t *testing.T) {
+			t.Parallel()
 			tests := []struct {
 				obj map[string]interface{}
 				typ string
@@ -105,7 +112,9 @@ func TestTypeOp(t *testing.T) {
 	})
 
 	t.Run("array", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when type matches", func(t *testing.T) {
+			t.Parallel()
 			tests := []struct {
 				arr []interface{}
 				typ string
@@ -129,6 +138,7 @@ func TestTypeOp(t *testing.T) {
 		})
 
 		t.Run("throws when type does not match", func(t *testing.T) {
+			t.Parallel()
 			tests := []struct {
 				arr []interface{}
 				typ string

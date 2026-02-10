@@ -9,7 +9,9 @@ import (
 )
 
 func TestFlipOp(t *testing.T) {
+	t.Parallel()
 	t.Run("casts values and them flips them", func(t *testing.T) {
+		t.Parallel()
 		doc := map[string]interface{}{
 			"val1": true,
 			"val2": false,
@@ -35,7 +37,9 @@ func TestFlipOp(t *testing.T) {
 	})
 
 	t.Run("root", func(t *testing.T) {
+		t.Parallel()
 		t.Run("flips true to false", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "flip",
 				Path: "",
@@ -47,6 +51,7 @@ func TestFlipOp(t *testing.T) {
 		})
 
 		t.Run("flips false to true", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "flip",
 				Path: "",
@@ -58,6 +63,7 @@ func TestFlipOp(t *testing.T) {
 		})
 
 		t.Run("flips truthy number to false", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "flip",
 				Path: "",
@@ -69,6 +75,7 @@ func TestFlipOp(t *testing.T) {
 		})
 
 		t.Run("flips zero to true", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "flip",
 				Path: "",
@@ -81,7 +88,9 @@ func TestFlipOp(t *testing.T) {
 	})
 
 	t.Run("object", func(t *testing.T) {
+		t.Parallel()
 		t.Run("flips true to false", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "flip",
 				Path: "/foo",
@@ -94,6 +103,7 @@ func TestFlipOp(t *testing.T) {
 		})
 
 		t.Run("flips false to true", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "flip",
 				Path: "/foo",
@@ -106,6 +116,7 @@ func TestFlipOp(t *testing.T) {
 		})
 
 		t.Run("treats empty arrays and objects as truthy", func(t *testing.T) {
+			t.Parallel()
 			operations := []internal.Operation{
 				{Op: "flip", Path: "/empty_array"},
 				{Op: "flip", Path: "/empty_object"},
@@ -125,6 +136,7 @@ func TestFlipOp(t *testing.T) {
 		})
 
 		t.Run("creates value when path doesn't exist", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "flip",
 				Path: "/newfield",
@@ -138,7 +150,9 @@ func TestFlipOp(t *testing.T) {
 	})
 
 	t.Run("array", func(t *testing.T) {
+		t.Parallel()
 		t.Run("flips true to false and back", func(t *testing.T) {
+			t.Parallel()
 			operations := []internal.Operation{
 				{
 					Op:   "flip",

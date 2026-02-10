@@ -8,6 +8,7 @@ import (
 )
 
 func TestMerge_Apply(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		path     []string
@@ -141,6 +142,7 @@ func TestMerge_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			var props map[string]any
 			if tt.props != nil {
 				props = tt.props.(map[string]any)
@@ -174,6 +176,7 @@ func TestMerge_Apply(t *testing.T) {
 }
 
 func TestMerge_Constructor(t *testing.T) {
+	t.Parallel()
 	path := []string{"user", "tags"}
 	pos := 1.0
 	props := map[string]any{"type": "merge"}

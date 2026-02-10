@@ -8,7 +8,9 @@ import (
 )
 
 func TestValidateOperations(t *testing.T) {
+	t.Parallel()
 	t.Run("throws on not an array", func(t *testing.T) {
+		t.Parallel()
 		err := jsonpatch.ValidateOperations(nil, false)
 		if !errors.Is(err, jsonpatch.ErrNotArray) {
 			t.Errorf("ValidateOperations(nil) error = %v, want %v", err, jsonpatch.ErrNotArray)
@@ -16,6 +18,7 @@ func TestValidateOperations(t *testing.T) {
 	})
 
 	t.Run("throws on empty array", func(t *testing.T) {
+		t.Parallel()
 		err := jsonpatch.ValidateOperations([]jsonpatch.Operation{}, false)
 		if !errors.Is(err, jsonpatch.ErrEmptyPatch) {
 			t.Errorf("ValidateOperations([]) error = %v, want %v", err, jsonpatch.ErrEmptyPatch)
@@ -23,6 +26,7 @@ func TestValidateOperations(t *testing.T) {
 	})
 
 	t.Run("throws on no operation path", func(t *testing.T) {
+		t.Parallel()
 		ops := []jsonpatch.Operation{{}}
 		err := jsonpatch.ValidateOperations(ops, false)
 		if err == nil {
@@ -34,6 +38,7 @@ func TestValidateOperations(t *testing.T) {
 	})
 
 	t.Run("throws on no operation code", func(t *testing.T) {
+		t.Parallel()
 		ops := []jsonpatch.Operation{{Path: "/"}}
 		err := jsonpatch.ValidateOperations(ops, false)
 		if err == nil {
@@ -45,6 +50,7 @@ func TestValidateOperations(t *testing.T) {
 	})
 
 	t.Run("throws on invalid operation code", func(t *testing.T) {
+		t.Parallel()
 		ops := []jsonpatch.Operation{{Path: "/", Op: "123"}}
 		err := jsonpatch.ValidateOperations(ops, false)
 		if err == nil {
@@ -56,6 +62,7 @@ func TestValidateOperations(t *testing.T) {
 	})
 
 	t.Run("succeeds on valid operation", func(t *testing.T) {
+		t.Parallel()
 		ops := []jsonpatch.Operation{{Op: "add", Path: "/test", Value: 123}}
 		err := jsonpatch.ValidateOperations(ops, false)
 		if err != nil {
@@ -64,6 +71,7 @@ func TestValidateOperations(t *testing.T) {
 	})
 
 	t.Run("throws on second invalid operation", func(t *testing.T) {
+		t.Parallel()
 		ops := []jsonpatch.Operation{
 			{Op: "add", Path: "/test", Value: 123},
 			{Op: "test", Path: "/test"},
@@ -78,6 +86,7 @@ func TestValidateOperations(t *testing.T) {
 	})
 
 	t.Run("throws if JSON pointer does not start with forward slash", func(t *testing.T) {
+		t.Parallel()
 		ops := []jsonpatch.Operation{
 			{Op: "add", Path: "/test", Value: 123},
 			{Op: "test", Path: "test", Value: 1},

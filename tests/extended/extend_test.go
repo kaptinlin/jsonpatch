@@ -9,8 +9,11 @@ import (
 )
 
 func TestExtendOp(t *testing.T) {
+	t.Parallel()
 	t.Run("root", func(t *testing.T) {
+		t.Parallel()
 		t.Run("can extend an object", func(t *testing.T) {
+			t.Parallel()
 			operations := []internal.Operation{
 				{
 					Op:   "extend",
@@ -34,7 +37,9 @@ func TestExtendOp(t *testing.T) {
 	})
 
 	t.Run("array", func(t *testing.T) {
+		t.Parallel()
 		t.Run("can extend an object", func(t *testing.T) {
+			t.Parallel()
 			operations := []internal.Operation{
 				{
 					Op:   "extend",
@@ -70,6 +75,7 @@ func TestExtendOp(t *testing.T) {
 		})
 
 		t.Run("can set null", func(t *testing.T) {
+			t.Parallel()
 			operations := []internal.Operation{
 				{
 					Op:   "extend",
@@ -108,6 +114,7 @@ func TestExtendOp(t *testing.T) {
 		})
 
 		t.Run("can use null to delete a key", func(t *testing.T) {
+			t.Parallel()
 			operations := []internal.Operation{
 				{
 					Op:   "extend",
@@ -146,7 +153,9 @@ func TestExtendOp(t *testing.T) {
 	})
 
 	t.Run("object", func(t *testing.T) {
+		t.Parallel()
 		t.Run("can extend an object", func(t *testing.T) {
+			t.Parallel()
 			operations := []internal.Operation{
 				{
 					Op:   "extend",
@@ -178,6 +187,7 @@ func TestExtendOp(t *testing.T) {
 		})
 
 		t.Run("can set null", func(t *testing.T) {
+			t.Parallel()
 			operations := []internal.Operation{
 				{
 					Op:   "extend",
@@ -212,6 +222,7 @@ func TestExtendOp(t *testing.T) {
 		})
 
 		t.Run("can use null to delete a key", func(t *testing.T) {
+			t.Parallel()
 			operations := []internal.Operation{
 				{
 					Op:   "extend",

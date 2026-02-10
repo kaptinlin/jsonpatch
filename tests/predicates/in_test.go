@@ -9,8 +9,11 @@ import (
 )
 
 func TestInOp(t *testing.T) {
+	t.Parallel()
 	t.Run("positive", func(t *testing.T) {
+		t.Parallel()
 		t.Run("should test against root (on a json document of type object) - and return true", func(t *testing.T) {
+			t.Parallel()
 			obj := map[string]interface{}{
 				"hello": "world",
 			}
@@ -31,6 +34,7 @@ func TestInOp(t *testing.T) {
 		})
 
 		t.Run("should test against root (on a json document of type object) - and return false", func(t *testing.T) {
+			t.Parallel()
 			obj := map[string]interface{}{
 				"hello": "world",
 			}
@@ -43,6 +47,7 @@ func TestInOp(t *testing.T) {
 		})
 
 		t.Run("should test against root (on a json document of type array) - and return false", func(t *testing.T) {
+			t.Parallel()
 			obj := []interface{}{
 				map[string]interface{}{
 					"hello": "world",

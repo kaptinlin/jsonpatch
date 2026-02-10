@@ -8,8 +8,11 @@ import (
 )
 
 func TestEndsOp(t *testing.T) {
+	t.Parallel()
 	t.Run("root", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when string ends with suffix", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "ends",
 				Path:  "",
@@ -23,6 +26,7 @@ func TestEndsOp(t *testing.T) {
 		})
 
 		t.Run("throws when string does not end with suffix", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "ends",
 				Path:  "",
@@ -36,6 +40,7 @@ func TestEndsOp(t *testing.T) {
 		})
 
 		t.Run("can ignore case", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:         "ends",
 				Path:       "",
@@ -51,7 +56,9 @@ func TestEndsOp(t *testing.T) {
 	})
 
 	t.Run("object", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when string ends with suffix", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "ends",
 				Path:  "/msg",
@@ -65,6 +72,7 @@ func TestEndsOp(t *testing.T) {
 		})
 
 		t.Run("throws when string does not end with suffix", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "ends",
 				Path:  "/msg",
@@ -79,7 +87,9 @@ func TestEndsOp(t *testing.T) {
 	})
 
 	t.Run("array", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when string ends with suffix", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "ends",
 				Path:  "/0",
@@ -93,6 +103,7 @@ func TestEndsOp(t *testing.T) {
 		})
 
 		t.Run("throws when string does not end with suffix", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "ends",
 				Path:  "/0",

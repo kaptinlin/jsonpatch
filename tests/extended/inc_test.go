@@ -9,7 +9,9 @@ import (
 )
 
 func TestIncOp(t *testing.T) {
+	t.Parallel()
 	t.Run("casts values and then increments them", func(t *testing.T) {
+		t.Parallel()
 		doc := map[string]interface{}{
 			"val1": true,
 			"val2": false,
@@ -35,6 +37,7 @@ func TestIncOp(t *testing.T) {
 	})
 
 	t.Run("can use arbitrary increment value and can decrement", func(t *testing.T) {
+		t.Parallel()
 		doc := map[string]interface{}{
 			"foo": 1,
 		}
@@ -52,6 +55,7 @@ func TestIncOp(t *testing.T) {
 	})
 
 	t.Run("increment can be a floating point number", func(t *testing.T) {
+		t.Parallel()
 		doc := map[string]interface{}{
 			"foo": 1,
 		}
@@ -68,7 +72,9 @@ func TestIncOp(t *testing.T) {
 	})
 
 	t.Run("root", func(t *testing.T) {
+		t.Parallel()
 		t.Run("increments from 0 to 5", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "inc",
 				Path: "",
@@ -81,6 +87,7 @@ func TestIncOp(t *testing.T) {
 		})
 
 		t.Run("increments from -0 to 5", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "inc",
 				Path: "",
@@ -94,7 +101,9 @@ func TestIncOp(t *testing.T) {
 	})
 
 	t.Run("object", func(t *testing.T) {
+		t.Parallel()
 		t.Run("increments from 0 to 5", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "inc",
 				Path: "/lala",
@@ -108,6 +117,7 @@ func TestIncOp(t *testing.T) {
 		})
 
 		t.Run("increments from -0 to 5", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "inc",
 				Path: "/lala",
@@ -121,6 +131,7 @@ func TestIncOp(t *testing.T) {
 		})
 
 		t.Run("casts string to number", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "inc",
 				Path: "/lala",
@@ -134,6 +145,7 @@ func TestIncOp(t *testing.T) {
 		})
 
 		t.Run("can increment twice", func(t *testing.T) {
+			t.Parallel()
 			operations := []internal.Operation{
 				{
 					Op:   "inc",
@@ -154,6 +166,7 @@ func TestIncOp(t *testing.T) {
 		})
 
 		t.Run("creates value when path doesn't exist", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "inc",
 				Path: "/newfield",
@@ -168,7 +181,9 @@ func TestIncOp(t *testing.T) {
 	})
 
 	t.Run("array", func(t *testing.T) {
+		t.Parallel()
 		t.Run("increments from 0 to -3", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "inc",
 				Path: "/0",
@@ -182,6 +197,7 @@ func TestIncOp(t *testing.T) {
 		})
 
 		t.Run("increments from -0 to -3", func(t *testing.T) {
+			t.Parallel()
 			operation := internal.Operation{
 				Op:   "inc",
 				Path: "/0",

@@ -9,6 +9,7 @@ import (
 )
 
 func TestReplace_Basic(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
@@ -36,6 +37,7 @@ func TestReplace_Basic(t *testing.T) {
 }
 
 func TestReplace_Nested(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": map[string]any{
 			"bar": "baz",
@@ -63,6 +65,7 @@ func TestReplace_Nested(t *testing.T) {
 }
 
 func TestReplace_Array(t *testing.T) {
+	t.Parallel()
 	doc := []any{
 		"first",
 		"second",
@@ -91,6 +94,7 @@ func TestReplace_Array(t *testing.T) {
 }
 
 func TestReplace_NonExistent(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 	}
@@ -106,6 +110,7 @@ func TestReplace_NonExistent(t *testing.T) {
 }
 
 func TestReplace_EmptyPath(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 	}
@@ -124,6 +129,7 @@ func TestReplace_EmptyPath(t *testing.T) {
 }
 
 func TestReplace_InterfaceMethods(t *testing.T) {
+	t.Parallel()
 	replaceOp := NewReplace([]string{"test"}, "value")
 
 	if got := replaceOp.Op(); got != internal.OpReplaceType {
@@ -141,6 +147,7 @@ func TestReplace_InterfaceMethods(t *testing.T) {
 }
 
 func TestReplace_ToJSON(t *testing.T) {
+	t.Parallel()
 	replaceOp := NewReplace([]string{"test"}, "value")
 
 	got, err := replaceOp.ToJSON()
@@ -160,6 +167,7 @@ func TestReplace_ToJSON(t *testing.T) {
 }
 
 func TestReplace_ToCompact(t *testing.T) {
+	t.Parallel()
 	replaceOp := NewReplace([]string{"test"}, "value")
 
 	compact, err := replaceOp.ToCompact()
@@ -181,6 +189,7 @@ func TestReplace_ToCompact(t *testing.T) {
 }
 
 func TestReplace_Validate(t *testing.T) {
+	t.Parallel()
 	replaceOp := NewReplace([]string{"test"}, "value")
 	if err := replaceOp.Validate(); err != nil {
 		t.Errorf("Validate() unexpected error: %v", err)

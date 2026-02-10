@@ -10,12 +10,14 @@ import (
 
 // This test matches the TypeScript automatic.spec.ts
 func TestAutomaticCodec(t *testing.T) {
+	t.Parallel()
 	// Configure options for testing
 	options := json.PatchOptions{}
 
 	// Use all sample operations (equivalent to TypeScript's operations)
 	for name, operation := range SampleOperations {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// Decode operation
 			ops, err := json.Decode([]map[string]any{operation}, options)
 			if err != nil {
@@ -94,6 +96,7 @@ func TestAutomaticCodec(t *testing.T) {
 }
 
 func TestCodecRoundTrip(t *testing.T) {
+	t.Parallel()
 	// Configure options for testing
 	options := json.PatchOptions{}
 

@@ -9,6 +9,7 @@ import (
 )
 
 func TestMove_Basic(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
@@ -39,6 +40,7 @@ func TestMove_Basic(t *testing.T) {
 }
 
 func TestMove_Array(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"items": []any{
 			"first",
@@ -76,6 +78,7 @@ func TestMove_Array(t *testing.T) {
 }
 
 func TestMove_FromNonExistent(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 	}
@@ -91,6 +94,7 @@ func TestMove_FromNonExistent(t *testing.T) {
 }
 
 func TestMove_SamePath(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{"foo": 1}
 	moveOp := NewMove([]string{"foo"}, []string{"foo"})
 	result, err := moveOp.Apply(doc)
@@ -106,6 +110,7 @@ func TestMove_SamePath(t *testing.T) {
 }
 
 func TestMove_RootArray(t *testing.T) {
+	t.Parallel()
 	doc := []any{"first", "second", "third"}
 	moveOp := NewMove([]string{"0"}, []string{"2"})
 	result, err := moveOp.Apply(doc)
@@ -124,6 +129,7 @@ func TestMove_RootArray(t *testing.T) {
 }
 
 func TestMove_EmptyPath(t *testing.T) {
+	t.Parallel()
 	moveOp := NewMove([]string{}, []string{"foo"})
 	err := moveOp.Validate()
 	if err == nil {
@@ -135,6 +141,7 @@ func TestMove_EmptyPath(t *testing.T) {
 }
 
 func TestMove_EmptyFrom(t *testing.T) {
+	t.Parallel()
 	moveOp := NewMove([]string{"target"}, []string{})
 	err := moveOp.Validate()
 	if err == nil {
@@ -146,6 +153,7 @@ func TestMove_EmptyFrom(t *testing.T) {
 }
 
 func TestMove_InterfaceMethods(t *testing.T) {
+	t.Parallel()
 	moveOp := NewMove([]string{"target"}, []string{"source"})
 
 	if got := moveOp.Op(); got != internal.OpMoveType {
@@ -166,6 +174,7 @@ func TestMove_InterfaceMethods(t *testing.T) {
 }
 
 func TestMove_ToJSON(t *testing.T) {
+	t.Parallel()
 	moveOp := NewMove([]string{"target"}, []string{"source"})
 
 	got, err := moveOp.ToJSON()
@@ -185,6 +194,7 @@ func TestMove_ToJSON(t *testing.T) {
 }
 
 func TestMove_ToCompact(t *testing.T) {
+	t.Parallel()
 	moveOp := NewMove([]string{"target"}, []string{"source"})
 
 	compact, err := moveOp.ToCompact()
@@ -206,6 +216,7 @@ func TestMove_ToCompact(t *testing.T) {
 }
 
 func TestMove_Validate(t *testing.T) {
+	t.Parallel()
 	moveOp := NewMove([]string{"target"}, []string{"source"})
 	if err := moveOp.Validate(); err != nil {
 		t.Errorf("Validate() unexpected error: %v", err)
@@ -240,6 +251,7 @@ func TestMove_Validate(t *testing.T) {
 }
 
 func TestMove_RFC6902_RemoveAddPattern(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		doc      map[string]any
@@ -281,6 +293,7 @@ func TestMove_RFC6902_RemoveAddPattern(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			moveOp := NewMove(tt.path, tt.from)
 			result, err := moveOp.Apply(tt.doc)
 			if err != nil {

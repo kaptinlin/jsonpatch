@@ -9,6 +9,7 @@ import (
 )
 
 func TestTestString_Apply(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name          string
 		doc           any
@@ -114,6 +115,7 @@ func TestTestString_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			testStringOp := NewTestString(tt.path, tt.expectedValue, tt.pos, false, false)
 			result, err := testStringOp.Apply(tt.doc)
 
@@ -143,6 +145,7 @@ func TestTestString_Apply(t *testing.T) {
 }
 
 func TestToString(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		value    any
@@ -159,6 +162,7 @@ func TestToString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result, err := toString(tt.value)
 			if tt.hasError {
 				if err == nil {

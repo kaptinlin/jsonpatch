@@ -8,6 +8,7 @@ import (
 )
 
 func TestAnd(t *testing.T) {
+	t.Parallel()
 	testCases := []testutils.MultiOperationTestCase{
 		{
 			Name: "succeeds_when_both_predicates_pass",

@@ -6,6 +6,7 @@ import (
 )
 
 func TestRemove_Basic(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
@@ -34,6 +35,7 @@ func TestRemove_Basic(t *testing.T) {
 }
 
 func TestRemove_Nested(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": map[string]any{"bar": "baz", "qux": 123},
 	}
@@ -58,6 +60,7 @@ func TestRemove_Nested(t *testing.T) {
 }
 
 func TestRemove_Array(t *testing.T) {
+	t.Parallel()
 	doc := []any{"first", "second", "third"}
 
 	removeOp := NewRemove([]string{"1"})
@@ -82,6 +85,7 @@ func TestRemove_Array(t *testing.T) {
 }
 
 func TestRemove_NonExistent(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{"foo": "bar"}
 
 	removeOp := NewRemove([]string{"qux"})
@@ -95,6 +99,7 @@ func TestRemove_NonExistent(t *testing.T) {
 }
 
 func TestRemove_EmptyPath(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{"foo": "bar"}
 
 	removeOp := NewRemove([]string{})

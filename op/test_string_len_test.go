@@ -9,6 +9,7 @@ import (
 )
 
 func TestTestStringLen_Apply(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		doc            any
@@ -110,6 +111,7 @@ func TestTestStringLen_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			strLenOp := NewTestStringLen(tt.path, tt.expectedLength)
 			result, err := strLenOp.Apply(tt.doc)
 

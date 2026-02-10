@@ -9,6 +9,7 @@ import (
 )
 
 func TestDefined_Basic(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": map[string]any{
@@ -45,6 +46,7 @@ func TestDefined_Basic(t *testing.T) {
 }
 
 func TestDefined_Apply(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 	}
@@ -69,6 +71,7 @@ func TestDefined_Apply(t *testing.T) {
 }
 
 func TestDefined_InterfaceMethods(t *testing.T) {
+	t.Parallel()
 	definedOp := NewDefined([]string{"test"})
 
 	if got := definedOp.Op(); got != internal.OpDefinedType {
@@ -83,6 +86,7 @@ func TestDefined_InterfaceMethods(t *testing.T) {
 }
 
 func TestDefined_ToJSON(t *testing.T) {
+	t.Parallel()
 	definedOp := NewDefined([]string{"test"})
 
 	got, err := definedOp.ToJSON()
@@ -98,6 +102,7 @@ func TestDefined_ToJSON(t *testing.T) {
 }
 
 func TestDefined_ToCompact(t *testing.T) {
+	t.Parallel()
 	definedOp := NewDefined([]string{"test"})
 
 	compact, err := definedOp.ToCompact()
@@ -116,6 +121,7 @@ func TestDefined_ToCompact(t *testing.T) {
 }
 
 func TestDefined_Validate(t *testing.T) {
+	t.Parallel()
 	definedOp := NewDefined([]string{"test"})
 	if err := definedOp.Validate(); err != nil {
 		t.Errorf("Validate() = %v, want nil for valid operation", err)

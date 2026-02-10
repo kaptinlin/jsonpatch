@@ -8,6 +8,7 @@ import (
 )
 
 func TestStrIns_Apply(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		path     []string
@@ -127,6 +128,7 @@ func TestStrIns_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			strInsOp := NewStrIns(tt.path, tt.pos, tt.str)
 			docCopy, err := DeepClone(tt.doc)
 			if err != nil {
@@ -156,6 +158,7 @@ func TestStrIns_Apply(t *testing.T) {
 }
 
 func TestStrIns_Constructor(t *testing.T) {
+	t.Parallel()
 	path := []string{"user", "bio"}
 	pos := 2.0
 	str := "abc"

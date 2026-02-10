@@ -8,6 +8,7 @@ import (
 )
 
 func TestExtend_Apply(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name       string
 		path       []string
@@ -109,6 +110,7 @@ func TestExtend_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			extendOp := NewExtend(tt.path, tt.props.(map[string]any), tt.deleteNull)
 			docCopy, err := DeepClone(tt.doc)
 			if err != nil {
@@ -138,6 +140,7 @@ func TestExtend_Apply(t *testing.T) {
 }
 
 func TestExtend_Constructor(t *testing.T) {
+	t.Parallel()
 	path := []string{"user", "profile"}
 	props := map[string]any{"age": 30, "city": "NYC"}
 	deleteNull := true

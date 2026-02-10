@@ -8,6 +8,7 @@ import (
 )
 
 func TestOr(t *testing.T) {
+	t.Parallel()
 	testCases := []testutils.MultiOperationTestCase{
 		{
 			Name: "succeeds_when_one_predicate_passes",

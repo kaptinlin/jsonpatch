@@ -8,6 +8,7 @@ import (
 )
 
 func TestSplit_Apply(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		path     []string
@@ -138,6 +139,7 @@ func TestSplit_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			splitOp := NewSplit(tt.path, tt.pos, tt.props)
 			docCopy, err := DeepClone(tt.doc)
 			if err != nil {
@@ -167,6 +169,7 @@ func TestSplit_Apply(t *testing.T) {
 }
 
 func TestSplit_Constructor(t *testing.T) {
+	t.Parallel()
 	path := []string{"user", "bio"}
 	pos := 2.0
 	props := map[string]any{"type": "split"}
@@ -189,6 +192,7 @@ func TestSplit_Constructor(t *testing.T) {
 }
 
 func TestSplit_TypeScript_Compatibility(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		doc      any
@@ -236,6 +240,7 @@ func TestSplit_TypeScript_Compatibility(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			splitOp := NewSplit(tt.path, tt.pos, tt.props)
 			result, err := splitOp.Apply(tt.doc)
 			if err != nil {

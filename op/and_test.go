@@ -9,6 +9,7 @@ import (
 )
 
 func TestAnd_Basic(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
@@ -29,6 +30,7 @@ func TestAnd_Basic(t *testing.T) {
 }
 
 func TestAnd_OneFails(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
@@ -49,6 +51,7 @@ func TestAnd_OneFails(t *testing.T) {
 }
 
 func TestAnd_Empty(t *testing.T) {
+	t.Parallel()
 	andOp := NewAnd([]string{}, []any{})
 
 	doc := map[string]any{"foo": "bar"}
@@ -62,6 +65,7 @@ func TestAnd_Empty(t *testing.T) {
 }
 
 func TestAnd_Apply(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
@@ -82,6 +86,7 @@ func TestAnd_Apply(t *testing.T) {
 }
 
 func TestAnd_Apply_Fails(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"foo": "bar",
 		"baz": 123,
@@ -102,6 +107,7 @@ func TestAnd_Apply_Fails(t *testing.T) {
 }
 
 func TestAnd_InterfaceMethods(t *testing.T) {
+	t.Parallel()
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
@@ -130,6 +136,7 @@ func TestAnd_InterfaceMethods(t *testing.T) {
 }
 
 func TestAnd_ToJSON(t *testing.T) {
+	t.Parallel()
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
@@ -151,6 +158,7 @@ func TestAnd_ToJSON(t *testing.T) {
 }
 
 func TestAnd_ToCompact(t *testing.T) {
+	t.Parallel()
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
@@ -172,6 +180,7 @@ func TestAnd_ToCompact(t *testing.T) {
 }
 
 func TestAnd_Validate(t *testing.T) {
+	t.Parallel()
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 

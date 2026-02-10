@@ -8,8 +8,11 @@ import (
 )
 
 func TestStartsOp(t *testing.T) {
+	t.Parallel()
 	t.Run("root", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when string starts with prefix", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "starts",
 				Path:  "",
@@ -23,6 +26,7 @@ func TestStartsOp(t *testing.T) {
 		})
 
 		t.Run("throws when string does not start with prefix", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "starts",
 				Path:  "",
@@ -36,6 +40,7 @@ func TestStartsOp(t *testing.T) {
 		})
 
 		t.Run("can ignore case", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:         "starts",
 				Path:       "",
@@ -51,7 +56,9 @@ func TestStartsOp(t *testing.T) {
 	})
 
 	t.Run("object", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when string starts with prefix", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "starts",
 				Path:  "/msg",
@@ -65,6 +72,7 @@ func TestStartsOp(t *testing.T) {
 		})
 
 		t.Run("throws when string does not start with prefix", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "starts",
 				Path:  "/msg",
@@ -79,7 +87,9 @@ func TestStartsOp(t *testing.T) {
 	})
 
 	t.Run("array", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when string starts with prefix", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "starts",
 				Path:  "/0",
@@ -93,6 +103,7 @@ func TestStartsOp(t *testing.T) {
 		})
 
 		t.Run("throws when string does not start with prefix", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:    "starts",
 				Path:  "/0",

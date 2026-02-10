@@ -9,6 +9,7 @@ import (
 )
 
 func TestStarts_Apply(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name          string
 		doc           any
@@ -109,6 +110,7 @@ func TestStarts_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			startsOp := NewStarts(tt.path, tt.prefix)
 			result, err := startsOp.Apply(tt.doc)
 

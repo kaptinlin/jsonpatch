@@ -8,8 +8,11 @@ import (
 )
 
 func TestDefinedOp(t *testing.T) {
+	t.Parallel()
 	t.Run("root", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when value is defined", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:   "defined",
 				Path: "",
@@ -22,6 +25,7 @@ func TestDefinedOp(t *testing.T) {
 		})
 
 		t.Run("throws when value is undefined", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:   "defined",
 				Path: "/missing",
@@ -35,7 +39,9 @@ func TestDefinedOp(t *testing.T) {
 	})
 
 	t.Run("object", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when property is defined", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:   "defined",
 				Path: "/foo",
@@ -48,6 +54,7 @@ func TestDefinedOp(t *testing.T) {
 		})
 
 		t.Run("throws when property is not defined", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:   "defined",
 				Path: "/missing",
@@ -61,7 +68,9 @@ func TestDefinedOp(t *testing.T) {
 	})
 
 	t.Run("array", func(t *testing.T) {
+		t.Parallel()
 		t.Run("succeeds when index is defined", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:   "defined",
 				Path: "/0",
@@ -74,6 +83,7 @@ func TestDefinedOp(t *testing.T) {
 		})
 
 		t.Run("throws when index is not defined", func(t *testing.T) {
+			t.Parallel()
 			op := internal.Operation{
 				Op:   "defined",
 				Path: "/5",

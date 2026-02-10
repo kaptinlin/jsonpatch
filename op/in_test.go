@@ -9,6 +9,7 @@ import (
 )
 
 func TestIn_Apply(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name          string
 		doc           any
@@ -84,6 +85,7 @@ func TestIn_Apply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			inOp := NewIn(tt.path, tt.values)
 			result, err := inOp.Apply(tt.doc)
 

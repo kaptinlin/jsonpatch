@@ -8,6 +8,7 @@ import (
 )
 
 func TestNegation(t *testing.T) {
+	t.Parallel()
 	testCases := []testutils.TestCase{
 		{
 			Name:      "not_flag_succeeds_when_values_differ",

@@ -20,6 +20,7 @@ type profile struct {
 }
 
 func TestApplyPatchBasic(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		doc      any
@@ -76,6 +77,7 @@ func TestApplyPatchBasic(t *testing.T) {
 }
 
 func TestValidateOperation(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		operation jsonpatch.Operation
@@ -133,6 +135,7 @@ func TestValidateOperation(t *testing.T) {
 }
 
 func TestApplyPatch_Struct(t *testing.T) {
+	t.Parallel()
 	// Test data
 	before := profile{
 		Name: "John",
@@ -178,6 +181,7 @@ func TestApplyPatch_Struct(t *testing.T) {
 }
 
 func TestApplyPatch_Map(t *testing.T) {
+	t.Parallel()
 	// Test data
 	before := map[string]any{
 		"name": "John",
@@ -221,6 +225,7 @@ func TestApplyPatch_Map(t *testing.T) {
 }
 
 func TestApplyPatch_JSONBytes(t *testing.T) {
+	t.Parallel()
 	// Test data
 	before := []byte(`{"name":"John","tags":["dev"]}`)
 
@@ -273,6 +278,7 @@ func TestApplyPatch_JSONBytes(t *testing.T) {
 }
 
 func TestApplyPatch_JSONString(t *testing.T) {
+	t.Parallel()
 	// Test data
 	before := `{"name":"John","tags":["dev"]}`
 
@@ -311,6 +317,7 @@ func TestApplyPatch_JSONString(t *testing.T) {
 }
 
 func TestArrayOperations(t *testing.T) {
+	t.Parallel()
 	// Document with array
 	doc := map[string]any{
 		"items": []any{
@@ -359,6 +366,7 @@ func TestArrayOperations(t *testing.T) {
 }
 
 func TestMultipleOperations(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"counters": map[string]any{
 			"a": 0,
@@ -399,6 +407,7 @@ func TestMultipleOperations(t *testing.T) {
 }
 
 func TestApplyPatch_WithMutate(t *testing.T) {
+	t.Parallel()
 	// Test data - using map for easier mutation testing
 	original := map[string]any{
 		"name": "John",
@@ -425,6 +434,7 @@ func TestApplyPatch_WithMutate(t *testing.T) {
 }
 
 func TestComplexDocument(t *testing.T) {
+	t.Parallel()
 	// Complex nested document
 	doc := map[string]any{
 		"company": map[string]any{
@@ -496,6 +506,7 @@ func TestComplexDocument(t *testing.T) {
 }
 
 func TestSpecialCharacters(t *testing.T) {
+	t.Parallel()
 	// Document with special characters in keys
 	doc := map[string]any{
 		"normal":     "value",
@@ -549,6 +560,7 @@ func TestSpecialCharacters(t *testing.T) {
 }
 
 func TestErrorHandling(t *testing.T) {
+	t.Parallel()
 	doc := map[string]any{
 		"user": map[string]any{
 			"name": "Alice",
@@ -576,7 +588,9 @@ func TestErrorHandling(t *testing.T) {
 }
 
 func TestApplyPatch_Errors(t *testing.T) {
+	t.Parallel()
 	t.Run("invalid JSON bytes", func(t *testing.T) {
+		t.Parallel()
 		invalidJSON := []byte(`{invalid json}`)
 		patch := []jsonpatch.Operation{
 			{Op: "replace", Path: "/name", Value: "Jane"},
@@ -589,6 +603,7 @@ func TestApplyPatch_Errors(t *testing.T) {
 	})
 
 	t.Run("invalid JSON string", func(t *testing.T) {
+		t.Parallel()
 		invalidJSON := `{invalid json}`
 		patch := []jsonpatch.Operation{
 			{Op: "replace", Path: "/name", Value: "Jane"},
@@ -604,6 +619,7 @@ func TestApplyPatch_Errors(t *testing.T) {
 	})
 
 	t.Run("invalid patch operation", func(t *testing.T) {
+		t.Parallel()
 		doc := map[string]any{"name": "John"}
 		patch := []jsonpatch.Operation{
 			{Op: "invalid", Path: "/name", Value: "Jane"},
