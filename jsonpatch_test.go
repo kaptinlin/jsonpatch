@@ -12,20 +12,12 @@ import (
 	"github.com/kaptinlin/jsonpatch"
 )
 
-// =============================================================================
-// TEST TYPES AND HELPERS
-// =============================================================================
-
 // profile is a test struct for generic patch testing
 type profile struct {
 	Name  string   `json:"name"`
 	Email string   `json:"email,omitempty"`
 	Tags  []string `json:"tags"`
 }
-
-// =============================================================================
-// BASIC FUNCTIONALITY TESTS
-// =============================================================================
 
 // TestApplyPatchBasic tests basic ApplyPatch functionality
 func TestApplyPatchBasic(t *testing.T) {
@@ -141,10 +133,6 @@ func TestValidateOperation(t *testing.T) {
 		})
 	}
 }
-
-// =============================================================================
-// GENERIC TYPE TESTS
-// =============================================================================
 
 // TestApplyPatch_Struct tests applying patches to struct types
 func TestApplyPatch_Struct(t *testing.T) {
@@ -328,10 +316,6 @@ func TestApplyPatch_JSONString(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// ARRAY OPERATIONS TESTS
-// =============================================================================
-
 // TestArrayOperations demonstrates array manipulation with JSON Patch
 func TestArrayOperations(t *testing.T) {
 	// Document with array
@@ -422,10 +406,6 @@ func TestMultipleOperations(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// OPTIONS TESTS
-// =============================================================================
-
 // TestApplyPatch_WithMutate tests the mutate option
 func TestApplyPatch_WithMutate(t *testing.T) {
 	// Test data - using map for easier mutation testing
@@ -452,10 +432,6 @@ func TestApplyPatch_WithMutate(t *testing.T) {
 		t.Errorf("len(result.Res) = %d, want %d", len(result.Res), 1)
 	}
 }
-
-// =============================================================================
-// COMPLEX DOCUMENT TESTS
-// =============================================================================
 
 // TestComplexDocument demonstrates complex document operations
 func TestComplexDocument(t *testing.T) {
@@ -529,10 +505,6 @@ func TestComplexDocument(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// SPECIAL CHARACTERS TESTS
-// =============================================================================
-
 // TestSpecialCharacters demonstrates handling special characters in paths
 func TestSpecialCharacters(t *testing.T) {
 	// Document with special characters in keys
@@ -586,10 +558,6 @@ func TestSpecialCharacters(t *testing.T) {
 		t.Errorf("resultMap[] = %v, want %v", got, "updated empty")
 	}
 }
-
-// =============================================================================
-// ERROR HANDLING TESTS
-// =============================================================================
 
 // TestErrorHandling demonstrates proper error handling
 func TestErrorHandling(t *testing.T) {
@@ -661,10 +629,6 @@ func TestApplyPatch_Errors(t *testing.T) {
 	})
 }
 
-// =============================================================================
-// EXAMPLE TESTS
-// =============================================================================
-
 // Example demonstrates basic JSON Patch operations
 func Example() {
 	// Original document
@@ -726,10 +690,6 @@ func Example() {
 	// 	}
 	// }
 }
-
-// =============================================================================
-// FUZZ TESTS
-// =============================================================================
 
 // FuzzOperationSequence performs fuzz testing on operation sequences
 func FuzzOperationSequence(f *testing.F) {

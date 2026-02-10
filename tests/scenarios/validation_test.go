@@ -7,10 +7,6 @@ import (
 	"github.com/kaptinlin/jsonpatch"
 )
 
-// =============================================================================
-// OPERATIONS TESTS
-// =============================================================================
-
 func TestValidateOperations(t *testing.T) {
 	t.Run("throws on not an array", func(t *testing.T) {
 		err := jsonpatch.ValidateOperations(nil, false)
