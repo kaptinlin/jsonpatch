@@ -261,14 +261,16 @@ ops := []jsonpatch.Operation{
     {Op: "remove", Path: "/temp"},
 }
 
-// Encode to compact format with numeric opcodes (~35% space savings)
-encoder := compact.NewEncoder(compact.WithStringOpcode(false))
-compactData, err := encoder.EncodeJSON(ops)
+// Encode to compact JSON with numeric opcodes (~35% space savings)
+compactData, err := compact.EncodeJSON(ops)
 // Result: [[0,"/name","John"],[2,"/age",30],[1,"/temp"]]
 
 // Decode back to operations
-decoder := compact.NewDecoder()
-decoded, err := decoder.DecodeJSON(compactData)
+decoded, err := compact.DecodeJSON(compactData)
+
+// Or use the encoder/decoder structs for more control
+encoder := compact.NewEncoder(compact.WithStringOpcode(true))
+encoded, err := encoder.EncodeSlice(ops)
 ```
 
 ### Binary Codec
@@ -281,7 +283,7 @@ ops := []jsonpatch.Operation{
     {Op: "inc", Path: "/user/score", Inc: 100},
 }
 
-codec := &binary.Codec{}
+codec := binary.New()
 
 // Encode to MessagePack binary (40-60% smaller than JSON)
 data, err := codec.Encode(ops)
@@ -392,8 +394,7 @@ if err != nil {
 import "github.com/kaptinlin/jsonpatch/codec/compact"
 
 func storeOperations(ops []jsonpatch.Operation) error {
-    encoder := compact.NewEncoder(compact.WithStringOpcode(false))
-    compactData, err := encoder.EncodeJSON(ops)
+    compactData, err := compact.EncodeJSON(ops)
     if err != nil {
         return err
     }

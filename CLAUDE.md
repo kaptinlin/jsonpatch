@@ -75,7 +75,13 @@ go test -bench=. -benchmem ./codec/json
 ### Core Package Structure
 - **`/`** - Main package with generic API (`ApplyPatch`, `ApplyOp`, `ApplyOps`)
 - **`/op`** - All operation implementations (29 operations total)
-- **`/internal`** - Shared interfaces and types (`Op`, `PredicateOp`, `SecondOrderPredicateOp`, `Codec`)
+- **`/internal`** - Shared interfaces and types, split into focused files:
+  - `interfaces.go` - `Op`, `PredicateOp`, `SecondOrderPredicateOp`, `Codec` interfaces
+  - `types.go` - Core data structures (`Operation`, `OpResult`, `PatchResult`, `Document`)
+  - `options.go` - `JSONPatchOptions` and functional option functions
+  - `constants.go` - Operation type and code constants
+  - `classify.go` - Operation classification functions
+  - `jsonpatch_type.go` - `JSONPatchType` constants and helpers
 - **`/codec`** - Encoding/decoding formats:
   - `/codec/json` - Standard JSON Patch format (RFC 6902)
   - `/codec/compact` - Compact array format for size optimization
@@ -129,19 +135,19 @@ type Operation struct {
     Value any    `json:"value,omitempty"`
     From  string `json:"from,omitempty"`
 
-    // Extended operation fields
-    Inc float64 `json:"inc"`
-    Pos int     `json:"pos"`
+    // Extended operation fields.
+    Inc float64 `json:"inc"`    // No omitempty — 0 is a valid increment.
+    Pos int     `json:"pos"`    // No omitempty — 0 is a valid position.
     Str string  `json:"str"`
-    Len int     `json:"len"`
+    Len int     `json:"len"`    // No omitempty — 0 is a valid length.
 
-    // Predicate fields
+    // Predicate fields.
     Not        bool        `json:"not,omitempty"`
     Type       any         `json:"type,omitempty"`
     IgnoreCase bool        `json:"ignore_case,omitempty"`
     Apply      []Operation `json:"apply,omitempty"`
 
-    // Special fields
+    // Special fields.
     Props      map[string]any `json:"props,omitempty"`
     DeleteNull bool           `json:"deleteNull,omitempty"`
     OldValue   any            `json:"oldValue,omitempty"`
@@ -159,26 +165,31 @@ type Operation struct {
 ### Testing Standards
 - Table-driven tests with clear test cases
 - Always include error cases
-- Use `testify/assert` for assertions
+- Use stdlib `testing` with `github.com/google/go-cmp` for complex comparisons
+- Use `t.Parallel()` in top-level tests and subtests where safe
 - Benchmark critical operations with `testing.B.Loop()`
 
 #### Error Testing Best Practices
-- **NEVER** compare error message content with `assert.Contains(t, err.Error(), "message")`
-- **USE** type-safe error checking with `assert.ErrorIs(t, err, ErrSpecificType)`
+- **NEVER** compare error message content with string matching
+- **USE** type-safe error checking with `errors.Is(err, ErrSpecificType)`
 - **PREFER** sentinel errors defined in `op/errors.go` for consistent error types
 - **PATTERN**:
   ```go
   // Good: Type-safe error checking
-  assert.Error(t, err)
-  assert.ErrorIs(t, err, ErrPathNotFound)
+  if err == nil {
+      t.Fatal("expected error")
+  }
+  if !errors.Is(err, ErrPathNotFound) {
+      t.Errorf("got %v, want %v", err, ErrPathNotFound)
+  }
 
   // Bad: Fragile message checking
-  assert.Contains(t, err.Error(), "NOT_FOUND")
+  if !strings.Contains(err.Error(), "NOT_FOUND") { ... }
   ```
-- **AVAILABLE** assertions:
-  - `assert.ErrorIs(t, err, ErrType)` - Check specific error type
-  - `assert.ErrorAs(t, err, &targetType)` - Check error implements interface
-  - `assert.Error(t, err)` - Just verify error occurred
+- **Standard assertions** (no third-party assertion library):
+  - `errors.Is(err, target)` - Check specific error type
+  - `errors.As(err, &target)` - Check error implements interface
+  - `cmp.Diff(got, want)` - Deep comparison via go-cmp
 
 ### Error Handling
 - Use json-joy compatible error messages
@@ -191,7 +202,7 @@ type Operation struct {
 - `github.com/kaptinlin/deepclone` - Deep cloning for immutable operations
 - `github.com/go-json-experiment/json` - JSON encoding/decoding (v2)
 - `github.com/tinylib/msgp` - MessagePack for binary codec
-- `github.com/stretchr/testify` - Testing assertions
+- `github.com/google/go-cmp` - Deep comparison in tests
 
 ## Operation Categories
 
