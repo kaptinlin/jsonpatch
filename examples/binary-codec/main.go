@@ -3,8 +3,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-json-experiment/json"
 	"log"
+
+	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch/codec/binary"
 	codecjson "github.com/kaptinlin/jsonpatch/codec/json"

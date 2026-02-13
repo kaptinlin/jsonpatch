@@ -1,6 +1,10 @@
 package internal
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestWithMutate(t *testing.T) {
 	t.Parallel()
@@ -41,6 +45,6 @@ func TestWithMatcher(t *testing.T) {
 
 	opts.CreateMatcher("test", false)
 	if !called {
-		t.Error("WithMatcher: factory was not called")
+		assert.Fail(t, "WithMatcher: factory was not called")
 	}
 }

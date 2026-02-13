@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSplit_Apply(t *testing.T) {
@@ -150,7 +151,7 @@ func TestSplit_Apply(t *testing.T) {
 
 			if tt.wantErr {
 				if err == nil {
-					t.Error("Apply() expected error, got nil")
+					assert.Fail(t, "Apply() expected error, got nil")
 				}
 				return
 			}
@@ -158,12 +159,8 @@ func TestSplit_Apply(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Apply() unexpected error: %v", err)
 			}
-			if diff := cmp.Diff(tt.expected, result.Doc); diff != "" {
-				t.Errorf("Apply() Doc mismatch (-want +got):\n%s", diff)
-			}
-			if diff := cmp.Diff(tt.oldValue, result.Old); diff != "" {
-				t.Errorf("Apply() Old mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, tt.expected, result.Doc)
+			assert.Equal(t, tt.oldValue, result.Old)
 		})
 	}
 }
@@ -177,17 +174,13 @@ func TestSplit_Constructor(t *testing.T) {
 	if diff := cmp.Diff(path, splitOp.Path()); diff != "" {
 		t.Errorf("NewSplit() Path mismatch (-want +got):\n%s", diff)
 	}
-	if splitOp.Pos != pos {
-		t.Errorf("NewSplit() Pos = %v, want %v", splitOp.Pos, pos)
-	}
-	if diff := cmp.Diff(props, splitOp.Props); diff != "" {
-		t.Errorf("NewSplit() Props mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, pos, splitOp.Pos, "NewSplit() Pos")
+	assert.Equal(t, props, splitOp.Props)
 	if got := splitOp.Op(); got != internal.OpSplitType {
-		t.Errorf("Op() = %v, want %v", got, internal.OpSplitType)
+		assert.Equal(t, internal.OpSplitType, got, "Op()")
 	}
 	if got := splitOp.Code(); got != internal.OpSplitCode {
-		t.Errorf("Code() = %v, want %v", got, internal.OpSplitCode)
+		assert.Equal(t, internal.OpSplitCode, got, "Code()")
 	}
 }
 
@@ -246,9 +239,7 @@ func TestSplit_TypeScript_Compatibility(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Apply() unexpected error: %v", err)
 			}
-			if diff := cmp.Diff(tt.expected, result.Doc); diff != "" {
-				t.Errorf("Apply() Doc mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, tt.expected, result.Doc)
 		})
 	}
 }

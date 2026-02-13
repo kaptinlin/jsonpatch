@@ -4,6 +4,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/kaptinlin/jsonpatch"
 )
 
@@ -13,7 +15,7 @@ func TestValidateOperations(t *testing.T) {
 		t.Parallel()
 		err := jsonpatch.ValidateOperations(nil, false)
 		if !errors.Is(err, jsonpatch.ErrNotArray) {
-			t.Errorf("ValidateOperations(nil) error = %v, want %v", err, jsonpatch.ErrNotArray)
+			assert.Equal(t, jsonpatch.ErrNotArray, err, "ValidateOperations(nil) error")
 		}
 	})
 
@@ -21,7 +23,7 @@ func TestValidateOperations(t *testing.T) {
 		t.Parallel()
 		err := jsonpatch.ValidateOperations([]jsonpatch.Operation{}, false)
 		if !errors.Is(err, jsonpatch.ErrEmptyPatch) {
-			t.Errorf("ValidateOperations([]) error = %v, want %v", err, jsonpatch.ErrEmptyPatch)
+			assert.Equal(t, jsonpatch.ErrEmptyPatch, err, "ValidateOperations([]) error")
 		}
 	})
 
@@ -33,7 +35,7 @@ func TestValidateOperations(t *testing.T) {
 			t.Fatal("ValidateOperations() error = nil, want error")
 		}
 		if !errors.Is(err, jsonpatch.ErrMissingOp) {
-			t.Errorf("ValidateOperations() error = %v, want %v", err, jsonpatch.ErrMissingOp)
+			assert.Equal(t, jsonpatch.ErrMissingOp, err, "ValidateOperations() error")
 		}
 	})
 
@@ -45,7 +47,7 @@ func TestValidateOperations(t *testing.T) {
 			t.Fatal("ValidateOperations() error = nil, want error")
 		}
 		if !errors.Is(err, jsonpatch.ErrMissingOp) {
-			t.Errorf("ValidateOperations() error = %v, want %v", err, jsonpatch.ErrMissingOp)
+			assert.Equal(t, jsonpatch.ErrMissingOp, err, "ValidateOperations() error")
 		}
 	})
 
@@ -57,7 +59,7 @@ func TestValidateOperations(t *testing.T) {
 			t.Fatal("ValidateOperations() error = nil, want error")
 		}
 		if !errors.Is(err, jsonpatch.ErrInvalidOperation) {
-			t.Errorf("ValidateOperations() error = %v, want %v", err, jsonpatch.ErrInvalidOperation)
+			assert.Equal(t, jsonpatch.ErrInvalidOperation, err, "ValidateOperations() error")
 		}
 	})
 
@@ -81,7 +83,7 @@ func TestValidateOperations(t *testing.T) {
 			t.Fatal("ValidateOperations() error = nil, want error")
 		}
 		if !errors.Is(err, jsonpatch.ErrMissingValue) {
-			t.Errorf("ValidateOperations() error = %v, want %v", err, jsonpatch.ErrMissingValue)
+			assert.Equal(t, jsonpatch.ErrMissingValue, err, "ValidateOperations() error")
 		}
 	})
 
@@ -96,7 +98,7 @@ func TestValidateOperations(t *testing.T) {
 			t.Fatal("ValidateOperations() error = nil, want error")
 		}
 		if !errors.Is(err, jsonpatch.ErrInvalidJSONPointer) {
-			t.Errorf("ValidateOperations() error = %v, want %v", err, jsonpatch.ErrInvalidJSONPointer)
+			assert.Equal(t, jsonpatch.ErrInvalidJSONPointer, err, "ValidateOperations() error")
 		}
 	})
 }

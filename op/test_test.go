@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTest_Basic(t *testing.T) {
@@ -21,7 +22,7 @@ func TestTest_Basic(t *testing.T) {
 		t.Fatalf("Test() unexpected error: %v", err)
 	}
 	if !ok {
-		t.Error("Test() = false, want true for equal values")
+		assert.Fail(t, "Test() = false, want true for equal values")
 	}
 
 	testOp = NewTest([]string{"foo"}, "qux")
@@ -30,7 +31,7 @@ func TestTest_Basic(t *testing.T) {
 		t.Fatalf("Test() unexpected error: %v", err)
 	}
 	if ok {
-		t.Error("Test() = true, want false for different values")
+		assert.Fail(t, "Test() = true, want false for different values")
 	}
 }
 
@@ -45,14 +46,12 @@ func TestTest_Apply(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Apply() unexpected error: %v", err)
 	}
-	if diff := cmp.Diff(doc, result.Doc); diff != "" {
-		t.Errorf("Apply() result mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, doc, result.Doc)
 
 	testOp = NewTest([]string{"foo"}, "qux")
 	_, err = testOp.Apply(doc)
 	if err == nil {
-		t.Error("Apply() expected error for non-matching values")
+		assert.Fail(t, "Apply() expected error for non-matching values")
 	}
 }
 
@@ -65,15 +64,9 @@ func TestTest_ToJSON(t *testing.T) {
 		t.Fatalf("ToJSON() unexpected error: %v", err)
 	}
 
-	if got.Op != "test" {
-		t.Errorf("ToJSON().Op = %v, want %v", got.Op, "test")
-	}
-	if got.Path != "/foo" {
-		t.Errorf("ToJSON().Path = %v, want %v", got.Path, "/foo")
-	}
-	if got.Value != "bar" {
-		t.Errorf("ToJSON().Value = %v, want %v", got.Value, "bar")
-	}
+	assert.Equal(t, "test", got.Op, "ToJSON().Op")
+	assert.Equal(t, "/foo", got.Path, "ToJSON().Path")
+	assert.Equal(t, "bar", got.Value, "ToJSON().Value")
 }
 
 func TestTest_ToCompact(t *testing.T) {
@@ -87,15 +80,9 @@ func TestTest_ToCompact(t *testing.T) {
 	if len(compact) != 3 {
 		t.Fatalf("len(ToCompact()) = %d, want %d", len(compact), 3)
 	}
-	if compact[0] != internal.OpTestCode {
-		t.Errorf("compact[0] = %v, want %v", compact[0], internal.OpTestCode)
-	}
-	if diff := cmp.Diff([]string{"foo"}, compact[1]); diff != "" {
-		t.Errorf("compact[1] mismatch (-want +got):\n%s", diff)
-	}
-	if compact[2] != "bar" {
-		t.Errorf("compact[2] = %v, want %v", compact[2], "bar")
-	}
+	assert.Equal(t, internal.OpTestCode, compact[0], "compact[0]")
+	assert.Equal(t, []string{"foo"}, compact[1])
+	assert.Equal(t, "bar", compact[2], "compact[2]")
 }
 
 func TestTest_Validate(t *testing.T) {
@@ -107,7 +94,7 @@ func TestTest_Validate(t *testing.T) {
 
 	testOp = NewTest([]string{}, "bar")
 	if err := testOp.Validate(); err == nil {
-		t.Error("Validate() expected error for empty path")
+		assert.Fail(t, "Validate() expected error for empty path")
 	}
 }
 
@@ -116,10 +103,10 @@ func TestTest_InterfaceMethods(t *testing.T) {
 	testOp := NewTest([]string{"foo"}, "bar")
 
 	if got := testOp.Op(); got != internal.OpTestType {
-		t.Errorf("Op() = %v, want %v", got, internal.OpTestType)
+		assert.Equal(t, internal.OpTestType, got, "Op()")
 	}
 	if got := testOp.Code(); got != internal.OpTestCode {
-		t.Errorf("Code() = %v, want %v", got, internal.OpTestCode)
+		assert.Equal(t, internal.OpTestCode, got, "Code()")
 	}
 	if diff := cmp.Diff([]string{"foo"}, testOp.Path()); diff != "" {
 		t.Errorf("Path() mismatch (-want +got):\n%s", diff)

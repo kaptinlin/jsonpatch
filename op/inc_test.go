@@ -3,8 +3,8 @@ package op
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInc_Apply(t *testing.T) {
@@ -111,7 +111,7 @@ func TestInc_Apply(t *testing.T) {
 
 			if tt.wantErr {
 				if err == nil {
-					t.Error("Apply() expected error, got nil")
+					assert.Fail(t, "Apply() expected error, got nil")
 				}
 				return
 			}
@@ -119,12 +119,8 @@ func TestInc_Apply(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Apply() unexpected error: %v", err)
 			}
-			if diff := cmp.Diff(tt.expected, result.Doc); diff != "" {
-				t.Errorf("Apply() Doc mismatch (-want +got):\n%s", diff)
-			}
-			if diff := cmp.Diff(tt.oldValue, result.Old); diff != "" {
-				t.Errorf("Apply() Old mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, tt.expected, result.Doc)
+			assert.Equal(t, tt.oldValue, result.Old)
 		})
 	}
 }
@@ -134,17 +130,13 @@ func TestInc_Constructor(t *testing.T) {
 	path := []string{"user", "score"}
 	inc := 3.5
 	incOp := NewInc(path, inc)
-	if diff := cmp.Diff(path, incOp.path); diff != "" {
-		t.Errorf("NewInc() path mismatch (-want +got):\n%s", diff)
-	}
-	if incOp.Inc != inc {
-		t.Errorf("NewInc() Inc = %v, want %v", incOp.Inc, inc)
-	}
+	assert.Equal(t, path, incOp.path)
+	assert.Equal(t, inc, incOp.Inc, "NewInc() Inc")
 	if got := incOp.Op(); got != internal.OpIncType {
-		t.Errorf("Op() = %v, want %v", got, internal.OpIncType)
+		assert.Equal(t, internal.OpIncType, got, "Op()")
 	}
 	if got := incOp.Code(); got != internal.OpIncCode {
-		t.Errorf("Code() = %v, want %v", got, internal.OpIncCode)
+		assert.Equal(t, internal.OpIncCode, got, "Code()")
 	}
 }
 
@@ -157,12 +149,10 @@ func TestInc_ToJSON(t *testing.T) {
 	}
 
 	if got.Op != "inc" {
-		t.Errorf("ToJSON() Op = %q, want %q", got.Op, "inc")
+		assert.Equal(t, "inc", got.Op, "ToJSON() Op")
 	}
 	if got.Path != "/count" {
-		t.Errorf("ToJSON() Path = %q, want %q", got.Path, "/count")
+		assert.Equal(t, "/count", got.Path, "ToJSON() Path")
 	}
-	if got.Inc != 5.5 {
-		t.Errorf("ToJSON() Inc = %v, want %v", got.Inc, 5.5)
-	}
+	assert.Equal(t, 5.5, got.Inc, "ToJSON() Inc")
 }

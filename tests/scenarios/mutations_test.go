@@ -6,8 +6,8 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMutateOptionFunctionality(t *testing.T) {
@@ -33,9 +33,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			t.Fatalf("ApplyPatch() error = %v, want nil", err)
 		}
 
-		if diff := cmp.Diff(originalSnapshot, original); diff != "" {
-			t.Errorf("original document modified (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, originalSnapshot, original)
 
 		resultDoc := result.Doc
 		if got := resultDoc["name"]; got != "Jane" {
@@ -45,11 +43,11 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			t.Errorf("result email = %v, want %q", got, "jane@example.com")
 		}
 		if _, ok := resultDoc["city"]; ok {
-			t.Error("result should not have city field")
+			assert.Fail(t, "result should not have city field")
 		}
 
 		if isSameMapObject(original, resultDoc) {
-			t.Error("result should be a different object from original")
+			assert.Fail(t, "result should be a different object from original")
 		}
 	})
 
@@ -80,17 +78,15 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			t.Errorf("original email = %v, want %q", got, "jane@example.com")
 		}
 		if _, ok := original["city"]; ok {
-			t.Error("original should not have city field")
+			assert.Fail(t, "original should not have city field")
 		}
 
 		resultDoc := result.Doc
 		if !isSameMapObject(original, resultDoc) {
-			t.Error("result should be the same object as original")
+			assert.Fail(t, "result should be the same object as original")
 		}
 
-		if diff := cmp.Diff(original, resultDoc); diff != "" {
-			t.Errorf("original and result mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, original, resultDoc)
 	})
 
 	t.Run("Array Operations with Mutate", func(t *testing.T) {
@@ -112,9 +108,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 				t.Fatalf("ApplyPatch() error = %v, want nil", err)
 			}
 
-			if diff := cmp.Diff(originalSnapshot, original); diff != "" {
-				t.Errorf("original array modified (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, originalSnapshot, original)
 
 			resultArray := result.Doc
 			if got := resultArray[1]; got != "blueberry" {
@@ -145,7 +139,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 
 			resultArray := result.Doc
 			if !isSameSliceObject(original, resultArray) {
-				t.Error("result should be the same slice as original")
+				assert.Fail(t, "result should be the same slice as original")
 			}
 		})
 
@@ -222,9 +216,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 							t.Errorf("original = %v, want %v (primitives are immutable in Go)", original, tc.value)
 						}
 
-						if result.Doc != tc.expected {
-							t.Errorf("result.Doc = %v, want %v", result.Doc, tc.expected)
-						}
+						assert.Equal(t, tc.expected, result.Doc, "result.Doc")
 					})
 				}
 			})
@@ -274,7 +266,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			}
 
 			if !isSameMapObject(testDoc, result.Doc) {
-				t.Error("result should be the same object as testDoc")
+				assert.Fail(t, "result should be the same object as testDoc")
 			}
 		})
 	})
@@ -306,9 +298,7 @@ func TestMutatePerformanceCharacteristics(t *testing.T) {
 			t.Fatalf("ApplyPatch(mutate=true) error = %v, want nil", err)
 		}
 
-		if diff := cmp.Diff(resultFalse.Doc, resultTrue.Doc); diff != "" {
-			t.Errorf("mutate modes produced different results (-false +true):\n%s", diff)
-		}
+		assert.Equal(t, resultFalse.Doc, resultTrue.Doc)
 	})
 }
 

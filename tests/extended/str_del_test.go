@@ -3,10 +3,10 @@ package ops_test
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestStrDelOp(t *testing.T) {
@@ -20,9 +20,7 @@ func TestStrDelOp(t *testing.T) {
 			Len:  7,
 		}
 		result := testutils.ApplyInternalOp(t, "Hello, world!", operation)
-		if result != "world!" {
-			t.Errorf("result = %v, want %v", result, "world!")
-		}
+		assert.Equal(t, "world!", result, "result")
 	})
 
 	t.Run("deletes characters from the end", func(t *testing.T) {
@@ -34,9 +32,7 @@ func TestStrDelOp(t *testing.T) {
 			Len:  8,
 		}
 		result := testutils.ApplyInternalOp(t, "Hello, world!", operation)
-		if result != "Hello" {
-			t.Errorf("result = %v, want %v", result, "Hello")
-		}
+		assert.Equal(t, "Hello", result, "result")
 	})
 
 	t.Run("deletes characters from the middle", func(t *testing.T) {
@@ -49,7 +45,7 @@ func TestStrDelOp(t *testing.T) {
 		}
 		result := testutils.ApplyInternalOp(t, "Hello beautiful world", operation)
 		if result != "Hello world" {
-			t.Errorf("result = %v, want %v", result, "Hello world")
+			assert.Equal(t, "Hello world", result, "result")
 		}
 	})
 
@@ -78,9 +74,7 @@ func TestStrDelOp(t *testing.T) {
 		if err != nil {
 			t.Fatalf("ApplyPatch() second operation error: %v", err)
 		}
-		if result2.Doc != "Helloworld" {
-			t.Errorf("result = %v, want %v", result2.Doc, "Helloworld")
-		}
+		assert.Equal(t, "Helloworld", result2.Doc, "result")
 	})
 
 	t.Run("root", func(t *testing.T) {
@@ -94,9 +88,7 @@ func TestStrDelOp(t *testing.T) {
 				Len:  5,
 			}
 			result := testutils.ApplyInternalOp(t, "hello", operation)
-			if result != "" {
-				t.Errorf("result = %v, want %v", result, "")
-			}
+			assert.Equal(t, "", result, "result")
 		})
 	})
 
@@ -112,9 +104,7 @@ func TestStrDelOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello, world!"}, operation)
 			expected := map[string]interface{}{"msg": "world!"}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 
 		t.Run("deletes characters from the end", func(t *testing.T) {
@@ -127,9 +117,7 @@ func TestStrDelOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello, world!"}, operation)
 			expected := map[string]interface{}{"msg": "Hello"}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 
 		t.Run("deletes characters from the middle", func(t *testing.T) {
@@ -142,9 +130,7 @@ func TestStrDelOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello beautiful world"}, operation)
 			expected := map[string]interface{}{"msg": "Hello world"}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 
 		t.Run("negative position counts from end", func(t *testing.T) {
@@ -157,9 +143,7 @@ func TestStrDelOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello!"}, operation)
 			expected := map[string]interface{}{"msg": "Hello"}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 	})
 
@@ -175,9 +159,7 @@ func TestStrDelOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOp(t, []interface{}{"Hello, world!"}, operation)
 			expected := []interface{}{"world!"}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 
 		t.Run("deletes characters from the end", func(t *testing.T) {
@@ -190,9 +172,7 @@ func TestStrDelOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOp(t, []interface{}{"Hello, world!"}, operation)
 			expected := []interface{}{"Hello"}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 
 		t.Run("deletes characters from the middle", func(t *testing.T) {
@@ -205,9 +185,7 @@ func TestStrDelOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOp(t, []interface{}{"Hello beautiful world"}, operation)
 			expected := []interface{}{"Hello world"}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 	})
 }

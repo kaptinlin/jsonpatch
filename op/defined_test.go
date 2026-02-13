@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDefined_Basic(t *testing.T) {
@@ -23,7 +24,7 @@ func TestDefined_Basic(t *testing.T) {
 		t.Fatalf("Defined.Test(doc, /foo) failed: %v", err)
 	}
 	if !ok {
-		t.Error("Defined.Test(doc, /foo) = false, want true for existing path")
+		assert.Fail(t, "Defined.Test(doc, /foo) = false, want true for existing path")
 	}
 
 	definedOp = NewDefined([]string{"qux"})
@@ -32,7 +33,7 @@ func TestDefined_Basic(t *testing.T) {
 		t.Fatalf("Defined.Test(doc, /qux) failed: %v", err)
 	}
 	if ok {
-		t.Error("Defined.Test(doc, /qux) = true, want false for non-existing path")
+		assert.Fail(t, "Defined.Test(doc, /qux) = true, want false for non-existing path")
 	}
 
 	definedOp = NewDefined([]string{"baz", "qux"})
@@ -41,7 +42,7 @@ func TestDefined_Basic(t *testing.T) {
 		t.Fatalf("Defined.Test(doc, /baz/qux) failed: %v", err)
 	}
 	if !ok {
-		t.Error("Defined.Test(doc, /baz/qux) = false, want true for existing nested path")
+		assert.Fail(t, "Defined.Test(doc, /baz/qux) = false, want true for existing nested path")
 	}
 }
 
@@ -57,16 +58,16 @@ func TestDefined_Apply(t *testing.T) {
 		t.Fatalf("Defined.Apply(doc, /foo) failed: %v", err)
 	}
 	if !deepEqual(result.Doc, doc) {
-		t.Error("Defined.Apply(doc, /foo) did not return the original document")
+		assert.Fail(t, "Defined.Apply(doc, /foo) did not return the original document")
 	}
 
 	definedOp = NewDefined([]string{"qux"})
 	_, err = definedOp.Apply(doc)
 	if err == nil {
-		t.Error("Defined.Apply(doc, /qux) succeeded, want error for non-existing path")
+		assert.Fail(t, "Defined.Apply(doc, /qux) succeeded, want error for non-existing path")
 	}
 	if !errors.Is(err, ErrDefinedTestFailed) {
-		t.Errorf("Defined.Apply(doc, /qux) error = %v, want %v", err, ErrDefinedTestFailed)
+		assert.Equal(t, ErrDefinedTestFailed, err, "Defined.Apply(doc, /qux) error")
 	}
 }
 
@@ -75,10 +76,10 @@ func TestDefined_InterfaceMethods(t *testing.T) {
 	definedOp := NewDefined([]string{"test"})
 
 	if got := definedOp.Op(); got != internal.OpDefinedType {
-		t.Errorf("Op() = %v, want %v", got, internal.OpDefinedType)
+		assert.Equal(t, internal.OpDefinedType, got, "Op()")
 	}
 	if got := definedOp.Code(); got != internal.OpDefinedCode {
-		t.Errorf("Code() = %v, want %v", got, internal.OpDefinedCode)
+		assert.Equal(t, internal.OpDefinedCode, got, "Code()")
 	}
 	if diff := cmp.Diff([]string{"test"}, definedOp.Path()); diff != "" {
 		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
@@ -94,10 +95,10 @@ func TestDefined_ToJSON(t *testing.T) {
 		t.Fatalf("ToJSON() failed: %v", err)
 	}
 	if got.Op != "defined" {
-		t.Errorf("ToJSON().Op = %q, want %q", got.Op, "defined")
+		assert.Equal(t, "defined", got.Op, "ToJSON().Op")
 	}
 	if got.Path != "/test" {
-		t.Errorf("ToJSON().Path = %q, want %q", got.Path, "/test")
+		assert.Equal(t, "/test", got.Path, "ToJSON().Path")
 	}
 }
 
@@ -112,12 +113,8 @@ func TestDefined_ToCompact(t *testing.T) {
 	if len(compact) != 2 {
 		t.Fatalf("len(ToCompact()) = %d, want 2", len(compact))
 	}
-	if compact[0] != internal.OpDefinedCode {
-		t.Errorf("ToCompact()[0] = %v, want %v", compact[0], internal.OpDefinedCode)
-	}
-	if diff := cmp.Diff([]string{"test"}, compact[1]); diff != "" {
-		t.Errorf("ToCompact()[1] mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, internal.OpDefinedCode, compact[0], "ToCompact()[0]")
+	assert.Equal(t, []string{"test"}, compact[1])
 }
 
 func TestDefined_Validate(t *testing.T) {

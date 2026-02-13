@@ -3,6 +3,8 @@ package op
 import (
 	"errors"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRemove_Basic(t *testing.T) {
@@ -21,7 +23,7 @@ func TestRemove_Basic(t *testing.T) {
 
 	modifiedDoc := result.Doc.(map[string]any)
 	if got := result.Old; got != "bar" {
-		t.Errorf("result.Old = %v, want %v", got, "bar")
+		assert.Equal(t, "bar", got, "result.Old")
 	}
 	if _, ok := modifiedDoc["foo"]; ok {
 		t.Error("modifiedDoc contains key \"foo\" after remove")
@@ -49,7 +51,7 @@ func TestRemove_Nested(t *testing.T) {
 	modifiedDoc := result.Doc.(map[string]any)
 	foo := modifiedDoc["foo"].(map[string]any)
 	if got := result.Old; got != "baz" {
-		t.Errorf("result.Old = %v, want %v", got, "baz")
+		assert.Equal(t, "baz", got, "result.Old")
 	}
 	if _, ok := foo["bar"]; ok {
 		t.Error("foo contains key \"bar\" after remove")
@@ -71,17 +73,13 @@ func TestRemove_Array(t *testing.T) {
 
 	modifiedArray := result.Doc.([]any)
 	if got := result.Old; got != "second" {
-		t.Errorf("result.Old = %v, want %v", got, "second")
+		assert.Equal(t, "second", got, "result.Old")
 	}
 	if len(modifiedArray) != 2 {
 		t.Fatalf("len(modifiedArray) = %d, want %d", len(modifiedArray), 2)
 	}
-	if modifiedArray[0] != "first" {
-		t.Errorf("modifiedArray[0] = %v, want %v", modifiedArray[0], "first")
-	}
-	if modifiedArray[1] != "third" {
-		t.Errorf("modifiedArray[1] = %v, want %v", modifiedArray[1], "third")
-	}
+	assert.Equal(t, "first", modifiedArray[0], "modifiedArray[0]")
+	assert.Equal(t, "third", modifiedArray[1], "modifiedArray[1]")
 }
 
 func TestRemove_NonExistent(t *testing.T) {
@@ -91,10 +89,10 @@ func TestRemove_NonExistent(t *testing.T) {
 	removeOp := NewRemove([]string{"qux"})
 	_, err := removeOp.Apply(doc)
 	if err == nil {
-		t.Error("Apply() expected error for non-existent path")
+		assert.Fail(t, "Apply() expected error for non-existent path")
 	}
 	if !errors.Is(err, ErrPathNotFound) {
-		t.Errorf("Apply() error = %v, want %v", err, ErrPathNotFound)
+		assert.Equal(t, ErrPathNotFound, err, "Apply() error")
 	}
 }
 
@@ -105,9 +103,9 @@ func TestRemove_EmptyPath(t *testing.T) {
 	removeOp := NewRemove([]string{})
 	_, err := removeOp.Apply(doc)
 	if err == nil {
-		t.Error("Apply() expected error for empty path")
+		assert.Fail(t, "Apply() expected error for empty path")
 	}
 	if !errors.Is(err, ErrPathEmpty) {
-		t.Errorf("Apply() error = %v, want %v", err, ErrPathEmpty)
+		assert.Equal(t, ErrPathEmpty, err, "Apply() error")
 	}
 }

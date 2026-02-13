@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestExtend_Apply(t *testing.T) {
@@ -121,7 +122,7 @@ func TestExtend_Apply(t *testing.T) {
 
 			if tt.wantErr {
 				if err == nil {
-					t.Error("Apply() expected error, got nil")
+					assert.Fail(t, "Apply() expected error, got nil")
 				}
 				return
 			}
@@ -129,12 +130,8 @@ func TestExtend_Apply(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Apply() unexpected error: %v", err)
 			}
-			if diff := cmp.Diff(tt.expected, result.Doc); diff != "" {
-				t.Errorf("Apply() Doc mismatch (-want +got):\n%s", diff)
-			}
-			if diff := cmp.Diff(tt.oldValue, result.Old); diff != "" {
-				t.Errorf("Apply() Old mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, tt.expected, result.Doc)
+			assert.Equal(t, tt.oldValue, result.Old)
 		})
 	}
 }
@@ -148,16 +145,12 @@ func TestExtend_Constructor(t *testing.T) {
 	if diff := cmp.Diff(path, extendOp.Path()); diff != "" {
 		t.Errorf("NewExtend() Path mismatch (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(props, extendOp.Properties); diff != "" {
-		t.Errorf("NewExtend() Properties mismatch (-want +got):\n%s", diff)
-	}
-	if extendOp.DeleteNull != deleteNull {
-		t.Errorf("NewExtend() DeleteNull = %v, want %v", extendOp.DeleteNull, deleteNull)
-	}
+	assert.Equal(t, props, extendOp.Properties)
+	assert.Equal(t, deleteNull, extendOp.DeleteNull, "NewExtend() DeleteNull")
 	if got := extendOp.Op(); got != internal.OpExtendType {
-		t.Errorf("Op() = %v, want %v", got, internal.OpExtendType)
+		assert.Equal(t, internal.OpExtendType, got, "Op()")
 	}
 	if got := extendOp.Code(); got != internal.OpExtendCode {
-		t.Errorf("Code() = %v, want %v", got, internal.OpExtendCode)
+		assert.Equal(t, internal.OpExtendCode, got, "Code()")
 	}
 }

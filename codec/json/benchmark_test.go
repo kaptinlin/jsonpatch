@@ -4,7 +4,8 @@ import (
 	"testing"
 
 	"github.com/go-json-experiment/json"
-	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 )
@@ -112,32 +113,26 @@ func TestBasicDecodeEncode(t *testing.T) {
 
 	// Test decode using struct-based operations
 	ops, err := DecodeOperations(testOperations, options)
-	if err != nil {
-		t.Fatalf("DecodeOperations: %v", err)
-	}
+	require.NoError(t, err)
 	if len(ops) != 4 {
 		t.Fatalf("DecodeOperations returned %d ops, want 4", len(ops))
 	}
 
 	// Test encode
 	encoded, err := Encode(ops)
-	if err != nil {
-		t.Fatalf("Encode: %v", err)
-	}
+	require.NoError(t, err)
 	if len(encoded) != 4 {
 		t.Fatalf("Encode returned %d ops, want 4", len(encoded))
 	}
 
 	// Verify roundtrip matches original structure
 	if got, want := encoded[0].Op, "add"; got != want {
-		t.Errorf("encoded[0].Op = %v, want %v", got, want)
+		assert.Equal(t, want, got, "encoded[0].Op")
 	}
 	if got, want := encoded[0].Path, "/name"; got != want {
-		t.Errorf("encoded[0].Path = %v, want %v", got, want)
+		assert.Equal(t, want, got, "encoded[0].Path")
 	}
-	if diff := cmp.Diff(any("John"), encoded[0].Value); diff != "" {
-		t.Errorf("encoded[0].Value mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, any("John"), encoded[0].Value)
 }
 
 func TestJSONDecodeEncode(t *testing.T) {
@@ -145,18 +140,14 @@ func TestJSONDecodeEncode(t *testing.T) {
 
 	// Test JSON decode
 	ops, err := DecodeJSON([]byte(testPatch), options)
-	if err != nil {
-		t.Fatalf("DecodeJSON: %v", err)
-	}
+	require.NoError(t, err)
 	if len(ops) != 4 {
 		t.Fatalf("DecodeJSON returned %d ops, want 4", len(ops))
 	}
 
 	// Test JSON encode
 	data, err := EncodeJSON(ops)
-	if err != nil {
-		t.Fatalf("EncodeJSON: %v", err)
-	}
+	require.NoError(t, err)
 
 	// Verify it's valid JSON and roundtrip works
 	var decoded []map[string]any
@@ -202,18 +193,14 @@ func TestAllOperationTypes(t *testing.T) {
 
 	// Test all operations can be decoded
 	ops, err := DecodeOperations(allOps, options)
-	if err != nil {
-		t.Fatalf("DecodeOperations: %v", err)
-	}
+	require.NoError(t, err)
 	if len(ops) != len(allOps) {
 		t.Fatalf("DecodeOperations returned %d ops, want %d", len(ops), len(allOps))
 	}
 
 	// Test all operations can be encoded back
 	encoded, err := Encode(ops)
-	if err != nil {
-		t.Fatalf("Encode: %v", err)
-	}
+	require.NoError(t, err)
 	if len(encoded) != len(allOps) {
 		t.Fatalf("Encode returned %d ops, want %d", len(encoded), len(allOps))
 	}
@@ -237,16 +224,12 @@ func TestOperationToMapNestedType(t *testing.T) {
 	}
 
 	ops, err := DecodeOperations(andOp, options)
-	if err != nil {
-		t.Fatalf("DecodeOperations: %v", err)
-	}
+	require.NoError(t, err)
 
 	encoded, err := Encode(ops)
-	if err != nil {
-		t.Fatalf("Encode: %v", err)
-	}
+	require.NoError(t, err)
 	if got, want := encoded[0].Op, "and"; got != want {
-		t.Errorf("Op = %v, want %v", got, want)
+		assert.Equal(t, want, got, "Op")
 	}
 }
 
@@ -270,16 +253,12 @@ func TestOperationToMapNestedTypeList(t *testing.T) {
 	}
 
 	ops, err := DecodeOperations(andOp, options)
-	if err != nil {
-		t.Fatalf("DecodeOperations: %v", err)
-	}
+	require.NoError(t, err)
 
 	encoded, err := Encode(ops)
-	if err != nil {
-		t.Fatalf("Encode: %v", err)
-	}
+	require.NoError(t, err)
 	if got, want := encoded[0].Op, "and"; got != want {
-		t.Errorf("Op = %v, want %v", got, want)
+		assert.Equal(t, want, got, "Op")
 	}
 }
 

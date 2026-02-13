@@ -3,9 +3,9 @@ package ops_test
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestExtendOp(t *testing.T) {
@@ -30,9 +30,7 @@ func TestExtendOp(t *testing.T) {
 				"a":   "b",
 				"c":   3,
 			}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 	})
 
@@ -69,9 +67,7 @@ func TestExtendOp(t *testing.T) {
 					},
 				},
 			}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 
 		t.Run("can set null", func(t *testing.T) {
@@ -108,9 +104,7 @@ func TestExtendOp(t *testing.T) {
 					},
 				},
 			}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 
 		t.Run("can use null to delete a key", func(t *testing.T) {
@@ -146,9 +140,7 @@ func TestExtendOp(t *testing.T) {
 					},
 				},
 			}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 	})
 
@@ -181,9 +173,7 @@ func TestExtendOp(t *testing.T) {
 					},
 				},
 			}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 
 		t.Run("can set null", func(t *testing.T) {
@@ -216,9 +206,7 @@ func TestExtendOp(t *testing.T) {
 					},
 				},
 			}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 
 		t.Run("can use null to delete a key", func(t *testing.T) {
@@ -250,9 +238,7 @@ func TestExtendOp(t *testing.T) {
 					},
 				},
 			}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 	})
 }

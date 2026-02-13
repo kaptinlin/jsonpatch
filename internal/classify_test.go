@@ -1,6 +1,8 @@
 package internal
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestIsJSONPatchOperation(t *testing.T) {
 	t.Parallel()

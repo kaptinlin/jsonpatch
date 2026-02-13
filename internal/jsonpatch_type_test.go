@@ -3,6 +3,8 @@ package internal
 import (
 	"math"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIsValidJSONPatchType(t *testing.T) {
@@ -81,7 +83,7 @@ func TestGetJSONPatchType(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			if got := GetJSONPatchType(tt.val); got != tt.want {
-				t.Errorf("GetJSONPatchType(%v) = %v, want %v", tt.val, got, tt.want)
+				assert.Equal(t, got, tt.want, tt.val, "GetJSONPatchType(%v)")
 			}
 		})
 	}

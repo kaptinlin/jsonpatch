@@ -4,9 +4,9 @@ import (
 	"math"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestEmptyDocumentHandling(t *testing.T) {
@@ -24,9 +24,7 @@ func TestEmptyDocumentHandling(t *testing.T) {
 		var doc interface{}
 		result := testutils.ApplyOperation(t, doc, op)
 		expected := map[string]interface{}{"foo": float64(123)} // JSON unmarshaling converts numbers to float64
-		if diff := cmp.Diff(expected, result); diff != "" {
-			t.Errorf("ApplyOperation() mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, expected, result)
 	})
 
 	t.Run("cannot add value to nonexisting path", func(t *testing.T) {
@@ -55,9 +53,7 @@ func TestNumberTypeCoercion(t *testing.T) {
 			"trueVal":  float64(2), // true converts to 1, then +1 = 2
 			"falseVal": float64(1), // false converts to 0, then +1 = 1
 		}
-		if diff := cmp.Diff(expected, result); diff != "" {
-			t.Errorf("ApplyOperations() mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, expected, result)
 	})
 
 	t.Run("inc operation with string numbers", func(t *testing.T) {
@@ -67,9 +63,7 @@ func TestNumberTypeCoercion(t *testing.T) {
 		result := testutils.ApplyOperation(t, doc, op)
 
 		expected := map[string]interface{}{"numStr": float64(50)}
-		if diff := cmp.Diff(expected, result); diff != "" {
-			t.Errorf("ApplyOperation() mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, expected, result)
 	})
 
 	t.Run("inc operation with floating point precision", func(t *testing.T) {
@@ -96,9 +90,7 @@ func TestArrayBoundaryConditions(t *testing.T) {
 		result := testutils.ApplyOperation(t, doc, op)
 
 		expected := []interface{}{1, 2, 3, 4}
-		if diff := cmp.Diff(expected, result); diff != "" {
-			t.Errorf("ApplyOperation() mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, expected, result)
 	})
 
 	t.Run("remove from array first element", func(t *testing.T) {
@@ -108,9 +100,7 @@ func TestArrayBoundaryConditions(t *testing.T) {
 		result := testutils.ApplyOperation(t, doc, op)
 
 		expected := []interface{}{2, 3}
-		if diff := cmp.Diff(expected, result); diff != "" {
-			t.Errorf("ApplyOperation() mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, expected, result)
 	})
 
 	t.Run("remove from array last element", func(t *testing.T) {
@@ -120,9 +110,7 @@ func TestArrayBoundaryConditions(t *testing.T) {
 		result := testutils.ApplyOperation(t, doc, op)
 
 		expected := []interface{}{1, 2}
-		if diff := cmp.Diff(expected, result); diff != "" {
-			t.Errorf("ApplyOperation() mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, expected, result)
 	})
 }
 
@@ -135,9 +123,7 @@ func TestStringOperationEdgeCases(t *testing.T) {
 		result := testutils.ApplyOperation(t, doc, op)
 
 		expected := map[string]interface{}{"text": "hello world"}
-		if diff := cmp.Diff(expected, result); diff != "" {
-			t.Errorf("ApplyOperation() mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, expected, result)
 	})
 
 	t.Run("str_ins at string end", func(t *testing.T) {
@@ -147,9 +133,7 @@ func TestStringOperationEdgeCases(t *testing.T) {
 		result := testutils.ApplyOperation(t, doc, op)
 
 		expected := map[string]interface{}{"text": "hello world"}
-		if diff := cmp.Diff(expected, result); diff != "" {
-			t.Errorf("ApplyOperation() mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, expected, result)
 	})
 
 	t.Run("str_del from string beginning", func(t *testing.T) {
@@ -159,9 +143,7 @@ func TestStringOperationEdgeCases(t *testing.T) {
 		result := testutils.ApplyOperation(t, doc, op)
 
 		expected := map[string]interface{}{"text": "world"}
-		if diff := cmp.Diff(expected, result); diff != "" {
-			t.Errorf("ApplyOperation() mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, expected, result)
 	})
 
 	t.Run("str_del entire string", func(t *testing.T) {
@@ -171,8 +153,6 @@ func TestStringOperationEdgeCases(t *testing.T) {
 		result := testutils.ApplyOperation(t, doc, op)
 
 		expected := map[string]interface{}{"text": ""}
-		if diff := cmp.Diff(expected, result); diff != "" {
-			t.Errorf("ApplyOperation() mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, expected, result)
 	})
 }

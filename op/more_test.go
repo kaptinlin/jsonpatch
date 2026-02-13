@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMore_Basic(t *testing.T) {
@@ -85,24 +86,20 @@ func TestMore_Basic(t *testing.T) {
 
 			if tt.expectError {
 				if err == nil {
-					t.Error("Apply() succeeded, want error")
+					assert.Fail(t, "Apply() succeeded, want error")
 				}
 				if tt.expectedError != nil && !errors.Is(err, tt.expectedError) {
-					t.Errorf("Apply() error = %v, want %v", err, tt.expectedError)
+					assert.Equal(t, tt.expectedError, err, "Apply() error")
 				}
-				if diff := cmp.Diff(internal.OpResult[any]{}, result); diff != "" {
-					t.Errorf("Apply() result mismatch (-want +got):\n%s", diff)
-				}
+				assert.Equal(t, internal.OpResult[any]{}, result)
 			} else {
 				if err != nil {
 					t.Errorf("Apply() failed: %v", err)
 				}
 				if result.Doc == nil {
-					t.Error("Apply() result.Doc = nil, want non-nil")
+					assert.Fail(t, "Apply() result.Doc = nil, want non-nil")
 				}
-				if diff := cmp.Diff(tt.doc, result.Doc); diff != "" {
-					t.Errorf("Apply() result.Doc mismatch (-want +got):\n%s", diff)
-				}
+				assert.Equal(t, tt.doc, result.Doc)
 			}
 		})
 	}
@@ -117,14 +114,12 @@ func TestMore_Constructor(t *testing.T) {
 	if diff := cmp.Diff(path, moreOp.Path()); diff != "" {
 		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
 	}
-	if moreOp.Value != value {
-		t.Errorf("Value = %v, want %v", moreOp.Value, value)
-	}
+	assert.Equal(t, value, moreOp.Value, "Value")
 	if got := moreOp.Op(); got != internal.OpMoreType {
-		t.Errorf("Op() = %v, want %v", got, internal.OpMoreType)
+		assert.Equal(t, internal.OpMoreType, got, "Op()")
 	}
 	if got := moreOp.Code(); got != internal.OpMoreCode {
-		t.Errorf("Code() = %v, want %v", got, internal.OpMoreCode)
+		assert.Equal(t, internal.OpMoreCode, got, "Code()")
 	}
 }
 
@@ -137,13 +132,13 @@ func TestMore_ToJSON(t *testing.T) {
 		t.Fatalf("ToJSON() failed: %v", err)
 	}
 	if got.Op != string(internal.OpMoreType) {
-		t.Errorf("ToJSON().Op = %q, want %q", got.Op, string(internal.OpMoreType))
+		assert.Equal(t, string(internal.OpMoreType), got.Op, "ToJSON().Op")
 	}
 	if got.Path != "/age" {
-		t.Errorf("ToJSON().Path = %q, want %q", got.Path, "/age")
+		assert.Equal(t, "/age", got.Path, "ToJSON().Path")
 	}
 	if got.Value != 18 { // Expect int, not float64
-		t.Errorf("ToJSON().Value = %v, want %v", got.Value, 18)
+		assert.Equal(t, 18, got.Value, "ToJSON().Value")
 	}
 }
 
@@ -155,7 +150,5 @@ func TestMore_ToCompact(t *testing.T) {
 		t.Errorf("ToCompact() failed: %v", err)
 	}
 	want := []any{internal.OpMoreCode, []string{"age"}, 18.0}
-	if diff := cmp.Diff(want, compact); diff != "" {
-		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, want, compact)
 }

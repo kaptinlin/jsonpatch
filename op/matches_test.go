@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMatches_Basic(t *testing.T) {
@@ -80,24 +81,20 @@ func TestMatches_Basic(t *testing.T) {
 
 			if tt.expectError {
 				if err == nil {
-					t.Error("Apply() succeeded, want error")
+					assert.Fail(t, "Apply() succeeded, want error")
 				}
 				if tt.expectedError != nil && !errors.Is(err, tt.expectedError) {
-					t.Errorf("Apply() error = %v, want %v", err, tt.expectedError)
+					assert.Equal(t, tt.expectedError, err, "Apply() error")
 				}
-				if diff := cmp.Diff(internal.OpResult[any]{}, result); diff != "" {
-					t.Errorf("Apply() result mismatch (-want +got):\n%s", diff)
-				}
+				assert.Equal(t, internal.OpResult[any]{}, result)
 			} else {
 				if err != nil {
 					t.Errorf("Apply() failed: %v", err)
 				}
 				if result.Doc == nil {
-					t.Error("Apply() result.Doc = nil, want non-nil")
+					assert.Fail(t, "Apply() result.Doc = nil, want non-nil")
 				}
-				if diff := cmp.Diff(tt.doc, result.Doc); diff != "" {
-					t.Errorf("Apply() result.Doc mismatch (-want +got):\n%s", diff)
-				}
+				assert.Equal(t, tt.doc, result.Doc)
 			}
 		})
 	}
@@ -115,16 +112,14 @@ func TestMatches_Constructor(t *testing.T) {
 		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
 	}
 	if matchesOp.Pattern != pattern {
-		t.Errorf("Pattern = %q, want %q", matchesOp.Pattern, pattern)
+		assert.Equal(t, pattern, matchesOp.Pattern, "Pattern")
 	}
-	if matchesOp.IgnoreCase != ignoreCase {
-		t.Errorf("IgnoreCase = %v, want %v", matchesOp.IgnoreCase, ignoreCase)
-	}
+	assert.Equal(t, ignoreCase, matchesOp.IgnoreCase, "IgnoreCase")
 	if got := matchesOp.Op(); got != internal.OpMatchesType {
-		t.Errorf("Op() = %v, want %v", got, internal.OpMatchesType)
+		assert.Equal(t, internal.OpMatchesType, got, "Op()")
 	}
 	if got := matchesOp.Code(); got != internal.OpMatchesCode {
-		t.Errorf("Code() = %v, want %v", got, internal.OpMatchesCode)
+		assert.Equal(t, internal.OpMatchesCode, got, "Code()")
 	}
 }
 
@@ -142,7 +137,7 @@ func TestMatches_InvalidPattern(t *testing.T) {
 
 	result, _ := matchesOp.Test(map[string]any{"email": "test@example.com"})
 	if result {
-		t.Error("Test() with invalid pattern = true, want false")
+		assert.Fail(t, "Test() with invalid pattern = true, want false")
 	}
 }
 
@@ -156,10 +151,10 @@ func TestMatches_ToJSON(t *testing.T) {
 	}
 
 	if got.Op != string(internal.OpMatchesType) {
-		t.Errorf("ToJSON().Op = %q, want %q", got.Op, string(internal.OpMatchesType))
+		assert.Equal(t, string(internal.OpMatchesType), got.Op, "ToJSON().Op")
 	}
 	if got.Path != "/email" {
-		t.Errorf("ToJSON().Path = %q, want %q", got.Path, "/email")
+		assert.Equal(t, "/email", got.Path, "ToJSON().Path")
 	}
 	if got.Value != `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$` {
 		t.Errorf("ToJSON().Value = %v, want pattern string", got.Value)
@@ -177,9 +172,7 @@ func TestMatches_ToCompact(t *testing.T) {
 		t.Errorf("ToCompact() failed: %v", err)
 	}
 	want := []any{internal.OpMatchesCode, []string{"name"}, "john", true}
-	if diff := cmp.Diff(want, compact); diff != "" {
-		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, want, compact)
 }
 
 func TestMatches_ToCompact_WithoutIgnoreCase(t *testing.T) {
@@ -190,7 +183,5 @@ func TestMatches_ToCompact_WithoutIgnoreCase(t *testing.T) {
 		t.Errorf("ToCompact() failed: %v", err)
 	}
 	want := []any{internal.OpMatchesCode, []string{"name"}, "john", false}
-	if diff := cmp.Diff(want, compact); diff != "" {
-		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, want, compact)
 }

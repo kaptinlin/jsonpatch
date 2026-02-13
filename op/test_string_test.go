@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTestString_Apply(t *testing.T) {
@@ -121,24 +121,20 @@ func TestTestString_Apply(t *testing.T) {
 
 			if tt.expectError {
 				if err == nil {
-					t.Error("Apply() succeeded, want error")
+					assert.Fail(t, "Apply() succeeded, want error")
 				}
 				if tt.expectedError != nil && !errors.Is(err, tt.expectedError) {
-					t.Errorf("Apply() error = %v, want %v", err, tt.expectedError)
+					assert.Equal(t, tt.expectedError, err, "Apply() error")
 				}
-				if diff := cmp.Diff(internal.OpResult[any]{}, result); diff != "" {
-					t.Errorf("Apply() result mismatch (-want +got):\n%s", diff)
-				}
+				assert.Equal(t, internal.OpResult[any]{}, result)
 			} else {
 				if err != nil {
 					t.Errorf("Apply() failed: %v", err)
 				}
 				if result.Doc == nil {
-					t.Error("Apply() result.Doc = nil, want non-nil")
+					assert.Fail(t, "Apply() result.Doc = nil, want non-nil")
 				}
-				if diff := cmp.Diff(tt.doc, result.Doc); diff != "" {
-					t.Errorf("Apply() result.Doc mismatch (-want +got):\n%s", diff)
-				}
+				assert.Equal(t, tt.doc, result.Doc)
 			}
 		})
 	}
@@ -166,14 +162,14 @@ func TestToString(t *testing.T) {
 			result, err := toString(tt.value)
 			if tt.hasError {
 				if err == nil {
-					t.Error("toString() succeeded, want error")
+					assert.Fail(t, "toString() succeeded, want error")
 				}
 			} else {
 				if err != nil {
 					t.Errorf("toString() failed: %v", err)
 				}
 				if result != tt.expected {
-					t.Errorf("toString() = %q, want %q", result, tt.expected)
+					assert.Equal(t, tt.expected, result, "toString()")
 				}
 			}
 		})

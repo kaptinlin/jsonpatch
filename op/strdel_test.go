@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestStrDel_Apply(t *testing.T) {
@@ -157,7 +158,7 @@ func TestStrDel_Apply(t *testing.T) {
 
 			if tt.wantErr {
 				if err == nil {
-					t.Error("Apply() expected error, got nil")
+					assert.Fail(t, "Apply() expected error, got nil")
 				}
 				return
 			}
@@ -165,12 +166,8 @@ func TestStrDel_Apply(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Apply() unexpected error: %v", err)
 			}
-			if diff := cmp.Diff(tt.expected, result.Doc); diff != "" {
-				t.Errorf("Apply() Doc mismatch (-want +got):\n%s", diff)
-			}
-			if diff := cmp.Diff(tt.oldValue, result.Old); diff != "" {
-				t.Errorf("Apply() Old mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, tt.expected, result.Doc)
+			assert.Equal(t, tt.oldValue, result.Old)
 		})
 	}
 }
@@ -184,16 +181,12 @@ func TestStrDel_Constructor(t *testing.T) {
 	if diff := cmp.Diff(path, strDelOp.Path()); diff != "" {
 		t.Errorf("NewStrDel() Path mismatch (-want +got):\n%s", diff)
 	}
-	if strDelOp.Pos != pos {
-		t.Errorf("NewStrDel() Pos = %v, want %v", strDelOp.Pos, pos)
-	}
-	if strDelOp.Len != length {
-		t.Errorf("NewStrDel() Len = %v, want %v", strDelOp.Len, length)
-	}
+	assert.Equal(t, pos, strDelOp.Pos, "NewStrDel() Pos")
+	assert.Equal(t, length, strDelOp.Len, "NewStrDel() Len")
 	if got := strDelOp.Op(); got != internal.OpStrDelType {
-		t.Errorf("Op() = %v, want %v", got, internal.OpStrDelType)
+		assert.Equal(t, internal.OpStrDelType, got, "Op()")
 	}
 	if got := strDelOp.Code(); got != internal.OpStrDelCode {
-		t.Errorf("Code() = %v, want %v", got, internal.OpStrDelCode)
+		assert.Equal(t, internal.OpStrDelCode, got, "Code()")
 	}
 }

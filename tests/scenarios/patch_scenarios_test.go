@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/go-json-experiment/json"
-	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/tests/data"
@@ -52,9 +52,7 @@ func TestAutomated(t *testing.T) {
 							t.Fatalf("ApplyPatch() unexpected error: %v", err)
 						}
 
-						if diff := cmp.Diff(test.Expected, result.Doc); diff != "" {
-							t.Errorf("ApplyPatch() mismatch (-want +got):\n%s", diff)
-						}
+						assert.Equal(t, test.Expected, result.Doc)
 					})
 				case test.Error != "":
 					t.Run(testName, func(t *testing.T) {
@@ -72,7 +70,7 @@ func TestAutomated(t *testing.T) {
 						if !validationFailed {
 							_, err := jsonpatch.ApplyPatch(test.Doc, test.Patch, options)
 							if err == nil {
-								t.Error("ApplyPatch() expected error, got nil")
+								assert.Fail(t, "ApplyPatch() expected error, got nil")
 							}
 						}
 					})

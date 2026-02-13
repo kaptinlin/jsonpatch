@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFlip_Apply(t *testing.T) {
@@ -151,7 +152,7 @@ func TestFlip_Apply(t *testing.T) {
 
 			if tt.wantErr {
 				if err == nil {
-					t.Error("Apply() expected error, got nil")
+					assert.Fail(t, "Apply() expected error, got nil")
 				}
 				return
 			}
@@ -159,12 +160,8 @@ func TestFlip_Apply(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Apply() unexpected error: %v", err)
 			}
-			if diff := cmp.Diff(tt.expected, result.Doc); diff != "" {
-				t.Errorf("Apply() Doc mismatch (-want +got):\n%s", diff)
-			}
-			if diff := cmp.Diff(tt.oldValue, result.Old); diff != "" {
-				t.Errorf("Apply() Old mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, tt.expected, result.Doc)
+			assert.Equal(t, tt.oldValue, result.Old)
 		})
 	}
 }
@@ -178,10 +175,10 @@ func TestFlip_Constructor(t *testing.T) {
 		t.Errorf("NewFlip() Path mismatch (-want +got):\n%s", diff)
 	}
 	if got := flipOp.Op(); got != internal.OpFlipType {
-		t.Errorf("Op() = %v, want %v", got, internal.OpFlipType)
+		assert.Equal(t, internal.OpFlipType, got, "Op()")
 	}
 	if got := flipOp.Code(); got != internal.OpFlipCode {
-		t.Errorf("Code() = %v, want %v", got, internal.OpFlipCode)
+		assert.Equal(t, internal.OpFlipCode, got, "Code()")
 	}
 }
 
@@ -214,9 +211,7 @@ func TestFlip_ComplexTypes(t *testing.T) {
 			}
 
 			resultDoc := result.Doc.(map[string]any)
-			if resultDoc["value"] != tt.expected {
-				t.Errorf("Apply() value = %v, want %v", resultDoc["value"], tt.expected)
-			}
+			assert.Equal(t, tt.expected, resultDoc["value"], "Apply() value")
 		})
 	}
 }

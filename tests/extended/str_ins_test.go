@@ -3,10 +3,10 @@ package ops_test
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestStrInsOp(t *testing.T) {
@@ -21,7 +21,7 @@ func TestStrInsOp(t *testing.T) {
 		}
 		result := testutils.ApplyInternalOp(t, "world!", operation)
 		if result != "Hello, world!" {
-			t.Errorf("result = %v, want %v", result, "Hello, world!")
+			assert.Equal(t, "Hello, world!", result, "result")
 		}
 	})
 
@@ -35,7 +35,7 @@ func TestStrInsOp(t *testing.T) {
 		}
 		result := testutils.ApplyInternalOp(t, "Hello", operation)
 		if result != "Hello, world" {
-			t.Errorf("result = %v, want %v", result, "Hello, world")
+			assert.Equal(t, "Hello, world", result, "result")
 		}
 	})
 
@@ -49,7 +49,7 @@ func TestStrInsOp(t *testing.T) {
 		}
 		result := testutils.ApplyInternalOp(t, "Hello world", operation)
 		if result != "Hello beautiful world" {
-			t.Errorf("result = %v, want %v", result, "Hello beautiful world")
+			assert.Equal(t, "Hello beautiful world", result, "result")
 		}
 	})
 
@@ -79,7 +79,7 @@ func TestStrInsOp(t *testing.T) {
 			t.Fatalf("ApplyPatch() second operation error: %v", err)
 		}
 		if result2.Doc != "Hello beautiful world bright" {
-			t.Errorf("result = %v, want %v", result2.Doc, "Hello beautiful world bright")
+			assert.Equal(t, "Hello beautiful world bright", result2.Doc, "result")
 		}
 	})
 
@@ -94,9 +94,7 @@ func TestStrInsOp(t *testing.T) {
 				Str:  "hello",
 			}
 			result := testutils.ApplyInternalOp(t, "", operation)
-			if result != "hello" {
-				t.Errorf("result = %v, want %v", result, "hello")
-			}
+			assert.Equal(t, "hello", result, "result")
 		})
 	})
 
@@ -112,9 +110,7 @@ func TestStrInsOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "world!"}, operation)
 			expected := map[string]interface{}{"msg": "Hello, world!"}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 
 		t.Run("inserts a string at the end", func(t *testing.T) {
@@ -127,9 +123,7 @@ func TestStrInsOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello"}, operation)
 			expected := map[string]interface{}{"msg": "Hello, world"}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 
 		t.Run("inserts a string in the middle", func(t *testing.T) {
@@ -142,9 +136,7 @@ func TestStrInsOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello world"}, operation)
 			expected := map[string]interface{}{"msg": "Hello beautiful world"}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 
 		t.Run("negative position counts from end", func(t *testing.T) {
@@ -157,9 +149,7 @@ func TestStrInsOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello"}, operation)
 			expected := map[string]interface{}{"msg": "Hell!o"}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 	})
 
@@ -175,9 +165,7 @@ func TestStrInsOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOp(t, []interface{}{"world!"}, operation)
 			expected := []interface{}{"Hello, world!"}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 
 		t.Run("inserts a string at the end", func(t *testing.T) {
@@ -190,9 +178,7 @@ func TestStrInsOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOp(t, []interface{}{"Hello"}, operation)
 			expected := []interface{}{"Hello, world"}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 
 		t.Run("inserts a string in the middle", func(t *testing.T) {
@@ -205,9 +191,7 @@ func TestStrInsOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOp(t, []interface{}{"Hello world"}, operation)
 			expected := []interface{}{"Hello beautiful world"}
-			if diff := cmp.Diff(expected, result); diff != "" {
-				t.Errorf("result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expected, result)
 		})
 	})
 }

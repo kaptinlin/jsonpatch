@@ -3,9 +3,9 @@ package tests
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/codec/json"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 // This test matches the TypeScript automatic.spec.ts
@@ -50,47 +50,39 @@ func TestAutomaticCodec(t *testing.T) {
 
 			// Verify round-trip consistency by comparing the struct fields
 			if got, want := encoded[0].Op, expectedOp.Op; got != want {
-				t.Errorf("Op = %v, want %v", got, want)
+				assert.Equal(t, want, got, "Op")
 			}
 			if got, want := encoded[0].Path, expectedOp.Path; got != want {
-				t.Errorf("Path = %v, want %v", got, want)
+				assert.Equal(t, want, got, "Path")
 			}
-			if diff := cmp.Diff(expectedOp.Value, encoded[0].Value); diff != "" {
-				t.Errorf("Value mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expectedOp.Value, encoded[0].Value)
 			if got, want := encoded[0].From, expectedOp.From; got != want {
-				t.Errorf("From = %v, want %v", got, want)
+				assert.Equal(t, want, got, "From")
 			}
 			if got, want := encoded[0].Inc, expectedOp.Inc; got != want {
-				t.Errorf("Inc = %v, want %v", got, want)
+				assert.Equal(t, want, got, "Inc")
 			}
 			if got, want := encoded[0].Pos, expectedOp.Pos; got != want {
-				t.Errorf("Pos = %v, want %v", got, want)
+				assert.Equal(t, want, got, "Pos")
 			}
 			if got, want := encoded[0].Str, expectedOp.Str; got != want {
-				t.Errorf("Str = %v, want %v", got, want)
+				assert.Equal(t, want, got, "Str")
 			}
 			if got, want := encoded[0].Len, expectedOp.Len; got != want {
-				t.Errorf("Len = %v, want %v", got, want)
+				assert.Equal(t, want, got, "Len")
 			}
 			if got, want := encoded[0].Not, expectedOp.Not; got != want {
-				t.Errorf("Not = %v, want %v", got, want)
+				assert.Equal(t, want, got, "Not")
 			}
-			if diff := cmp.Diff(expectedOp.Type, encoded[0].Type); diff != "" {
-				t.Errorf("Type mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expectedOp.Type, encoded[0].Type)
 			if got, want := encoded[0].IgnoreCase, expectedOp.IgnoreCase; got != want {
-				t.Errorf("IgnoreCase = %v, want %v", got, want)
+				assert.Equal(t, want, got, "IgnoreCase")
 			}
-			if diff := cmp.Diff(expectedOp.Props, encoded[0].Props); diff != "" {
-				t.Errorf("Props mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expectedOp.Props, encoded[0].Props)
 			if got, want := encoded[0].DeleteNull, expectedOp.DeleteNull; got != want {
-				t.Errorf("DeleteNull = %v, want %v", got, want)
+				assert.Equal(t, want, got, "DeleteNull")
 			}
-			if diff := cmp.Diff(expectedOp.OldValue, encoded[0].OldValue); diff != "" {
-				t.Errorf("OldValue mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, expectedOp.OldValue, encoded[0].OldValue)
 		})
 	}
 }
@@ -137,9 +129,7 @@ func TestCodecRoundTrip(t *testing.T) {
 	}
 
 	// Should be structurally identical
-	if diff := cmp.Diff(expectedOps, encoded); diff != "" {
-		t.Errorf("round-trip mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, expectedOps, encoded)
 }
 
 // mapToOperation converts a map[string]any to internal.Operation struct

@@ -3,9 +3,9 @@ package ops_test
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMergeOp(t *testing.T) {
@@ -30,9 +30,7 @@ func TestMergeOp(t *testing.T) {
 		expected := []interface{}{
 			map[string]interface{}{"text": "foobar"},
 		}
-		if diff := cmp.Diff(expected, result.Doc); diff != "" {
-			t.Errorf("result mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, expected, result.Doc)
 	})
 
 	t.Run("cannot target first array element when merging", func(t *testing.T) {
@@ -80,9 +78,7 @@ func TestMergeOp(t *testing.T) {
 				map[string]interface{}{"children": []interface{}{map[string]interface{}{"text": "1"}, map[string]interface{}{"text": "2"}, map[string]interface{}{"text": "3"}, map[string]interface{}{"text": "4"}}},
 			},
 		}
-		if diff := cmp.Diff(expected, result.Doc); diff != "" {
-			t.Errorf("result mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, expected, result.Doc)
 	})
 
 	t.Run("cannot merge root", func(t *testing.T) {
@@ -115,9 +111,7 @@ func TestMergeOp(t *testing.T) {
 			t.Fatalf("ApplyPatch() error: %v", err)
 		}
 		expected := []interface{}{"hello world"}
-		if diff := cmp.Diff(expected, result.Doc); diff != "" {
-			t.Errorf("result mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, expected, result.Doc)
 	})
 
 	t.Run("can merge numbers", func(t *testing.T) {
@@ -135,9 +129,7 @@ func TestMergeOp(t *testing.T) {
 			t.Fatalf("ApplyPatch() error: %v", err)
 		}
 		expected := []interface{}{float64(8)}
-		if diff := cmp.Diff(expected, result.Doc); diff != "" {
-			t.Errorf("result mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, expected, result.Doc)
 	})
 
 	t.Run("returns array for non-mergeable types", func(t *testing.T) {
@@ -155,8 +147,6 @@ func TestMergeOp(t *testing.T) {
 			t.Fatalf("ApplyPatch() error: %v", err)
 		}
 		expected := []interface{}{[]interface{}{true, false}}
-		if diff := cmp.Diff(expected, result.Doc); diff != "" {
-			t.Errorf("result mismatch (-want +got):\n%s", diff)
-		}
+		assert.Equal(t, expected, result.Doc)
 	})
 }

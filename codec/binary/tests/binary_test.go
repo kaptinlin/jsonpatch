@@ -4,6 +4,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/kaptinlin/jsonpatch/codec/binary"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/op"
@@ -133,17 +136,13 @@ func TestRoundtrip(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			encoded, err := codec.Encode(tt.patch)
-			if err != nil {
-				t.Fatalf("Encode should not error: %v", err)
-			}
+			require.NoError(t, err)
 
 			decoded, err := codec.Decode(encoded)
-			if err != nil {
-				t.Fatalf("Decode should not error: %v", err)
-			}
+			require.NoError(t, err)
 
 			if !areOpsEqual(tt.patch, decoded) {
-				t.Error("decoded patch should equal original patch")
+				assert.Fail(t, "decoded patch should equal original patch")
 			}
 		})
 	}

@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMove_Basic(t *testing.T) {
@@ -32,10 +33,10 @@ func TestMove_Basic(t *testing.T) {
 		t.Error("modifiedDoc contains key \"foo\" after move")
 	}
 	if got := modifiedDoc["qux"].(map[string]any)["moved"]; got != "bar" {
-		t.Errorf("modifiedDoc[qux][moved] = %v, want %v", got, "bar")
+		assert.Equal(t, "bar", got, "modifiedDoc[qux][moved]")
 	}
 	if got := modifiedDoc["baz"]; got != 123 {
-		t.Errorf("modifiedDoc[baz] = %v, want %v", got, 123)
+		assert.Equal(t, 123, got, "modifiedDoc[baz]")
 	}
 }
 
@@ -66,15 +67,9 @@ func TestMove_Array(t *testing.T) {
 	if len(items) != 2 {
 		t.Fatalf("len(items) = %d, want %d", len(items), 2)
 	}
-	if items[0] != "first" {
-		t.Errorf("items[0] = %v, want %v", items[0], "first")
-	}
-	if items[1] != "third" {
-		t.Errorf("items[1] = %v, want %v", items[1], "third")
-	}
-	if target["moved"] != "second" {
-		t.Errorf("target[moved] = %v, want %v", target["moved"], "second")
-	}
+	assert.Equal(t, "first", items[0], "items[0]")
+	assert.Equal(t, "third", items[1], "items[1]")
+	assert.Equal(t, "second", target["moved"], "target[moved]")
 }
 
 func TestMove_FromNonExistent(t *testing.T) {
@@ -86,10 +81,10 @@ func TestMove_FromNonExistent(t *testing.T) {
 	moveOp := NewMove([]string{"target"}, []string{"qux"})
 	_, err := moveOp.Apply(doc)
 	if err == nil {
-		t.Error("Apply() expected error for non-existent from path")
+		assert.Fail(t, "Apply() expected error for non-existent from path")
 	}
 	if !errors.Is(err, ErrPathNotFound) {
-		t.Errorf("Apply() error = %v, want %v", err, ErrPathNotFound)
+		assert.Equal(t, ErrPathNotFound, err, "Apply() error")
 	}
 }
 
@@ -101,9 +96,7 @@ func TestMove_SamePath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Apply() unexpected error: %v", err)
 	}
-	if diff := cmp.Diff(doc, result.Doc); diff != "" {
-		t.Errorf("result.Doc mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, doc, result.Doc)
 	if result.Old != nil {
 		t.Errorf("result.Old = %v, want nil", result.Old)
 	}
@@ -120,12 +113,8 @@ func TestMove_RootArray(t *testing.T) {
 
 	resultArray := result.Doc.([]any)
 	want := []any{"third", "first", "second"}
-	if diff := cmp.Diff(want, resultArray); diff != "" {
-		t.Errorf("result.Doc mismatch (-want +got):\n%s", diff)
-	}
-	if result.Old != "first" {
-		t.Errorf("result.Old = %v, want %v", result.Old, "first")
-	}
+	assert.Equal(t, want, resultArray)
+	assert.Equal(t, "first", result.Old, "result.Old")
 }
 
 func TestMove_EmptyPath(t *testing.T) {
@@ -133,10 +122,10 @@ func TestMove_EmptyPath(t *testing.T) {
 	moveOp := NewMove([]string{}, []string{"foo"})
 	err := moveOp.Validate()
 	if err == nil {
-		t.Error("Validate() expected error for empty path")
+		assert.Fail(t, "Validate() expected error for empty path")
 	}
 	if !errors.Is(err, ErrPathEmpty) {
-		t.Errorf("Validate() error = %v, want %v", err, ErrPathEmpty)
+		assert.Equal(t, ErrPathEmpty, err, "Validate() error")
 	}
 }
 
@@ -145,10 +134,10 @@ func TestMove_EmptyFrom(t *testing.T) {
 	moveOp := NewMove([]string{"target"}, []string{})
 	err := moveOp.Validate()
 	if err == nil {
-		t.Error("Validate() expected error for empty from path")
+		assert.Fail(t, "Validate() expected error for empty from path")
 	}
 	if !errors.Is(err, ErrFromPathEmpty) {
-		t.Errorf("Validate() error = %v, want %v", err, ErrFromPathEmpty)
+		assert.Equal(t, ErrFromPathEmpty, err, "Validate() error")
 	}
 }
 
@@ -157,10 +146,10 @@ func TestMove_InterfaceMethods(t *testing.T) {
 	moveOp := NewMove([]string{"target"}, []string{"source"})
 
 	if got := moveOp.Op(); got != internal.OpMoveType {
-		t.Errorf("Op() = %v, want %v", got, internal.OpMoveType)
+		assert.Equal(t, internal.OpMoveType, got, "Op()")
 	}
 	if got := moveOp.Code(); got != internal.OpMoveCode {
-		t.Errorf("Code() = %v, want %v", got, internal.OpMoveCode)
+		assert.Equal(t, internal.OpMoveCode, got, "Code()")
 	}
 	if diff := cmp.Diff([]string{"target"}, moveOp.Path()); diff != "" {
 		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
@@ -169,7 +158,7 @@ func TestMove_InterfaceMethods(t *testing.T) {
 		t.Errorf("From() mismatch (-want +got):\n%s", diff)
 	}
 	if !moveOp.HasFrom() {
-		t.Error("HasFrom() = false, want true")
+		assert.Fail(t, "HasFrom() = false, want true")
 	}
 }
 
@@ -182,15 +171,9 @@ func TestMove_ToJSON(t *testing.T) {
 		t.Fatalf("ToJSON() unexpected error: %v", err)
 	}
 
-	if got.Op != "move" {
-		t.Errorf("ToJSON().Op = %v, want %v", got.Op, "move")
-	}
-	if got.Path != "/target" {
-		t.Errorf("ToJSON().Path = %v, want %v", got.Path, "/target")
-	}
-	if got.From != "/source" {
-		t.Errorf("ToJSON().From = %v, want %v", got.From, "/source")
-	}
+	assert.Equal(t, "move", got.Op, "ToJSON().Op")
+	assert.Equal(t, "/target", got.Path, "ToJSON().Path")
+	assert.Equal(t, "/source", got.From, "ToJSON().From")
 }
 
 func TestMove_ToCompact(t *testing.T) {
@@ -204,15 +187,9 @@ func TestMove_ToCompact(t *testing.T) {
 	if len(compact) != 3 {
 		t.Fatalf("len(ToCompact()) = %d, want %d", len(compact), 3)
 	}
-	if compact[0] != internal.OpMoveCode {
-		t.Errorf("compact[0] = %v, want %v", compact[0], internal.OpMoveCode)
-	}
-	if diff := cmp.Diff([]string{"target"}, compact[1]); diff != "" {
-		t.Errorf("compact[1] mismatch (-want +got):\n%s", diff)
-	}
-	if diff := cmp.Diff([]string{"source"}, compact[2]); diff != "" {
-		t.Errorf("compact[2] mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, internal.OpMoveCode, compact[0], "compact[0]")
+	assert.Equal(t, []string{"target"}, compact[1])
+	assert.Equal(t, []string{"source"}, compact[2])
 }
 
 func TestMove_Validate(t *testing.T) {
@@ -225,28 +202,28 @@ func TestMove_Validate(t *testing.T) {
 	moveOp = NewMove([]string{}, []string{"source"})
 	err := moveOp.Validate()
 	if err == nil {
-		t.Error("Validate() expected error for empty path")
+		assert.Fail(t, "Validate() expected error for empty path")
 	}
 	if !errors.Is(err, ErrPathEmpty) {
-		t.Errorf("Validate() error = %v, want %v", err, ErrPathEmpty)
+		assert.Equal(t, ErrPathEmpty, err, "Validate() error")
 	}
 
 	moveOp = NewMove([]string{"target"}, []string{})
 	err = moveOp.Validate()
 	if err == nil {
-		t.Error("Validate() expected error for empty from path")
+		assert.Fail(t, "Validate() expected error for empty from path")
 	}
 	if !errors.Is(err, ErrFromPathEmpty) {
-		t.Errorf("Validate() error = %v, want %v", err, ErrFromPathEmpty)
+		assert.Equal(t, ErrFromPathEmpty, err, "Validate() error")
 	}
 
 	moveOp = NewMove([]string{"same"}, []string{"same"})
 	err = moveOp.Validate()
 	if err == nil {
-		t.Error("Validate() expected error for identical paths")
+		assert.Fail(t, "Validate() expected error for identical paths")
 	}
 	if !errors.Is(err, ErrPathsIdentical) {
-		t.Errorf("Validate() error = %v, want %v", err, ErrPathsIdentical)
+		assert.Equal(t, ErrPathsIdentical, err, "Validate() error")
 	}
 }
 
@@ -299,9 +276,7 @@ func TestMove_RFC6902_RemoveAddPattern(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Apply() unexpected error: %v", err)
 			}
-			if diff := cmp.Diff(tt.expected, result.Doc); diff != "" {
-				t.Errorf("Apply() result mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, tt.expected, result.Doc)
 		})
 	}
 }

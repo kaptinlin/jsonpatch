@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestReplace_Basic(t *testing.T) {
@@ -26,13 +27,13 @@ func TestReplace_Basic(t *testing.T) {
 
 	modifiedDoc := result.Doc.(map[string]any)
 	if got := result.Old; got != "bar" {
-		t.Errorf("result.Old = %v, want %v", got, "bar")
+		assert.Equal(t, "bar", got, "result.Old")
 	}
 	if got := modifiedDoc["foo"]; got != "new_value" {
-		t.Errorf("modifiedDoc[foo] = %v, want %v", got, "new_value")
+		assert.Equal(t, "new_value", got, "modifiedDoc[foo]")
 	}
 	if got := modifiedDoc["baz"]; got != 123 {
-		t.Errorf("modifiedDoc[baz] = %v, want %v", got, 123)
+		assert.Equal(t, 123, got, "modifiedDoc[baz]")
 	}
 }
 
@@ -54,13 +55,13 @@ func TestReplace_Nested(t *testing.T) {
 	modifiedDoc := result.Doc.(map[string]any)
 	foo := modifiedDoc["foo"].(map[string]any)
 	if got := result.Old; got != "baz" {
-		t.Errorf("result.Old = %v, want %v", got, "baz")
+		assert.Equal(t, "baz", got, "result.Old")
 	}
 	if got := foo["bar"]; got != "new_nested_value" {
-		t.Errorf("foo[bar] = %v, want %v", got, "new_nested_value")
+		assert.Equal(t, "new_nested_value", got, "foo[bar]")
 	}
 	if got := foo["qux"]; got != 123 {
-		t.Errorf("foo[qux] = %v, want %v", got, 123)
+		assert.Equal(t, 123, got, "foo[qux]")
 	}
 }
 
@@ -80,17 +81,11 @@ func TestReplace_Array(t *testing.T) {
 
 	modifiedArray := result.Doc.([]any)
 	if got := result.Old; got != "second" {
-		t.Errorf("result.Old = %v, want %v", got, "second")
+		assert.Equal(t, "second", got, "result.Old")
 	}
-	if modifiedArray[1] != "new_second" {
-		t.Errorf("modifiedArray[1] = %v, want %v", modifiedArray[1], "new_second")
-	}
-	if modifiedArray[0] != "first" {
-		t.Errorf("modifiedArray[0] = %v, want %v", modifiedArray[0], "first")
-	}
-	if modifiedArray[2] != "third" {
-		t.Errorf("modifiedArray[2] = %v, want %v", modifiedArray[2], "third")
-	}
+	assert.Equal(t, "new_second", modifiedArray[1], "modifiedArray[1]")
+	assert.Equal(t, "first", modifiedArray[0], "modifiedArray[0]")
+	assert.Equal(t, "third", modifiedArray[2], "modifiedArray[2]")
 }
 
 func TestReplace_NonExistent(t *testing.T) {
@@ -102,10 +97,10 @@ func TestReplace_NonExistent(t *testing.T) {
 	replaceOp := NewReplace([]string{"qux"}, "new_value")
 	_, err := replaceOp.Apply(doc)
 	if err == nil {
-		t.Error("Apply() expected error for non-existent path")
+		assert.Fail(t, "Apply() expected error for non-existent path")
 	}
 	if !errors.Is(err, ErrPathNotFound) {
-		t.Errorf("Apply() error = %v, want %v", err, ErrPathNotFound)
+		assert.Equal(t, ErrPathNotFound, err, "Apply() error")
 	}
 }
 
@@ -120,12 +115,8 @@ func TestReplace_EmptyPath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Apply() unexpected error: %v", err)
 	}
-	if result.Doc != "new_value" {
-		t.Errorf("result.Doc = %v, want %v", result.Doc, "new_value")
-	}
-	if diff := cmp.Diff(doc, result.Old); diff != "" {
-		t.Errorf("result.Old mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, "new_value", result.Doc, "result.Doc")
+	assert.Equal(t, doc, result.Old)
 }
 
 func TestReplace_InterfaceMethods(t *testing.T) {
@@ -133,17 +124,15 @@ func TestReplace_InterfaceMethods(t *testing.T) {
 	replaceOp := NewReplace([]string{"test"}, "value")
 
 	if got := replaceOp.Op(); got != internal.OpReplaceType {
-		t.Errorf("Op() = %v, want %v", got, internal.OpReplaceType)
+		assert.Equal(t, internal.OpReplaceType, got, "Op()")
 	}
 	if got := replaceOp.Code(); got != internal.OpReplaceCode {
-		t.Errorf("Code() = %v, want %v", got, internal.OpReplaceCode)
+		assert.Equal(t, internal.OpReplaceCode, got, "Code()")
 	}
 	if diff := cmp.Diff([]string{"test"}, replaceOp.Path()); diff != "" {
 		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
 	}
-	if replaceOp.Value != "value" {
-		t.Errorf("Value = %v, want %v", replaceOp.Value, "value")
-	}
+	assert.Equal(t, "value", replaceOp.Value, "Value")
 }
 
 func TestReplace_ToJSON(t *testing.T) {
@@ -155,15 +144,9 @@ func TestReplace_ToJSON(t *testing.T) {
 		t.Fatalf("ToJSON() unexpected error: %v", err)
 	}
 
-	if got.Op != "replace" {
-		t.Errorf("ToJSON().Op = %v, want %v", got.Op, "replace")
-	}
-	if got.Path != "/test" {
-		t.Errorf("ToJSON().Path = %v, want %v", got.Path, "/test")
-	}
-	if got.Value != "value" {
-		t.Errorf("ToJSON().Value = %v, want %v", got.Value, "value")
-	}
+	assert.Equal(t, "replace", got.Op, "ToJSON().Op")
+	assert.Equal(t, "/test", got.Path, "ToJSON().Path")
+	assert.Equal(t, "value", got.Value, "ToJSON().Value")
 }
 
 func TestReplace_ToCompact(t *testing.T) {
@@ -177,15 +160,9 @@ func TestReplace_ToCompact(t *testing.T) {
 	if len(compact) != 3 {
 		t.Fatalf("len(ToCompact()) = %d, want %d", len(compact), 3)
 	}
-	if compact[0] != internal.OpReplaceCode {
-		t.Errorf("compact[0] = %v, want %v", compact[0], internal.OpReplaceCode)
-	}
-	if diff := cmp.Diff([]string{"test"}, compact[1]); diff != "" {
-		t.Errorf("compact[1] mismatch (-want +got):\n%s", diff)
-	}
-	if compact[2] != "value" {
-		t.Errorf("compact[2] = %v, want %v", compact[2], "value")
-	}
+	assert.Equal(t, internal.OpReplaceCode, compact[0], "compact[0]")
+	assert.Equal(t, []string{"test"}, compact[1])
+	assert.Equal(t, "value", compact[2], "compact[2]")
 }
 
 func TestReplace_Validate(t *testing.T) {
@@ -198,9 +175,9 @@ func TestReplace_Validate(t *testing.T) {
 	replaceOp = NewReplace([]string{}, "value")
 	err := replaceOp.Validate()
 	if err == nil {
-		t.Error("Validate() expected error for empty path")
+		assert.Fail(t, "Validate() expected error for empty path")
 	}
 	if !errors.Is(err, ErrPathEmpty) {
-		t.Errorf("Validate() error = %v, want %v", err, ErrPathEmpty)
+		assert.Equal(t, ErrPathEmpty, err, "Validate() error")
 	}
 }

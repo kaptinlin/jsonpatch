@@ -3,9 +3,10 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/go-json-experiment/json"
 	"github.com/go-json-experiment/json/jsontext"
-	"log"
 
 	"github.com/kaptinlin/jsonpatch"
 )

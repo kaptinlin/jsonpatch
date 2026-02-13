@@ -3,6 +3,9 @@ package binarytests
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/codec/binary"
 	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
@@ -45,25 +48,19 @@ func TestAutomaticRoundtrip(t *testing.T) {
 			t.Parallel()
 			// Step 1: JSON -> Op (json codec)
 			jsonOps, err := jsoncodec.Decode([]map[string]any{opMap}, options)
-			if err != nil {
-				t.Fatalf("json Decode should not error: %v", err)
-			}
+			require.NoError(t, err)
 
 			// Step 2: Op -> Binary bytes
 			encoded, err := binCodec.Encode(jsonOps)
-			if err != nil {
-				t.Fatalf("binary Encode should not error: %v", err)
-			}
+			require.NoError(t, err)
 
 			// Step 3: Binary bytes -> Op
 			decodedOps, err := binCodec.Decode(encoded)
-			if err != nil {
-				t.Fatalf("binary Decode should not error: %v", err)
-			}
+			require.NoError(t, err)
 
 			// Step 4: Validate equality between original decoded ops and binary roundtrip
 			if !areOpsEqual(jsonOps, decodedOps) {
-				t.Error("roundtrip should preserve ops equality")
+				assert.Fail(t, "roundtrip should preserve ops equality")
 			}
 		})
 	}
