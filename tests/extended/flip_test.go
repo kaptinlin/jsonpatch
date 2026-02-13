@@ -12,7 +12,7 @@ func TestFlipOp(t *testing.T) {
 	t.Parallel()
 	t.Run("casts values and them flips them", func(t *testing.T) {
 		t.Parallel()
-		doc := map[string]interface{}{
+		doc := map[string]any{
 			"val1": true,
 			"val2": false,
 			"val3": 1,
@@ -25,7 +25,7 @@ func TestFlipOp(t *testing.T) {
 			{Op: "flip", Path: "/val4"},
 		}
 		result := testutils.ApplyInternalOps(t, doc, operations)
-		expected := map[string]interface{}{
+		expected := map[string]any{
 			"val1": false,
 			"val2": true,
 			"val3": false,
@@ -93,8 +93,8 @@ func TestFlipOp(t *testing.T) {
 				Op:   "flip",
 				Path: "/foo",
 			}
-			result := testutils.ApplyInternalOps(t, map[string]interface{}{"foo": true}, []internal.Operation{operation})
-			expected := map[string]interface{}{"foo": false}
+			result := testutils.ApplyInternalOps(t, map[string]any{"foo": true}, []internal.Operation{operation})
+			expected := map[string]any{"foo": false}
 			assert.Equal(t, expected, result)
 		})
 
@@ -104,8 +104,8 @@ func TestFlipOp(t *testing.T) {
 				Op:   "flip",
 				Path: "/foo",
 			}
-			result := testutils.ApplyInternalOps(t, map[string]interface{}{"foo": false}, []internal.Operation{operation})
-			expected := map[string]interface{}{"foo": true}
+			result := testutils.ApplyInternalOps(t, map[string]any{"foo": false}, []internal.Operation{operation})
+			expected := map[string]any{"foo": true}
 			assert.Equal(t, expected, result)
 		})
 
@@ -115,12 +115,12 @@ func TestFlipOp(t *testing.T) {
 				{Op: "flip", Path: "/empty_array"},
 				{Op: "flip", Path: "/empty_object"},
 			}
-			doc := map[string]interface{}{
-				"empty_array":  []interface{}{},
-				"empty_object": map[string]interface{}{},
+			doc := map[string]any{
+				"empty_array":  []any{},
+				"empty_object": map[string]any{},
 			}
 			result := testutils.ApplyInternalOps(t, doc, operations)
-			expected := map[string]interface{}{
+			expected := map[string]any{
 				"empty_array":  false, // empty array is truthy -> false
 				"empty_object": false, // empty object is truthy -> false
 			}
@@ -133,8 +133,8 @@ func TestFlipOp(t *testing.T) {
 				Op:   "flip",
 				Path: "/newfield",
 			}
-			result := testutils.ApplyInternalOps(t, map[string]interface{}{}, []internal.Operation{operation})
-			expected := map[string]interface{}{"newfield": true}
+			result := testutils.ApplyInternalOps(t, map[string]any{}, []internal.Operation{operation})
+			expected := map[string]any{"newfield": true}
 			assert.Equal(t, expected, result)
 		})
 	})
@@ -153,8 +153,8 @@ func TestFlipOp(t *testing.T) {
 					Path: "/1",
 				},
 			}
-			result := testutils.ApplyInternalOps(t, []interface{}{true, false}, operations)
-			expected := []interface{}{false, true}
+			result := testutils.ApplyInternalOps(t, []any{true, false}, operations)
+			expected := []any{false, true}
 			assert.Equal(t, expected, result)
 		})
 	})

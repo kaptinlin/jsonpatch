@@ -14,7 +14,7 @@ func main() {
 	fmt.Println("=== Error Handling ===")
 
 	// Test document
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"balance": 1000.0,
 		"status":  "active",
 		"version": 1,

@@ -31,7 +31,7 @@ func TestDefinedOp(t *testing.T) {
 				Path: "/missing",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(map[string]interface{}{}, patch, internal.WithMutate(true))
+			_, err := jsonpatch.ApplyPatch(map[string]any{}, patch, internal.WithMutate(true))
 			if err == nil {
 				t.Fatal("ApplyPatch() error = nil, want error")
 			}
@@ -47,7 +47,7 @@ func TestDefinedOp(t *testing.T) {
 				Path: "/foo",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(map[string]interface{}{"foo": "bar"}, patch, internal.WithMutate(true))
+			_, err := jsonpatch.ApplyPatch(map[string]any{"foo": "bar"}, patch, internal.WithMutate(true))
 			if err != nil {
 				t.Fatalf("ApplyPatch() error = %v, want nil", err)
 			}
@@ -60,7 +60,7 @@ func TestDefinedOp(t *testing.T) {
 				Path: "/missing",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(map[string]interface{}{"foo": "bar"}, patch, internal.WithMutate(true))
+			_, err := jsonpatch.ApplyPatch(map[string]any{"foo": "bar"}, patch, internal.WithMutate(true))
 			if err == nil {
 				t.Fatal("ApplyPatch() error = nil, want error")
 			}
@@ -76,7 +76,7 @@ func TestDefinedOp(t *testing.T) {
 				Path: "/0",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch([]interface{}{"hello"}, patch, internal.WithMutate(true))
+			_, err := jsonpatch.ApplyPatch([]any{"hello"}, patch, internal.WithMutate(true))
 			if err != nil {
 				t.Fatalf("ApplyPatch() error = %v, want nil", err)
 			}
@@ -89,7 +89,7 @@ func TestDefinedOp(t *testing.T) {
 				Path: "/5",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch([]interface{}{"hello"}, patch, internal.WithMutate(true))
+			_, err := jsonpatch.ApplyPatch([]any{"hello"}, patch, internal.WithMutate(true))
 			if err == nil {
 				t.Fatal("ApplyPatch() error = nil, want error")
 			}

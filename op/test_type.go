@@ -3,6 +3,7 @@ package op
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/kaptinlin/jsonpatch/internal"
@@ -55,16 +56,11 @@ func (tt *TestTypeOperation) getValueAndCheckType(doc any) (any, string, bool, e
 
 // checkTypeMatch checks if actualType matches any expected type.
 func (tt *TestTypeOperation) checkTypeMatch(actualType string) bool {
-	for _, expectedType := range tt.Types {
-		if actualType == expectedType {
-			return true
-		}
-		// Special case: if expected type is "number" and actual is "integer", it should match
-		if expectedType == "number" && actualType == "integer" {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(tt.Types, func(expectedType string) bool {
+		return actualType == expectedType ||
+			// Special case: if expected type is "number" and actual is "integer", it should match
+			(expectedType == "number" && actualType == "integer")
+	})
 }
 
 // Test evaluates the test type predicate condition.

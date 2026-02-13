@@ -14,10 +14,10 @@ func TestSplitOp(t *testing.T) {
 		t.Parallel()
 		t.Run("split a single 'ab' paragraphs into two", func(t *testing.T) {
 			t.Parallel()
-			state := []interface{}{
-				map[string]interface{}{
-					"children": []interface{}{
-						map[string]interface{}{
+			state := []any{
+				map[string]any{
+					"children": []any{
+						map[string]any{
 							"text": "ab",
 						},
 					},
@@ -34,13 +34,13 @@ func TestSplitOp(t *testing.T) {
 			if err != nil {
 				t.Fatalf("ApplyPatch() error: %v", err)
 			}
-			expected := []interface{}{
-				map[string]interface{}{
-					"children": []interface{}{
-						map[string]interface{}{
+			expected := []any{
+				map[string]any{
+					"children": []any{
+						map[string]any{
 							"text": "a",
 						},
-						map[string]interface{}{
+						map[string]any{
 							"text": "b",
 						},
 					},
@@ -51,13 +51,13 @@ func TestSplitOp(t *testing.T) {
 
 		t.Run("split two element blocks into one", func(t *testing.T) {
 			t.Parallel()
-			state := []interface{}{
-				map[string]interface{}{
-					"children": []interface{}{
-						map[string]interface{}{
+			state := []any{
+				map[string]any{
+					"children": []any{
+						map[string]any{
 							"text": "a",
 						},
-						map[string]interface{}{
+						map[string]any{
 							"text": "b",
 						},
 					},
@@ -74,17 +74,17 @@ func TestSplitOp(t *testing.T) {
 			if err != nil {
 				t.Fatalf("ApplyPatch() error: %v", err)
 			}
-			expected := []interface{}{
-				map[string]interface{}{
-					"children": []interface{}{
-						map[string]interface{}{
+			expected := []any{
+				map[string]any{
+					"children": []any{
+						map[string]any{
 							"text": "a",
 						},
 					},
 				},
-				map[string]interface{}{
-					"children": []interface{}{
-						map[string]interface{}{
+				map[string]any{
+					"children": []any{
+						map[string]any{
 							"text": "b",
 						},
 					},
@@ -100,7 +100,7 @@ func TestSplitOp(t *testing.T) {
 			t.Parallel()
 			t.Run("can split string in two", func(t *testing.T) {
 				t.Parallel()
-				var state interface{} = "1234"
+				var state any = "1234"
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 2},
 				}
@@ -108,13 +108,13 @@ func TestSplitOp(t *testing.T) {
 				if err != nil {
 					t.Fatalf("ApplyPatch() error: %v", err)
 				}
-				expected := []interface{}{"12", "34"}
+				expected := []any{"12", "34"}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("can split string in two at pos=1", func(t *testing.T) {
 				t.Parallel()
-				var state interface{} = "1234"
+				var state any = "1234"
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 1},
 				}
@@ -122,13 +122,13 @@ func TestSplitOp(t *testing.T) {
 				if err != nil {
 					t.Fatalf("ApplyPatch() error: %v", err)
 				}
-				expected := []interface{}{"1", "234"}
+				expected := []any{"1", "234"}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("can split string in two from beginning", func(t *testing.T) {
 				t.Parallel()
-				var state interface{} = "1234"
+				var state any = "1234"
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 0},
 				}
@@ -136,13 +136,13 @@ func TestSplitOp(t *testing.T) {
 				if err != nil {
 					t.Fatalf("ApplyPatch() error: %v", err)
 				}
-				expected := []interface{}{"", "1234"}
+				expected := []any{"", "1234"}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("can split string in two from end", func(t *testing.T) {
 				t.Parallel()
-				var state interface{} = "1234"
+				var state any = "1234"
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 4},
 				}
@@ -150,13 +150,13 @@ func TestSplitOp(t *testing.T) {
 				if err != nil {
 					t.Fatalf("ApplyPatch() error: %v", err)
 				}
-				expected := []interface{}{"1234", ""}
+				expected := []any{"1234", ""}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("can split string in two when pos is greater than string length", func(t *testing.T) {
 				t.Parallel()
-				var state interface{} = "12345"
+				var state any = "12345"
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 99999},
 				}
@@ -164,13 +164,13 @@ func TestSplitOp(t *testing.T) {
 				if err != nil {
 					t.Fatalf("ApplyPatch() error: %v", err)
 				}
-				expected := []interface{}{"12345", ""}
+				expected := []any{"12345", ""}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("takes characters from end if pos is negative", func(t *testing.T) {
 				t.Parallel()
-				var state interface{} = "12345"
+				var state any = "12345"
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: -1},
 				}
@@ -178,13 +178,13 @@ func TestSplitOp(t *testing.T) {
 				if err != nil {
 					t.Fatalf("ApplyPatch() error: %v", err)
 				}
-				expected := []interface{}{"1234", "5"}
+				expected := []any{"1234", "5"}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("takes characters from end if pos is negative - 2", func(t *testing.T) {
 				t.Parallel()
-				var state interface{} = "12345"
+				var state any = "12345"
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: -2},
 				}
@@ -192,13 +192,13 @@ func TestSplitOp(t *testing.T) {
 				if err != nil {
 					t.Fatalf("ApplyPatch() error: %v", err)
 				}
-				expected := []interface{}{"123", "45"}
+				expected := []any{"123", "45"}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("when negative pos overflows, first element is empty", func(t *testing.T) {
 				t.Parallel()
-				var state interface{} = "12345"
+				var state any = "12345"
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: -7},
 				}
@@ -206,7 +206,7 @@ func TestSplitOp(t *testing.T) {
 				if err != nil {
 					t.Fatalf("ApplyPatch() error: %v", err)
 				}
-				expected := []interface{}{"", "12345"}
+				expected := []any{"", "12345"}
 				assert.Equal(t, expected, result.Doc)
 			})
 		})
@@ -215,7 +215,7 @@ func TestSplitOp(t *testing.T) {
 			t.Parallel()
 			t.Run("splits simple SlateTextNode", func(t *testing.T) {
 				t.Parallel()
-				var state interface{} = map[string]interface{}{
+				var state any = map[string]any{
 					"text": "foo bar",
 				}
 				operations := []internal.Operation{
@@ -225,16 +225,16 @@ func TestSplitOp(t *testing.T) {
 				if err != nil {
 					t.Fatalf("ApplyPatch() error: %v", err)
 				}
-				expected := []interface{}{
-					map[string]interface{}{"text": "foo"},
-					map[string]interface{}{"text": " bar"},
+				expected := []any{
+					map[string]any{"text": "foo"},
+					map[string]any{"text": " bar"},
 				}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("preserves text node attributes", func(t *testing.T) {
 				t.Parallel()
-				var state interface{} = map[string]interface{}{
+				var state any = map[string]any{
 					"text": "foo bar",
 					"foo":  "bar",
 				}
@@ -245,49 +245,49 @@ func TestSplitOp(t *testing.T) {
 				if err != nil {
 					t.Fatalf("ApplyPatch() error: %v", err)
 				}
-				expected := []interface{}{
-					map[string]interface{}{"text": "foo", "foo": "bar"},
-					map[string]interface{}{"text": " bar", "foo": "bar"},
+				expected := []any{
+					map[string]any{"text": "foo", "foo": "bar"},
+					map[string]any{"text": " bar", "foo": "bar"},
 				}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("can add custom attributes", func(t *testing.T) {
 				t.Parallel()
-				var state interface{} = map[string]interface{}{
+				var state any = map[string]any{
 					"text": "foo bar",
 					"foo":  "bar",
 				}
 				operations := []internal.Operation{
-					{Op: "split", Path: "", Pos: 3, Props: map[string]interface{}{"baz": "qux"}},
+					{Op: "split", Path: "", Pos: 3, Props: map[string]any{"baz": "qux"}},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				if err != nil {
 					t.Fatalf("ApplyPatch() error: %v", err)
 				}
-				expected := []interface{}{
-					map[string]interface{}{"text": "foo", "foo": "bar", "baz": "qux"},
-					map[string]interface{}{"text": " bar", "foo": "bar", "baz": "qux"},
+				expected := []any{
+					map[string]any{"text": "foo", "foo": "bar", "baz": "qux"},
+					map[string]any{"text": " bar", "foo": "bar", "baz": "qux"},
 				}
 				assert.Equal(t, expected, result.Doc)
 			})
 
 			t.Run("custom attributes can overwrite node attributes", func(t *testing.T) {
 				t.Parallel()
-				var state interface{} = map[string]interface{}{
+				var state any = map[string]any{
 					"text": "foo bar",
 					"foo":  "bar",
 				}
 				operations := []internal.Operation{
-					{Op: "split", Path: "", Pos: 3, Props: map[string]interface{}{"foo": "1"}},
+					{Op: "split", Path: "", Pos: 3, Props: map[string]any{"foo": "1"}},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				if err != nil {
 					t.Fatalf("ApplyPatch() error: %v", err)
 				}
-				expected := []interface{}{
-					map[string]interface{}{"text": "foo", "foo": "1"},
-					map[string]interface{}{"text": " bar", "foo": "1"},
+				expected := []any{
+					map[string]any{"text": "foo", "foo": "1"},
+					map[string]any{"text": " bar", "foo": "1"},
 				}
 				assert.Equal(t, expected, result.Doc)
 			})
@@ -297,11 +297,11 @@ func TestSplitOp(t *testing.T) {
 			t.Parallel()
 			t.Run("splits simple node", func(t *testing.T) {
 				t.Parallel()
-				var state interface{} = map[string]interface{}{
-					"children": []interface{}{
-						map[string]interface{}{"text": "foo"},
-						map[string]interface{}{"text": "bar"},
-						map[string]interface{}{"text": "baz"},
+				var state any = map[string]any{
+					"children": []any{
+						map[string]any{"text": "foo"},
+						map[string]any{"text": "bar"},
+						map[string]any{"text": "baz"},
 					},
 				}
 				operations := []internal.Operation{
@@ -311,16 +311,16 @@ func TestSplitOp(t *testing.T) {
 				if err != nil {
 					t.Fatalf("ApplyPatch() error: %v", err)
 				}
-				expected := []interface{}{
-					map[string]interface{}{
-						"children": []interface{}{
-							map[string]interface{}{"text": "foo"},
+				expected := []any{
+					map[string]any{
+						"children": []any{
+							map[string]any{"text": "foo"},
 						},
 					},
-					map[string]interface{}{
-						"children": []interface{}{
-							map[string]interface{}{"text": "bar"},
-							map[string]interface{}{"text": "baz"},
+					map[string]any{
+						"children": []any{
+							map[string]any{"text": "bar"},
+							map[string]any{"text": "baz"},
 						},
 					},
 				}
@@ -329,32 +329,32 @@ func TestSplitOp(t *testing.T) {
 
 			t.Run("can provide custom attributes", func(t *testing.T) {
 				t.Parallel()
-				var state interface{} = map[string]interface{}{
-					"children": []interface{}{
-						map[string]interface{}{"text": "foo"},
-						map[string]interface{}{"text": "bar"},
-						map[string]interface{}{"text": "baz"},
+				var state any = map[string]any{
+					"children": []any{
+						map[string]any{"text": "foo"},
+						map[string]any{"text": "bar"},
+						map[string]any{"text": "baz"},
 					},
 				}
 				operations := []internal.Operation{
-					{Op: "split", Path: "", Pos: 2, Props: map[string]interface{}{"f": 1}},
+					{Op: "split", Path: "", Pos: 2, Props: map[string]any{"f": 1}},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				if err != nil {
 					t.Fatalf("ApplyPatch() error: %v", err)
 				}
-				expected := []interface{}{
-					map[string]interface{}{
+				expected := []any{
+					map[string]any{
 						"f": 1,
-						"children": []interface{}{
-							map[string]interface{}{"text": "foo"},
-							map[string]interface{}{"text": "bar"},
+						"children": []any{
+							map[string]any{"text": "foo"},
+							map[string]any{"text": "bar"},
 						},
 					},
-					map[string]interface{}{
+					map[string]any{
 						"f": 1,
-						"children": []interface{}{
-							map[string]interface{}{"text": "baz"},
+						"children": []any{
+							map[string]any{"text": "baz"},
 						},
 					},
 				}
@@ -363,35 +363,35 @@ func TestSplitOp(t *testing.T) {
 
 			t.Run("carries over node attributes", func(t *testing.T) {
 				t.Parallel()
-				var state interface{} = map[string]interface{}{
+				var state any = map[string]any{
 					"a": 1,
-					"children": []interface{}{
-						map[string]interface{}{"text": "foo"},
-						map[string]interface{}{"text": "bar"},
-						map[string]interface{}{"text": "baz"},
+					"children": []any{
+						map[string]any{"text": "foo"},
+						map[string]any{"text": "bar"},
+						map[string]any{"text": "baz"},
 					},
 				}
 				operations := []internal.Operation{
-					{Op: "split", Path: "", Pos: 2, Props: map[string]interface{}{"f": 2}},
+					{Op: "split", Path: "", Pos: 2, Props: map[string]any{"f": 2}},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				if err != nil {
 					t.Fatalf("ApplyPatch() error: %v", err)
 				}
-				expected := []interface{}{
-					map[string]interface{}{
+				expected := []any{
+					map[string]any{
 						"f": 2,
 						"a": 1,
-						"children": []interface{}{
-							map[string]interface{}{"text": "foo"},
-							map[string]interface{}{"text": "bar"},
+						"children": []any{
+							map[string]any{"text": "foo"},
+							map[string]any{"text": "bar"},
 						},
 					},
-					map[string]interface{}{
+					map[string]any{
 						"f": 2,
 						"a": 1,
-						"children": []interface{}{
-							map[string]interface{}{"text": "baz"},
+						"children": []any{
+							map[string]any{"text": "baz"},
 						},
 					},
 				}
@@ -400,38 +400,38 @@ func TestSplitOp(t *testing.T) {
 
 			t.Run("can overwrite node attributes", func(t *testing.T) {
 				t.Parallel()
-				var state interface{} = map[string]interface{}{
+				var state any = map[string]any{
 					"a": 1,
 					"c": 3,
-					"children": []interface{}{
-						map[string]interface{}{"text": "foo"},
-						map[string]interface{}{"text": "bar"},
-						map[string]interface{}{"text": "baz"},
+					"children": []any{
+						map[string]any{"text": "foo"},
+						map[string]any{"text": "bar"},
+						map[string]any{"text": "baz"},
 					},
 				}
 				operations := []internal.Operation{
-					{Op: "split", Path: "", Pos: 2, Props: map[string]interface{}{"f": 2, "a": 2}},
+					{Op: "split", Path: "", Pos: 2, Props: map[string]any{"f": 2, "a": 2}},
 				}
 				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 				if err != nil {
 					t.Fatalf("ApplyPatch() error: %v", err)
 				}
-				expected := []interface{}{
-					map[string]interface{}{
+				expected := []any{
+					map[string]any{
 						"f": 2,
 						"a": 2,
 						"c": 3,
-						"children": []interface{}{
-							map[string]interface{}{"text": "foo"},
-							map[string]interface{}{"text": "bar"},
+						"children": []any{
+							map[string]any{"text": "foo"},
+							map[string]any{"text": "bar"},
 						},
 					},
-					map[string]interface{}{
+					map[string]any{
 						"f": 2,
 						"a": 2,
 						"c": 3,
-						"children": []interface{}{
-							map[string]interface{}{"text": "baz"},
+						"children": []any{
+							map[string]any{"text": "baz"},
 						},
 					},
 				}
@@ -444,7 +444,7 @@ func TestSplitOp(t *testing.T) {
 		t.Parallel()
 		t.Run("can split string in two", func(t *testing.T) {
 			t.Parallel()
-			state := map[string]interface{}{"foo": "ab"}
+			state := map[string]any{"foo": "ab"}
 			operations := []internal.Operation{
 				{Op: "split", Path: "/foo", Pos: 1},
 			}
@@ -452,24 +452,24 @@ func TestSplitOp(t *testing.T) {
 			if err != nil {
 				t.Fatalf("ApplyPatch() error: %v", err)
 			}
-			expected := map[string]interface{}{"foo": []interface{}{"a", "b"}}
+			expected := map[string]any{"foo": []any{"a", "b"}}
 			assert.Equal(t, expected, result.Doc)
 		})
 
 		t.Run("if attribute are specified, wraps strings into nodes", func(t *testing.T) {
 			t.Parallel()
-			state := map[string]interface{}{"foo": "ab"}
+			state := map[string]any{"foo": "ab"}
 			operations := []internal.Operation{
-				{Op: "split", Path: "/foo", Pos: 1, Props: map[string]interface{}{"z": "x"}},
+				{Op: "split", Path: "/foo", Pos: 1, Props: map[string]any{"z": "x"}},
 			}
 			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 			if err != nil {
 				t.Fatalf("ApplyPatch() error: %v", err)
 			}
-			expected := map[string]interface{}{
-				"foo": []interface{}{
-					map[string]interface{}{"text": "a", "z": "x"},
-					map[string]interface{}{"text": "b", "z": "x"},
+			expected := map[string]any{
+				"foo": []any{
+					map[string]any{"text": "a", "z": "x"},
+					map[string]any{"text": "b", "z": "x"},
 				},
 			}
 			assert.Equal(t, expected, result.Doc)
@@ -477,18 +477,18 @@ func TestSplitOp(t *testing.T) {
 
 		t.Run("splits SlateTextNode", func(t *testing.T) {
 			t.Parallel()
-			state := map[string]interface{}{"foo": map[string]interface{}{"text": "777"}}
+			state := map[string]any{"foo": map[string]any{"text": "777"}}
 			operations := []internal.Operation{
-				{Op: "split", Path: "/foo", Pos: 1, Props: map[string]interface{}{"z": "x"}},
+				{Op: "split", Path: "/foo", Pos: 1, Props: map[string]any{"z": "x"}},
 			}
 			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 			if err != nil {
 				t.Fatalf("ApplyPatch() error: %v", err)
 			}
-			expected := map[string]interface{}{
-				"foo": []interface{}{
-					map[string]interface{}{"text": "7", "z": "x"},
-					map[string]interface{}{"text": "77", "z": "x"},
+			expected := map[string]any{
+				"foo": []any{
+					map[string]any{"text": "7", "z": "x"},
+					map[string]any{"text": "77", "z": "x"},
 				},
 			}
 			assert.Equal(t, expected, result.Doc)
@@ -496,7 +496,7 @@ func TestSplitOp(t *testing.T) {
 
 		t.Run("crates a tuple if target is a boolean value", func(t *testing.T) {
 			t.Parallel()
-			state := map[string]interface{}{"foo": true}
+			state := map[string]any{"foo": true}
 			operations := []internal.Operation{
 				{Op: "split", Path: "/foo", Pos: 1},
 			}
@@ -504,13 +504,13 @@ func TestSplitOp(t *testing.T) {
 			if err != nil {
 				t.Fatalf("ApplyPatch() error: %v", err)
 			}
-			expected := map[string]interface{}{"foo": []interface{}{true, true}}
+			expected := map[string]any{"foo": []any{true, true}}
 			assert.Equal(t, expected, result.Doc)
 		})
 
 		t.Run("divides number into two haves if target is a number", func(t *testing.T) {
 			t.Parallel()
-			state := map[string]interface{}{"foo": 10}
+			state := map[string]any{"foo": 10}
 			operations := []internal.Operation{
 				{Op: "split", Path: "/foo", Pos: 9},
 			}
@@ -518,7 +518,7 @@ func TestSplitOp(t *testing.T) {
 			if err != nil {
 				t.Fatalf("ApplyPatch() error: %v", err)
 			}
-			expected := map[string]interface{}{"foo": []interface{}{float64(9), float64(1)}}
+			expected := map[string]any{"foo": []any{float64(9), float64(1)}}
 			assert.Equal(t, expected, result.Doc)
 		})
 	})
@@ -527,7 +527,7 @@ func TestSplitOp(t *testing.T) {
 		t.Parallel()
 		t.Run("splits SlateElementNode into two", func(t *testing.T) {
 			t.Parallel()
-			state := []interface{}{1, map[string]interface{}{"children": []interface{}{map[string]interface{}{"text": "a"}, map[string]interface{}{"text": "b"}}}, 2}
+			state := []any{1, map[string]any{"children": []any{map[string]any{"text": "a"}, map[string]any{"text": "b"}}}, 2}
 			operations := []internal.Operation{
 				{Op: "split", Path: "/1", Pos: 0},
 			}
@@ -535,24 +535,24 @@ func TestSplitOp(t *testing.T) {
 			if err != nil {
 				t.Fatalf("ApplyPatch() error: %v", err)
 			}
-			expected := []interface{}{1, map[string]interface{}{"children": []interface{}{}}, map[string]interface{}{"children": []interface{}{map[string]interface{}{"text": "a"}, map[string]interface{}{"text": "b"}}}, 2}
+			expected := []any{1, map[string]any{"children": []any{}}, map[string]any{"children": []any{map[string]any{"text": "a"}, map[string]any{"text": "b"}}}, 2}
 			assert.Equal(t, expected, result.Doc)
 		})
 
 		t.Run("adds custom props and preserves node props", func(t *testing.T) {
 			t.Parallel()
-			state := []interface{}{1, map[string]interface{}{"foo": "bar", "children": []interface{}{map[string]interface{}{"text": "a"}, map[string]interface{}{"text": "b"}}}, 2}
+			state := []any{1, map[string]any{"foo": "bar", "children": []any{map[string]any{"text": "a"}, map[string]any{"text": "b"}}}, 2}
 			operations := []internal.Operation{
-				{Op: "split", Path: "/1", Pos: 0, Props: map[string]interface{}{"a": "b"}},
+				{Op: "split", Path: "/1", Pos: 0, Props: map[string]any{"a": "b"}},
 			}
 			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
 			if err != nil {
 				t.Fatalf("ApplyPatch() error: %v", err)
 			}
-			expected := []interface{}{
+			expected := []any{
 				1,
-				map[string]interface{}{"foo": "bar", "a": "b", "children": []interface{}{}},
-				map[string]interface{}{"foo": "bar", "a": "b", "children": []interface{}{map[string]interface{}{"text": "a"}, map[string]interface{}{"text": "b"}}},
+				map[string]any{"foo": "bar", "a": "b", "children": []any{}},
+				map[string]any{"foo": "bar", "a": "b", "children": []any{map[string]any{"text": "a"}, map[string]any{"text": "b"}}},
 				2,
 			}
 			assert.Equal(t, expected, result.Doc)

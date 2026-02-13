@@ -14,13 +14,13 @@ func TestTestOp(t *testing.T) {
 		t.Parallel()
 		t.Run("should test against root on json document of type object and return true", func(t *testing.T) {
 			t.Parallel()
-			obj := map[string]interface{}{
+			obj := map[string]any{
 				"hello": "world",
 			}
 			op := internal.Operation{
 				Op:    "test",
 				Path:  "",
-				Value: map[string]interface{}{"hello": "world"},
+				Value: map[string]any{"hello": "world"},
 			}
 			result := testutils.ApplyInternalOp(t, obj, op)
 			assert.Equal(t, obj, result)
@@ -28,7 +28,7 @@ func TestTestOp(t *testing.T) {
 
 		t.Run("should test against root on json document of type object and return false", func(t *testing.T) {
 			t.Parallel()
-			obj := map[string]interface{}{
+			obj := map[string]any{
 				"hello": "world",
 			}
 			op := internal.Operation{
@@ -41,8 +41,8 @@ func TestTestOp(t *testing.T) {
 
 		t.Run("should test against root on json document of type array and return false", func(t *testing.T) {
 			t.Parallel()
-			obj := []interface{}{
-				map[string]interface{}{
+			obj := []any{
+				map[string]any{
 					"hello": "world",
 				},
 			}
@@ -67,7 +67,7 @@ func TestTestOp(t *testing.T) {
 
 		t.Run("should throw when object key is different", func(t *testing.T) {
 			t.Parallel()
-			obj := map[string]interface{}{"foo": 1}
+			obj := map[string]any{"foo": 1}
 			op := internal.Operation{
 				Op:    "test",
 				Path:  "/foo",
@@ -79,7 +79,7 @@ func TestTestOp(t *testing.T) {
 
 		t.Run("should not throw when object key is the same", func(t *testing.T) {
 			t.Parallel()
-			obj := map[string]interface{}{"foo": 1}
+			obj := map[string]any{"foo": 1}
 			op := internal.Operation{
 				Op:    "test",
 				Path:  "/foo",
@@ -105,7 +105,7 @@ func TestTestOp(t *testing.T) {
 
 		t.Run("should not throw when object key is different", func(t *testing.T) {
 			t.Parallel()
-			obj := map[string]interface{}{"foo": 1}
+			obj := map[string]any{"foo": 1}
 			op := internal.Operation{
 				Op:    "test",
 				Path:  "/foo",
@@ -117,7 +117,7 @@ func TestTestOp(t *testing.T) {
 
 		t.Run("should throw when object key is the same", func(t *testing.T) {
 			t.Parallel()
-			obj := map[string]interface{}{"foo": 1}
+			obj := map[string]any{"foo": 1}
 			op := internal.Operation{
 				Op:    "test",
 				Path:  "/foo",

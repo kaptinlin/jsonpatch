@@ -12,7 +12,7 @@ func TestAnd(t *testing.T) {
 	testCases := []testutils.MultiOperationTestCase{
 		{
 			Name: "succeeds_when_both_predicates_pass",
-			Doc:  map[string]interface{}{"foo": 1, "bar": 2},
+			Doc:  map[string]any{"foo": 1, "bar": 2},
 			Operations: []jsonpatch.Operation{
 				{
 					Op:   "and",
@@ -23,12 +23,12 @@ func TestAnd(t *testing.T) {
 					},
 				},
 			},
-			Expected: map[string]interface{}{"foo": 1, "bar": 2},
+			Expected: map[string]any{"foo": 1, "bar": 2},
 			Comment:  "AND should succeed when all predicates pass",
 		},
 		{
 			Name: "fails_when_one_predicate_fails",
-			Doc:  map[string]interface{}{"foo": 2, "bar": 2},
+			Doc:  map[string]any{"foo": 2, "bar": 2},
 			Operations: []jsonpatch.Operation{
 				{
 					Op:   "and",

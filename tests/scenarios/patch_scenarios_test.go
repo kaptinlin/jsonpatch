@@ -92,9 +92,9 @@ type AutomatedTestSuite struct {
 
 type AutomatedTestCase struct {
 	Comment  string
-	Doc      interface{}
+	Doc      any
 	Patch    []jsonpatch.Operation
-	Expected interface{}
+	Expected any
 	Error    string
 	Disabled bool
 }

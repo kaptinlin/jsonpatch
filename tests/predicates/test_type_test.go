@@ -16,9 +16,9 @@ func TestTestTypeOp(t *testing.T) {
 			op := internal.Operation{
 				Op:   "test_type",
 				Path: "",
-				Type: []interface{}{"object"},
+				Type: []any{"object"},
 			}
-			testutils.ApplyInternalOp(t, map[string]interface{}{}, op)
+			testutils.ApplyInternalOp(t, map[string]any{}, op)
 		})
 
 		t.Run("succeeds when target has correct type in list of types", func(t *testing.T) {
@@ -26,9 +26,9 @@ func TestTestTypeOp(t *testing.T) {
 			op := internal.Operation{
 				Op:   "test_type",
 				Path: "",
-				Type: []interface{}{"number", "object"},
+				Type: []any{"number", "object"},
 			}
-			testutils.ApplyInternalOp(t, map[string]interface{}{}, op)
+			testutils.ApplyInternalOp(t, map[string]any{}, op)
 		})
 
 		t.Run("matches null as null type", func(t *testing.T) {
@@ -36,7 +36,7 @@ func TestTestTypeOp(t *testing.T) {
 			op := internal.Operation{
 				Op:   "test_type",
 				Path: "",
-				Type: []interface{}{"null"},
+				Type: []any{"null"},
 			}
 			testutils.ApplyInternalOp(t, nil, op)
 		})
@@ -46,7 +46,7 @@ func TestTestTypeOp(t *testing.T) {
 			op := internal.Operation{
 				Op:   "test_type",
 				Path: "",
-				Type: []interface{}{"object"},
+				Type: []any{"object"},
 			}
 			testutils.ApplyInternalOpWithError(t, nil, op)
 		})
@@ -56,7 +56,7 @@ func TestTestTypeOp(t *testing.T) {
 			op := internal.Operation{
 				Op:   "test_type",
 				Path: "",
-				Type: []interface{}{"string", "number"},
+				Type: []any{"string", "number"},
 			}
 			testutils.ApplyInternalOp(t, 123, op)
 		})
@@ -66,7 +66,7 @@ func TestTestTypeOp(t *testing.T) {
 			op := internal.Operation{
 				Op:   "test_type",
 				Path: "",
-				Type: []interface{}{"string", "object"},
+				Type: []any{"string", "object"},
 			}
 			testutils.ApplyInternalOpWithError(t, 123, op)
 		})
@@ -76,7 +76,7 @@ func TestTestTypeOp(t *testing.T) {
 			op := internal.Operation{
 				Op:   "test_type",
 				Path: "",
-				Type: []interface{}{"string", "number"},
+				Type: []any{"string", "number"},
 			}
 			testutils.ApplyInternalOp(t, 1.2, op)
 		})
@@ -86,7 +86,7 @@ func TestTestTypeOp(t *testing.T) {
 			op := internal.Operation{
 				Op:   "test_type",
 				Path: "",
-				Type: []interface{}{"integer"},
+				Type: []any{"integer"},
 			}
 			testutils.ApplyInternalOpWithError(t, 2.3, op)
 		})
@@ -96,7 +96,7 @@ func TestTestTypeOp(t *testing.T) {
 			op := internal.Operation{
 				Op:   "test_type",
 				Path: "",
-				Type: []interface{}{"integer"},
+				Type: []any{"integer"},
 			}
 			testutils.ApplyInternalOp(t, 0, op)
 		})
@@ -106,9 +106,9 @@ func TestTestTypeOp(t *testing.T) {
 			op := internal.Operation{
 				Op:   "test_type",
 				Path: "",
-				Type: []interface{}{"object"},
+				Type: []any{"object"},
 			}
-			testutils.ApplyInternalOpWithError(t, []interface{}{1, 2, 3}, op)
+			testutils.ApplyInternalOpWithError(t, []any{1, 2, 3}, op)
 		})
 
 		t.Run("does not match array as null type", func(t *testing.T) {
@@ -116,9 +116,9 @@ func TestTestTypeOp(t *testing.T) {
 			op := internal.Operation{
 				Op:   "test_type",
 				Path: "",
-				Type: []interface{}{"null"},
+				Type: []any{"null"},
 			}
-			testutils.ApplyInternalOpWithError(t, []interface{}{1, 2, 3}, op)
+			testutils.ApplyInternalOpWithError(t, []any{1, 2, 3}, op)
 		})
 
 		t.Run("matches array as array type", func(t *testing.T) {
@@ -126,9 +126,9 @@ func TestTestTypeOp(t *testing.T) {
 			op := internal.Operation{
 				Op:   "test_type",
 				Path: "",
-				Type: []interface{}{"null", "object", "array"},
+				Type: []any{"null", "object", "array"},
 			}
-			testutils.ApplyInternalOp(t, []interface{}{1, 2, 3}, op)
+			testutils.ApplyInternalOp(t, []any{1, 2, 3}, op)
 		})
 
 		t.Run("matches boolean as boolean type", func(t *testing.T) {
@@ -136,14 +136,14 @@ func TestTestTypeOp(t *testing.T) {
 			op1 := internal.Operation{
 				Op:   "test_type",
 				Path: "",
-				Type: []interface{}{"boolean"},
+				Type: []any{"boolean"},
 			}
 			testutils.ApplyInternalOp(t, true, op1)
 
 			op2 := internal.Operation{
 				Op:   "test_type",
 				Path: "",
-				Type: []interface{}{"boolean"},
+				Type: []any{"boolean"},
 			}
 			testutils.ApplyInternalOp(t, false, op2)
 		})
@@ -156,9 +156,9 @@ func TestTestTypeOp(t *testing.T) {
 			op := internal.Operation{
 				Op:   "test_type",
 				Path: "/a",
-				Type: []interface{}{"string"},
+				Type: []any{"string"},
 			}
-			testutils.ApplyInternalOp(t, map[string]interface{}{"a": "asdf"}, op)
+			testutils.ApplyInternalOp(t, map[string]any{"a": "asdf"}, op)
 		})
 
 		t.Run("does not match string as null type", func(t *testing.T) {
@@ -166,9 +166,9 @@ func TestTestTypeOp(t *testing.T) {
 			op := internal.Operation{
 				Op:   "test_type",
 				Path: "/a",
-				Type: []interface{}{"null"},
+				Type: []any{"null"},
 			}
-			testutils.ApplyInternalOpWithError(t, map[string]interface{}{"a": "asdf"}, op)
+			testutils.ApplyInternalOpWithError(t, map[string]any{"a": "asdf"}, op)
 		})
 	})
 
@@ -179,9 +179,9 @@ func TestTestTypeOp(t *testing.T) {
 			op := internal.Operation{
 				Op:   "test_type",
 				Path: "/a/0",
-				Type: []interface{}{"string"},
+				Type: []any{"string"},
 			}
-			testutils.ApplyInternalOp(t, map[string]interface{}{"a": []interface{}{"asdf"}}, op)
+			testutils.ApplyInternalOp(t, map[string]any{"a": []any{"asdf"}}, op)
 		})
 
 		t.Run("does not match string as null type", func(t *testing.T) {
@@ -189,9 +189,9 @@ func TestTestTypeOp(t *testing.T) {
 			op := internal.Operation{
 				Op:   "test_type",
 				Path: "/a/0",
-				Type: []interface{}{"null"},
+				Type: []any{"null"},
 			}
-			testutils.ApplyInternalOpWithError(t, map[string]interface{}{"a": []interface{}{"asdf"}}, op)
+			testutils.ApplyInternalOpWithError(t, map[string]any{"a": []any{"asdf"}}, op)
 		})
 	})
 }

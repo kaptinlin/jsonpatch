@@ -12,7 +12,7 @@ func TestNot(t *testing.T) {
 	testCases := []testutils.MultiOperationTestCase{
 		{
 			Name: "succeeds_when_all_predicates_fail",
-			Doc:  map[string]interface{}{"foo": 2, "bar": 2},
+			Doc:  map[string]any{"foo": 2, "bar": 2},
 			Operations: []jsonpatch.Operation{
 				{
 					Op:   "not",
@@ -23,12 +23,12 @@ func TestNot(t *testing.T) {
 					},
 				},
 			},
-			Expected: map[string]interface{}{"foo": 2, "bar": 2},
+			Expected: map[string]any{"foo": 2, "bar": 2},
 			Comment:  "NOT should succeed when all predicates fail",
 		},
 		{
 			Name: "fails_when_one_predicate_passes",
-			Doc:  map[string]interface{}{"foo": 2, "bar": 2},
+			Doc:  map[string]any{"foo": 2, "bar": 2},
 			Operations: []jsonpatch.Operation{
 				{
 					Op:   "not",
@@ -44,7 +44,7 @@ func TestNot(t *testing.T) {
 		},
 		{
 			Name: "fails_when_all_predicates_pass",
-			Doc:  map[string]interface{}{"foo": 1, "bar": 2},
+			Doc:  map[string]any{"foo": 1, "bar": 2},
 			Operations: []jsonpatch.Operation{
 				{
 					Op:   "not",

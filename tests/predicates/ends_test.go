@@ -65,7 +65,7 @@ func TestEndsOp(t *testing.T) {
 				Value: "world",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(map[string]interface{}{"msg": "Hello world"}, patch, internal.WithMutate(true))
+			_, err := jsonpatch.ApplyPatch(map[string]any{"msg": "Hello world"}, patch, internal.WithMutate(true))
 			if err != nil {
 				t.Fatalf("ApplyPatch() error = %v, want nil", err)
 			}
@@ -79,7 +79,7 @@ func TestEndsOp(t *testing.T) {
 				Value: "Hello",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(map[string]interface{}{"msg": "Hello world"}, patch, internal.WithMutate(true))
+			_, err := jsonpatch.ApplyPatch(map[string]any{"msg": "Hello world"}, patch, internal.WithMutate(true))
 			if err == nil {
 				t.Fatal("ApplyPatch() error = nil, want error")
 			}
@@ -96,7 +96,7 @@ func TestEndsOp(t *testing.T) {
 				Value: "world",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch([]interface{}{"Hello world"}, patch, internal.WithMutate(true))
+			_, err := jsonpatch.ApplyPatch([]any{"Hello world"}, patch, internal.WithMutate(true))
 			if err != nil {
 				t.Fatalf("ApplyPatch() error = %v, want nil", err)
 			}
@@ -110,7 +110,7 @@ func TestEndsOp(t *testing.T) {
 				Value: "Hello",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch([]interface{}{"Hello world"}, patch, internal.WithMutate(true))
+			_, err := jsonpatch.ApplyPatch([]any{"Hello world"}, patch, internal.WithMutate(true))
 			if err == nil {
 				t.Fatal("ApplyPatch() error = nil, want error")
 			}

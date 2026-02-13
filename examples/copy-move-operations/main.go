@@ -13,12 +13,12 @@ import (
 func main() {
 	fmt.Println("=== Copy and Move Operations ===")
 
-	doc := map[string]interface{}{
-		"user": map[string]interface{}{
+	doc := map[string]any{
+		"user": map[string]any{
 			"name":  "John Doe",
 			"email": "john@example.com",
 		},
-		"settings": map[string]interface{}{
+		"settings": map[string]any{
 			"theme": "dark",
 		},
 		"temp": "temporary_data",

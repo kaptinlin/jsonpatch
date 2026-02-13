@@ -129,7 +129,7 @@ func demoJSONBytesArrayOperations() {
 
 // prettyJSON formats JSON bytes for better readability
 func prettyJSON(data []byte) string {
-	var obj interface{}
+	var obj any
 	if err := json.Unmarshal(data, &obj); err != nil {
 		return string(data) // Return original if parsing fails
 	}

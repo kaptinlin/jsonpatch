@@ -14,15 +14,15 @@ func TestInOp(t *testing.T) {
 		t.Parallel()
 		t.Run("should test against root (on a json document of type object) - and return true", func(t *testing.T) {
 			t.Parallel()
-			obj := map[string]interface{}{
+			obj := map[string]any{
 				"hello": "world",
 			}
 			op := internal.Operation{
 				Op:   "in",
 				Path: "",
-				Value: []interface{}{
+				Value: []any{
 					1,
-					map[string]interface{}{
+					map[string]any{
 						"hello": "world",
 					},
 				},
@@ -33,28 +33,28 @@ func TestInOp(t *testing.T) {
 
 		t.Run("should test against root (on a json document of type object) - and return false", func(t *testing.T) {
 			t.Parallel()
-			obj := map[string]interface{}{
+			obj := map[string]any{
 				"hello": "world",
 			}
 			op := internal.Operation{
 				Op:    "in",
 				Path:  "",
-				Value: []interface{}{1},
+				Value: []any{1},
 			}
 			testutils.ApplyInternalOpWithError(t, obj, op)
 		})
 
 		t.Run("should test against root (on a json document of type array) - and return false", func(t *testing.T) {
 			t.Parallel()
-			obj := []interface{}{
-				map[string]interface{}{
+			obj := []any{
+				map[string]any{
 					"hello": "world",
 				},
 			}
 			op := internal.Operation{
 				Op:    "in",
 				Path:  "",
-				Value: []interface{}{1},
+				Value: []any{1},
 			}
 			testutils.ApplyInternalOpWithError(t, obj, op)
 		})

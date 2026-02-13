@@ -14,7 +14,7 @@ func main() {
 	fmt.Println("=== Basic Operations ===")
 
 	// Document to modify
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"name":  "John",
 		"age":   30,
 		"email": "original@example.com",

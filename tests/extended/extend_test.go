@@ -18,14 +18,14 @@ func TestExtendOp(t *testing.T) {
 				{
 					Op:   "extend",
 					Path: "",
-					Props: map[string]interface{}{
+					Props: map[string]any{
 						"a": "b",
 						"c": 3,
 					},
 				},
 			}
-			result := testutils.ApplyInternalOps(t, map[string]interface{}{"foo": "bar"}, operations)
-			expected := map[string]interface{}{
+			result := testutils.ApplyInternalOps(t, map[string]any{"foo": "bar"}, operations)
+			expected := map[string]any{
 				"foo": "bar",
 				"a":   "b",
 				"c":   3,
@@ -42,25 +42,25 @@ func TestExtendOp(t *testing.T) {
 				{
 					Op:   "extend",
 					Path: "/foo/0/lol",
-					Props: map[string]interface{}{
+					Props: map[string]any{
 						"b": 123,
 					},
 				},
 			}
-			doc := map[string]interface{}{
-				"foo": []interface{}{
-					map[string]interface{}{
-						"lol": map[string]interface{}{
+			doc := map[string]any{
+				"foo": []any{
+					map[string]any{
+						"lol": map[string]any{
 							"a": 1,
 						},
 					},
 				},
 			}
 			result := testutils.ApplyInternalOps(t, doc, operations)
-			expected := map[string]interface{}{
-				"foo": []interface{}{
-					map[string]interface{}{
-						"lol": map[string]interface{}{
+			expected := map[string]any{
+				"foo": []any{
+					map[string]any{
+						"lol": map[string]any{
 							"a": 1,
 							"b": 123,
 						},
@@ -76,27 +76,27 @@ func TestExtendOp(t *testing.T) {
 				{
 					Op:   "extend",
 					Path: "/foo/0/lol",
-					Props: map[string]interface{}{
+					Props: map[string]any{
 						"b": 123,
 						"c": nil,
 						"a": nil,
 					},
 				},
 			}
-			doc := map[string]interface{}{
-				"foo": []interface{}{
-					map[string]interface{}{
-						"lol": map[string]interface{}{
+			doc := map[string]any{
+				"foo": []any{
+					map[string]any{
+						"lol": map[string]any{
 							"a": 1,
 						},
 					},
 				},
 			}
 			result := testutils.ApplyInternalOps(t, doc, operations)
-			expected := map[string]interface{}{
-				"foo": []interface{}{
-					map[string]interface{}{
-						"lol": map[string]interface{}{
+			expected := map[string]any{
+				"foo": []any{
+					map[string]any{
+						"lol": map[string]any{
 							"a": nil,
 							"b": 123,
 							"c": nil,
@@ -113,7 +113,7 @@ func TestExtendOp(t *testing.T) {
 				{
 					Op:   "extend",
 					Path: "/foo/0/lol",
-					Props: map[string]interface{}{
+					Props: map[string]any{
 						"b": 123,
 						"c": nil,
 						"a": nil,
@@ -121,20 +121,20 @@ func TestExtendOp(t *testing.T) {
 					DeleteNull: true,
 				},
 			}
-			doc := map[string]interface{}{
-				"foo": []interface{}{
-					map[string]interface{}{
-						"lol": map[string]interface{}{
+			doc := map[string]any{
+				"foo": []any{
+					map[string]any{
+						"lol": map[string]any{
 							"a": 1,
 						},
 					},
 				},
 			}
 			result := testutils.ApplyInternalOps(t, doc, operations)
-			expected := map[string]interface{}{
-				"foo": []interface{}{
-					map[string]interface{}{
-						"lol": map[string]interface{}{
+			expected := map[string]any{
+				"foo": []any{
+					map[string]any{
+						"lol": map[string]any{
 							"b": 123,
 						},
 					},
@@ -152,22 +152,22 @@ func TestExtendOp(t *testing.T) {
 				{
 					Op:   "extend",
 					Path: "/foo/lol",
-					Props: map[string]interface{}{
+					Props: map[string]any{
 						"b": 123,
 					},
 				},
 			}
-			doc := map[string]interface{}{
-				"foo": map[string]interface{}{
-					"lol": map[string]interface{}{
+			doc := map[string]any{
+				"foo": map[string]any{
+					"lol": map[string]any{
 						"a": 1,
 					},
 				},
 			}
 			result := testutils.ApplyInternalOps(t, doc, operations)
-			expected := map[string]interface{}{
-				"foo": map[string]interface{}{
-					"lol": map[string]interface{}{
+			expected := map[string]any{
+				"foo": map[string]any{
+					"lol": map[string]any{
 						"a": 1,
 						"b": 123,
 					},
@@ -182,24 +182,24 @@ func TestExtendOp(t *testing.T) {
 				{
 					Op:   "extend",
 					Path: "/foo/lol",
-					Props: map[string]interface{}{
+					Props: map[string]any{
 						"b": 123,
 						"c": nil,
 						"a": nil,
 					},
 				},
 			}
-			doc := map[string]interface{}{
-				"foo": map[string]interface{}{
-					"lol": map[string]interface{}{
+			doc := map[string]any{
+				"foo": map[string]any{
+					"lol": map[string]any{
 						"a": 1,
 					},
 				},
 			}
 			result := testutils.ApplyInternalOps(t, doc, operations)
-			expected := map[string]interface{}{
-				"foo": map[string]interface{}{
-					"lol": map[string]interface{}{
+			expected := map[string]any{
+				"foo": map[string]any{
+					"lol": map[string]any{
 						"a": nil,
 						"b": 123,
 						"c": nil,
@@ -215,7 +215,7 @@ func TestExtendOp(t *testing.T) {
 				{
 					Op:   "extend",
 					Path: "/foo/lol",
-					Props: map[string]interface{}{
+					Props: map[string]any{
 						"b": 123,
 						"c": nil,
 						"a": nil,
@@ -223,17 +223,17 @@ func TestExtendOp(t *testing.T) {
 					DeleteNull: true,
 				},
 			}
-			doc := map[string]interface{}{
-				"foo": map[string]interface{}{
-					"lol": map[string]interface{}{
+			doc := map[string]any{
+				"foo": map[string]any{
+					"lol": map[string]any{
 						"a": 1,
 					},
 				},
 			}
 			result := testutils.ApplyInternalOps(t, doc, operations)
-			expected := map[string]interface{}{
-				"foo": map[string]interface{}{
-					"lol": map[string]interface{}{
+			expected := map[string]any{
+				"foo": map[string]any{
+					"lol": map[string]any{
 						"b": 123,
 					},
 				},

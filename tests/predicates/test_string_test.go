@@ -47,7 +47,7 @@ func TestTestString(t *testing.T) {
 		t.Parallel()
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
 			t.Parallel()
-			obj := map[string]interface{}{"a": "b", "test": "foo bar"}
+			obj := map[string]any{"a": "b", "test": "foo bar"}
 			op := internal.Operation{
 				Op:   "test_string",
 				Path: "/test",
@@ -59,7 +59,7 @@ func TestTestString(t *testing.T) {
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
 			t.Parallel()
-			obj := map[string]interface{}{"test": "foo bar"}
+			obj := map[string]any{"test": "foo bar"}
 			op := internal.Operation{
 				Op:   "test_string",
 				Path: "/test",
@@ -74,7 +74,7 @@ func TestTestString(t *testing.T) {
 		t.Parallel()
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
 			t.Parallel()
-			obj := map[string]interface{}{"a": "b", "test": []interface{}{"foo bar"}}
+			obj := map[string]any{"a": "b", "test": []any{"foo bar"}}
 			op := internal.Operation{
 				Op:   "test_string",
 				Path: "/test/0",
@@ -86,7 +86,7 @@ func TestTestString(t *testing.T) {
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
 			t.Parallel()
-			obj := map[string]interface{}{"test": []interface{}{"foo bar"}}
+			obj := map[string]any{"test": []any{"foo bar"}}
 			op := internal.Operation{
 				Op:   "test_string",
 				Path: "/test/0",

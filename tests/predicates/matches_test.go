@@ -86,7 +86,7 @@ func TestMatchesOp(t *testing.T) {
 		t.Parallel()
 		t.Run("matches email pattern", func(t *testing.T) {
 			t.Parallel()
-			doc := map[string]interface{}{
+			doc := map[string]any{
 				"email": "user@example.com",
 			}
 			op := jsonpatch.Operation{
@@ -106,7 +106,7 @@ func TestMatchesOp(t *testing.T) {
 
 		t.Run("fails with invalid email pattern", func(t *testing.T) {
 			t.Parallel()
-			doc := map[string]interface{}{
+			doc := map[string]any{
 				"email": "invalid-email",
 			}
 			op := jsonpatch.Operation{
@@ -123,7 +123,7 @@ func TestMatchesOp(t *testing.T) {
 
 		t.Run("matches phone number pattern", func(t *testing.T) {
 			t.Parallel()
-			doc := map[string]interface{}{
+			doc := map[string]any{
 				"phone": "123-456-7890",
 			}
 			op := jsonpatch.Operation{
@@ -146,8 +146,8 @@ func TestMatchesOp(t *testing.T) {
 		t.Parallel()
 		t.Run("matches string in array", func(t *testing.T) {
 			t.Parallel()
-			doc := map[string]interface{}{
-				"items": []interface{}{"apple", "banana", "cherry"},
+			doc := map[string]any{
+				"items": []any{"apple", "banana", "cherry"},
 			}
 			op := jsonpatch.Operation{
 				Op:    "matches",
@@ -159,7 +159,7 @@ func TestMatchesOp(t *testing.T) {
 			if err != nil {
 				t.Fatalf("ApplyPatch() error = %v, want nil", err)
 			}
-			items := result.Doc["items"].([]interface{})
+			items := result.Doc["items"].([]any)
 			if got := items[1]; got != "banana" {
 				assert.Equal(t, "banana", got, "items[1]")
 			}
@@ -170,7 +170,7 @@ func TestMatchesOp(t *testing.T) {
 		t.Parallel()
 		t.Run("matches URL pattern", func(t *testing.T) {
 			t.Parallel()
-			doc := map[string]interface{}{
+			doc := map[string]any{
 				"website": "https://example.com",
 			}
 			op := jsonpatch.Operation{
@@ -190,7 +190,7 @@ func TestMatchesOp(t *testing.T) {
 
 		t.Run("matches UUID pattern", func(t *testing.T) {
 			t.Parallel()
-			doc := map[string]interface{}{
+			doc := map[string]any{
 				"id": "123e4567-e89b-12d3-a456-426614174000",
 			}
 			op := jsonpatch.Operation{
@@ -247,7 +247,7 @@ func TestMatchesOp(t *testing.T) {
 
 		t.Run("fails on non-string value", func(t *testing.T) {
 			t.Parallel()
-			doc := map[string]interface{}{
+			doc := map[string]any{
 				"number": 123,
 			}
 			op := jsonpatch.Operation{
@@ -267,7 +267,7 @@ func TestMatchesOp(t *testing.T) {
 
 		t.Run("fails on missing path", func(t *testing.T) {
 			t.Parallel()
-			doc := map[string]interface{}{
+			doc := map[string]any{
 				"field": "value",
 			}
 			op := jsonpatch.Operation{

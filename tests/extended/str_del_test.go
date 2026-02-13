@@ -102,8 +102,8 @@ func TestStrDelOp(t *testing.T) {
 				Pos:  0,
 				Len:  7,
 			}
-			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello, world!"}, operation)
-			expected := map[string]interface{}{"msg": "world!"}
+			result := testutils.ApplyInternalOp(t, map[string]any{"msg": "Hello, world!"}, operation)
+			expected := map[string]any{"msg": "world!"}
 			assert.Equal(t, expected, result)
 		})
 
@@ -115,8 +115,8 @@ func TestStrDelOp(t *testing.T) {
 				Pos:  5,
 				Len:  8,
 			}
-			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello, world!"}, operation)
-			expected := map[string]interface{}{"msg": "Hello"}
+			result := testutils.ApplyInternalOp(t, map[string]any{"msg": "Hello, world!"}, operation)
+			expected := map[string]any{"msg": "Hello"}
 			assert.Equal(t, expected, result)
 		})
 
@@ -128,8 +128,8 @@ func TestStrDelOp(t *testing.T) {
 				Pos:  5,
 				Len:  10,
 			}
-			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello beautiful world"}, operation)
-			expected := map[string]interface{}{"msg": "Hello world"}
+			result := testutils.ApplyInternalOp(t, map[string]any{"msg": "Hello beautiful world"}, operation)
+			expected := map[string]any{"msg": "Hello world"}
 			assert.Equal(t, expected, result)
 		})
 
@@ -141,8 +141,8 @@ func TestStrDelOp(t *testing.T) {
 				Pos:  -1,
 				Len:  1,
 			}
-			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello!"}, operation)
-			expected := map[string]interface{}{"msg": "Hello"}
+			result := testutils.ApplyInternalOp(t, map[string]any{"msg": "Hello!"}, operation)
+			expected := map[string]any{"msg": "Hello"}
 			assert.Equal(t, expected, result)
 		})
 	})
@@ -157,8 +157,8 @@ func TestStrDelOp(t *testing.T) {
 				Pos:  0,
 				Len:  7,
 			}
-			result := testutils.ApplyInternalOp(t, []interface{}{"Hello, world!"}, operation)
-			expected := []interface{}{"world!"}
+			result := testutils.ApplyInternalOp(t, []any{"Hello, world!"}, operation)
+			expected := []any{"world!"}
 			assert.Equal(t, expected, result)
 		})
 
@@ -170,8 +170,8 @@ func TestStrDelOp(t *testing.T) {
 				Pos:  5,
 				Len:  8,
 			}
-			result := testutils.ApplyInternalOp(t, []interface{}{"Hello, world!"}, operation)
-			expected := []interface{}{"Hello"}
+			result := testutils.ApplyInternalOp(t, []any{"Hello, world!"}, operation)
+			expected := []any{"Hello"}
 			assert.Equal(t, expected, result)
 		})
 
@@ -183,8 +183,8 @@ func TestStrDelOp(t *testing.T) {
 				Pos:  5,
 				Len:  10,
 			}
-			result := testutils.ApplyInternalOp(t, []interface{}{"Hello beautiful world"}, operation)
-			expected := []interface{}{"Hello world"}
+			result := testutils.ApplyInternalOp(t, []any{"Hello beautiful world"}, operation)
+			expected := []any{"Hello world"}
 			assert.Equal(t, expected, result)
 		})
 	})

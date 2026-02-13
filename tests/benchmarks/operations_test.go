@@ -10,47 +10,47 @@ import (
 func BenchmarkBasicOperations(b *testing.B) {
 	testCases := []struct {
 		name string
-		doc  interface{}
+		doc  any
 		ops  []jsonpatch.Operation
 	}{
 		{
 			name: "add_simple_value",
-			doc:  map[string]interface{}{"foo": "bar"},
+			doc:  map[string]any{"foo": "bar"},
 			ops: []jsonpatch.Operation{
 				{Op: "add", Path: "/baz", Value: "qux"},
 			},
 		},
 		{
 			name: "replace_value",
-			doc:  map[string]interface{}{"foo": "bar", "baz": "qux"},
+			doc:  map[string]any{"foo": "bar", "baz": "qux"},
 			ops: []jsonpatch.Operation{
 				{Op: "replace", Path: "/foo", Value: "new_value"},
 			},
 		},
 		{
 			name: "remove_value",
-			doc:  map[string]interface{}{"foo": "bar", "baz": "qux"},
+			doc:  map[string]any{"foo": "bar", "baz": "qux"},
 			ops: []jsonpatch.Operation{
 				{Op: "remove", Path: "/baz"},
 			},
 		},
 		{
 			name: "test_operation",
-			doc:  map[string]interface{}{"foo": "bar"},
+			doc:  map[string]any{"foo": "bar"},
 			ops: []jsonpatch.Operation{
 				{Op: "test", Path: "/foo", Value: "bar"},
 			},
 		},
 		{
 			name: "copy_operation",
-			doc:  map[string]interface{}{"foo": "bar", "baz": map[string]interface{}{"deep": "value"}},
+			doc:  map[string]any{"foo": "bar", "baz": map[string]any{"deep": "value"}},
 			ops: []jsonpatch.Operation{
 				{Op: "copy", From: "/baz", Path: "/copied"},
 			},
 		},
 		{
 			name: "move_operation",
-			doc:  map[string]interface{}{"foo": "bar", "baz": "qux"},
+			doc:  map[string]any{"foo": "bar", "baz": "qux"},
 			ops: []jsonpatch.Operation{
 				{Op: "move", From: "/baz", Path: "/moved"},
 			},
@@ -74,33 +74,33 @@ func BenchmarkBasicOperations(b *testing.B) {
 func BenchmarkExtendedOperations(b *testing.B) {
 	testCases := []struct {
 		name string
-		doc  interface{}
+		doc  any
 		ops  []jsonpatch.Operation
 	}{
 		{
 			name: "inc_operation",
-			doc:  map[string]interface{}{"counter": 42},
+			doc:  map[string]any{"counter": 42},
 			ops: []jsonpatch.Operation{
 				{Op: "inc", Path: "/counter", Inc: 1},
 			},
 		},
 		{
 			name: "flip_operation",
-			doc:  map[string]interface{}{"enabled": true},
+			doc:  map[string]any{"enabled": true},
 			ops: []jsonpatch.Operation{
 				{Op: "flip", Path: "/enabled"},
 			},
 		},
 		{
 			name: "strins_operation",
-			doc:  map[string]interface{}{"text": "hello world"},
+			doc:  map[string]any{"text": "hello world"},
 			ops: []jsonpatch.Operation{
 				{Op: "str_ins", Path: "/text", Pos: 5, Str: " beautiful"},
 			},
 		},
 		{
 			name: "split_operation",
-			doc:  map[string]interface{}{"text": "hello,world,test"},
+			doc:  map[string]any{"text": "hello,world,test"},
 			ops: []jsonpatch.Operation{
 				{Op: "split", Path: "/text", Pos: 5},
 			},
@@ -124,47 +124,47 @@ func BenchmarkExtendedOperations(b *testing.B) {
 func BenchmarkPredicateOperations(b *testing.B) {
 	testCases := []struct {
 		name string
-		doc  interface{}
+		doc  any
 		ops  []jsonpatch.Operation
 	}{
 		{
 			name: "contains_predicate",
-			doc:  map[string]interface{}{"text": "hello world"},
+			doc:  map[string]any{"text": "hello world"},
 			ops: []jsonpatch.Operation{
 				{Op: "contains", Path: "/text", Value: "world"},
 			},
 		},
 		{
 			name: "starts_predicate",
-			doc:  map[string]interface{}{"text": "hello world"},
+			doc:  map[string]any{"text": "hello world"},
 			ops: []jsonpatch.Operation{
 				{Op: "starts", Path: "/text", Value: "hello"},
 			},
 		},
 		{
 			name: "ends_predicate",
-			doc:  map[string]interface{}{"text": "hello world"},
+			doc:  map[string]any{"text": "hello world"},
 			ops: []jsonpatch.Operation{
 				{Op: "ends", Path: "/text", Value: "world"},
 			},
 		},
 		{
 			name: "type_predicate",
-			doc:  map[string]interface{}{"value": 42},
+			doc:  map[string]any{"value": 42},
 			ops: []jsonpatch.Operation{
 				{Op: "type", Path: "/value", Value: "number"},
 			},
 		},
 		{
 			name: "less_predicate",
-			doc:  map[string]interface{}{"value": 42},
+			doc:  map[string]any{"value": 42},
 			ops: []jsonpatch.Operation{
 				{Op: "less", Path: "/value", Value: 50},
 			},
 		},
 		{
 			name: "more_predicate",
-			doc:  map[string]interface{}{"value": 42},
+			doc:  map[string]any{"value": 42},
 			ops: []jsonpatch.Operation{
 				{Op: "more", Path: "/value", Value: 30},
 			},
@@ -188,12 +188,12 @@ func BenchmarkPredicateOperations(b *testing.B) {
 func BenchmarkSecondOrderPredicates(b *testing.B) {
 	testCases := []struct {
 		name string
-		doc  interface{}
+		doc  any
 		ops  []jsonpatch.Operation
 	}{
 		{
 			name: "not_predicate",
-			doc:  map[string]interface{}{"foo": 1, "bar": 2},
+			doc:  map[string]any{"foo": 1, "bar": 2},
 			ops: []jsonpatch.Operation{
 				{
 					Op:   "not",
@@ -221,37 +221,37 @@ func BenchmarkSecondOrderPredicates(b *testing.B) {
 }
 
 func BenchmarkComplexDocument(b *testing.B) {
-	complexDoc := map[string]interface{}{
-		"users": []interface{}{
-			map[string]interface{}{
+	complexDoc := map[string]any{
+		"users": []any{
+			map[string]any{
 				"id":   1,
 				"name": "Alice",
-				"profile": map[string]interface{}{
+				"profile": map[string]any{
 					"age":   30,
 					"email": "alice@example.com",
-					"preferences": map[string]interface{}{
+					"preferences": map[string]any{
 						"theme": "dark",
 						"lang":  "en",
 					},
 				},
 			},
-			map[string]interface{}{
+			map[string]any{
 				"id":   2,
 				"name": "Bob",
-				"profile": map[string]interface{}{
+				"profile": map[string]any{
 					"age":   25,
 					"email": "bob@example.com",
-					"preferences": map[string]interface{}{
+					"preferences": map[string]any{
 						"theme": "light",
 						"lang":  "es",
 					},
 				},
 			},
 		},
-		"metadata": map[string]interface{}{
+		"metadata": map[string]any{
 			"version":   "1.0",
 			"timestamp": "2024-01-01T00:00:00Z",
-			"stats": map[string]interface{}{
+			"stats": map[string]any{
 				"total_users":   2,
 				"active_users":  1,
 				"last_modified": "2024-01-01T12:00:00Z",
@@ -269,10 +269,10 @@ func BenchmarkComplexDocument(b *testing.B) {
 				{
 					Op:   "add",
 					Path: "/users/-",
-					Value: map[string]interface{}{
+					Value: map[string]any{
 						"id":   3,
 						"name": "Charlie",
-						"profile": map[string]interface{}{
+						"profile": map[string]any{
 							"age":   28,
 							"email": "charlie@example.com",
 						},
@@ -310,16 +310,16 @@ func BenchmarkComplexDocument(b *testing.B) {
 }
 
 func BenchmarkMutateVsImmutable(b *testing.B) {
-	doc := map[string]interface{}{
-		"data": make([]interface{}, 1000),
-		"metadata": map[string]interface{}{
+	doc := map[string]any{
+		"data": make([]any, 1000),
+		"metadata": map[string]any{
 			"size":    1000,
 			"version": 1,
 		},
 	}
 
 	for i := range 1000 {
-		doc["data"].([]interface{})[i] = map[string]interface{}{
+		doc["data"].([]any)[i] = map[string]any{
 			"id":    i,
 			"value": i * 2,
 		}
@@ -353,12 +353,12 @@ func BenchmarkMutateVsImmutable(b *testing.B) {
 	})
 }
 
-func cloneDocument(doc interface{}) interface{} {
+func cloneDocument(doc any) any {
 	data, err := json.Marshal(doc)
 	if err != nil {
 		panic(err)
 	}
-	var result interface{}
+	var result any
 	err = json.Unmarshal(data, &result)
 	if err != nil {
 		panic(err)

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/kaptinlin/jsonpatch/internal"
@@ -260,7 +261,7 @@ func validateOperationTestType(operation Operation) error {
 		if typeStr == "" {
 			return fmt.Errorf("%w: missing required field 'type'", ErrInvalidTypeField)
 		}
-		if !validTypesMap[typeStr] {
+		if !slices.Contains(validTypes, typeStr) {
 			return fmt.Errorf("%w: invalid type '%s'", ErrInvalidType, typeStr)
 		}
 		return nil
@@ -276,7 +277,7 @@ func validateOperationTestType(operation Operation) error {
 			if !isString {
 				return fmt.Errorf("%w: all types must be strings", ErrInvalidType)
 			}
-			if !validTypesMap[typeStr] {
+			if !slices.Contains(validTypes, typeStr) {
 				return fmt.Errorf("%w: invalid type '%s'", ErrInvalidType, typeStr)
 			}
 		}
@@ -389,18 +390,12 @@ func validateJSONPointer(path string) error {
 	return jsonpointer.Validate(path)
 }
 
-var validTypesMap = map[string]bool{
-	"string":  true,
-	"number":  true,
-	"boolean": true,
-	"object":  true,
-	"integer": true,
-	"array":   true,
-	"null":    true,
+var validTypes = []string{
+	"string", "number", "boolean", "object", "integer", "array", "null",
 }
 
 func validateTestType(typeStr string) error {
-	if !validTypesMap[typeStr] {
+	if !slices.Contains(validTypes, typeStr) {
 		return ErrInvalidType
 	}
 	return nil

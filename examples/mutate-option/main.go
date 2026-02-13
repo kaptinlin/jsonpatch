@@ -15,7 +15,7 @@ func main() {
 	fmt.Println("==================================")
 
 	// Sample document and patch
-	document := map[string]interface{}{
+	document := map[string]any{
 		"name":  "John",
 		"age":   30,
 		"email": "john@example.com",
@@ -65,20 +65,20 @@ func main() {
 }
 
 // Helper functions
-func copyDocument(doc map[string]interface{}) map[string]interface{} {
-	docCopy := make(map[string]interface{})
+func copyDocument(doc map[string]any) map[string]any {
+	docCopy := make(map[string]any)
 	for k, v := range doc {
 		docCopy[k] = v
 	}
 	return docCopy
 }
 
-func toJSON(v interface{}) string {
+func toJSON(v any) string {
 	b, _ := json.Marshal(v)
 	return string(b)
 }
 
-func isSameObject(a, b interface{}) bool {
+func isSameObject(a, b any) bool {
 	aVal := reflect.ValueOf(a)
 	bVal := reflect.ValueOf(b)
 

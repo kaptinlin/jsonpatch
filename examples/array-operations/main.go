@@ -14,13 +14,13 @@ func main() {
 	fmt.Println("=== Array Operations ===")
 
 	// Document with arrays
-	doc := map[string]interface{}{
-		"users": []interface{}{
-			map[string]interface{}{"id": 1, "name": "Alice"},
-			map[string]interface{}{"id": 2, "name": "Bob"},
-			map[string]interface{}{"id": 3, "name": "Charlie"},
+	doc := map[string]any{
+		"users": []any{
+			map[string]any{"id": 1, "name": "Alice"},
+			map[string]any{"id": 2, "name": "Bob"},
+			map[string]any{"id": 3, "name": "Charlie"},
 		},
-		"tags": []interface{}{"go", "json"},
+		"tags": []any{"go", "json"},
 	}
 
 	fmt.Println("\nOriginal:")
@@ -32,7 +32,7 @@ func main() {
 		{
 			Op:    "add",
 			Path:  "/users/-",
-			Value: map[string]interface{}{"id": 4, "name": "David"},
+			Value: map[string]any{"id": 4, "name": "David"},
 		},
 
 		// Insert at beginning

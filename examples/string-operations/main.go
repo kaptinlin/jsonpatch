@@ -14,7 +14,7 @@ func main() {
 	fmt.Println("=== String Operations ===")
 
 	// Document with text content
-	doc := map[string]interface{}{
+	doc := map[string]any{
 		"title":   "My Document",
 		"content": "Hello world!",
 		"tags":    "go,json",

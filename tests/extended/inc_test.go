@@ -12,7 +12,7 @@ func TestIncOp(t *testing.T) {
 	t.Parallel()
 	t.Run("casts values and then increments them", func(t *testing.T) {
 		t.Parallel()
-		doc := map[string]interface{}{
+		doc := map[string]any{
 			"val1": true,
 			"val2": false,
 			"val3": 1,
@@ -25,7 +25,7 @@ func TestIncOp(t *testing.T) {
 			{Op: "inc", Path: "/val4", Inc: 1},
 		}
 		result := testutils.ApplyInternalOps(t, doc, operations)
-		expected := map[string]interface{}{
+		expected := map[string]any{
 			"val1": float64(2),
 			"val2": float64(1),
 			"val3": float64(2),
@@ -36,7 +36,7 @@ func TestIncOp(t *testing.T) {
 
 	t.Run("can use arbitrary increment value and can decrement", func(t *testing.T) {
 		t.Parallel()
-		doc := map[string]interface{}{
+		doc := map[string]any{
 			"foo": 1,
 		}
 		operations := []internal.Operation{
@@ -44,7 +44,7 @@ func TestIncOp(t *testing.T) {
 			{Op: "inc", Path: "/foo", Inc: -3},
 		}
 		result := testutils.ApplyInternalOps(t, doc, operations)
-		expected := map[string]interface{}{
+		expected := map[string]any{
 			"foo": float64(8),
 		}
 		assert.Equal(t, expected, result)
@@ -52,14 +52,14 @@ func TestIncOp(t *testing.T) {
 
 	t.Run("increment can be a floating point number", func(t *testing.T) {
 		t.Parallel()
-		doc := map[string]interface{}{
+		doc := map[string]any{
 			"foo": 1,
 		}
 		operations := []internal.Operation{
 			{Op: "inc", Path: "/foo", Inc: 0.1},
 		}
 		result := testutils.ApplyInternalOps(t, doc, operations)
-		expected := map[string]interface{}{
+		expected := map[string]any{
 			"foo": 1.1,
 		}
 		assert.Equal(t, expected, result)
@@ -99,8 +99,8 @@ func TestIncOp(t *testing.T) {
 				Path: "/lala",
 				Inc:  5,
 			}
-			result := testutils.ApplyInternalOps(t, map[string]interface{}{"lala": 0}, []internal.Operation{operation})
-			expected := map[string]interface{}{"lala": float64(5)}
+			result := testutils.ApplyInternalOps(t, map[string]any{"lala": 0}, []internal.Operation{operation})
+			expected := map[string]any{"lala": float64(5)}
 			assert.Equal(t, expected, result)
 		})
 
@@ -111,8 +111,8 @@ func TestIncOp(t *testing.T) {
 				Path: "/lala",
 				Inc:  5,
 			}
-			result := testutils.ApplyInternalOps(t, map[string]interface{}{"lala": -0}, []internal.Operation{operation})
-			expected := map[string]interface{}{"lala": float64(5)}
+			result := testutils.ApplyInternalOps(t, map[string]any{"lala": -0}, []internal.Operation{operation})
+			expected := map[string]any{"lala": float64(5)}
 			assert.Equal(t, expected, result)
 		})
 
@@ -123,8 +123,8 @@ func TestIncOp(t *testing.T) {
 				Path: "/lala",
 				Inc:  5,
 			}
-			result := testutils.ApplyInternalOps(t, map[string]interface{}{"lala": "4"}, []internal.Operation{operation})
-			expected := map[string]interface{}{"lala": float64(9)}
+			result := testutils.ApplyInternalOps(t, map[string]any{"lala": "4"}, []internal.Operation{operation})
+			expected := map[string]any{"lala": float64(9)}
 			assert.Equal(t, expected, result)
 		})
 
@@ -142,8 +142,8 @@ func TestIncOp(t *testing.T) {
 					Inc:  2,
 				},
 			}
-			result := testutils.ApplyInternalOps(t, map[string]interface{}{"lala": 0}, operations)
-			expected := map[string]interface{}{"lala": float64(3)}
+			result := testutils.ApplyInternalOps(t, map[string]any{"lala": 0}, operations)
+			expected := map[string]any{"lala": float64(3)}
 			assert.Equal(t, expected, result)
 		})
 
@@ -154,8 +154,8 @@ func TestIncOp(t *testing.T) {
 				Path: "/newfield",
 				Inc:  5,
 			}
-			result := testutils.ApplyInternalOps(t, map[string]interface{}{}, []internal.Operation{operation})
-			expected := map[string]interface{}{"newfield": float64(5)}
+			result := testutils.ApplyInternalOps(t, map[string]any{}, []internal.Operation{operation})
+			expected := map[string]any{"newfield": float64(5)}
 			assert.Equal(t, expected, result)
 		})
 	})
@@ -169,8 +169,8 @@ func TestIncOp(t *testing.T) {
 				Path: "/0",
 				Inc:  -3,
 			}
-			result := testutils.ApplyInternalOps(t, []interface{}{0}, []internal.Operation{operation})
-			expected := []interface{}{float64(-3)}
+			result := testutils.ApplyInternalOps(t, []any{0}, []internal.Operation{operation})
+			expected := []any{float64(-3)}
 			assert.Equal(t, expected, result)
 		})
 
@@ -181,8 +181,8 @@ func TestIncOp(t *testing.T) {
 				Path: "/0",
 				Inc:  -3,
 			}
-			result := testutils.ApplyInternalOps(t, []interface{}{-0}, []internal.Operation{operation})
-			expected := []interface{}{float64(-3)}
+			result := testutils.ApplyInternalOps(t, []any{-0}, []internal.Operation{operation})
+			expected := []any{float64(-3)}
 			assert.Equal(t, expected, result)
 		})
 	})

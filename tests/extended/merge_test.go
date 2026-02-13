@@ -12,9 +12,9 @@ func TestMergeOp(t *testing.T) {
 	t.Parallel()
 	t.Run("can merge two nodes in an array", func(t *testing.T) {
 		t.Parallel()
-		state := []interface{}{
-			map[string]interface{}{"text": "foo"},
-			map[string]interface{}{"text": "bar"},
+		state := []any{
+			map[string]any{"text": "foo"},
+			map[string]any{"text": "bar"},
 		}
 		operations := []internal.Operation{
 			{
@@ -27,17 +27,17 @@ func TestMergeOp(t *testing.T) {
 		if err != nil {
 			t.Fatalf("ApplyPatch() error: %v", err)
 		}
-		expected := []interface{}{
-			map[string]interface{}{"text": "foobar"},
+		expected := []any{
+			map[string]any{"text": "foobar"},
 		}
 		assert.Equal(t, expected, result.Doc)
 	})
 
 	t.Run("cannot target first array element when merging", func(t *testing.T) {
 		t.Parallel()
-		state := []interface{}{
-			map[string]interface{}{"text": "foo"},
-			map[string]interface{}{"text": "bar"},
+		state := []any{
+			map[string]any{"text": "foo"},
+			map[string]any{"text": "bar"},
 		}
 		operations := []internal.Operation{
 			{
@@ -54,11 +54,11 @@ func TestMergeOp(t *testing.T) {
 
 	t.Run("can merge slate element nodes", func(t *testing.T) {
 		t.Parallel()
-		state := map[string]interface{}{
-			"foo": []interface{}{
-				map[string]interface{}{"children": []interface{}{map[string]interface{}{"text": "1"}, map[string]interface{}{"text": "2"}}},
-				map[string]interface{}{"children": []interface{}{map[string]interface{}{"text": "1"}, map[string]interface{}{"text": "2"}}},
-				map[string]interface{}{"children": []interface{}{map[string]interface{}{"text": "3"}, map[string]interface{}{"text": "4"}}},
+		state := map[string]any{
+			"foo": []any{
+				map[string]any{"children": []any{map[string]any{"text": "1"}, map[string]any{"text": "2"}}},
+				map[string]any{"children": []any{map[string]any{"text": "1"}, map[string]any{"text": "2"}}},
+				map[string]any{"children": []any{map[string]any{"text": "3"}, map[string]any{"text": "4"}}},
 			},
 		}
 		operations := []internal.Operation{
@@ -72,10 +72,10 @@ func TestMergeOp(t *testing.T) {
 		if err != nil {
 			t.Fatalf("ApplyPatch() error: %v", err)
 		}
-		expected := map[string]interface{}{
-			"foo": []interface{}{
-				map[string]interface{}{"children": []interface{}{map[string]interface{}{"text": "1"}, map[string]interface{}{"text": "2"}}},
-				map[string]interface{}{"children": []interface{}{map[string]interface{}{"text": "1"}, map[string]interface{}{"text": "2"}, map[string]interface{}{"text": "3"}, map[string]interface{}{"text": "4"}}},
+		expected := map[string]any{
+			"foo": []any{
+				map[string]any{"children": []any{map[string]any{"text": "1"}, map[string]any{"text": "2"}}},
+				map[string]any{"children": []any{map[string]any{"text": "1"}, map[string]any{"text": "2"}, map[string]any{"text": "3"}, map[string]any{"text": "4"}}},
 			},
 		}
 		assert.Equal(t, expected, result.Doc)
@@ -98,7 +98,7 @@ func TestMergeOp(t *testing.T) {
 
 	t.Run("can merge strings", func(t *testing.T) {
 		t.Parallel()
-		state := []interface{}{"hello", " world"}
+		state := []any{"hello", " world"}
 		operations := []internal.Operation{
 			{
 				Op:   "merge",
@@ -110,13 +110,13 @@ func TestMergeOp(t *testing.T) {
 		if err != nil {
 			t.Fatalf("ApplyPatch() error: %v", err)
 		}
-		expected := []interface{}{"hello world"}
+		expected := []any{"hello world"}
 		assert.Equal(t, expected, result.Doc)
 	})
 
 	t.Run("can merge numbers", func(t *testing.T) {
 		t.Parallel()
-		state := []interface{}{5, 3}
+		state := []any{5, 3}
 		operations := []internal.Operation{
 			{
 				Op:   "merge",
@@ -128,13 +128,13 @@ func TestMergeOp(t *testing.T) {
 		if err != nil {
 			t.Fatalf("ApplyPatch() error: %v", err)
 		}
-		expected := []interface{}{float64(8)}
+		expected := []any{float64(8)}
 		assert.Equal(t, expected, result.Doc)
 	})
 
 	t.Run("returns array for non-mergeable types", func(t *testing.T) {
 		t.Parallel()
-		state := []interface{}{true, false}
+		state := []any{true, false}
 		operations := []internal.Operation{
 			{
 				Op:   "merge",
@@ -146,7 +146,7 @@ func TestMergeOp(t *testing.T) {
 		if err != nil {
 			t.Fatalf("ApplyPatch() error: %v", err)
 		}
-		expected := []interface{}{[]interface{}{true, false}}
+		expected := []any{[]any{true, false}}
 		assert.Equal(t, expected, result.Doc)
 	})
 }

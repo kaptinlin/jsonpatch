@@ -67,7 +67,7 @@ func TestContainsOp(t *testing.T) {
 		t.Parallel()
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
 			t.Parallel()
-			obj := map[string]interface{}{"foo": "foo bar"}
+			obj := map[string]any{"foo": "foo bar"}
 			op := internal.Operation{
 				Op:    "contains",
 				Path:  "/foo",
@@ -78,7 +78,7 @@ func TestContainsOp(t *testing.T) {
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
 			t.Parallel()
-			obj := map[string]interface{}{"foo": "foo bar"}
+			obj := map[string]any{"foo": "foo bar"}
 			op := internal.Operation{
 				Op:    "contains",
 				Path:  "/foo",
@@ -92,7 +92,7 @@ func TestContainsOp(t *testing.T) {
 		t.Parallel()
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
 			t.Parallel()
-			arr := []interface{}{"foo bar"}
+			arr := []any{"foo bar"}
 			op := internal.Operation{
 				Op:    "contains",
 				Path:  "/0",
@@ -103,7 +103,7 @@ func TestContainsOp(t *testing.T) {
 
 		t.Run("throws when matches substring incorrectly", func(t *testing.T) {
 			t.Parallel()
-			arr := []interface{}{"foo bar"}
+			arr := []any{"foo bar"}
 			op := internal.Operation{
 				Op:    "contains",
 				Path:  "/0",

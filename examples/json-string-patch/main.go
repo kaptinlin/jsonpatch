@@ -123,7 +123,7 @@ func demoConfigurationPatch() {
 		{Op: "add", Path: "/server/ssl_cert", Value: "/etc/ssl/cert.pem"},
 		{Op: "replace", Path: "/features/metrics", Value: true},
 		{Op: "add", Path: "/features/monitoring", Value: true},
-		{Op: "add", Path: "/redis", Value: map[string]interface{}{
+		{Op: "add", Path: "/redis", Value: map[string]any{
 			"host": "redis.example.com",
 			"port": 6379,
 		}},
@@ -140,7 +140,7 @@ func demoConfigurationPatch() {
 
 // prettyJSONString formats a JSON string for better readability
 func prettyJSONString(jsonStr string) string {
-	var obj interface{}
+	var obj any
 	if err := json.Unmarshal([]byte(jsonStr), &obj); err != nil {
 		return jsonStr // Return original if parsing fails
 	}

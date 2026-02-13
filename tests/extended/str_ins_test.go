@@ -108,8 +108,8 @@ func TestStrInsOp(t *testing.T) {
 				Pos:  0,
 				Str:  "Hello, ",
 			}
-			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "world!"}, operation)
-			expected := map[string]interface{}{"msg": "Hello, world!"}
+			result := testutils.ApplyInternalOp(t, map[string]any{"msg": "world!"}, operation)
+			expected := map[string]any{"msg": "Hello, world!"}
 			assert.Equal(t, expected, result)
 		})
 
@@ -121,8 +121,8 @@ func TestStrInsOp(t *testing.T) {
 				Pos:  5,
 				Str:  ", world",
 			}
-			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello"}, operation)
-			expected := map[string]interface{}{"msg": "Hello, world"}
+			result := testutils.ApplyInternalOp(t, map[string]any{"msg": "Hello"}, operation)
+			expected := map[string]any{"msg": "Hello, world"}
 			assert.Equal(t, expected, result)
 		})
 
@@ -134,8 +134,8 @@ func TestStrInsOp(t *testing.T) {
 				Pos:  5,
 				Str:  " beautiful",
 			}
-			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello world"}, operation)
-			expected := map[string]interface{}{"msg": "Hello beautiful world"}
+			result := testutils.ApplyInternalOp(t, map[string]any{"msg": "Hello world"}, operation)
+			expected := map[string]any{"msg": "Hello beautiful world"}
 			assert.Equal(t, expected, result)
 		})
 
@@ -147,8 +147,8 @@ func TestStrInsOp(t *testing.T) {
 				Pos:  -1,
 				Str:  "!",
 			}
-			result := testutils.ApplyInternalOp(t, map[string]interface{}{"msg": "Hello"}, operation)
-			expected := map[string]interface{}{"msg": "Hell!o"}
+			result := testutils.ApplyInternalOp(t, map[string]any{"msg": "Hello"}, operation)
+			expected := map[string]any{"msg": "Hell!o"}
 			assert.Equal(t, expected, result)
 		})
 	})
@@ -163,8 +163,8 @@ func TestStrInsOp(t *testing.T) {
 				Pos:  0,
 				Str:  "Hello, ",
 			}
-			result := testutils.ApplyInternalOp(t, []interface{}{"world!"}, operation)
-			expected := []interface{}{"Hello, world!"}
+			result := testutils.ApplyInternalOp(t, []any{"world!"}, operation)
+			expected := []any{"Hello, world!"}
 			assert.Equal(t, expected, result)
 		})
 
@@ -176,8 +176,8 @@ func TestStrInsOp(t *testing.T) {
 				Pos:  5,
 				Str:  ", world",
 			}
-			result := testutils.ApplyInternalOp(t, []interface{}{"Hello"}, operation)
-			expected := []interface{}{"Hello, world"}
+			result := testutils.ApplyInternalOp(t, []any{"Hello"}, operation)
+			expected := []any{"Hello, world"}
 			assert.Equal(t, expected, result)
 		})
 
@@ -189,8 +189,8 @@ func TestStrInsOp(t *testing.T) {
 				Pos:  5,
 				Str:  " beautiful",
 			}
-			result := testutils.ApplyInternalOp(t, []interface{}{"Hello world"}, operation)
-			expected := []interface{}{"Hello beautiful world"}
+			result := testutils.ApplyInternalOp(t, []any{"Hello world"}, operation)
+			expected := []any{"Hello beautiful world"}
 			assert.Equal(t, expected, result)
 		})
 	})

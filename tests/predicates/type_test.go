@@ -14,15 +14,15 @@ func TestTypeOp(t *testing.T) {
 		t.Run("succeeds when type matches", func(t *testing.T) {
 			t.Parallel()
 			tests := []struct {
-				value interface{}
+				value any
 				typ   string
 			}{
 				{1, "number"},
 				{"hello", "string"},
 				{true, "boolean"},
 				{nil, "null"},
-				{[]interface{}{}, "array"},
-				{map[string]interface{}{}, "object"},
+				{[]any{}, "array"},
+				{map[string]any{}, "object"},
 			}
 
 			for _, test := range tests {
@@ -38,15 +38,15 @@ func TestTypeOp(t *testing.T) {
 		t.Run("throws when type does not match", func(t *testing.T) {
 			t.Parallel()
 			tests := []struct {
-				value interface{}
+				value any
 				typ   string
 			}{
 				{1, "string"},
 				{"hello", "number"},
 				{true, "null"},
 				{nil, "boolean"},
-				{[]interface{}{}, "object"},
-				{map[string]interface{}{}, "array"},
+				{[]any{}, "object"},
+				{map[string]any{}, "array"},
 			}
 
 			for _, test := range tests {
@@ -65,15 +65,15 @@ func TestTypeOp(t *testing.T) {
 		t.Run("succeeds when type matches", func(t *testing.T) {
 			t.Parallel()
 			tests := []struct {
-				obj map[string]interface{}
+				obj map[string]any
 				typ string
 			}{
-				{map[string]interface{}{"foo": 1}, "number"},
-				{map[string]interface{}{"foo": "hello"}, "string"},
-				{map[string]interface{}{"foo": true}, "boolean"},
-				{map[string]interface{}{"foo": nil}, "null"},
-				{map[string]interface{}{"foo": []interface{}{}}, "array"},
-				{map[string]interface{}{"foo": map[string]interface{}{}}, "object"},
+				{map[string]any{"foo": 1}, "number"},
+				{map[string]any{"foo": "hello"}, "string"},
+				{map[string]any{"foo": true}, "boolean"},
+				{map[string]any{"foo": nil}, "null"},
+				{map[string]any{"foo": []any{}}, "array"},
+				{map[string]any{"foo": map[string]any{}}, "object"},
 			}
 
 			for _, test := range tests {
@@ -89,15 +89,15 @@ func TestTypeOp(t *testing.T) {
 		t.Run("throws when type does not match", func(t *testing.T) {
 			t.Parallel()
 			tests := []struct {
-				obj map[string]interface{}
+				obj map[string]any
 				typ string
 			}{
-				{map[string]interface{}{"foo": 1}, "string"},
-				{map[string]interface{}{"foo": "hello"}, "number"},
-				{map[string]interface{}{"foo": true}, "null"},
-				{map[string]interface{}{"foo": nil}, "boolean"},
-				{map[string]interface{}{"foo": []interface{}{}}, "object"},
-				{map[string]interface{}{"foo": map[string]interface{}{}}, "array"},
+				{map[string]any{"foo": 1}, "string"},
+				{map[string]any{"foo": "hello"}, "number"},
+				{map[string]any{"foo": true}, "null"},
+				{map[string]any{"foo": nil}, "boolean"},
+				{map[string]any{"foo": []any{}}, "object"},
+				{map[string]any{"foo": map[string]any{}}, "array"},
 			}
 
 			for _, test := range tests {
@@ -116,15 +116,15 @@ func TestTypeOp(t *testing.T) {
 		t.Run("succeeds when type matches", func(t *testing.T) {
 			t.Parallel()
 			tests := []struct {
-				arr []interface{}
+				arr []any
 				typ string
 			}{
-				{[]interface{}{1}, "number"},
-				{[]interface{}{"hello"}, "string"},
-				{[]interface{}{true}, "boolean"},
-				{[]interface{}{nil}, "null"},
-				{[]interface{}{[]interface{}{}}, "array"},
-				{[]interface{}{map[string]interface{}{}}, "object"},
+				{[]any{1}, "number"},
+				{[]any{"hello"}, "string"},
+				{[]any{true}, "boolean"},
+				{[]any{nil}, "null"},
+				{[]any{[]any{}}, "array"},
+				{[]any{map[string]any{}}, "object"},
 			}
 
 			for _, test := range tests {
@@ -140,15 +140,15 @@ func TestTypeOp(t *testing.T) {
 		t.Run("throws when type does not match", func(t *testing.T) {
 			t.Parallel()
 			tests := []struct {
-				arr []interface{}
+				arr []any
 				typ string
 			}{
-				{[]interface{}{1}, "string"},
-				{[]interface{}{"hello"}, "number"},
-				{[]interface{}{true}, "null"},
-				{[]interface{}{nil}, "boolean"},
-				{[]interface{}{[]interface{}{}}, "object"},
-				{[]interface{}{map[string]interface{}{}}, "array"},
+				{[]any{1}, "string"},
+				{[]any{"hello"}, "number"},
+				{[]any{true}, "null"},
+				{[]any{nil}, "boolean"},
+				{[]any{[]any{}}, "object"},
+				{[]any{map[string]any{}}, "array"},
 			}
 
 			for _, test := range tests {

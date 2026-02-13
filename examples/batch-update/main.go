@@ -14,11 +14,11 @@ func main() {
 	fmt.Println("=== Batch Update ===")
 
 	// System with multiple servers
-	system := map[string]interface{}{
-		"servers": []interface{}{
-			map[string]interface{}{"id": "srv1", "status": "inactive", "version": "1.0"},
-			map[string]interface{}{"id": "srv2", "status": "inactive", "version": "1.0"},
-			map[string]interface{}{"id": "srv3", "status": "inactive", "version": "1.0"},
+	system := map[string]any{
+		"servers": []any{
+			map[string]any{"id": "srv1", "status": "inactive", "version": "1.0"},
+			map[string]any{"id": "srv2", "status": "inactive", "version": "1.0"},
+			map[string]any{"id": "srv3", "status": "inactive", "version": "1.0"},
 		},
 		"updated": 0,
 	}

@@ -14,7 +14,7 @@ func main() {
 	fmt.Println("=== Conditional Operations ===")
 
 	// Account data
-	account := map[string]interface{}{
+	account := map[string]any{
 		"balance": 1000.0,
 		"status":  "active",
 		"version": 1,
