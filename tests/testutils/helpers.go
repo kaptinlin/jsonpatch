@@ -10,11 +10,10 @@ import (
 )
 
 // ApplyOperation applies a single operation to a document.
-func ApplyOperation(t *testing.T, doc interface{}, operation jsonpatch.Operation) interface{} {
+func ApplyOperation(t *testing.T, doc any, operation jsonpatch.Operation) any {
 	t.Helper()
 	patch := []jsonpatch.Operation{operation}
-	options := jsonpatch.WithMutate(true)
-	result, err := jsonpatch.ApplyPatch(doc, patch, options)
+	result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
 	if err != nil {
 		t.Fatalf("ApplyPatch() error = %v, want nil", err)
 	}
@@ -22,11 +21,10 @@ func ApplyOperation(t *testing.T, doc interface{}, operation jsonpatch.Operation
 }
 
 // ApplyOperationWithError applies an operation expecting it to fail.
-func ApplyOperationWithError(t *testing.T, doc interface{}, operation jsonpatch.Operation) error {
+func ApplyOperationWithError(t *testing.T, doc any, operation jsonpatch.Operation) error {
 	t.Helper()
 	patch := []jsonpatch.Operation{operation}
-	options := jsonpatch.WithMutate(true)
-	_, err := jsonpatch.ApplyPatch(doc, patch, options)
+	_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
 	if err == nil {
 		t.Fatalf("ApplyPatch() error = nil, want error")
 	}
@@ -34,10 +32,9 @@ func ApplyOperationWithError(t *testing.T, doc interface{}, operation jsonpatch.
 }
 
 // ApplyOperations applies multiple operations to a document.
-func ApplyOperations(t *testing.T, doc interface{}, operations []jsonpatch.Operation) interface{} {
+func ApplyOperations(t *testing.T, doc any, operations []jsonpatch.Operation) any {
 	t.Helper()
-	options := jsonpatch.WithMutate(true)
-	result, err := jsonpatch.ApplyPatch(doc, operations, options)
+	result, err := jsonpatch.ApplyPatch(doc, operations, jsonpatch.WithMutate(true))
 	if err != nil {
 		t.Fatalf("ApplyPatch() error = %v, want nil", err)
 	}
@@ -45,10 +42,9 @@ func ApplyOperations(t *testing.T, doc interface{}, operations []jsonpatch.Opera
 }
 
 // ApplyOperationsWithError applies multiple operations expecting them to fail.
-func ApplyOperationsWithError(t *testing.T, doc interface{}, operations []jsonpatch.Operation) error {
+func ApplyOperationsWithError(t *testing.T, doc any, operations []jsonpatch.Operation) error {
 	t.Helper()
-	options := jsonpatch.WithMutate(true)
-	_, err := jsonpatch.ApplyPatch(doc, operations, options)
+	_, err := jsonpatch.ApplyPatch(doc, operations, jsonpatch.WithMutate(true))
 	if err == nil {
 		t.Fatalf("ApplyPatch() error = nil, want error")
 	}
@@ -56,7 +52,7 @@ func ApplyOperationsWithError(t *testing.T, doc interface{}, operations []jsonpa
 }
 
 // ApplyInternalOp applies a single internal.Operation to a document.
-func ApplyInternalOp(t *testing.T, doc interface{}, op internal.Operation) interface{} {
+func ApplyInternalOp(t *testing.T, doc any, op internal.Operation) any {
 	t.Helper()
 	patch := []internal.Operation{op}
 	result, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
@@ -67,7 +63,7 @@ func ApplyInternalOp(t *testing.T, doc interface{}, op internal.Operation) inter
 }
 
 // ApplyInternalOpWithError applies an internal.Operation expecting it to fail.
-func ApplyInternalOpWithError(t *testing.T, doc interface{}, op internal.Operation) {
+func ApplyInternalOpWithError(t *testing.T, doc any, op internal.Operation) {
 	t.Helper()
 	patch := []internal.Operation{op}
 	_, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
@@ -77,7 +73,7 @@ func ApplyInternalOpWithError(t *testing.T, doc interface{}, op internal.Operati
 }
 
 // ApplyInternalOps applies multiple internal.Operations to a document.
-func ApplyInternalOps(t *testing.T, doc interface{}, ops []internal.Operation) interface{} {
+func ApplyInternalOps(t *testing.T, doc any, ops []internal.Operation) any {
 	t.Helper()
 	result, err := jsonpatch.ApplyPatch(doc, ops, internal.WithMutate(true))
 	if err != nil {
@@ -87,7 +83,7 @@ func ApplyInternalOps(t *testing.T, doc interface{}, ops []internal.Operation) i
 }
 
 // ApplyInternalOpsWithError applies multiple internal.Operations expecting them to fail.
-func ApplyInternalOpsWithError(t *testing.T, doc interface{}, ops []internal.Operation) {
+func ApplyInternalOpsWithError(t *testing.T, doc any, ops []internal.Operation) {
 	t.Helper()
 	_, err := jsonpatch.ApplyPatch(doc, ops, internal.WithMutate(true))
 	if err == nil {
@@ -97,22 +93,22 @@ func ApplyInternalOpsWithError(t *testing.T, doc interface{}, ops []internal.Ope
 
 // TestCase represents a single operation test case.
 type TestCase struct {
-	Name      string              // Test case name
-	Doc       interface{}         // Input document
-	Operation jsonpatch.Operation // Operation to apply
-	Expected  interface{}         // Expected result
-	WantErr   bool                // Whether operation should fail
-	Comment   string              // Comment or source information
+	Name      string
+	Doc       any
+	Operation jsonpatch.Operation
+	Expected  any
+	WantErr   bool
+	Comment   string
 }
 
 // MultiOperationTestCase represents a multi-operation test case.
 type MultiOperationTestCase struct {
-	Name       string                // Test case name
-	Doc        interface{}           // Input document
-	Operations []jsonpatch.Operation // Operations to apply
-	Expected   interface{}           // Expected result
-	WantErr    bool                  // Whether operations should fail
-	Comment    string                // Comment or source information
+	Name       string
+	Doc        any
+	Operations []jsonpatch.Operation
+	Expected   any
+	WantErr    bool
+	Comment    string
 }
 
 // RunTestCase executes a single test case.

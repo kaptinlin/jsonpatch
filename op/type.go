@@ -30,43 +30,35 @@ func (tp *TypeOperation) Code() int {
 	return internal.OpTypeCode
 }
 
+// typeMatches checks if the actual type matches the expected type,
+// with a special case where "number" also matches "integer".
+func (tp *TypeOperation) typeMatches(actualType string) bool {
+	if actualType == tp.TypeValue {
+		return true
+	}
+	return tp.TypeValue == "number" && actualType == "integer"
+}
+
 // Test evaluates the type predicate condition.
 func (tp *TypeOperation) Test(doc any) (bool, error) {
 	val, err := getValue(doc, tp.Path())
 	if err != nil {
-		// For JSON Patch test operations, path not found means test fails (returns false)
-		// This is correct JSON Patch semantics - returning nil error with false result
-		//nolint:nilerr // This is intentional behavior for test operations
+		//nolint:nilerr // intentional: path not found means test fails
 		return false, nil
 	}
 
-	// Get the actual type of the value
-	actualType := getTypeName(val)
-
-	// Check if the type matches
-	return actualType == tp.TypeValue, nil
+	return tp.typeMatches(getTypeName(val)), nil
 }
 
 // Apply applies the type operation to the document.
 func (tp *TypeOperation) Apply(doc any) (internal.OpResult[any], error) {
-	// Get target value
 	val, err := getValue(doc, tp.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, ErrPathNotFound
 	}
 
-	// Get the actual type of the value
 	actualType := getTypeName(val)
-
-	// Check if the type matches
-	typeMatches := actualType == tp.TypeValue
-
-	// Special case: if expected type is "number" and actual is "integer", it should match
-	if !typeMatches && tp.TypeValue == "number" && actualType == "integer" {
-		typeMatches = true
-	}
-
-	if !typeMatches {
+	if !tp.typeMatches(actualType) {
 		return internal.OpResult[any]{}, fmt.Errorf("%w: expected type %s, got %s", ErrTypeMismatch, tp.TypeValue, actualType)
 	}
 

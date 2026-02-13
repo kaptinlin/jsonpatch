@@ -46,7 +46,7 @@ func GetOpPath(operation internal.Op) []string {
 }
 
 // ApplyOpDirect applies an operation directly using the Op interface.
-func ApplyOpDirect(operation internal.Op, doc interface{}) (internal.OpResult[any], error) {
+func ApplyOpDirect(operation internal.Op, doc any) (internal.OpResult[any], error) {
 	return operation.Apply(doc)
 }
 
@@ -61,7 +61,7 @@ func ToCompact(operation internal.Op) (internal.CompactOperation, error) {
 }
 
 // TestPredicate tests a predicate operation using the PredicateOp interface.
-func TestPredicate(predicate internal.PredicateOp, doc interface{}) (bool, error) {
+func TestPredicate(predicate internal.PredicateOp, doc any) (bool, error) {
 	return predicate.Test(doc)
 }
 

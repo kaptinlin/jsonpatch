@@ -29,11 +29,9 @@ var WithMutate = internal.WithMutate
 var WithMatcher = internal.WithMatcher
 
 // DefaultOptions returns the default configuration for patch operations.
+// By default, operations are immutable (documents are cloned before patching).
 func DefaultOptions() *internal.Options {
-	return &internal.Options{
-		Mutate:        false, // Immutable by default for safety
-		CreateMatcher: nil,   // Use default regex implementation
-	}
+	return &internal.Options{}
 }
 
 // OpResult represents the result of a single operation with generic type support.

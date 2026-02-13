@@ -47,21 +47,18 @@ func (tl *TestStringLenOperation) Not() bool {
 
 // Test tests the string length condition on the document.
 func (tl *TestStringLenOperation) Test(doc any) (bool, error) {
-	// Get the value at the path
 	value, err := getValue(doc, tl.Path())
 	if err != nil {
 		//nolint:nilerr // intentional: path not found means test fails
 		return false, nil
 	}
 
-	// Convert value to string
 	str, ok := extractString(value)
 	if !ok {
 		return false, nil
 	}
 
-	length := int(tl.Length)
-	lengthMatches := len(str) >= length
+	lengthMatches := len(str) >= int(tl.Length)
 	return tl.NotFlag != lengthMatches, nil
 }
 
@@ -101,15 +98,12 @@ func (tl *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error)
 
 // ToJSON serializes the operation to JSON format.
 func (tl *TestStringLenOperation) ToJSON() (internal.Operation, error) {
-	result := internal.Operation{
+	return internal.Operation{
 		Op:   string(internal.OpTestStringLenType),
 		Path: formatPath(tl.Path()),
 		Len:  int(tl.Length),
-	}
-	if tl.NotFlag {
-		result.Not = tl.NotFlag
-	}
-	return result, nil
+		Not:  tl.NotFlag,
+	}, nil
 }
 
 // ToCompact serializes the operation to compact format.

@@ -34,12 +34,9 @@ func (mo *MoreOperation) Code() int {
 func (mo *MoreOperation) Test(doc any) (bool, error) {
 	_, num, err := getNumericValue(doc, mo.Path())
 	if err != nil {
-		// For JSON Patch test operations, path not found or wrong type means test fails (returns false)
-		// This is correct JSON Patch semantics - returning nil error with false result
-		//nolint:nilerr // This is intentional behavior for test operations
+		//nolint:nilerr // intentional: path not found or wrong type means test fails
 		return false, nil
 	}
-
 	return num > mo.Value, nil
 }
 

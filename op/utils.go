@@ -2,6 +2,7 @@ package op
 
 import (
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -36,15 +37,7 @@ func extractPredicateOps(operations []any) []internal.PredicateOp {
 
 // pathEquals checks if two paths are equal.
 func pathEquals(p1, p2 []string) bool {
-	if len(p1) != len(p2) {
-		return false
-	}
-	for i, v := range p1 {
-		if v != p2[i] {
-			return false
-		}
-	}
-	return true
+	return slices.Equal(p1, p2)
 }
 
 // formatPath formats a path slice into a JSON Pointer string.

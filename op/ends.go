@@ -41,20 +41,23 @@ func (e *EndsOperation) Code() int {
 	return internal.OpEndsCode
 }
 
+// hasSuffix checks whether str ends with the expected suffix,
+// respecting the IgnoreCase flag.
+func (e *EndsOperation) hasSuffix(str string) bool {
+	if e.IgnoreCase {
+		return strings.HasSuffix(strings.ToLower(str), strings.ToLower(e.Value))
+	}
+	return strings.HasSuffix(str, e.Value)
+}
+
 // Test evaluates the ends predicate condition.
 func (e *EndsOperation) Test(doc any) (bool, error) {
 	_, str, err := getAndValidateString(doc, e.Path())
 	if err != nil {
-		// For JSON Patch test operations, path not found or wrong type means test fails (returns false)
-		// This is correct JSON Patch semantics - returning nil error with false result
-		//nolint:nilerr // This is intentional behavior for test operations
+		//nolint:nilerr // intentional: path not found or wrong type means test fails
 		return false, nil
 	}
-
-	if e.IgnoreCase {
-		return strings.HasSuffix(strings.ToLower(str), strings.ToLower(e.Value)), nil
-	}
-	return strings.HasSuffix(str, e.Value), nil
+	return e.hasSuffix(str), nil
 }
 
 // Apply applies the ends test operation to the document.
@@ -64,14 +67,7 @@ func (e *EndsOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, err
 	}
 
-	var hasSuffix bool
-	if e.IgnoreCase {
-		hasSuffix = strings.HasSuffix(strings.ToLower(str), strings.ToLower(e.Value))
-	} else {
-		hasSuffix = strings.HasSuffix(str, e.Value)
-	}
-
-	if !hasSuffix {
+	if !e.hasSuffix(str) {
 		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not end with %q", ErrStringMismatch, str, e.Value)
 	}
 
@@ -80,15 +76,12 @@ func (e *EndsOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // ToJSON serializes the operation to JSON format.
 func (e *EndsOperation) ToJSON() (internal.Operation, error) {
-	result := internal.Operation{
-		Op:    string(internal.OpEndsType),
-		Path:  formatPath(e.Path()),
-		Value: e.Value,
-	}
-	if e.IgnoreCase {
-		result.IgnoreCase = e.IgnoreCase
-	}
-	return result, nil
+	return internal.Operation{
+		Op:         string(internal.OpEndsType),
+		Path:       formatPath(e.Path()),
+		Value:      e.Value,
+		IgnoreCase: e.IgnoreCase,
+	}, nil
 }
 
 // ToCompact serializes the operation to compact format.

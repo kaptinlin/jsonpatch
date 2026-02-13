@@ -9,7 +9,6 @@ import (
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
 )
 
-// Ported from TypeScript: patch.scenarious.spec.ts
 func TestEmptyDocumentHandling(t *testing.T) {
 	t.Parallel()
 	t.Run("cannot add key to empty document", func(t *testing.T) {

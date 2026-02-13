@@ -12,7 +12,6 @@ import (
 
 func TestAutomated(t *testing.T) {
 	t.Parallel()
-	// Use test suites from Go data files instead of JSON
 	testSuites := []AutomatedTestSuite{
 		{
 			Name:  "JSON Patch spec",
@@ -88,23 +87,20 @@ func TestAutomated(t *testing.T) {
 	}
 }
 
-// AutomatedTestSuite represents a test suite for automated tests
 type AutomatedTestSuite struct {
-	Name  string              `json:"name"`
-	Tests []AutomatedTestCase `json:"tests"`
+	Name  string
+	Tests []AutomatedTestCase
 }
 
-// AutomatedTestCase represents a single test case for automated tests
 type AutomatedTestCase struct {
-	Comment  string                `json:"comment,omitempty"`
-	Doc      interface{}           `json:"doc"`
-	Patch    []jsonpatch.Operation `json:"patch"`
-	Expected interface{}           `json:"expected,omitempty"`
-	Error    string                `json:"error,omitempty"`
-	Disabled bool                  `json:"disabled,omitempty"`
+	Comment  string
+	Doc      interface{}
+	Patch    []jsonpatch.Operation
+	Expected interface{}
+	Error    string
+	Disabled bool
 }
 
-// convertSpecTestCases converts data.TestCase to AutomatedTestCase for spec tests
 func convertSpecTestCases(specCases []data.TestCase) []AutomatedTestCase {
 	result := make([]AutomatedTestCase, len(specCases))
 	for i, tc := range specCases {
@@ -120,7 +116,6 @@ func convertSpecTestCases(specCases []data.TestCase) []AutomatedTestCase {
 	return result
 }
 
-// convertTestCases converts data.TestCase to AutomatedTestCase
 func convertTestCases(testCases []data.TestCase) []AutomatedTestCase {
 	result := make([]AutomatedTestCase, len(testCases))
 	for i, tc := range testCases {
@@ -136,11 +131,9 @@ func convertTestCases(testCases []data.TestCase) []AutomatedTestCase {
 	return result
 }
 
-// convertPatch converts []map[string]any to []jsonpatch.Operation
 func convertPatch(patch []map[string]any) []jsonpatch.Operation {
 	result := make([]jsonpatch.Operation, len(patch))
 	for i, op := range patch {
-		// Convert map to Operation struct
 		var operation jsonpatch.Operation
 		if v, ok := op["op"].(string); ok {
 			operation.Op = v
@@ -194,53 +187,4 @@ func convertPatch(patch []map[string]any) []jsonpatch.Operation {
 		result[i] = operation
 	}
 	return result
-}
-
-// Additional scenario tests from patch_scenarios_test.go
-// Original TypeScript: .reference/json-joy/src/json-patch/__tests__/patch.scenarious.spec.ts
-
-func TestCannotAddKeyToEmptyDocument(t *testing.T) {
-	t.Parallel()
-	patch := []jsonpatch.Operation{
-		{Op: "add", Path: "/foo", Value: 123},
-	}
-
-	options := jsonpatch.WithMutate(true)
-	var doc interface{}
-	_, err := jsonpatch.ApplyPatch(doc, patch, options)
-	if err == nil {
-		t.Error("ApplyPatch() expected error when adding key to empty document, got nil")
-	}
-}
-
-func TestCanOverwriteEmptyDocument(t *testing.T) {
-	t.Parallel()
-	patch := []jsonpatch.Operation{
-		{Op: "add", Path: "/foo", Value: 123},
-	}
-
-	options := jsonpatch.WithMutate(true)
-	result, err := jsonpatch.ApplyPatch(map[string]interface{}{}, patch, options)
-	if err != nil {
-		t.Fatalf("ApplyPatch() unexpected error: %v", err)
-	}
-
-	expected := map[string]interface{}{"foo": 123}
-	if diff := cmp.Diff(expected, result.Doc); diff != "" {
-		t.Errorf("ApplyPatch() mismatch (-want +got):\n%s", diff)
-	}
-}
-
-func TestCannotAddValueToNonexistingPath(t *testing.T) {
-	t.Parallel()
-	doc := map[string]interface{}{"foo": 123}
-	patch := []jsonpatch.Operation{
-		{Op: "add", Path: "/foo/bar/baz", Value: "test"},
-	}
-
-	options := jsonpatch.WithMutate(true)
-	_, err := jsonpatch.ApplyPatch(doc, patch, options)
-	if err == nil {
-		t.Error("ApplyPatch() expected error when adding value to nonexisting path, got nil")
-	}
 }

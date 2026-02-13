@@ -41,7 +41,19 @@ func (e *Encoder) EncodeSlice(ops []internal.Op) ([]Op, error) {
 
 // Encode encodes operations into compact format.
 func Encode(ops []internal.Op, opts ...Option) ([]Op, error) {
-	return NewEncoder(opts...).EncodeSlice(ops)
+	var o Options
+	for _, opt := range opts {
+		opt(&o)
+	}
+	result := make([]Op, len(ops))
+	for i, op := range ops {
+		encoded, err := encodeOp(op, o)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = encoded
+	}
+	return result, nil
 }
 
 // EncodeJSON encodes operations into compact JSON bytes.

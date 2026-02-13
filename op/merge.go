@@ -192,55 +192,40 @@ func isSlateElementNode(value any) bool {
 	return false
 }
 
-// mergeSlateTextNodes merges two Slate text nodes by concatenating their text
-func mergeSlateTextNodes(one, two map[string]any) map[string]any {
+// copyPropsExcluding copies properties from two maps into a new map,
+// skipping the specified key. Properties from the second map overwrite the first.
+func copyPropsExcluding(one, two map[string]any, excludeKey string) map[string]any {
 	result := make(map[string]any)
-
-	// Copy properties from first node
 	for k, v := range one {
-		if k != "text" {
+		if k != excludeKey {
 			result[k] = v
 		}
 	}
-	// Copy properties from second node (overwrites first)
 	for k, v := range two {
-		if k != "text" {
+		if k != excludeKey {
 			result[k] = v
 		}
 	}
-
-	// Concatenate text
-	textOne, _ := one["text"].(string)
-	textTwo, _ := two["text"].(string)
-	result["text"] = textOne + textTwo
-
 	return result
 }
 
-// mergeSlateElementNodes merges two Slate element nodes by concatenating their children
+// mergeSlateTextNodes merges two Slate text nodes by concatenating their text.
+func mergeSlateTextNodes(one, two map[string]any) map[string]any {
+	result := copyPropsExcluding(one, two, "text")
+	textOne, _ := one["text"].(string)
+	textTwo, _ := two["text"].(string)
+	result["text"] = textOne + textTwo
+	return result
+}
+
+// mergeSlateElementNodes merges two Slate element nodes by concatenating their children.
 func mergeSlateElementNodes(one, two map[string]any) map[string]any {
-	result := make(map[string]any)
-
-	// Copy properties from first node
-	for k, v := range one {
-		if k != "children" {
-			result[k] = v
-		}
-	}
-	// Copy properties from second node (overwrites first)
-	for k, v := range two {
-		if k != "children" {
-			result[k] = v
-		}
-	}
-
-	// Concatenate children
+	result := copyPropsExcluding(one, two, "children")
 	childrenOne, _ := one["children"].([]any)
 	childrenTwo, _ := two["children"].([]any)
 	mergedChildren := make([]any, 0, len(childrenOne)+len(childrenTwo))
 	mergedChildren = append(mergedChildren, childrenOne...)
 	mergedChildren = append(mergedChildren, childrenTwo...)
 	result["children"] = mergedChildren
-
 	return result
 }

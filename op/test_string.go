@@ -46,55 +46,39 @@ func (ts *TestStringOperation) Not() bool {
 func (ts *TestStringOperation) Test(doc any) (bool, error) {
 	val, err := getValue(doc, ts.Path())
 	if err != nil {
-		// For JSON Patch test operations, path not found means test fails (returns false)
-		// This is correct JSON Patch semantics - returning nil error with false result
-		//nolint:nilerr // This is intentional behavior for test operations
+		//nolint:nilerr // intentional: path not found means test fails
 		return false, nil
 	}
 
-	// Convert to string or from byte slice
 	str, ok := extractString(val)
 	if !ok {
-		return false, nil // Return false if not string or byte slice
+		return false, nil
 	}
 
-	// Implement the same logic as json-joy reference
-	// const length = (val as string).length;
-	// const start = Math.min(this.pos, length);
-	// const end = Math.min(this.pos + this.str.length, length);
-	// const test = (val as string).substring(start, end) === this.str;
-	// return this.not ? !test : test;
-
+	// Match json-joy behavior: clamp positions to string bounds
 	length := len(str)
 	start := min(ts.Pos, length)
 	end := min(ts.Pos+len(ts.Str), length)
 
 	substring := str[start:end]
-	var test bool
+	var match bool
 	if ts.IgnoreCase {
-		test = strings.EqualFold(substring, ts.Str)
+		match = strings.EqualFold(substring, ts.Str)
 	} else {
-		test = substring == ts.Str
+		match = substring == ts.Str
 	}
-	return ts.NotFlag != test, nil // XOR with NotFlag for negation
+	return ts.NotFlag != match, nil
 }
 
 // Apply applies the test string operation to the document.
 func (ts *TestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
-	// Get target value
 	val, err := getValue(doc, ts.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, ErrPathNotFound
 	}
 
-	// Check if value is a string or convert byte slice to string
-	var str string
-	switch v := val.(type) {
-	case string:
-		str = v
-	case []byte:
-		str = string(v)
-	default:
+	str, ok := extractString(val)
+	if !ok {
 		return internal.OpResult[any]{}, ErrNotString
 	}
 
@@ -132,15 +116,14 @@ func (ts *TestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // ToJSON serializes the operation to JSON format.
 func (ts *TestStringOperation) ToJSON() (internal.Operation, error) {
-	result := internal.Operation{
+	return internal.Operation{
 		Op:         string(internal.OpTestStringType),
 		Path:       formatPath(ts.Path()),
 		Str:        ts.Str,
 		Pos:        ts.Pos,
 		Not:        ts.NotFlag,
 		IgnoreCase: ts.IgnoreCase,
-	}
-	return result, nil
+	}, nil
 }
 
 // ToCompact serializes the operation to compact format.

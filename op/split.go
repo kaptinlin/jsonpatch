@@ -209,7 +209,25 @@ func (sp *SplitOperation) Validate() error {
 	return nil
 }
 
-// splitSlateTextNode splits a Slate text node at the specified position
+// splitNodePair creates two new nodes from an original, copying all properties
+// except excludeKey, and applying optional extra properties to both.
+func splitNodePair(nodeMap map[string]any, excludeKey string, props map[string]any) (map[string]any, map[string]any) {
+	beforeNode := make(map[string]any)
+	afterNode := make(map[string]any)
+	for k, v := range nodeMap {
+		if k != excludeKey {
+			beforeNode[k] = v
+			afterNode[k] = v
+		}
+	}
+	for k, v := range props {
+		beforeNode[k] = v
+		afterNode[k] = v
+	}
+	return beforeNode, afterNode
+}
+
+// splitSlateTextNode splits a Slate text node at the specified position.
 func splitSlateTextNode(nodeMap map[string]any, pos int, props map[string]any) []map[string]any {
 	text, ok := nodeMap["text"].(string)
 	if !ok {
@@ -217,86 +235,34 @@ func splitSlateTextNode(nodeMap map[string]any, pos int, props map[string]any) [
 	}
 
 	runes := []rune(text)
+	pos = max(0, min(pos, len(runes)))
 
-	// Clamp position to valid bounds
-	if pos < 0 {
-		pos = 0
-	}
-	if pos > len(runes) {
-		pos = len(runes)
-	}
-
-	before := string(runes[:pos])
-	after := string(runes[pos:])
-
-	// Create two new nodes with inherited properties
-	beforeNode := make(map[string]any)
-	afterNode := make(map[string]any)
-
-	// Copy properties from original node
-	for k, v := range nodeMap {
-		if k != "text" {
-			beforeNode[k] = v
-			afterNode[k] = v
-		}
-	}
-
-	beforeNode["text"] = before
-	afterNode["text"] = after
-
-	// Apply extra properties if specified
-	for k, v := range props {
-		beforeNode[k] = v
-		afterNode[k] = v
-	}
+	beforeNode, afterNode := splitNodePair(nodeMap, "text", props)
+	beforeNode["text"] = string(runes[:pos])
+	afterNode["text"] = string(runes[pos:])
 
 	return []map[string]any{beforeNode, afterNode}
 }
 
-// splitSlateElementNode splits a Slate element node at the specified position in its children
+// splitSlateElementNode splits a Slate element node at the specified position in its children.
 func splitSlateElementNode(nodeMap map[string]any, pos int, props map[string]any) []map[string]any {
 	children, ok := nodeMap["children"].([]any)
 	if !ok {
 		return nil
 	}
 
-	// Clamp position to valid bounds
-	if pos < 0 {
-		pos = 0
-	}
-	if pos > len(children) {
-		pos = len(children)
-	}
+	pos = max(0, min(pos, len(children)))
 
-	beforeChildren := children[:pos]
-	afterChildren := children[pos:]
-
-	// Create two new nodes with inherited properties
-	beforeNode := make(map[string]any)
-	afterNode := make(map[string]any)
-
-	// Copy properties from original node
-	for k, v := range nodeMap {
-		if k != "children" {
-			beforeNode[k] = v
-			afterNode[k] = v
-		}
-	}
+	beforeNode, afterNode := splitNodePair(nodeMap, "children", props)
 
 	// Copy children slices to avoid mutation
-	beforeChildrenCopy := make([]any, len(beforeChildren))
-	copy(beforeChildrenCopy, beforeChildren)
-	afterChildrenCopy := make([]any, len(afterChildren))
-	copy(afterChildrenCopy, afterChildren)
+	beforeChildrenCopy := make([]any, len(children[:pos]))
+	copy(beforeChildrenCopy, children[:pos])
+	afterChildrenCopy := make([]any, len(children[pos:]))
+	copy(afterChildrenCopy, children[pos:])
 
 	beforeNode["children"] = beforeChildrenCopy
 	afterNode["children"] = afterChildrenCopy
-
-	// Apply extra properties if specified
-	for k, v := range props {
-		beforeNode[k] = v
-		afterNode[k] = v
-	}
 
 	return []map[string]any{beforeNode, afterNode}
 }

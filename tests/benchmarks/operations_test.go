@@ -1,9 +1,9 @@
 package jsonpatch_test
 
 import (
-	"github.com/go-json-experiment/json"
 	"testing"
 
+	"github.com/go-json-experiment/json"
 	"github.com/kaptinlin/jsonpatch"
 )
 
@@ -61,7 +61,6 @@ func BenchmarkBasicOperations(b *testing.B) {
 		b.Run(tc.name, func(b *testing.B) {
 			b.ResetTimer()
 			for b.Loop() {
-				// Clone document for each iteration
 				docCopy := cloneDocument(tc.doc)
 				_, err := jsonpatch.ApplyPatch(docCopy, tc.ops, jsonpatch.WithMutate(true))
 				if err != nil {
@@ -92,14 +91,6 @@ func BenchmarkExtendedOperations(b *testing.B) {
 				{Op: "flip", Path: "/enabled"},
 			},
 		},
-		// Note: merge operation works on arrays, commenting out object merge for now
-		// {
-		//	name: "merge_operation",
-		//	doc:  map[string]interface{}{"obj": map[string]interface{}{"a": 1}},
-		//	ops: []jsonpatch.Operation{
-		//		{"op": "merge", "path": "/obj", "value": map[string]interface{}{"b": 2}},
-		//	},
-		// },
 		{
 			name: "strins_operation",
 			doc:  map[string]interface{}{"text": "hello world"},
@@ -120,7 +111,6 @@ func BenchmarkExtendedOperations(b *testing.B) {
 		b.Run(tc.name, func(b *testing.B) {
 			b.ResetTimer()
 			for b.Loop() {
-				// Clone document for each iteration
 				docCopy := cloneDocument(tc.doc)
 				_, err := jsonpatch.ApplyPatch(docCopy, tc.ops, jsonpatch.WithMutate(true))
 				if err != nil {
@@ -185,7 +175,6 @@ func BenchmarkPredicateOperations(b *testing.B) {
 		b.Run(tc.name, func(b *testing.B) {
 			b.ResetTimer()
 			for b.Loop() {
-				// Clone document for each iteration
 				docCopy := cloneDocument(tc.doc)
 				_, err := jsonpatch.ApplyPatch(docCopy, tc.ops, jsonpatch.WithMutate(true))
 				if err != nil {
@@ -202,36 +191,6 @@ func BenchmarkSecondOrderPredicates(b *testing.B) {
 		doc  interface{}
 		ops  []jsonpatch.Operation
 	}{
-		// Note: Complex and operation - commented out for benchmark stability
-		// {
-		//	name: "and_predicate",
-		//	doc:  map[string]interface{}{"foo": 1, "bar": 2},
-		//	ops: []jsonpatch.Operation{
-		//		{
-		//			Op:   "and",
-		//			Path: "",
-		//			Apply: []interface{}{
-		//				map[string]interface{}{"op": "test", "path": "/foo", "value": 1},
-		//				map[string]interface{}{"op": "test", "path": "/bar", "value": 2},
-		//			},
-		//		},
-		//	},
-		// },
-		// Note: Complex or operation - commented out for benchmark stability
-		// {
-		//	name: "or_predicate",
-		//	doc:  map[string]interface{}{"foo": 1, "bar": 2},
-		//	ops: []jsonpatch.Operation{
-		//		{
-		//			Op:   "or",
-		//			Path: "",
-		//			Apply: []interface{}{
-		//				map[string]interface{}{"op": "test", "path": "/foo", "value": 1},
-		//				map[string]interface{}{"op": "test", "path": "/bar", "value": 3},
-		//			},
-		//		},
-		//	},
-		// },
 		{
 			name: "not_predicate",
 			doc:  map[string]interface{}{"foo": 1, "bar": 2},
@@ -251,7 +210,6 @@ func BenchmarkSecondOrderPredicates(b *testing.B) {
 		b.Run(tc.name, func(b *testing.B) {
 			b.ResetTimer()
 			for b.Loop() {
-				// Clone document for each iteration
 				docCopy := cloneDocument(tc.doc)
 				_, err := jsonpatch.ApplyPatch(docCopy, tc.ops, jsonpatch.WithMutate(true))
 				if err != nil {
@@ -335,27 +293,12 @@ func BenchmarkComplexDocument(b *testing.B) {
 				{Op: "inc", Path: "/metadata/stats/active_users", Inc: 1},
 			},
 		},
-		// Note: Complex validation with and operation - commented out for benchmark stability
-		// {
-		//	name: "complex_validation",
-		//	ops: []jsonpatch.Operation{
-		//		{
-		//			Op:   "and",
-		//			Path: "",
-		//			Apply: []interface{}{
-		//				map[string]interface{}{"op": "test", "path": "/metadata/version", "value": "1.0"},
-		//				map[string]interface{}{"op": "more", "path": "/metadata/stats/total_users", "value": 0},
-		//			},
-		//		},
-		//	},
-		// },
 	}
 
 	for _, tc := range testCases {
 		b.Run(tc.name, func(b *testing.B) {
 			b.ResetTimer()
 			for b.Loop() {
-				// Clone document for each iteration
 				docCopy := cloneDocument(complexDoc)
 				_, err := jsonpatch.ApplyPatch(docCopy, tc.ops, jsonpatch.WithMutate(true))
 				if err != nil {
@@ -366,7 +309,6 @@ func BenchmarkComplexDocument(b *testing.B) {
 	}
 }
 
-// BenchmarkMutateVsImmutable compares mutable vs immutable operations
 func BenchmarkMutateVsImmutable(b *testing.B) {
 	doc := map[string]interface{}{
 		"data": make([]interface{}, 1000),
@@ -376,8 +318,7 @@ func BenchmarkMutateVsImmutable(b *testing.B) {
 		},
 	}
 
-	// Fill the array with test data
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		doc["data"].([]interface{})[i] = map[string]interface{}{
 			"id":    i,
 			"value": i * 2,
@@ -412,9 +353,7 @@ func BenchmarkMutateVsImmutable(b *testing.B) {
 	})
 }
 
-// cloneDocument creates a deep copy of the document for benchmarking
 func cloneDocument(doc interface{}) interface{} {
-	// Use JSON marshal/unmarshal for deep cloning
 	data, err := json.Marshal(doc)
 	if err != nil {
 		panic(err)

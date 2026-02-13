@@ -44,27 +44,27 @@ func DecodeJSON(data []byte, opts internal.JSONPatchOptions) ([]internal.Op, err
 }
 
 // parseOpHeader extracts and validates the "op" and "path" fields from m.
-func parseOpHeader(m map[string]any) (string, string, []string, error) {
+func parseOpHeader(m map[string]any) (string, []string, error) {
 	opType, ok := m["op"].(string)
 	if !ok {
-		return "", "", nil, ErrOpMissingOpField
+		return "", nil, ErrOpMissingOpField
 	}
 
 	pathStr, ok := m["path"].(string)
 	if !ok {
-		return "", "", nil, ErrOpMissingPathField
+		return "", nil, ErrOpMissingPathField
 	}
 
 	if err := jsonpointer.Validate(pathStr); err != nil {
-		return "", "", nil, ErrInvalidPointer
+		return "", nil, ErrInvalidPointer
 	}
 
-	return opType, pathStr, jsonpointer.Parse(pathStr), nil
+	return opType, jsonpointer.Parse(pathStr), nil
 }
 
 // decodeOp converts a JSON operation map to an Op instance.
 func decodeOp(m map[string]any, opts internal.JSONPatchOptions) (internal.Op, error) {
-	opType, pathStr, path, err := parseOpHeader(m)
+	opType, path, err := parseOpHeader(m)
 	if err != nil {
 		return nil, err
 	}
@@ -75,19 +75,19 @@ func decodeOp(m map[string]any, opts internal.JSONPatchOptions) (internal.Op, er
 	case "flip", "inc", "str_ins", "str_del", "split", "merge", "extend":
 		return decodeExtendedOp(opType, path, m)
 	case "not":
-		return decodeNotOp(path, pathStr, m, opts)
+		return decodeNotOp(path, m, opts)
 	default:
-		return decodePredicateOp(opType, path, pathStr, m, opts)
+		return decodePredicateOp(opType, path, m, opts)
 	}
 }
 
 // decodePredicateOnly converts a JSON operation map to a PredicateOp.
 func decodePredicateOnly(m map[string]any, opts internal.JSONPatchOptions) (internal.Op, error) {
-	opType, pathStr, path, err := parseOpHeader(m)
+	opType, path, err := parseOpHeader(m)
 	if err != nil {
 		return nil, err
 	}
-	return decodePredicateOp(opType, path, pathStr, m, opts)
+	return decodePredicateOp(opType, path, m, opts)
 }
 
 // decodeCoreOp decodes standard JSON Patch (RFC 6902) operations.
@@ -219,7 +219,7 @@ func decodeExtendedOp(opType string, path []string, m map[string]any) (internal.
 
 // decodePredicateOp decodes JSON Predicate operations including test,
 // type checks, string tests, comparisons, and composite operations.
-func decodePredicateOp(opType string, path []string, pathStr string, m map[string]any, opts internal.JSONPatchOptions) (internal.Op, error) {
+func decodePredicateOp(opType string, path []string, m map[string]any, opts internal.JSONPatchOptions) (internal.Op, error) {
 	switch opType {
 	case "test":
 		val, ok := m["value"]
@@ -308,21 +308,21 @@ func decodePredicateOp(opType string, path []string, pathStr string, m map[strin
 		return op.NewMore(path, val), nil
 
 	case "and":
-		preds, err := decodeApplyField(m, pathStr, ErrAndOpMissingApply, opts)
+		preds, err := decodeApplyField(m, path, ErrAndOpMissingApply, opts)
 		if err != nil {
 			return nil, err
 		}
 		return op.NewAnd(path, preds), nil
 
 	case "or":
-		preds, err := decodeApplyField(m, pathStr, ErrOrOpMissingApply, opts)
+		preds, err := decodeApplyField(m, path, ErrOrOpMissingApply, opts)
 		if err != nil {
 			return nil, err
 		}
 		return op.NewOr(path, preds), nil
 
 	case "not":
-		return decodePredicateNot(pathStr, m, opts)
+		return decodePredicateNot(path, m, opts)
 
 	default:
 		return nil, ErrCodecOpUnknown
@@ -394,10 +394,7 @@ func decodeTestStringLen(path []string, m map[string]any) (internal.Op, error) {
 		return nil, ErrTestStringLenOpMissingLen
 	}
 	not, _ := m["not"].(bool)
-	if not {
-		return op.NewTestStringLenWithNot(path, lenVal, not), nil
-	}
-	return op.NewTestStringLen(path, lenVal), nil
+	return op.NewTestStringLenWithNot(path, lenVal, not), nil
 }
 
 // extractApplyField extracts and validates the "apply" array from m.
@@ -413,21 +410,21 @@ func extractApplyField(m map[string]any) ([]any, error) {
 }
 
 // decodeApplyField extracts the "apply" array and decodes its sub-predicates.
-func decodeApplyField(m map[string]any, pathStr string, missingErr error, opts internal.JSONPatchOptions) ([]any, error) {
+func decodeApplyField(m map[string]any, path []string, missingErr error, opts internal.JSONPatchOptions) ([]any, error) {
 	apply, ok := m["apply"].([]any)
 	if !ok {
 		return nil, missingErr
 	}
-	return decodeSubPredicates(apply, jsonpointer.Parse(pathStr), opts)
+	return decodeSubPredicates(apply, path, opts)
 }
 
 // decodeNotOp decodes a top-level not operation with multiple predicates.
-func decodeNotOp(path []string, pathStr string, m map[string]any, opts internal.JSONPatchOptions) (internal.Op, error) {
+func decodeNotOp(path []string, m map[string]any, opts internal.JSONPatchOptions) (internal.Op, error) {
 	apply, err := extractApplyField(m)
 	if err != nil {
 		return nil, err
 	}
-	preds, err := decodeSubPredicates(apply, jsonpointer.Parse(pathStr), opts)
+	preds, err := decodeSubPredicates(apply, path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -435,7 +432,7 @@ func decodeNotOp(path []string, pathStr string, m map[string]any, opts internal.
 }
 
 // decodePredicateNot decodes a not predicate with a single operand.
-func decodePredicateNot(pathStr string, m map[string]any, opts internal.JSONPatchOptions) (internal.Op, error) {
+func decodePredicateNot(path []string, m map[string]any, opts internal.JSONPatchOptions) (internal.Op, error) {
 	apply, err := extractApplyField(m)
 	if err != nil {
 		return nil, err
@@ -446,7 +443,7 @@ func decodePredicateNot(pathStr string, m map[string]any, opts internal.JSONPatc
 	}
 
 	sp, _ := sub["path"].(string)
-	merged := mergePaths(jsonpointer.Parse(pathStr), jsonpointer.Parse(sp))
+	merged := mergePaths(path, jsonpointer.Parse(sp))
 	sub["path"] = jsonpointer.Format(merged...)
 
 	operand, err := decodePredicateOnly(sub, opts)

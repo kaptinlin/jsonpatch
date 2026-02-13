@@ -64,39 +64,19 @@ func (ma *MatchesOperation) Code() int {
 
 // Test evaluates the matches predicate condition.
 func (ma *MatchesOperation) Test(doc any) (bool, error) {
-	// Get target value
-	val, err := getValue(doc, ma.Path())
+	_, str, err := getAndValidateString(doc, ma.Path())
 	if err != nil {
-		// For JSON Patch test operations, path not found means test fails (returns false)
-		// This is correct JSON Patch semantics - returning nil error with false result
-		//nolint:nilerr // This is intentional behavior for test operations
+		//nolint:nilerr // intentional: path not found or wrong type means test fails
 		return false, nil
 	}
-
-	// Convert to string
-	str, err := toString(val)
-	if err != nil {
-		// For JSON Patch test operations, wrong type means test fails (returns false)
-		// This is correct JSON Patch semantics - returning nil error with false result
-		//nolint:nilerr // This is intentional behavior for test operations
-		return false, nil
-	}
-
 	return ma.matcher(str), nil
 }
 
 // Apply applies the matches operation.
 func (ma *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
-	// Get target value
-	val, err := getValue(doc, ma.Path())
+	val, str, err := getAndValidateString(doc, ma.Path())
 	if err != nil {
-		return internal.OpResult[any]{}, ErrPathNotFound
-	}
-
-	// Convert to string
-	str, err := toString(val)
-	if err != nil {
-		return internal.OpResult[any]{}, ErrNotString
+		return internal.OpResult[any]{}, err
 	}
 
 	if !ma.matcher(str) {
@@ -108,14 +88,12 @@ func (ma *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // ToJSON converts the operation to JSON representation.
 func (ma *MatchesOperation) ToJSON() (internal.Operation, error) {
-	result := internal.Operation{
+	return internal.Operation{
 		Op:         string(internal.OpMatchesType),
 		Path:       formatPath(ma.Path()),
 		Value:      ma.Pattern,
 		IgnoreCase: ma.IgnoreCase,
-	}
-
-	return result, nil
+	}, nil
 }
 
 // ToCompact converts the operation to compact array representation.

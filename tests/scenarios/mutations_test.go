@@ -11,8 +11,9 @@ import (
 )
 
 func TestMutateOptionFunctionality(t *testing.T) {
+	t.Parallel()
 	t.Run("Mutate False - Document Preservation", func(t *testing.T) {
-		// Test that Mutate: false preserves the original document
+		t.Parallel()
 		original := map[string]interface{}{
 			"name": "John",
 			"age":  30,
@@ -32,12 +33,10 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			t.Fatalf("ApplyPatch() error = %v, want nil", err)
 		}
 
-		// Original document should remain unchanged
 		if diff := cmp.Diff(originalSnapshot, original); diff != "" {
 			t.Errorf("original document modified (-want +got):\n%s", diff)
 		}
 
-		// Result should contain the changes
 		resultDoc := result.Doc
 		if got := resultDoc["name"]; got != "Jane" {
 			t.Errorf("result name = %v, want %q", got, "Jane")
@@ -49,14 +48,13 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			t.Error("result should not have city field")
 		}
 
-		// Should be different objects
 		if isSameMapObject(original, resultDoc) {
 			t.Error("result should be a different object from original")
 		}
 	})
 
 	t.Run("Mutate True - In-Place Modification", func(t *testing.T) {
-		// Test that Mutate: true modifies the original document in-place
+		t.Parallel()
 		original := map[string]interface{}{
 			"name": "John",
 			"age":  30,
@@ -75,7 +73,6 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			t.Fatalf("ApplyPatch() error = %v, want nil", err)
 		}
 
-		// Original document should be modified
 		if got := original["name"]; got != "Jane" {
 			t.Errorf("original name = %v, want %q", got, "Jane")
 		}
@@ -86,20 +83,20 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			t.Error("original should not have city field")
 		}
 
-		// Result should point to the same object
 		resultDoc := result.Doc
 		if !isSameMapObject(original, resultDoc) {
 			t.Error("result should be the same object as original")
 		}
 
-		// Values should match
 		if diff := cmp.Diff(original, resultDoc); diff != "" {
 			t.Errorf("original and result mismatch (-want +got):\n%s", diff)
 		}
 	})
 
 	t.Run("Array Operations with Mutate", func(t *testing.T) {
+		t.Parallel()
 		t.Run("Mutate False - Array Preservation", func(t *testing.T) {
+			t.Parallel()
 			original := []interface{}{"apple", "banana", "cherry"}
 			originalSnapshot := make([]interface{}, len(original))
 			copy(originalSnapshot, original)
@@ -115,12 +112,10 @@ func TestMutateOptionFunctionality(t *testing.T) {
 				t.Fatalf("ApplyPatch() error = %v, want nil", err)
 			}
 
-			// Original should be unchanged
 			if diff := cmp.Diff(originalSnapshot, original); diff != "" {
 				t.Errorf("original array modified (-want +got):\n%s", diff)
 			}
 
-			// Result should have changes
 			resultArray := result.Doc
 			if got := resultArray[1]; got != "blueberry" {
 				t.Errorf("result[1] = %v, want %q", got, "blueberry")
@@ -131,7 +126,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 		})
 
 		t.Run("Mutate True - Array Modification (Go Limitation)", func(t *testing.T) {
-			// Note: Go slices have limitations with in-place length changes
+			t.Parallel()
 			original := []interface{}{"apple", "banana", "cherry"}
 
 			patch := []jsonpatch.Operation{
@@ -144,12 +139,10 @@ func TestMutateOptionFunctionality(t *testing.T) {
 				t.Fatalf("ApplyPatch() error = %v, want nil", err)
 			}
 
-			// For element replacement, original should be modified
 			if got := original[1]; got != "blueberry" {
 				t.Errorf("original[1] = %v, want %q", got, "blueberry")
 			}
 
-			// Should be same slice for replacement operations
 			resultArray := result.Doc
 			if !isSameSliceObject(original, resultArray) {
 				t.Error("result should be the same slice as original")
@@ -157,7 +150,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 		})
 
 		t.Run("Array Addition - New Slice Required", func(t *testing.T) {
-			// Array additions that change length require new slices in Go
+			t.Parallel()
 			original := []interface{}{"apple", "banana", "cherry"}
 
 			patch := []jsonpatch.Operation{
@@ -170,12 +163,10 @@ func TestMutateOptionFunctionality(t *testing.T) {
 				t.Fatalf("ApplyPatch() error = %v, want nil", err)
 			}
 
-			// Original slice cannot be extended in-place (Go limitation)
 			if got := len(original); got != 3 {
 				t.Errorf("original slice length = %d, want 3 (Go limitation)", got)
 			}
 
-			// Result should have the new element
 			resultArray := result.Doc
 			if got := len(resultArray); got != 4 {
 				t.Errorf("result slice length = %d, want 4", got)
@@ -183,14 +174,11 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			if got := resultArray[3]; got != "date" {
 				t.Errorf("result[3] = %v, want %q", got, "date")
 			}
-
-			// Note: This is a Go language limitation, not an implementation issue
-			t.Log("Note: Go slices cannot be extended in-place when capacity is exceeded")
 		})
 	})
 
 	t.Run("Primitive Types - Go Language Behavior", func(t *testing.T) {
-		// Test Go's inherent limitation with primitive types
+		t.Parallel()
 		testCases := []struct {
 			name     string
 			value    interface{}
@@ -219,9 +207,9 @@ func TestMutateOptionFunctionality(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
+				t.Parallel()
 				original := tc.value
 
-				// Test with both mutate options - behavior should be identical for primitives
 				for _, mutate := range []bool{false, true} {
 					t.Run(fmt.Sprintf("Mutate_%v", mutate), func(t *testing.T) {
 						options := jsonpatch.WithMutate(mutate)
@@ -230,12 +218,10 @@ func TestMutateOptionFunctionality(t *testing.T) {
 							t.Fatalf("ApplyPatch() error = %v, want nil", err)
 						}
 
-						// Original primitive cannot be changed (Go language characteristic)
 						if original != tc.value {
 							t.Errorf("original = %v, want %v (primitives are immutable in Go)", original, tc.value)
 						}
 
-						// Result should have the new value
 						if result.Doc != tc.expected {
 							t.Errorf("result.Doc = %v, want %v", result.Doc, tc.expected)
 						}
@@ -246,6 +232,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 	})
 
 	t.Run("Complex Nested Structures", func(t *testing.T) {
+		t.Parallel()
 		original := map[string]interface{}{
 			"user": map[string]interface{}{
 				"name": "John",
@@ -267,6 +254,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 		}
 
 		t.Run("Mutate True - Deep Modification", func(t *testing.T) {
+			t.Parallel()
 			testDoc := deepCopyMap(original)
 
 			options := jsonpatch.WithMutate(true)
@@ -275,7 +263,6 @@ func TestMutateOptionFunctionality(t *testing.T) {
 				t.Fatalf("ApplyPatch() error = %v, want nil", err)
 			}
 
-			// Verify deep modifications
 			if got := testDoc["user"].(map[string]interface{})["name"]; got != "Jane" {
 				t.Errorf("testDoc user name = %v, want %q", got, "Jane")
 			}
@@ -286,7 +273,6 @@ func TestMutateOptionFunctionality(t *testing.T) {
 				t.Errorf("testDoc items[0] name = %v, want %q", got, "updated_item1")
 			}
 
-			// Should be same root object
 			if !isSameMapObject(testDoc, result.Doc) {
 				t.Error("result should be the same object as testDoc")
 			}
@@ -295,11 +281,11 @@ func TestMutateOptionFunctionality(t *testing.T) {
 }
 
 func TestMutatePerformanceCharacteristics(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("Skipping performance test in short mode")
 	}
 
-	// Create a substantial document for meaningful performance testing
 	largeDoc := createLargeDocument(1000)
 	patch := []jsonpatch.Operation{
 		{Op: "replace", Path: "/field_500", Value: "modified"},
@@ -307,7 +293,7 @@ func TestMutatePerformanceCharacteristics(t *testing.T) {
 	}
 
 	t.Run("Performance Validation", func(t *testing.T) {
-		// Test both modes work correctly
+		t.Parallel()
 		optionsFalse := jsonpatch.WithMutate(false)
 		resultFalse, err := jsonpatch.ApplyPatch(deepCopyMap(largeDoc), patch, optionsFalse)
 		if err != nil {
@@ -320,20 +306,11 @@ func TestMutatePerformanceCharacteristics(t *testing.T) {
 			t.Fatalf("ApplyPatch(mutate=true) error = %v, want nil", err)
 		}
 
-		// Both should produce equivalent results
 		if diff := cmp.Diff(resultFalse.Doc, resultTrue.Doc); diff != "" {
 			t.Errorf("mutate modes produced different results (-false +true):\n%s", diff)
 		}
-
-		t.Log("Mutate option performance characteristics:")
-		t.Log("  Mutate=true: ~12-27% faster execution")
-		t.Log("  Mutate=true: ~27% less memory usage")
-		t.Log("  Mutate=true: Fewer memory allocations")
-		t.Log("  Best for: Large documents, high-frequency operations, memory-constrained environments")
 	})
 }
-
-// Helper functions
 
 func copyMap(original map[string]interface{}) map[string]interface{} {
 	mapCopy := make(map[string]interface{})

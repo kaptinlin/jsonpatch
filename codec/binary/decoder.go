@@ -85,31 +85,31 @@ func decodeOp(r *msgp.Reader) (internal.Op, error) {
 	case internal.OpTestTypeCode:
 		return decodeTestType(r, path)
 	case internal.OpLessCode:
-		v, err := readFloat64(r)
+		v, err := r.ReadFloat64()
 		if err != nil {
 			return nil, err
 		}
 		return op.NewLess(path, v), nil
 	case internal.OpMoreCode:
-		v, err := readFloat64(r)
+		v, err := r.ReadFloat64()
 		if err != nil {
 			return nil, err
 		}
 		return op.NewMore(path, v), nil
 	case internal.OpContainsCode:
-		v, err := readString(r)
+		v, err := r.ReadString()
 		if err != nil {
 			return nil, err
 		}
 		return op.NewContains(path, v), nil
 	case internal.OpStartsCode:
-		v, err := readString(r)
+		v, err := r.ReadString()
 		if err != nil {
 			return nil, err
 		}
 		return op.NewStarts(path, v), nil
 	case internal.OpEndsCode:
-		v, err := readString(r)
+		v, err := r.ReadString()
 		if err != nil {
 			return nil, err
 		}
@@ -149,32 +149,6 @@ func decodeOp(r *msgp.Reader) (internal.Op, error) {
 		return nil, fmt.Errorf("unsupported op code %d: %w",
 			code, ErrUnsupportedOp)
 	}
-}
-
-// readFloat64 reads an interface value and asserts it is float64.
-func readFloat64(r *msgp.Reader) (float64, error) {
-	value, err := decodeValue(r)
-	if err != nil {
-		return 0, err
-	}
-	f, ok := value.(float64)
-	if !ok {
-		return 0, fmt.Errorf("expected number, got %T: %w", value, ErrInvalidValueType)
-	}
-	return f, nil
-}
-
-// readString reads an interface value and asserts it is string.
-func readString(r *msgp.Reader) (string, error) {
-	value, err := decodeValue(r)
-	if err != nil {
-		return "", err
-	}
-	s, ok := value.(string)
-	if !ok {
-		return "", fmt.Errorf("expected string, got %T: %w", value, ErrInvalidValueType)
-	}
-	return s, nil
 }
 
 // decodeTestType decodes a test_type operation.

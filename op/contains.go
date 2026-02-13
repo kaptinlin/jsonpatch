@@ -48,17 +48,15 @@ func (co *ContainsOperation) Apply(doc any) (internal.OpResult[any], error) {
 func (co *ContainsOperation) Test(doc any) (bool, error) {
 	_, _, testValue, testString, err := co.getAndPrepareStrings(doc)
 	if err != nil {
-		// For JSON Patch test operations, path not found or wrong type means test fails (returns false)
-		// This is correct JSON Patch semantics - returning nil error with false result
-		//nolint:nilerr // This is intentional behavior for test operations
+		//nolint:nilerr // intentional: path not found or wrong type means test fails
 		return false, nil
 	}
-
 	return strings.Contains(testValue, testString), nil
 }
 
-// getAndPrepareStrings retrieves the value, converts to string, and prepares test strings
-// Optimized to avoid unnecessary allocations in case-sensitive operations
+// getAndPrepareStrings retrieves the value, converts to string, and prepares
+// comparison strings (lowercased when IgnoreCase is set).
+// Returns: originalValue, actualString, comparableString, comparableTarget, error.
 func (co *ContainsOperation) getAndPrepareStrings(doc any) (any, string, string, string, error) {
 	value, err := getValue(doc, co.Path())
 	if err != nil {
@@ -70,16 +68,11 @@ func (co *ContainsOperation) getAndPrepareStrings(doc any) (any, string, string,
 		return nil, "", "", "", ErrNotString
 	}
 
-	// Fast path: case-sensitive comparison (most common case)
 	if !co.IgnoreCase {
 		return value, actualValue, actualValue, co.Value, nil
 	}
 
-	// Slower path: case-insensitive comparison
-	testValue := strings.ToLower(actualValue)
-	testString := strings.ToLower(co.Value)
-
-	return value, actualValue, testValue, testString, nil
+	return value, actualValue, strings.ToLower(actualValue), strings.ToLower(co.Value), nil
 }
 
 // Op returns the operation type.

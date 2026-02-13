@@ -47,26 +47,29 @@ func GetJSONPatchType(value any) JSONPatchType {
 		return JSONPatchTypeBoolean
 	case map[string]any:
 		return JSONPatchTypeObject
+	case []any:
+		return JSONPatchTypeArray
 	case int, int8, int16, int32, int64,
 		uint, uint8, uint16, uint32, uint64:
 		return JSONPatchTypeInteger
 	case float32:
-		f := float64(v)
-		if !math.IsNaN(f) && !math.IsInf(f, 0) && math.Trunc(f) == f {
-			return JSONPatchTypeInteger
-		}
-		return JSONPatchTypeNumber
+		return classifyFloat(float64(v))
 	case float64:
-		if !math.IsNaN(v) && !math.IsInf(v, 0) && math.Trunc(v) == v {
-			return JSONPatchTypeInteger
-		}
-		return JSONPatchTypeNumber
+		return classifyFloat(v)
 	default:
 		if isSliceKind(value) {
 			return JSONPatchTypeArray
 		}
 		return JSONPatchTypeNull
 	}
+}
+
+// classifyFloat returns "integer" for whole-number floats, "number" otherwise.
+func classifyFloat(f float64) JSONPatchType {
+	if !math.IsNaN(f) && !math.IsInf(f, 0) && math.Trunc(f) == f {
+		return JSONPatchTypeInteger
+	}
+	return JSONPatchTypeNumber
 }
 
 // isSliceKind reports whether value is a slice or array using reflection.

@@ -267,7 +267,7 @@ func validateOperationTestType(operation Operation) error {
 	}
 
 	// Handle array of types
-	if typeSlice, ok := operation.Type.([]interface{}); ok {
+	if typeSlice, ok := operation.Type.([]any); ok {
 		if len(typeSlice) == 0 {
 			return fmt.Errorf("%w: type array cannot be empty", ErrInvalidTypeField)
 		}
@@ -407,7 +407,7 @@ func validateTestType(typeStr string) error {
 }
 
 // Type checking helper functions
-func isNumber(value interface{}) bool {
+func isNumber(value any) bool {
 	switch value.(type) {
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
 		return true
@@ -416,12 +416,12 @@ func isNumber(value interface{}) bool {
 	}
 }
 
-func isArray(value interface{}) bool {
+func isArray(value any) bool {
 	if value == nil {
 		return false
 	}
 	switch value.(type) {
-	case []interface{}, []string, []int, []float64:
+	case []any, []string, []int, []float64:
 		return true
 	default:
 		rv := reflect.ValueOf(value)

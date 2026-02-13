@@ -34,9 +34,7 @@ func (in *InOperation) Code() int {
 func (in *InOperation) Test(doc any) (bool, error) {
 	_, found, err := in.getValueAndCheckInArray(doc)
 	if err != nil {
-		// For JSON Patch test operations, path not found means test fails (returns false)
-		// This is correct JSON Patch semantics - returning nil error with false result
-		//nolint:nilerr // This is intentional behavior for test operations
+		//nolint:nilerr // intentional: path not found means test fails
 		return false, nil
 	}
 	return found, nil

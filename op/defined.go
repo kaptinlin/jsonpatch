@@ -24,22 +24,14 @@ func (d *DefinedOperation) Code() int {
 	return internal.OpDefinedCode
 }
 
-// checkPathExists is a helper function that checks if a path exists
-func (d *DefinedOperation) checkPathExists(doc any) bool {
-	_, err := getValue(doc, d.path)
-	return err == nil
-}
-
 // Test performs the defined operation.
 func (d *DefinedOperation) Test(doc any) (bool, error) {
-	// Direct return without intermediate variables
-	return d.checkPathExists(doc), nil
+	return pathExists(doc, d.path), nil
 }
 
 // Apply applies the defined operation.
 func (d *DefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
-	// Use the same logic as Test but avoid double call
-	if !d.checkPathExists(doc) {
+	if !pathExists(doc, d.path) {
 		return internal.OpResult[any]{}, ErrDefinedTestFailed
 	}
 	return internal.OpResult[any]{Doc: doc}, nil

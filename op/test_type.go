@@ -71,10 +71,7 @@ func (tt *TestTypeOperation) checkTypeMatch(actualType string) bool {
 func (tt *TestTypeOperation) Test(doc any) (bool, error) {
 	_, _, typeMatches, err := tt.getValueAndCheckType(doc)
 	if err != nil {
-		// Path access error means the path doesn't exist
-		// For JSON Patch test operations, path not found means test fails (returns false)
-		// This is correct JSON Patch semantics - returning nil error with false result
-		//nolint:nilerr // This is intentional behavior for test operations
+		//nolint:nilerr // intentional: path not found means test fails
 		return false, nil
 	}
 	return typeMatches, nil

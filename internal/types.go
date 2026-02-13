@@ -15,7 +15,7 @@ type Operation struct {
 	// Extended operation fields.
 	Inc float64 `json:"inc"` // No omitempty — 0 is a valid increment.
 	Pos int     `json:"pos"` // No omitempty — 0 is a valid position.
-	Str string  `json:"str"`
+	Str string  `json:"str"` // No omitempty — empty string is a valid value.
 	Len int     `json:"len"` // No omitempty — 0 is a valid length.
 
 	// Predicate fields.

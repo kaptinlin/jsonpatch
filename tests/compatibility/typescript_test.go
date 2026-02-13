@@ -9,21 +9,18 @@ import (
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
 )
 
-// TypeScriptTestCase represents a test case from TypeScript implementation
 type TypeScriptTestCase struct {
-	Name     string                `json:"name"`
-	Doc      interface{}           `json:"doc"`
-	Patch    []jsonpatch.Operation `json:"patch"`
-	Expected interface{}           `json:"expected,omitempty"`
-	WantErr  bool                  `json:"shouldFail,omitempty"`
-	Comment  string                `json:"comment,omitempty"`
-	Source   string                `json:"source,omitempty"` // Which TypeScript file this came from
+	Name     string
+	Doc      interface{}
+	Patch    []jsonpatch.Operation
+	Expected interface{}
+	WantErr  bool
+	Comment  string
+	Source   string
 }
 
-// TestTypeScriptParity verifies that our Go implementation behaves consistently with TypeScript
 func TestTypeScriptParity(t *testing.T) {
 	t.Parallel()
-	// Load test cases from known working operations
 	testCases := getKnownWorkingTestCases()
 
 	for _, tc := range testCases {
@@ -351,11 +348,8 @@ func TestSecondOrderPredicateParity(t *testing.T) {
 	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
 }
 
-// getKnownWorkingTestCases returns a curated set of test cases that are known to work
 func getKnownWorkingTestCases() []TypeScriptTestCase {
 	var allTestCases []TypeScriptTestCase
-
-	// Combine all the working test cases
 	allTestCases = append(allTestCases, getBasicOperationTestCases()...)
 	allTestCases = append(allTestCases, getArrayOperationTestCases()...)
 	allTestCases = append(allTestCases, getPredicateOperationTestCases()...)
@@ -366,7 +360,6 @@ func getKnownWorkingTestCases() []TypeScriptTestCase {
 	return allTestCases
 }
 
-// Helper functions to get specific test case categories
 func getBasicOperationTestCases() []TypeScriptTestCase {
 	return []TypeScriptTestCase{
 		{
@@ -461,7 +454,6 @@ func getSecondOrderPredicateTestCases() []TypeScriptTestCase {
 	}
 }
 
-// convertToMultiOpTestCases converts TypeScript test cases to multi-operation test cases
 func convertToMultiOpTestCases(tsCases []TypeScriptTestCase) []testutils.MultiOperationTestCase {
 	multiOpCases := make([]testutils.MultiOperationTestCase, 0, len(tsCases))
 	for _, tc := range tsCases {
