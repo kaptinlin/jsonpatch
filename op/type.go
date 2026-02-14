@@ -41,7 +41,7 @@ func (tp *TypeOperation) typeMatches(actualType string) bool {
 
 // Test evaluates the type predicate condition.
 func (tp *TypeOperation) Test(doc any) (bool, error) {
-	val, err := getValue(doc, tp.Path())
+	val, err := value(doc, tp.Path())
 	if err != nil {
 		//nolint:nilerr // intentional: path not found means test fails
 		return false, nil
@@ -52,7 +52,7 @@ func (tp *TypeOperation) Test(doc any) (bool, error) {
 
 // Apply applies the type operation to the document.
 func (tp *TypeOperation) Apply(doc any) (internal.OpResult[any], error) {
-	val, err := getValue(doc, tp.Path())
+	val, err := value(doc, tp.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, ErrPathNotFound
 	}

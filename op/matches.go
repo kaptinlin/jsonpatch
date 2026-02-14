@@ -64,7 +64,7 @@ func (ma *MatchesOperation) Code() int {
 
 // Test evaluates the matches predicate condition.
 func (ma *MatchesOperation) Test(doc any) (bool, error) {
-	_, str, err := getAndValidateString(doc, ma.Path())
+	_, str, err := validateString(doc, ma.Path())
 	if err != nil {
 		//nolint:nilerr // intentional: path not found or wrong type means test fails
 		return false, nil
@@ -74,7 +74,7 @@ func (ma *MatchesOperation) Test(doc any) (bool, error) {
 
 // Apply applies the matches operation.
 func (ma *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
-	val, str, err := getAndValidateString(doc, ma.Path())
+	val, str, err := validateString(doc, ma.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}

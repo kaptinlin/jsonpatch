@@ -44,7 +44,7 @@ func (ts *TestStringOperation) Not() bool {
 
 // Test evaluates the test string predicate condition.
 func (ts *TestStringOperation) Test(doc any) (bool, error) {
-	val, err := getValue(doc, ts.Path())
+	val, err := value(doc, ts.Path())
 	if err != nil {
 		//nolint:nilerr // intentional: path not found means test fails
 		return false, nil
@@ -72,7 +72,7 @@ func (ts *TestStringOperation) Test(doc any) (bool, error) {
 
 // Apply applies the test string operation to the document.
 func (ts *TestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
-	val, err := getValue(doc, ts.Path())
+	val, err := value(doc, ts.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, ErrPathNotFound
 	}

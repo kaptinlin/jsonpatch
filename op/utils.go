@@ -68,31 +68,32 @@ func formatPath(path []string) string {
 	return builder.String()
 }
 
-// getValue retrieves a value from a document using a path.
-func getValue(doc any, path []string) (any, error) {
+// value retrieves a value from a document using a path.
+// Returns the value at the path or an error if the path is not found.
+func value(doc any, path []string) (any, error) {
 	if len(path) == 0 {
 		return doc, nil
 	}
 
-	value, err := jsonpointer.Get(doc, path...)
+	val, err := jsonpointer.Get(doc, path...)
 	if err != nil {
 		return nil, ErrPathNotFound
 	}
-	return value, nil
+	return val, nil
 }
 
-// getNumericValue retrieves a numeric value from the document at the given path.
+// numericValue retrieves a numeric value from the document at the given path.
 // Returns the original value, the float64 conversion, and any error.
-func getNumericValue(doc any, path []string) (any, float64, error) {
-	value, err := getValue(doc, path)
+func numericValue(doc any, path []string) (any, float64, error) {
+	val, err := value(doc, path)
 	if err != nil {
 		return nil, 0, ErrPathNotFound
 	}
-	numValue, ok := ToFloat64(value)
+	numValue, ok := ToFloat64(val)
 	if !ok {
 		return nil, 0, ErrNotNumber
 	}
-	return value, numValue, nil
+	return val, numValue, nil
 }
 
 // deepEqual performs a deep equality check between two values.
@@ -209,7 +210,7 @@ func navigateToParent(doc any, path []string) (any, any, error) {
 		parent = doc
 	} else {
 		var err error
-		parent, err = getValue(doc, parentPath)
+		parent, err = value(doc, parentPath)
 		if err != nil {
 			return nil, nil, ErrPathNotFound
 		}
@@ -230,8 +231,9 @@ func navigateToParent(doc any, path []string) (any, any, error) {
 	}
 }
 
-// getValueFromParent retrieves a value from a parent container using a key
-func getValueFromParent(parent any, key any) any {
+// valueFromParent retrieves a value from a parent container using a key.
+// Supports both map[string]any (with string keys) and []any (with int keys).
+func valueFromParent(parent any, key any) any {
 	switch p := parent.(type) {
 	case map[string]any:
 		if k, ok := key.(string); ok {
@@ -335,7 +337,7 @@ func updateGrandparent(doc any, path []string, newSlice []any) error {
 		return nil
 	}
 
-	grandParent, err := getValue(doc, grandParentPath)
+	grandParent, err := value(doc, grandParentPath)
 	if err != nil {
 		return err
 	}
@@ -509,9 +511,10 @@ func toString(value any) (string, error) {
 	}
 }
 
-// getAndValidateString retrieves and validates the string value at the path.
-func getAndValidateString(doc any, path []string) (any, string, error) {
-	val, err := getValue(doc, path)
+// validateString retrieves and validates the string value at the path.
+// Returns the original value, the string representation, and any error.
+func validateString(doc any, path []string) (any, string, error) {
+	val, err := value(doc, path)
 	if err != nil {
 		return nil, "", ErrPathNotFound
 	}

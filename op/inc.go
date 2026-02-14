@@ -47,7 +47,7 @@ func (ic *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 	var currentValue any
 	var oldValue float64
 	if pathExists(doc, ic.path) {
-		currentValue = getValueFromParent(parent, key)
+		currentValue = valueFromParent(parent, key)
 		var ok bool
 		oldValue, ok = ToFloat64(currentValue)
 		if !ok {

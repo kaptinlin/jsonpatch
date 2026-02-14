@@ -56,7 +56,7 @@ func (ex *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	// Get the target object
-	target, err := getValue(doc, ex.Path())
+	target, err := value(doc, ex.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}

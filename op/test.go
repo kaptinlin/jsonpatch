@@ -43,7 +43,7 @@ func (t *TestOperation) Code() int {
 // Test performs the test operation.
 func (t *TestOperation) Test(doc any) (bool, error) {
 	// Get target value
-	target, err := getValue(doc, t.Path())
+	target, err := value(doc, t.Path())
 	if err != nil {
 		// If path not found, return inverse of 'not' flag (matches json-joy behavior)
 		//nolint:nilerr // This is intentional JSON Patch behavior - path not found is not an error
@@ -62,7 +62,7 @@ func (t *TestOperation) Not() bool {
 
 // Apply applies the test operation.
 func (t *TestOperation) Apply(doc any) (internal.OpResult[any], error) {
-	value, err := getValue(doc, t.path)
+	value, err := value(doc, t.path)
 	if err != nil {
 		// If path not found, determine test result based on 'not' flag (matches json-joy behavior)
 		shouldPass := t.NotFlag

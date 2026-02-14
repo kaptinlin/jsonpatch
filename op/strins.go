@@ -68,7 +68,7 @@ func (si *StrInsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	// Get the target value for non-root paths
-	target, err := getValue(doc, si.Path())
+	target, err := value(doc, si.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}

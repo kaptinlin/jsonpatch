@@ -26,14 +26,14 @@ func (c *CopyOperation) Code() int {
 
 // Apply applies the copy operation.
 func (c *CopyOperation) Apply(doc any) (internal.OpResult[any], error) {
-	value, err := getValue(doc, c.from)
+	val, err := value(doc, c.from)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
 	// Avoid deep copy for simple types
 	var clonedValue any
-	switch v := value.(type) {
+	switch v := val.(type) {
 	case string, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, bool, nil:
 		clonedValue = v // Simple types are assigned directly
 	default:
@@ -50,7 +50,7 @@ func (c *CopyOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	var oldValue any
-	if old, err := getValue(doc, c.path); err == nil {
+	if old, err := value(doc, c.path); err == nil {
 		oldValue = old
 	}
 

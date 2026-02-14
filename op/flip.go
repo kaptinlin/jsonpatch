@@ -36,7 +36,7 @@ func (f *FlipOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{Doc: flipped, Old: doc}, nil
 	}
 
-	value, err := getValue(doc, f.Path())
+	value, err := value(doc, f.Path())
 	var oldValue any
 	if err != nil {
 		// Path doesn't exist: treat as undefined (false), flip to true

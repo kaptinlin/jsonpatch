@@ -32,7 +32,7 @@ func (l *LessOperation) Code() int {
 
 // Test evaluates the less predicate condition.
 func (l *LessOperation) Test(doc any) (bool, error) {
-	_, actualValue, err := getNumericValue(doc, l.Path())
+	_, actualValue, err := numericValue(doc, l.Path())
 	if err != nil {
 		//nolint:nilerr // intentional: path not found means test fails
 		return false, nil
@@ -42,7 +42,7 @@ func (l *LessOperation) Test(doc any) (bool, error) {
 
 // Apply applies the less test operation to the document.
 func (l *LessOperation) Apply(doc any) (internal.OpResult[any], error) {
-	value, actualValue, err := getNumericValue(doc, l.Path())
+	value, actualValue, err := numericValue(doc, l.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}

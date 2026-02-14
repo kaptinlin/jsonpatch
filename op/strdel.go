@@ -72,7 +72,7 @@ func (sd *StrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	// Get the target value for non-root paths
-	target, err := getValue(doc, sd.Path())
+	target, err := value(doc, sd.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}

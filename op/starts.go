@@ -52,7 +52,7 @@ func (s *StartsOperation) hasPrefix(str string) bool {
 
 // Test evaluates the starts predicate condition.
 func (s *StartsOperation) Test(doc any) (bool, error) {
-	_, str, err := getAndValidateString(doc, s.Path())
+	_, str, err := validateString(doc, s.Path())
 	if err != nil {
 		//nolint:nilerr // intentional: path not found or wrong type means test fails
 		return false, nil
@@ -62,7 +62,7 @@ func (s *StartsOperation) Test(doc any) (bool, error) {
 
 // Apply applies the starts test operation to the document.
 func (s *StartsOperation) Apply(doc any) (internal.OpResult[any], error) {
-	value, str, err := getAndValidateString(doc, s.Path())
+	value, str, err := validateString(doc, s.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}

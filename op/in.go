@@ -57,7 +57,7 @@ func (in *InOperation) Apply(doc any) (internal.OpResult[any], error) {
 // getValueAndCheckInArray retrieves the value and checks if it's in the array
 func (in *InOperation) getValueAndCheckInArray(doc any) (any, bool, error) {
 	// Get target value
-	val, err := getValue(doc, in.Path())
+	val, err := value(doc, in.Path())
 	if err != nil {
 		return nil, false, ErrPathNotFound
 	}

@@ -33,7 +33,7 @@ func NewContainsWithIgnoreCase(path []string, substring string, ignoreCase bool)
 
 // Apply applies the contains test operation to the document.
 func (co *ContainsOperation) Apply(doc any) (internal.OpResult[any], error) {
-	value, actualValue, testValue, testString, err := co.getAndPrepareStrings(doc)
+	val, actualValue, testValue, testString, err := co.prepareStrings(doc)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -41,12 +41,12 @@ func (co *ContainsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if !strings.Contains(testValue, testString) {
 		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not contain %q", ErrStringMismatch, actualValue, co.Value)
 	}
-	return internal.OpResult[any]{Doc: doc, Old: value}, nil
+	return internal.OpResult[any]{Doc: doc, Old: val}, nil
 }
 
 // Test performs the contains test operation.
 func (co *ContainsOperation) Test(doc any) (bool, error) {
-	_, _, testValue, testString, err := co.getAndPrepareStrings(doc)
+	_, _, testValue, testString, err := co.prepareStrings(doc)
 	if err != nil {
 		//nolint:nilerr // intentional: path not found or wrong type means test fails
 		return false, nil
@@ -54,25 +54,25 @@ func (co *ContainsOperation) Test(doc any) (bool, error) {
 	return strings.Contains(testValue, testString), nil
 }
 
-// getAndPrepareStrings retrieves the value, converts to string, and prepares
+// prepareStrings retrieves the value, converts to string, and prepares
 // comparison strings (lowercased when IgnoreCase is set).
 // Returns: originalValue, actualString, comparableString, comparableTarget, error.
-func (co *ContainsOperation) getAndPrepareStrings(doc any) (any, string, string, string, error) {
-	value, err := getValue(doc, co.Path())
+func (co *ContainsOperation) prepareStrings(doc any) (any, string, string, string, error) {
+	val, err := value(doc, co.Path())
 	if err != nil {
 		return nil, "", "", "", ErrPathNotFound
 	}
 
-	actualValue, err := toString(value)
+	actualValue, err := toString(val)
 	if err != nil {
 		return nil, "", "", "", ErrNotString
 	}
 
 	if !co.IgnoreCase {
-		return value, actualValue, actualValue, co.Value, nil
+		return val, actualValue, actualValue, co.Value, nil
 	}
 
-	return value, actualValue, strings.ToLower(actualValue), strings.ToLower(co.Value), nil
+	return val, actualValue, strings.ToLower(actualValue), strings.ToLower(co.Value), nil
 }
 
 // Op returns the operation type.

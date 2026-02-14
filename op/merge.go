@@ -50,7 +50,7 @@ func (mg *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 		targetArray = slice
 	} else {
 		// Get array at path
-		target, err := getValue(doc, mg.Path())
+		target, err := value(doc, mg.Path())
 		if err != nil {
 			return internal.OpResult[any]{}, err
 		}

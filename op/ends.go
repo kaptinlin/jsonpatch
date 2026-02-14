@@ -52,7 +52,7 @@ func (e *EndsOperation) hasSuffix(str string) bool {
 
 // Test evaluates the ends predicate condition.
 func (e *EndsOperation) Test(doc any) (bool, error) {
-	_, str, err := getAndValidateString(doc, e.Path())
+	_, str, err := validateString(doc, e.Path())
 	if err != nil {
 		//nolint:nilerr // intentional: path not found or wrong type means test fails
 		return false, nil
@@ -62,7 +62,7 @@ func (e *EndsOperation) Test(doc any) (bool, error) {
 
 // Apply applies the ends test operation to the document.
 func (e *EndsOperation) Apply(doc any) (internal.OpResult[any], error) {
-	value, str, err := getAndValidateString(doc, e.Path())
+	value, str, err := validateString(doc, e.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}

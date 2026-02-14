@@ -43,7 +43,7 @@ func (tt *TestTypeOperation) Code() int {
 
 // getValueAndCheckType retrieves the value and checks if it matches any expected type.
 func (tt *TestTypeOperation) getValueAndCheckType(doc any) (any, string, bool, error) {
-	val, err := getValue(doc, tt.Path())
+	val, err := value(doc, tt.Path())
 	if err != nil {
 		return nil, "", false, err
 	}

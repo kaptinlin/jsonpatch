@@ -47,7 +47,7 @@ func (tl *TestStringLenOperation) Not() bool {
 
 // Test tests the string length condition on the document.
 func (tl *TestStringLenOperation) Test(doc any) (bool, error) {
-	value, err := getValue(doc, tl.Path())
+	value, err := value(doc, tl.Path())
 	if err != nil {
 		//nolint:nilerr // intentional: path not found means test fails
 		return false, nil
@@ -65,7 +65,7 @@ func (tl *TestStringLenOperation) Test(doc any) (bool, error) {
 // Apply applies the test string length operation to the document.
 func (tl *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Get the value at the path
-	value, err := getValue(doc, tl.Path())
+	value, err := value(doc, tl.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, ErrPathNotFound
 	}

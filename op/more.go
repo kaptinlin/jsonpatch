@@ -32,7 +32,7 @@ func (mo *MoreOperation) Code() int {
 
 // Test evaluates the more predicate condition.
 func (mo *MoreOperation) Test(doc any) (bool, error) {
-	_, num, err := getNumericValue(doc, mo.Path())
+	_, num, err := numericValue(doc, mo.Path())
 	if err != nil {
 		//nolint:nilerr // intentional: path not found or wrong type means test fails
 		return false, nil
@@ -42,7 +42,7 @@ func (mo *MoreOperation) Test(doc any) (bool, error) {
 
 // Apply applies the more operation.
 func (mo *MoreOperation) Apply(doc any) (internal.OpResult[any], error) {
-	val, num, err := getNumericValue(doc, mo.Path())
+	val, num, err := numericValue(doc, mo.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}

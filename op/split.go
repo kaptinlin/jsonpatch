@@ -41,7 +41,7 @@ func (sp *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if len(sp.Path()) == 0 {
 		target = doc
 	} else {
-		target, err = getValue(doc, sp.Path())
+		target, err = value(doc, sp.Path())
 		if err != nil {
 			return internal.OpResult[any]{}, err
 		}
