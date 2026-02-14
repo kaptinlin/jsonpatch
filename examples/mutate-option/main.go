@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
 
 	"github.com/go-json-experiment/json"
@@ -67,9 +68,7 @@ func main() {
 // Helper functions
 func copyDocument(doc map[string]any) map[string]any {
 	docCopy := make(map[string]any)
-	for k, v := range doc {
-		docCopy[k] = v
-	}
+	maps.Copy(docCopy, doc)
 	return docCopy
 }
 

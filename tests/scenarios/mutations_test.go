@@ -2,6 +2,7 @@ package jsonpatch_test
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
 	"testing"
 	"unsafe"
@@ -304,9 +305,7 @@ func TestMutatePerformanceCharacteristics(t *testing.T) {
 
 func copyMap(original map[string]any) map[string]any {
 	mapCopy := make(map[string]any)
-	for k, v := range original {
-		mapCopy[k] = v
-	}
+	maps.Copy(mapCopy, original)
 	return mapCopy
 }
 
