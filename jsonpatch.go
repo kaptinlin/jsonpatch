@@ -377,7 +377,7 @@ func handleStructDocument[T internal.Document](doc T, patch []internal.Operation
 //
 //	// Struct
 //	user := User{Name: "John", Age: 30}
-//	result, err := ApplyOp(user, operation, WithMutate(false))
+//	result, err := ApplyOp(user, op, WithMutate(false))
 //	if err == nil {
 //		patchedUser := result.Doc // Type: User
 //		oldValue := result.Old    // Previous value
@@ -385,12 +385,12 @@ func handleStructDocument[T internal.Document](doc T, patch []internal.Operation
 //
 //	// Map
 //	doc := map[string]any{"name": "John", "age": 30}
-//	result, err := ApplyOp(doc, operation, WithMutate(true))
+//	result, err := ApplyOp(doc, op, WithMutate(true))
 //
 // The function preserves the input type: struct input returns struct output,
 // map input returns map output, etc.
-func ApplyOp[T internal.Document](doc T, operation internal.Op, opts ...internal.Option) (*internal.OpResult[T], error) {
-	opJSON, err := operation.ToJSON()
+func ApplyOp[T internal.Document](doc T, op internal.Op, opts ...internal.Option) (*internal.OpResult[T], error) {
+	opJSON, err := op.ToJSON()
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert operation to JSON: %w", err)
 	}
@@ -415,7 +415,7 @@ func ApplyOp[T internal.Document](doc T, operation internal.Op, opts ...internal
 //
 //	// Struct
 //	user := User{Name: "John", Age: 30}
-//	result, err := ApplyOps(user, operations, WithMutate(false))
+//	result, err := ApplyOps(user, ops, WithMutate(false))
 //	if err == nil {
 //		patchedUser := result.Doc // Type: User
 //		opResults := result.Res   // Operation results
@@ -423,13 +423,13 @@ func ApplyOp[T internal.Document](doc T, operation internal.Op, opts ...internal
 //
 //	// Map
 //	doc := map[string]any{"name": "John", "age": 30}
-//	result, err := ApplyOps(doc, operations, WithMutate(true))
+//	result, err := ApplyOps(doc, ops, WithMutate(true))
 //
 // The function preserves the input type: struct input returns struct output,
 // map input returns map output, etc.
-func ApplyOps[T internal.Document](doc T, operations []internal.Op, opts ...internal.Option) (*internal.PatchResult[T], error) {
-	patch := make([]internal.Operation, len(operations))
-	for i, op := range operations {
+func ApplyOps[T internal.Document](doc T, ops []internal.Op, opts ...internal.Option) (*internal.PatchResult[T], error) {
+	patch := make([]internal.Operation, len(ops))
+	for i, op := range ops {
 		opJSON, err := op.ToJSON()
 		if err != nil {
 			return nil, fmt.Errorf("operation %d: %w", i, err)

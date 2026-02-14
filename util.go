@@ -26,38 +26,38 @@ func CreateMatcherDefault(pattern string, ignoreCase bool) RegexMatcher {
 }
 
 // ValidateOp validates an operation using the Op interface.
-func ValidateOp(operation internal.Op) error {
-	return operation.Validate()
+func ValidateOp(op internal.Op) error {
+	return op.Validate()
 }
 
 // GetOpType returns the operation type using the Op interface.
-func GetOpType(operation internal.Op) internal.OpType {
-	return operation.Op()
+func GetOpType(op internal.Op) internal.OpType {
+	return op.Op()
 }
 
 // GetOpCode returns the operation code using the Op interface.
-func GetOpCode(operation internal.Op) int {
-	return operation.Code()
+func GetOpCode(op internal.Op) int {
+	return op.Code()
 }
 
 // GetOpPath returns the operation path using the Op interface.
-func GetOpPath(operation internal.Op) []string {
-	return operation.Path()
+func GetOpPath(op internal.Op) []string {
+	return op.Path()
 }
 
 // ApplyOpDirect applies an operation directly using the Op interface.
-func ApplyOpDirect(operation internal.Op, doc any) (internal.OpResult[any], error) {
-	return operation.Apply(doc)
+func ApplyOpDirect(op internal.Op, doc any) (internal.OpResult[any], error) {
+	return op.Apply(doc)
 }
 
 // ToJSON converts an operation to JSON format using the Op interface.
-func ToJSON(operation internal.Op) (internal.Operation, error) {
-	return operation.ToJSON()
+func ToJSON(op internal.Op) (internal.Operation, error) {
+	return op.ToJSON()
 }
 
 // ToCompact converts an operation to compact format using the Op interface.
-func ToCompact(operation internal.Op) (internal.CompactOperation, error) {
-	return operation.ToCompact()
+func ToCompact(op internal.Op) (internal.CompactOperation, error) {
+	return op.ToCompact()
 }
 
 // TestPredicate tests a predicate operation using the PredicateOp interface.

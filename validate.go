@@ -61,8 +61,8 @@ func ValidateOperations(ops []Operation, allowMatchesOp bool) error {
 		return ErrEmptyPatch
 	}
 
-	for i, operation := range ops {
-		if err := ValidateOperation(operation, allowMatchesOp); err != nil {
+	for i, op := range ops {
+		if err := ValidateOperation(op, allowMatchesOp); err != nil {
 			return fmt.Errorf("error in operation [index = %d] (%w)", i, err)
 		}
 	}
@@ -70,95 +70,95 @@ func ValidateOperations(ops []Operation, allowMatchesOp bool) error {
 }
 
 // ValidateOperation validates a single JSON Patch operation.
-func ValidateOperation(operation Operation, allowMatchesOp bool) error {
+func ValidateOperation(op Operation, allowMatchesOp bool) error {
 	// Validate op field first
-	if operation.Op == "" {
+	if op.Op == "" {
 		return ErrMissingOp
 	}
 
 	// Validate path field
-	if operation.Path == "" {
+	if op.Path == "" {
 		return ErrMissingPath
 	}
-	if err := validateJSONPointer(operation.Path); err != nil {
+	if err := validateJSONPointer(op.Path); err != nil {
 		return ErrInvalidJSONPointer
 	}
 
 	// Validate operation by type
-	switch operation.Op {
+	switch op.Op {
 	case "add":
-		return validateOperationAdd(operation)
+		return validateOperationAdd(op)
 	case "remove":
-		return validateOperationRemove(operation)
+		return validateOperationRemove(op)
 	case "replace":
-		return validateOperationReplace(operation)
+		return validateOperationReplace(op)
 	case "copy":
-		return validateOperationCopy(operation)
+		return validateOperationCopy(op)
 	case "move":
-		return validateOperationMove(operation)
+		return validateOperationMove(op)
 	case "flip":
 		return nil
 	case "inc":
-		return validateOperationInc(operation)
+		return validateOperationInc(op)
 	case "str_ins":
-		return validateOperationStrIns(operation)
+		return validateOperationStrIns(op)
 	case "str_del":
-		return validateOperationStrDel(operation)
+		return validateOperationStrDel(op)
 	case "extend":
-		return validateOperationExtend(operation)
+		return validateOperationExtend(op)
 	case "merge":
-		return validateOperationMerge(operation)
+		return validateOperationMerge(op)
 	case "split":
-		return validateOperationSplit(operation)
+		return validateOperationSplit(op)
 	default:
-		return validatePredicateOperation(operation, operation.Op, allowMatchesOp)
+		return validatePredicateOperation(op, op.Op, allowMatchesOp)
 	}
 }
 
 // validatePredicateOperation validates predicate operations
-func validatePredicateOperation(operation Operation, opStr string, allowMatchesOp bool) error {
+func validatePredicateOperation(op Operation, opStr string, allowMatchesOp bool) error {
 	switch opStr {
 	case "test":
-		return validateOperationTest(operation)
+		return validateOperationTest(op)
 	case "test_type":
-		return validateOperationTestType(operation)
+		return validateOperationTestType(op)
 	case "test_string":
-		return validateOperationTestString(operation)
+		return validateOperationTestString(op)
 	case "test_string_len":
-		return validateOperationTestStringLen(operation)
+		return validateOperationTestStringLen(op)
 	case "matches":
 		if !allowMatchesOp {
 			return ErrMatchesNotAllowed
 		}
-		return validateOperationMatches(operation)
+		return validateOperationMatches(op)
 	case "contains":
-		return validateOperationContains(operation)
+		return validateOperationContains(op)
 	case "ends":
-		return validateOperationEnds(operation)
+		return validateOperationEnds(op)
 	case "starts":
-		return validateOperationStarts(operation)
+		return validateOperationStarts(op)
 	case "in":
-		return validateOperationIn(operation)
+		return validateOperationIn(op)
 	case "more":
-		return validateOperationMore(operation)
+		return validateOperationMore(op)
 	case "less":
-		return validateOperationLess(operation)
+		return validateOperationLess(op)
 	case "type":
-		return validateOperationType(operation)
+		return validateOperationType(op)
 	case "defined":
 		return nil
 	case "undefined":
 		return nil
 	case "and", "or", "not":
-		return validateCompositeOperation(operation, allowMatchesOp)
+		return validateCompositeOperation(op, allowMatchesOp)
 	default:
 		return fmt.Errorf("%w: unknown operation '%s'", ErrInvalidOperation, opStr)
 	}
 }
 
 // Core operation validators
-func validateOperationAdd(operation Operation) error {
-	if operation.Value == nil {
+func validateOperationAdd(op Operation) error {
+	if op.Value == nil {
 		return ErrMissingValue
 	}
 	return nil
@@ -169,37 +169,37 @@ func validateOperationRemove(_ Operation) error {
 	return nil
 }
 
-func validateOperationReplace(operation Operation) error {
-	if operation.Value == nil {
+func validateOperationReplace(op Operation) error {
+	if op.Value == nil {
 		return ErrMissingValue
 	}
 	// OldValue is optional, no validation needed for struct-based approach
 	return nil
 }
 
-func validateOperationCopy(operation Operation) error {
-	if operation.From == "" {
+func validateOperationCopy(op Operation) error {
+	if op.From == "" {
 		return ErrMissingFrom
 	}
-	return validateJSONPointer(operation.From)
+	return validateJSONPointer(op.From)
 }
 
-func validateOperationMove(operation Operation) error {
-	if operation.From == "" {
+func validateOperationMove(op Operation) error {
+	if op.From == "" {
 		return ErrMissingFrom
 	}
-	if err := validateJSONPointer(operation.From); err != nil {
+	if err := validateJSONPointer(op.From); err != nil {
 		return err
 	}
 
-	if strings.HasPrefix(operation.Path, operation.From+"/") {
+	if strings.HasPrefix(op.Path, op.From+"/") {
 		return ErrCannotMoveToChildren
 	}
 	return nil
 }
 
-func validateOperationTest(operation Operation) error {
-	if operation.Value == nil {
+func validateOperationTest(op Operation) error {
+	if op.Value == nil {
 		return ErrMissingValue
 	}
 	return nil
@@ -212,21 +212,21 @@ func validateOperationInc(_ Operation) error {
 	return nil
 }
 
-func validateOperationStrIns(operation Operation) error {
-	if operation.Pos < 0 {
+func validateOperationStrIns(op Operation) error {
+	if op.Pos < 0 {
 		return ErrNegativeNumber
 	}
 	// Str field can be empty (for inserting empty string)
 	return nil
 }
 
-func validateOperationStrDel(operation Operation) error {
-	if operation.Pos < 0 {
+func validateOperationStrDel(op Operation) error {
+	if op.Pos < 0 {
 		return ErrNegativeNumber
 	}
 
 	// Either Str or Len should be provided (but not required to error if both missing, as len=0 is valid)
-	if operation.Len < 0 {
+	if op.Len < 0 {
 		return ErrNegativeNumber
 	}
 
@@ -238,8 +238,8 @@ func validateOperationExtend(_ Operation) error {
 	return nil
 }
 
-func validateOperationMerge(operation Operation) error {
-	if operation.Pos < 1 {
+func validateOperationMerge(op Operation) error {
+	if op.Pos < 1 {
 		return ErrPosGreaterThanZero
 	}
 	return nil
@@ -251,13 +251,13 @@ func validateOperationSplit(_ Operation) error {
 }
 
 // Predicate operation validators
-func validateOperationTestType(operation Operation) error {
-	if operation.Type == nil {
+func validateOperationTestType(op Operation) error {
+	if op.Type == nil {
 		return fmt.Errorf("%w: missing required field 'type'", ErrInvalidTypeField)
 	}
 
 	// Handle single type string
-	if typeStr, ok := operation.Type.(string); ok {
+	if typeStr, ok := op.Type.(string); ok {
 		if typeStr == "" {
 			return fmt.Errorf("%w: missing required field 'type'", ErrInvalidTypeField)
 		}
@@ -268,7 +268,7 @@ func validateOperationTestType(operation Operation) error {
 	}
 
 	// Handle array of types
-	if typeSlice, ok := operation.Type.([]any); ok {
+	if typeSlice, ok := op.Type.([]any); ok {
 		if len(typeSlice) == 0 {
 			return fmt.Errorf("%w: type array cannot be empty", ErrInvalidTypeField)
 		}
@@ -287,96 +287,96 @@ func validateOperationTestType(operation Operation) error {
 	return fmt.Errorf("%w: type field must be string or array of strings", ErrInvalidType)
 }
 
-func validateOperationTestString(operation Operation) error {
-	if operation.Pos < 0 {
+func validateOperationTestString(op Operation) error {
+	if op.Pos < 0 {
 		return ErrNegativeNumber
 	}
 	// Str can be empty (to test for empty string at position)
 	return nil
 }
 
-func validateOperationTestStringLen(operation Operation) error {
-	if operation.Len < 0 {
+func validateOperationTestStringLen(op Operation) error {
+	if op.Len < 0 {
 		return ErrNegativeNumber
 	}
 	return nil
 }
 
-// requireStringValue validates that operation.Value is a non-nil string.
+// requireStringValue validates that op.Value is a non-nil string.
 // This eliminates code duplication across string predicate validators.
-func requireStringValue(operation Operation) error {
-	if operation.Value == nil {
+func requireStringValue(op Operation) error {
+	if op.Value == nil {
 		return ErrExpectedValueToBeString
 	}
-	if _, isString := operation.Value.(string); !isString {
+	if _, isString := op.Value.(string); !isString {
 		return ErrExpectedValueToBeString
 	}
 	return nil
 }
 
-// requireNumberValue validates that operation.Value is a non-nil number.
+// requireNumberValue validates that op.Value is a non-nil number.
 // This eliminates code duplication across numeric predicate validators.
-func requireNumberValue(operation Operation, err error) error {
-	if operation.Value == nil {
+func requireNumberValue(op Operation, err error) error {
+	if op.Value == nil {
 		return err
 	}
-	if !isNumber(operation.Value) {
+	if !isNumber(op.Value) {
 		return err
 	}
 	return nil
 }
 
-func validateOperationMatches(operation Operation) error {
-	return requireStringValue(operation)
+func validateOperationMatches(op Operation) error {
+	return requireStringValue(op)
 }
 
-func validateOperationContains(operation Operation) error {
-	return requireStringValue(operation)
+func validateOperationContains(op Operation) error {
+	return requireStringValue(op)
 }
 
-func validateOperationEnds(operation Operation) error {
-	return requireStringValue(operation)
+func validateOperationEnds(op Operation) error {
+	return requireStringValue(op)
 }
 
-func validateOperationStarts(operation Operation) error {
-	return requireStringValue(operation)
+func validateOperationStarts(op Operation) error {
+	return requireStringValue(op)
 }
 
-func validateOperationIn(operation Operation) error {
-	if operation.Value == nil {
+func validateOperationIn(op Operation) error {
+	if op.Value == nil {
 		return ErrInOperationValueMustBeArray
 	}
-	if !isArray(operation.Value) {
+	if !isArray(op.Value) {
 		return ErrInOperationValueMustBeArray
 	}
 	return nil
 }
 
-func validateOperationMore(operation Operation) error {
-	return requireNumberValue(operation, ErrValueMustBeNumber)
+func validateOperationMore(op Operation) error {
+	return requireNumberValue(op, ErrValueMustBeNumber)
 }
 
-func validateOperationLess(operation Operation) error {
-	return requireNumberValue(operation, ErrValueMustBeNumber)
+func validateOperationLess(op Operation) error {
+	return requireNumberValue(op, ErrValueMustBeNumber)
 }
 
-func validateOperationType(operation Operation) error {
-	if operation.Value == nil {
+func validateOperationType(op Operation) error {
+	if op.Value == nil {
 		return ErrExpectedValueToBeString
 	}
-	valueStr, isString := operation.Value.(string)
+	valueStr, isString := op.Value.(string)
 	if !isString {
 		return ErrExpectedValueToBeString
 	}
 	return validateTestType(valueStr)
 }
 
-func validateCompositeOperation(operation internal.Operation, allowMatchesOp bool) error {
-	if len(operation.Apply) == 0 {
+func validateCompositeOperation(op internal.Operation, allowMatchesOp bool) error {
+	if len(op.Apply) == 0 {
 		return ErrEmptyPredicateList
 	}
 
-	for _, predicate := range operation.Apply {
+	for _, predicate := range op.Apply {
 		if err := ValidateOperation(predicate, allowMatchesOp); err != nil {
 			return err
 		}
