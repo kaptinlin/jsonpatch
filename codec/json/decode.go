@@ -344,31 +344,41 @@ func decodeTestType(path []string, m map[string]any) (internal.Op, error) {
 		}
 		return op.NewTestType(path, v), nil
 	case []any:
-		if len(v) == 0 {
-			return nil, ErrEmptyTypeList
-		}
-		types := make([]string, len(v))
-		for i, t := range v {
-			s, ok := t.(string)
-			if !ok || !internal.IsValidJSONPatchType(s) {
-				return nil, ErrInvalidType
-			}
-			types[i] = s
-		}
-		return op.NewTestTypeMultiple(path, types), nil
+		return decodeTestTypeArray(path, v)
 	case []string:
-		if len(v) == 0 {
-			return nil, ErrEmptyTypeList
-		}
-		for _, s := range v {
-			if !internal.IsValidJSONPatchType(s) {
-				return nil, ErrInvalidType
-			}
-		}
-		return op.NewTestTypeMultiple(path, v), nil
+		return decodeTestTypeStringArray(path, v)
 	default:
 		return nil, ErrTestTypeOpMissingType
 	}
+}
+
+// decodeTestTypeArray decodes a test_type operation with []any type list.
+func decodeTestTypeArray(path []string, v []any) (internal.Op, error) {
+	if len(v) == 0 {
+		return nil, ErrEmptyTypeList
+	}
+	types := make([]string, len(v))
+	for i, t := range v {
+		s, ok := t.(string)
+		if !ok || !internal.IsValidJSONPatchType(s) {
+			return nil, ErrInvalidType
+		}
+		types[i] = s
+	}
+	return op.NewTestTypeMultiple(path, types), nil
+}
+
+// decodeTestTypeStringArray decodes a test_type operation with []string type list.
+func decodeTestTypeStringArray(path []string, v []string) (internal.Op, error) {
+	if len(v) == 0 {
+		return nil, ErrEmptyTypeList
+	}
+	for _, s := range v {
+		if !internal.IsValidJSONPatchType(s) {
+			return nil, ErrInvalidType
+		}
+	}
+	return op.NewTestTypeMultiple(path, v), nil
 }
 
 // decodeTestString decodes a test_string operation.
@@ -495,7 +505,8 @@ func mergePaths(base, sub jsonpointer.Path) jsonpointer.Path {
 		return sub
 	}
 	result := make(jsonpointer.Path, 0, len(base)+len(sub))
-	return append(append(result, base...), sub...)
+	result = append(result, base...)
+	return append(result, sub...)
 }
 
 // operationToMap converts an Operation struct to a map for decoding.

@@ -182,18 +182,7 @@ func handleJSONString[T internal.Document](doc T, patch []internal.Operation, op
 		return nil, fmt.Errorf("%w: expected string, got %T", ErrInvalidDocumentType, doc)
 	}
 
-	// Only parse as JSON if the string looks like a JSON object or array.
-	// This prevents automatic conversion of simple strings like "123" to numbers.
-	var parsedDoc any
-	originalWasJSON := len(docStr) > 0 && (docStr[0] == '{' || docStr[0] == '[')
-	if originalWasJSON {
-		if err := json.Unmarshal([]byte(docStr), &parsedDoc); err != nil {
-			parsedDoc = docStr
-			originalWasJSON = false
-		}
-	} else {
-		parsedDoc = docStr
-	}
+	parsedDoc, originalWasJSON := parseStringDocument(docStr)
 
 	resultDoc, resultOps, err := applyInternalPatch(parsedDoc, patch, options)
 	if err != nil {
@@ -211,12 +200,25 @@ func handleJSONString[T internal.Document](doc T, patch []internal.Operation, op
 	}, nil
 }
 
+// parseStringDocument parses a string as JSON if it looks like JSON, otherwise returns it as-is.
+func parseStringDocument(docStr string) (any, bool) {
+	// Only parse as JSON if the string looks like a JSON object or array.
+	if len(docStr) == 0 || (docStr[0] != '{' && docStr[0] != '[') {
+		return docStr, false
+	}
+
+	var parsedDoc any
+	if err := json.Unmarshal([]byte(docStr), &parsedDoc); err != nil {
+		return docStr, false
+	}
+	return parsedDoc, true
+}
+
 // convertStringResult converts the patched result back to type T for string-based documents.
 // It handles direct conversion, interface types, and JSON re-encoding as needed.
 func convertStringResult[T internal.Document](resultDoc any, originalWasJSON bool, doc T) (T, error) {
 	var zeroT T
 
-	// Nil result returns zero value.
 	if resultDoc == nil {
 		return zeroT, nil
 	}
@@ -226,7 +228,7 @@ func convertStringResult[T internal.Document](resultDoc any, originalWasJSON boo
 		return result, nil
 	}
 
-	// Check if T is an interface type (e.g., any) -- accept the result as-is.
+	// Check if T is an interface type (e.g., any).
 	zeroTType := reflect.TypeOf(zeroT)
 	if zeroTType == nil || zeroTType.Kind() == reflect.Interface {
 		if result, ok := resultDoc.(T); ok {
@@ -321,7 +323,7 @@ func convertNullableResult[T internal.Document](resultDoc any, doc T) (T, error)
 		return resultT, nil
 	}
 
-	// Result is nil -- only valid for interface types.
+	// Result is nil - only valid for interface types.
 	zeroTType := reflect.TypeOf(zeroT)
 	if zeroTType == nil || zeroTType.Kind() == reflect.Interface {
 		if nilResult, ok := any(nil).(T); ok {

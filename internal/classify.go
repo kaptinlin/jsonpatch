@@ -7,15 +7,13 @@ func IsJSONPatchOperation(op string) bool {
 	case OpAddType, OpRemoveType, OpReplaceType,
 		OpMoveType, OpCopyType, OpTestType:
 		return true
-	default:
-		return false
 	}
+	return false
 }
 
 // IsPredicateOperation reports whether op is any predicate operation.
 func IsPredicateOperation(op string) bool {
-	return IsFirstOrderPredicateOperation(op) ||
-		IsSecondOrderPredicateOperation(op)
+	return IsFirstOrderPredicateOperation(op) || IsSecondOrderPredicateOperation(op)
 }
 
 // IsFirstOrderPredicateOperation reports whether op is a first-order
@@ -27,9 +25,8 @@ func IsFirstOrderPredicateOperation(op string) bool {
 		OpContainsType, OpEndsType, OpStartsType,
 		OpInType, OpLessType, OpMoreType, OpMatchesType:
 		return true
-	default:
-		return false
 	}
+	return false
 }
 
 // IsSecondOrderPredicateOperation reports whether op is a
@@ -38,9 +35,8 @@ func IsSecondOrderPredicateOperation(op string) bool {
 	switch OpType(op) { //nolint:exhaustive // intentionally matches only second-order predicates
 	case OpAndType, OpOrType, OpNotType:
 		return true
-	default:
-		return false
 	}
+	return false
 }
 
 // IsJSONPatchExtendedOperation reports whether op is an extended
@@ -50,7 +46,6 @@ func IsJSONPatchExtendedOperation(op string) bool {
 	case OpStrInsType, OpStrDelType, OpFlipType,
 		OpIncType, OpSplitType, OpMergeType, OpExtendType:
 		return true
-	default:
-		return false
 	}
+	return false
 }

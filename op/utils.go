@@ -99,42 +99,34 @@ func numericValue(doc any, path []string) (any, float64, error) {
 // deepEqual performs a deep equality check between two values.
 // Optimized to avoid expensive reflect.DeepEqual for common types.
 func deepEqual(a, b any) bool {
-	// Fast path: both nil
 	if a == nil && b == nil {
 		return true
 	}
 
-	// Fast path: one nil, other not
 	if a == nil || b == nil {
 		return false
 	}
 
 	// Fast path: strings (very common)
 	if aStr, aIsStr := a.(string); aIsStr {
-		if bStr, bIsStr := b.(string); bIsStr {
-			return aStr == bStr
-		}
-		return false
+		bStr, bIsStr := b.(string)
+		return bIsStr && aStr == bStr
 	}
 
 	// Fast path: booleans
 	if aBool, aIsBool := a.(bool); aIsBool {
-		if bBool, bIsBool := b.(bool); bIsBool {
-			return aBool == bBool
-		}
-		return false
+		bBool, bIsBool := b.(bool)
+		return bIsBool && aBool == bBool
 	}
 
-	// Fast path: numeric types (only if both are actual numbers, not string conversions)
+	// Fast path: numeric types
 	aFloat, aIsNum := toNumericValue(a)
 	bFloat, bIsNum := toNumericValue(b)
-	if aIsNum && bIsNum {
-		return aFloat == bFloat
-	}
-
-	// Only one is numeric - not equal
 	if aIsNum != bIsNum {
 		return false
+	}
+	if aIsNum {
+		return aFloat == bFloat
 	}
 
 	// Fast path: try direct comparison for comparable types
@@ -204,11 +196,8 @@ func navigateToParent(doc any, path []string) (any, any, error) {
 	parentPath := path[:len(path)-1]
 	key := path[len(path)-1]
 
-	// Navigate to parent
-	var parent any
-	if len(parentPath) == 0 {
-		parent = doc
-	} else {
+	parent := doc
+	if len(parentPath) > 0 {
 		var err error
 		parent, err = value(doc, parentPath)
 		if err != nil {
@@ -216,16 +205,16 @@ func navigateToParent(doc any, path []string) (any, any, error) {
 		}
 	}
 
-	// Convert key to appropriate type
+	// Convert key to appropriate type based on parent
 	switch parent.(type) {
 	case map[string]any:
 		return parent, key, nil
 	case []any:
-		// Try to parse as integer for array index
-		if index, err := parseArrayIndex(key); err == nil {
-			return parent, index, nil
+		index, err := parseArrayIndex(key)
+		if err != nil {
+			return nil, nil, ErrPathNotFound
 		}
-		return nil, nil, ErrPathNotFound
+		return parent, index, nil
 	default:
 		return nil, nil, ErrPathNotFound
 	}
@@ -328,7 +317,6 @@ func updateGrandparent(doc any, path []string, newSlice []any) error {
 	grandParentKey := path[len(path)-2]
 
 	if len(grandParentPath) == 0 {
-		// Parent is in root
 		docMap, ok := doc.(map[string]any)
 		if !ok {
 			return ErrCannotUpdateParent
@@ -353,24 +341,25 @@ func updateGrandparent(doc any, path []string, newSlice []any) error {
 func updateParent(parent any, key any, value any) error {
 	switch p := parent.(type) {
 	case map[string]any:
-		if k, ok := key.(string); ok {
+		k, ok := key.(string)
+		if !ok {
+			return ErrInvalidKeyTypeMap
+		}
+		p[k] = value
+		return nil
+	case []any:
+		k, ok := key.(int)
+		if !ok {
+			return ErrInvalidKeyTypeSlice
+		}
+		if k >= 0 && k < len(p) {
 			p[k] = value
 			return nil
 		}
-		return ErrInvalidKeyTypeMap
-	case []any:
-		if k, ok := key.(int); ok {
-			if k >= 0 && k < len(p) {
-				p[k] = value
-				return nil
-			} else if k == len(p) {
-				// Allow appending to the end of the array
-				// Note: We can't modify the slice header here, this needs to be handled by the caller
-				return ErrIndexOutOfRange
-			}
+		if k == len(p) {
 			return ErrIndexOutOfRange
 		}
-		return ErrInvalidKeyTypeSlice
+		return ErrIndexOutOfRange
 	default:
 		return ErrUnsupportedParentType
 	}
@@ -435,7 +424,6 @@ func ToFloat64(val any) (float64, bool) {
 
 // parseStringToFloat optimizes string-to-float conversion with fast paths
 func parseStringToFloat(v string) (float64, bool) {
-	// Fast path: check for empty string first (common case)
 	if len(v) == 0 {
 		return 0, true
 	}
@@ -453,11 +441,8 @@ func parseStringToFloat(v string) (float64, bool) {
 		return 0, true
 	}
 
-	if f, err := strconv.ParseFloat(trimmed, 64); err == nil {
-		return f, true
-	}
-
-	return 0, false
+	f, err := strconv.ParseFloat(trimmed, 64)
+	return f, err == nil
 }
 
 // isSimpleNumeric checks if string contains only numeric characters (fast path)
