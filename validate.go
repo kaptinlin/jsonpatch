@@ -317,12 +317,12 @@ func requireStringValue(op Operation) error {
 
 // requireNumberValue validates that op.Value is a non-nil number.
 // This eliminates code duplication across numeric predicate validators.
-func requireNumberValue(op Operation, err error) error {
+func requireNumberValue(op Operation) error {
 	if op.Value == nil {
-		return err
+		return ErrValueMustBeNumber
 	}
 	if !isNumber(op.Value) {
-		return err
+		return ErrValueMustBeNumber
 	}
 	return nil
 }
@@ -354,11 +354,11 @@ func validateOperationIn(op Operation) error {
 }
 
 func validateOperationMore(op Operation) error {
-	return requireNumberValue(op, ErrValueMustBeNumber)
+	return requireNumberValue(op)
 }
 
 func validateOperationLess(op Operation) error {
-	return requireNumberValue(op, ErrValueMustBeNumber)
+	return requireNumberValue(op)
 }
 
 func validateOperationType(op Operation) error {
@@ -402,7 +402,7 @@ func validateTestType(typeStr string) error {
 	return nil
 }
 
-// Type checking helper functions
+// isNumber reports whether value is a numeric type.
 func isNumber(value any) bool {
 	switch value.(type) {
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
@@ -412,6 +412,7 @@ func isNumber(value any) bool {
 	}
 }
 
+// isArray reports whether value is an array or slice type.
 func isArray(value any) bool {
 	if value == nil {
 		return false

@@ -219,16 +219,17 @@ func parseStringDocument(docStr string) (any, bool) {
 func convertStringResult[T internal.Document](resultDoc any, originalWasJSON bool, doc T) (T, error) {
 	var zeroT T
 
+	// Handle nil result early
 	if resultDoc == nil {
 		return zeroT, nil
 	}
 
-	// Direct conversion covers the common case.
+	// Try direct conversion first (common case)
 	if result, ok := resultDoc.(T); ok {
 		return result, nil
 	}
 
-	// Check if T is an interface type (e.g., any).
+	// Check if T is an interface type (e.g., any)
 	zeroTType := reflect.TypeOf(zeroT)
 	if zeroTType == nil || zeroTType.Kind() == reflect.Interface {
 		if result, ok := resultDoc.(T); ok {
@@ -237,7 +238,7 @@ func convertStringResult[T internal.Document](resultDoc any, originalWasJSON boo
 		return zeroT, fmt.Errorf("%w: failed to convert result to interface type", ErrConversionFailed)
 	}
 
-	// For concrete string types with a JSON-encoded original: re-encode the result.
+	// For concrete string types with JSON-encoded original, re-encode the result
 	if zeroTType.Kind() == reflect.String && originalWasJSON {
 		return marshalToStringType(resultDoc, doc)
 	}
@@ -315,6 +316,7 @@ func handleMapDocument[T internal.Document](doc T, patch []internal.Operation, o
 func convertNullableResult[T internal.Document](resultDoc any, doc T) (T, error) {
 	var zeroT T
 
+	// Handle non-nil result first (common case)
 	if resultDoc != nil {
 		resultT, ok := resultDoc.(T)
 		if !ok {
@@ -323,7 +325,7 @@ func convertNullableResult[T internal.Document](resultDoc any, doc T) (T, error)
 		return resultT, nil
 	}
 
-	// Result is nil - only valid for interface types.
+	// Result is nil - only valid for interface types
 	zeroTType := reflect.TypeOf(zeroT)
 	if zeroTType == nil || zeroTType.Kind() == reflect.Interface {
 		if nilResult, ok := any(nil).(T); ok {
