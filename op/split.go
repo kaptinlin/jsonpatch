@@ -1,6 +1,10 @@
 package op
 
-import "github.com/kaptinlin/jsonpatch/internal"
+import (
+	"slices"
+
+	"github.com/kaptinlin/jsonpatch/internal"
+)
 
 // SplitOperation represents a string split operation.
 // path: target path
@@ -255,14 +259,9 @@ func splitSlateElementNode(nodeMap map[string]any, pos int, props map[string]any
 
 	beforeNode, afterNode := splitNodePair(nodeMap, "children", props)
 
-	// Copy children slices to avoid mutation
-	beforeChildrenCopy := make([]any, len(children[:pos]))
-	copy(beforeChildrenCopy, children[:pos])
-	afterChildrenCopy := make([]any, len(children[pos:]))
-	copy(afterChildrenCopy, children[pos:])
-
-	beforeNode["children"] = beforeChildrenCopy
-	afterNode["children"] = afterChildrenCopy
+	// Clone children slices to avoid mutation (Go 1.21+)
+	beforeNode["children"] = slices.Clone(children[:pos])
+	afterNode["children"] = slices.Clone(children[pos:])
 
 	return []map[string]any{beforeNode, afterNode}
 }

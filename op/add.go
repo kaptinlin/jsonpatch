@@ -2,6 +2,8 @@
 package op
 
 import (
+	"slices"
+
 	"github.com/kaptinlin/deepclone"
 	"github.com/kaptinlin/jsonpatch/internal"
 )
@@ -105,10 +107,8 @@ func addToSlice(doc []any, path []string, value any) (any, any, error) {
 			displacedElement = doc[index]
 		}
 
-		newV := make([]any, len(doc)+1)
-		copy(newV, doc[:index])
-		newV[index] = value
-		copy(newV[index+1:], doc[index:])
+		// Use slices.Insert (Go 1.21+) for efficient element insertion
+		newV := slices.Insert(slices.Clone(doc), index, value)
 		return newV, displacedElement, nil
 	}
 

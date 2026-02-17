@@ -192,7 +192,8 @@ func validateOperationMove(op Operation) error {
 		return err
 	}
 
-	if strings.HasPrefix(op.Path, op.From+"/") {
+	// Use strings.CutPrefix (Go 1.20+) to check if path starts with from+"/"
+	if _, found := strings.CutPrefix(op.Path, op.From+"/"); found {
 		return ErrCannotMoveToChildren
 	}
 	return nil

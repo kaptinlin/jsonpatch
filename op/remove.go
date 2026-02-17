@@ -1,6 +1,10 @@
 package op
 
-import "github.com/kaptinlin/jsonpatch/internal"
+import (
+	"slices"
+
+	"github.com/kaptinlin/jsonpatch/internal"
+)
 
 // RemoveOperation represents a remove operation that removes a value at a specified path.
 type RemoveOperation struct {
@@ -58,9 +62,8 @@ func (r *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 				return internal.OpResult[any]{}, ErrIndexOutOfRange
 			}
 			oldValue := v[index]
-			newArray := make([]any, len(v)-1)
-			copy(newArray, v[:index])
-			copy(newArray[index:], v[index+1:])
+			// Use slices.Delete (Go 1.21+) for efficient element removal
+			newArray := slices.Delete(slices.Clone(v), index, index+1)
 			return internal.OpResult[any]{Doc: newArray, Old: oldValue}, nil
 		default:
 			return internal.OpResult[any]{}, ErrCannotRemoveFromValue
@@ -93,9 +96,8 @@ func (r *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 			return internal.OpResult[any]{}, ErrIndexOutOfRange
 		}
 		oldValue := p[k]
-		newSlice := make([]any, len(p)-1)
-		copy(newSlice, p[:k])
-		copy(newSlice[k:], p[k+1:])
+		// Use slices.Delete (Go 1.21+) for efficient element removal
+		newSlice := slices.Delete(slices.Clone(p), k, k+1)
 		if err := setValueAtPath(doc, r.path[:len(r.path)-1], newSlice); err != nil {
 			return internal.OpResult[any]{}, err
 		}

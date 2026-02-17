@@ -2,6 +2,7 @@ package op
 
 import (
 	"maps"
+	"slices"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 )
@@ -72,11 +73,10 @@ func (mg *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	two := targetArray[pos]
 	merged := mg.mergeElements(one, two)
 
-	// Create new array with merged result
-	newSlice := make([]any, len(targetArray)-1)
-	copy(newSlice[:pos-1], targetArray[:pos-1])
+	// Create new array with merged result using slices.Delete (Go 1.21+)
+	newSlice := slices.Clone(targetArray)
 	newSlice[pos-1] = merged
-	copy(newSlice[pos:], targetArray[pos+1:])
+	newSlice = slices.Delete(newSlice, pos, pos+1)
 
 	// Update the document
 	if len(mg.Path()) == 0 {
@@ -223,9 +223,7 @@ func mergeSlateElementNodes(one, two map[string]any) map[string]any {
 	result := copyPropsExcluding(one, two, "children")
 	childrenOne, _ := one["children"].([]any)
 	childrenTwo, _ := two["children"].([]any)
-	mergedChildren := make([]any, 0, len(childrenOne)+len(childrenTwo))
-	mergedChildren = append(mergedChildren, childrenOne...)
-	mergedChildren = append(mergedChildren, childrenTwo...)
-	result["children"] = mergedChildren
+	// Use slices.Concat (Go 1.22+) for efficient slice concatenation
+	result["children"] = slices.Concat(childrenOne, childrenTwo)
 	return result
 }
