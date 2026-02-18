@@ -14,9 +14,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Initialize submodules
-        run: git submodule update --init --recursive
-
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
