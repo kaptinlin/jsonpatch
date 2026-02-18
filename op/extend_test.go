@@ -3,7 +3,6 @@ package op
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
 )
@@ -142,9 +141,7 @@ func TestExtend_Constructor(t *testing.T) {
 	props := map[string]any{"age": 30, "city": "NYC"}
 	deleteNull := true
 	extendOp := NewExtend(path, props, deleteNull)
-	if diff := cmp.Diff(path, extendOp.Path()); diff != "" {
-		t.Errorf("NewExtend() Path mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, path, extendOp.Path(), "Path()")
 	assert.Equal(t, props, extendOp.Properties)
 	assert.Equal(t, deleteNull, extendOp.DeleteNull, "NewExtend() DeleteNull")
 	if got := extendOp.Op(); got != internal.OpExtendType {

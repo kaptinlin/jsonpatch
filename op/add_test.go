@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
 )
@@ -79,9 +78,7 @@ func TestAdd_InterfaceMethods(t *testing.T) {
 	if got := addOp.Code(); got != internal.OpAddCode {
 		assert.Equal(t, internal.OpAddCode, got, "Code()")
 	}
-	if diff := cmp.Diff([]string{"foo"}, addOp.Path()); diff != "" {
-		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, []string{"foo"}, addOp.Path(), "Path()")
 }
 
 func TestAdd_ToJSON(t *testing.T) {
@@ -138,9 +135,7 @@ func TestAdd_Constructor(t *testing.T) {
 
 	addOp := NewAdd(path, value)
 
-	if diff := cmp.Diff(path, addOp.Path()); diff != "" {
-		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, path, addOp.Path(), "Path()")
 	// Verify value indirectly through ToJSON since the value field is unexported
 	got, err := addOp.ToJSON()
 	if err != nil {

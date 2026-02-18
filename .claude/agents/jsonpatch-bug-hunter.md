@@ -52,7 +52,7 @@ You are a Go expert specializing in JSON Patch (RFC 6902) implementation validat
 - Extended operation implementations
 
 **Quality Standards:**
-- All fixes must pass existing tests with `make test`
+- All fixes must pass existing tests with `task test`
 - New validation tests must use `testify/assert` for assertions
 - Follow the project's performance optimization approach
 - Maintain code coverage and add tests for fixed bugs

@@ -4,9 +4,9 @@ package testutils
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 // ApplyOperation applies a single operation to a document.
@@ -120,9 +120,7 @@ func RunTestCase(t *testing.T, tc TestCase) {
 			_ = ApplyOperationWithError(t, tc.Doc, tc.Operation)
 		} else {
 			result := ApplyOperation(t, tc.Doc, tc.Operation)
-			if diff := cmp.Diff(tc.Expected, result); diff != "" {
-				t.Fatalf("ApplyPatch() mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, tc.Expected, result, "ApplyPatch() result mismatch")
 		}
 	})
 }
@@ -136,9 +134,7 @@ func RunMultiOperationTestCase(t *testing.T, tc MultiOperationTestCase) {
 			_ = ApplyOperationsWithError(t, tc.Doc, tc.Operations)
 		} else {
 			result := ApplyOperations(t, tc.Doc, tc.Operations)
-			if diff := cmp.Diff(tc.Expected, result); diff != "" {
-				t.Fatalf("ApplyPatch() mismatch (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, tc.Expected, result, "ApplyPatch() result mismatch")
 		}
 	})
 }

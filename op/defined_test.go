@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
 )
@@ -81,9 +80,7 @@ func TestDefined_InterfaceMethods(t *testing.T) {
 	if got := definedOp.Code(); got != internal.OpDefinedCode {
 		assert.Equal(t, internal.OpDefinedCode, got, "Code()")
 	}
-	if diff := cmp.Diff([]string{"test"}, definedOp.Path()); diff != "" {
-		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, []string{"test"}, definedOp.Path(), "Path()")
 }
 
 func TestDefined_ToJSON(t *testing.T) {

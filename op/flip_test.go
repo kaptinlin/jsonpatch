@@ -3,7 +3,6 @@ package op
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
 )
@@ -171,9 +170,7 @@ func TestFlip_Constructor(t *testing.T) {
 	path := []string{"user", "active"}
 	flipOp := NewFlip(path)
 
-	if diff := cmp.Diff(path, flipOp.Path()); diff != "" {
-		t.Errorf("NewFlip() Path mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, path, flipOp.Path(), "Path()")
 	if got := flipOp.Op(); got != internal.OpFlipType {
 		assert.Equal(t, internal.OpFlipType, got, "Op()")
 	}

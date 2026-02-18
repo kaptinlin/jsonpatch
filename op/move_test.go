@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
 )
@@ -151,12 +150,8 @@ func TestMove_InterfaceMethods(t *testing.T) {
 	if got := moveOp.Code(); got != internal.OpMoveCode {
 		assert.Equal(t, internal.OpMoveCode, got, "Code()")
 	}
-	if diff := cmp.Diff([]string{"target"}, moveOp.Path()); diff != "" {
-		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
-	}
-	if diff := cmp.Diff([]string{"source"}, moveOp.From()); diff != "" {
-		t.Errorf("From() mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, []string{"target"}, moveOp.Path(), "Path()")
+	assert.Equal(t, []string{"source"}, moveOp.From(), "From()")
 	if !moveOp.HasFrom() {
 		assert.Fail(t, "HasFrom() = false, want true")
 	}

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
 )
@@ -108,9 +107,7 @@ func TestMatches_Constructor(t *testing.T) {
 
 	matchesOp := NewMatches(path, pattern, ignoreCase, nil)
 
-	if diff := cmp.Diff(path, matchesOp.Path()); diff != "" {
-		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, path, matchesOp.Path(), "Path()")
 	if matchesOp.Pattern != pattern {
 		assert.Equal(t, pattern, matchesOp.Pattern, "Pattern")
 	}

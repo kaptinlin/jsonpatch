@@ -3,7 +3,6 @@ package op
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
 )
@@ -178,9 +177,7 @@ func TestMerge_Constructor(t *testing.T) {
 	pos := 1.0
 	props := map[string]any{"type": "merge"}
 	mergeOp := NewMerge(path, pos, props)
-	if diff := cmp.Diff(path, mergeOp.Path()); diff != "" {
-		t.Errorf("NewMerge() Path mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, path, mergeOp.Path(), "Path()")
 	assert.Equal(t, pos, mergeOp.Pos, "NewMerge() Pos")
 	assert.Equal(t, props, mergeOp.Props)
 	if got := mergeOp.Op(); got != internal.OpMergeType {

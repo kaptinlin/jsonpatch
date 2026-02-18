@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
 )
@@ -118,9 +117,7 @@ func TestAnd_InterfaceMethods(t *testing.T) {
 	if got := andOp.Code(); got != internal.OpAndCode {
 		assert.Equal(t, internal.OpAndCode, got, "Code()")
 	}
-	if diff := cmp.Diff([]string{"test"}, andOp.Path()); diff != "" {
-		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, []string{"test"}, andOp.Path(), "Path()")
 
 	ops := andOp.Ops()
 	if len(ops) != 2 {

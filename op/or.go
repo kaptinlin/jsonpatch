@@ -75,17 +75,9 @@ func (oo *OrOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // ToJSON serializes the operation to JSON format.
 func (oo *OrOperation) ToJSON() (internal.Operation, error) {
-	opsJSON := make([]internal.Operation, 0, len(oo.Operations))
-	for _, op := range oo.Operations {
-		predicateOp, ok := op.(internal.PredicateOp)
-		if !ok {
-			return internal.Operation{}, ErrInvalidPredicateInOr
-		}
-		jsonVal, err := predicateOp.ToJSON()
-		if err != nil {
-			return internal.Operation{}, err
-		}
-		opsJSON = append(opsJSON, jsonVal)
+	opsJSON, err := predicateOpsToJSON(oo.Operations, ErrInvalidPredicateInOr)
+	if err != nil {
+		return internal.Operation{}, err
 	}
 	return internal.Operation{
 		Op:    string(internal.OpOrType),
@@ -96,32 +88,14 @@ func (oo *OrOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (oo *OrOperation) ToCompact() (internal.CompactOperation, error) {
-	opsCompact := make([]any, 0, len(oo.Operations))
-	for _, op := range oo.Operations {
-		predicateOp, ok := op.(internal.PredicateOp)
-		if !ok {
-			return nil, ErrInvalidPredicateInOr
-		}
-		compact, err := predicateOp.ToCompact()
-		if err != nil {
-			return nil, err
-		}
-		opsCompact = append(opsCompact, compact)
+	opsCompact, err := predicateOpsToCompact(oo.Operations, ErrInvalidPredicateInOr)
+	if err != nil {
+		return nil, err
 	}
 	return internal.CompactOperation{internal.OpOrCode, oo.Path(), opsCompact}, nil
 }
 
 // Validate validates the OR operation.
 func (oo *OrOperation) Validate() error {
-	// Empty operations are valid (though they return false)
-	for _, op := range oo.Operations {
-		predicateOp, ok := op.(internal.PredicateOp)
-		if !ok {
-			return ErrInvalidPredicateInOr
-		}
-		if err := predicateOp.Validate(); err != nil {
-			return err
-		}
-	}
-	return nil
+	return validatePredicateOps(oo.Operations, ErrInvalidPredicateInOr)
 }

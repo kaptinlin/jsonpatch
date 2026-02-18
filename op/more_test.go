@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
 )
@@ -111,9 +110,7 @@ func TestMore_Constructor(t *testing.T) {
 	value := 18.0
 
 	moreOp := NewMore(path, value)
-	if diff := cmp.Diff(path, moreOp.Path()); diff != "" {
-		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, path, moreOp.Path(), "Path()")
 	assert.Equal(t, value, moreOp.Value, "Value")
 	if got := moreOp.Op(); got != internal.OpMoreType {
 		assert.Equal(t, internal.OpMoreType, got, "Op()")

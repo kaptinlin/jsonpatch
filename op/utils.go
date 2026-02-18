@@ -356,9 +356,6 @@ func updateParent(parent any, key any, value any) error {
 			p[k] = value
 			return nil
 		}
-		if k == len(p) {
-			return ErrIndexOutOfRange
-		}
 		return ErrIndexOutOfRange
 	default:
 		return ErrUnsupportedParentType
@@ -517,4 +514,55 @@ func floatToJSONValue(f float64) any {
 		return int(f)
 	}
 	return f
+}
+
+// predicateOpsToJSON converts a slice of predicate operations to JSON format.
+// Used by composite predicates (And, Or, Not) to serialize their sub-operations.
+func predicateOpsToJSON(operations []any, errInvalid error) ([]internal.Operation, error) {
+	result := make([]internal.Operation, 0, len(operations))
+	for _, op := range operations {
+		predicateOp, ok := op.(internal.PredicateOp)
+		if !ok {
+			return nil, errInvalid
+		}
+		jsonVal, err := predicateOp.ToJSON()
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, jsonVal)
+	}
+	return result, nil
+}
+
+// predicateOpsToCompact converts a slice of predicate operations to compact format.
+// Used by composite predicates (And, Or, Not) to serialize their sub-operations.
+func predicateOpsToCompact(operations []any, errInvalid error) ([]any, error) {
+	result := make([]any, 0, len(operations))
+	for _, op := range operations {
+		predicateOp, ok := op.(internal.PredicateOp)
+		if !ok {
+			return nil, errInvalid
+		}
+		compact, err := predicateOp.ToCompact()
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, compact)
+	}
+	return result, nil
+}
+
+// validatePredicateOps validates a slice of predicate operations.
+// Used by composite predicates (And, Or, Not) to validate their sub-operations.
+func validatePredicateOps(operations []any, errInvalid error) error {
+	for _, op := range operations {
+		predicateOp, ok := op.(internal.PredicateOp)
+		if !ok {
+			return errInvalid
+		}
+		if err := predicateOp.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
