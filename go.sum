@@ -4,10 +4,10 @@ github.com/go-json-experiment/json v0.0.0-20251027170946-4849db3c2f7e h1:Lf/gRko
 github.com/go-json-experiment/json v0.0.0-20251027170946-4849db3c2f7e/go.mod h1:uNVvRXArCGbZ508SxYYTC5v1JWoz2voff5pm25jU1Ok=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
-github.com/kaptinlin/deepclone v0.2.9 h1:ILJhHPHuSrZ+A86hP3TiG7oyBdYgO4xBwnncZr3TYFM=
-github.com/kaptinlin/deepclone v0.2.9/go.mod h1:SvbvSQmFYS5glrGRYDu/qtsTUzX9YVmrsOOvC85N9Xw=
-github.com/kaptinlin/jsonpointer v0.4.16 h1:Ux4w4FY+uLv+K+TxaCJtM/TpPv+1+eS6gH4Z9/uhOuA=
-github.com/kaptinlin/jsonpointer v0.4.16/go.mod h1:SsfsjqnHG5zuKo1DTBzk1VknaHlL4osHw+X9kZKukpU=
+github.com/kaptinlin/deepclone v0.2.10 h1:H0qea0AcNq/ZzSWvXrGMQUECmH4s5QJFb2cmUiJL/BU=
+github.com/kaptinlin/deepclone v0.2.10/go.mod h1:SvbvSQmFYS5glrGRYDu/qtsTUzX9YVmrsOOvC85N9Xw=
+github.com/kaptinlin/jsonpointer v0.4.17 h1:mY9k8ciWncxbsECyaxKnR0MdmxamNdp2tLQkAKVrtSk=
+github.com/kaptinlin/jsonpointer v0.4.17/go.mod h1:SsfsjqnHG5zuKo1DTBzk1VknaHlL4osHw+X9kZKukpU=
 github.com/philhofer/fwd v1.2.0 h1:e6DnBTl7vGY+Gz322/ASL4Gyp1FspeMvx1RNDoToZuM=
 github.com/philhofer/fwd v1.2.0/go.mod h1:RqIHx9QI14HlwKwm98g9Re5prTQ6LdeRQn+gXJFxsJM=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
