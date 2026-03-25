@@ -174,16 +174,9 @@ func (sp *SplitOperation) splitString(s string) []any {
 	return []any{before, after}
 }
 
-// splitNumber splits a number at the specified position
+// splitNumber splits a number at the specified position (no clamping, matching json-joy behavior)
 func (sp *SplitOperation) splitNumber(n float64) []any {
-	pos := sp.Pos
-	if pos > n {
-		pos = n
-	}
-	if pos < 0 {
-		pos = 0
-	}
-	return []any{pos, n - pos}
+	return []any{sp.Pos, n - sp.Pos}
 }
 
 // ToJSON serializes the operation to JSON format.

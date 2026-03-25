@@ -11,11 +11,11 @@ import (
 
 // decodeOps reads the operation count and decodes each operation.
 func decodeOps(r *msgp.Reader) ([]internal.Op, error) {
-	count, err := r.ReadFloat64()
+	arrSize, err := r.ReadArrayHeader()
 	if err != nil {
 		return nil, err
 	}
-	size := int(count)
+	size := int(arrSize)
 	ops := make([]internal.Op, size)
 	for i := range size {
 		decoded, err := decodeOp(r)
@@ -30,7 +30,8 @@ func decodeOps(r *msgp.Reader) ([]internal.Op, error) {
 // decodeOp reads the array header, operation code, and path,
 // then dispatches to the appropriate decoder.
 func decodeOp(r *msgp.Reader) (internal.Op, error) {
-	if _, err := r.ReadArrayHeader(); err != nil {
+	arrSize, err := r.ReadArrayHeader()
+	if err != nil {
 		return nil, err
 	}
 	code, err := r.ReadUint8()
@@ -51,6 +52,13 @@ func decodeOp(r *msgp.Reader) (internal.Op, error) {
 		}
 		return op.NewAdd(path, value), nil
 	case internal.OpRemoveCode:
+		if arrSize >= 3 {
+			oldValue, err := decodeValue(r)
+			if err != nil {
+				return nil, err
+			}
+			return op.NewRemoveWithOldValue(path, oldValue), nil
+		}
 		return op.NewRemove(path), nil
 	case internal.OpReplaceCode:
 		value, err := decodeValue(r)
@@ -63,13 +71,13 @@ func decodeOp(r *msgp.Reader) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
-		return op.NewMove(from, path), nil
+		return op.NewMove(path, from), nil
 	case internal.OpCopyCode:
 		from, err := decodePath(r)
 		if err != nil {
 			return nil, err
 		}
-		return op.NewCopy(from, path), nil
+		return op.NewCopy(path, from), nil
 	case internal.OpTestCode:
 		value, err := decodeValue(r)
 		if err != nil {
@@ -139,11 +147,11 @@ func decodeOp(r *msgp.Reader) (internal.Op, error) {
 	case internal.OpStrDelCode:
 		return decodeStrDel(r, path)
 	case internal.OpSplitCode:
-		return decodeSplit(r, path)
+		return decodeSplit(r, path, arrSize)
 	case internal.OpExtendCode:
 		return decodeExtend(r, path)
 	case internal.OpMergeCode:
-		return decodeMerge(r, path)
+		return decodeMerge(r, path, arrSize)
 
 	default:
 		return nil, fmt.Errorf("unsupported op code %d: %w",
@@ -260,14 +268,17 @@ func decodeStrDel(r *msgp.Reader, path []string) (internal.Op, error) {
 }
 
 // decodeSplit decodes a split operation.
-func decodeSplit(r *msgp.Reader, path []string) (internal.Op, error) {
+func decodeSplit(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, error) {
 	pos, err := r.ReadFloat64()
 	if err != nil {
 		return nil, err
 	}
-	props, err := decodeValue(r)
-	if err != nil {
-		return nil, err
+	var props any
+	if arrSize >= 4 {
+		props, err = decodeValue(r)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return op.NewSplit(path, pos, props), nil
 }
@@ -290,29 +301,32 @@ func decodeExtend(r *msgp.Reader, path []string) (internal.Op, error) {
 }
 
 // decodeMerge decodes a merge operation.
-func decodeMerge(r *msgp.Reader, path []string) (internal.Op, error) {
+func decodeMerge(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, error) {
 	pos, err := r.ReadFloat64()
 	if err != nil {
 		return nil, err
 	}
-	raw, err := decodeValue(r)
-	if err != nil {
-		return nil, err
-	}
-	props, ok := raw.(map[string]any)
-	if !ok {
-		return nil, fmt.Errorf("merge properties must be an object, got %T: %w", raw, ErrInvalidValueType)
+	var props map[string]any
+	if arrSize >= 4 {
+		raw, err := decodeValue(r)
+		if err != nil {
+			return nil, err
+		}
+		var ok bool
+		props, ok = raw.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("merge properties must be an object, got %T: %w", raw, ErrInvalidValueType)
+		}
 	}
 	return op.NewMerge(path, pos, props), nil
 }
 
-// decodePath reads a path as a float64 count followed by string segments.
+// decodePath reads a path as a msgpack native array of string segments.
 func decodePath(r *msgp.Reader) ([]string, error) {
-	count, err := r.ReadFloat64()
+	size, err := r.ReadArrayHeader()
 	if err != nil {
 		return nil, err
 	}
-	size := int(count)
 	path := make([]string, size)
 	for i := range size {
 		seg, err := r.ReadString()

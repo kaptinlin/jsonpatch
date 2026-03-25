@@ -52,8 +52,6 @@ func (u *UndefinedOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the undefined operation.
 func (u *UndefinedOperation) Validate() error {
-	if len(u.path) == 0 {
-		return ErrPathEmpty
-	}
+	// Empty path (root) is valid for undefined operation, symmetric with defined
 	return nil
 }

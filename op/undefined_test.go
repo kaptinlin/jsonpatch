@@ -155,12 +155,9 @@ func TestUndefined_Validate(t *testing.T) {
 		t.Errorf("Validate() = %v, want nil for valid operation", err)
 	}
 
+	// Empty path is valid per RFC 6902 and json-joy
 	undefinedOp = NewUndefined([]string{})
-	err := undefinedOp.Validate()
-	if err == nil {
-		assert.Fail(t, "Validate() = nil, want error for empty path")
-	}
-	if !errors.Is(err, ErrPathEmpty) {
-		assert.Equal(t, ErrPathEmpty, err, "Validate() error")
+	if err := undefinedOp.Validate(); err != nil {
+		t.Errorf("Validate() unexpected error for empty path: %v", err)
 	}
 }

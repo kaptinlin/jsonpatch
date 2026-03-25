@@ -128,7 +128,11 @@ func (ts *TestStringOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (ts *TestStringOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpTestStringCode, ts.Path(), ts.Str}, nil
+	compact := internal.CompactOperation{internal.OpTestStringCode, ts.Path(), ts.Str}
+	if ts.IgnoreCase {
+		compact = append(compact, ts.IgnoreCase)
+	}
+	return compact, nil
 }
 
 // Validate validates the test string operation.

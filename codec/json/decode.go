@@ -551,7 +551,9 @@ func setValueField(m map[string]any, o internal.Operation, nested bool) {
 // setNumericFields sets inc, pos, str, and len fields for extended operations.
 // In nested mode, zero-value fields are omitted.
 func setNumericFields(m map[string]any, o internal.Operation, nested bool) {
-	m["inc"] = o.Inc
+	if o.Inc != 0 {
+		m["inc"] = o.Inc
+	}
 	if nested {
 		if o.Pos != 0 {
 			m["pos"] = float64(o.Pos)

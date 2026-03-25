@@ -1,8 +1,6 @@
 package op
 
 import (
-	"reflect"
-
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
@@ -54,78 +52,24 @@ func (f *FlipOperation) Apply(doc any) (internal.OpResult[any], error) {
 	return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 }
 
-// flipValue inverts a value's boolean interpretation.
+// flipValue inverts a value using logical negation matching json-joy's !ref.val behavior.
+// Uses JavaScript truthiness rules for non-boolean types.
 func flipValue(value any) any {
-	if v, ok := value.(bool); ok {
-		return !v
-	}
-	return !toBool(value)
-}
-
-// toBool converts a value to its boolean interpretation following JavaScript semantics.
-func toBool(value any) bool {
 	switch v := value.(type) {
 	case nil:
-		return false
-	case bool:
-		return v
-	case int:
-		return v != 0
-	case int8:
-		return v != 0
-	case int16:
-		return v != 0
-	case int32:
-		return v != 0
-	case int64:
-		return v != 0
-	case uint:
-		return v != 0
-	case uint8:
-		return v != 0
-	case uint16:
-		return v != 0
-	case uint32:
-		return v != 0
-	case uint64:
-		return v != 0
-	case float32:
-		return v != 0.0
-	case float64:
-		return v != 0.0
-	case string:
-		return v != ""
-	default:
-		return toBoolReflect(value)
-	}
-}
-
-// toBoolReflect handles boolean conversion for complex types via reflection.
-func toBoolReflect(value any) bool {
-	val := reflect.ValueOf(value)
-	switch val.Kind() {
-	case reflect.Array, reflect.Slice, reflect.Map, reflect.Struct:
 		return true
-	case reflect.Chan:
-		return val.Len() > 0
-	case reflect.Pointer, reflect.Interface, reflect.Func, reflect.UnsafePointer:
-		return !val.IsNil()
-	case reflect.Invalid:
+	case bool:
+		return !v
+	case float64:
+		return v == 0
+	case int:
+		return v == 0
+	case string:
+		return v == ""
+	default:
+		// All other types (arrays, objects, etc.) are truthy in JS
 		return false
-	case reflect.Bool:
-		return val.Bool()
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return val.Int() != 0
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		return val.Uint() != 0
-	case reflect.Float32, reflect.Float64:
-		return val.Float() != 0.0
-	case reflect.Complex64, reflect.Complex128:
-		return val.Complex() != 0
-	case reflect.String:
-		return val.String() != ""
 	}
-	return true
 }
 
 // ToJSON serializes the operation to JSON format.

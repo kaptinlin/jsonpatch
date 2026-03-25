@@ -91,9 +91,10 @@ func TestTest_Validate(t *testing.T) {
 		t.Errorf("Validate() unexpected error: %v", err)
 	}
 
+	// Empty path is valid (test root document) per RFC 6902 and json-joy
 	testOp = NewTest([]string{}, "bar")
-	if err := testOp.Validate(); err == nil {
-		assert.Fail(t, "Validate() expected error for empty path")
+	if err := testOp.Validate(); err != nil {
+		t.Errorf("Validate() unexpected error for empty path: %v", err)
 	}
 }
 

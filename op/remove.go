@@ -128,8 +128,6 @@ func (r *RemoveOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the remove operation.
 func (r *RemoveOperation) Validate() error {
-	if len(r.path) == 0 {
-		return ErrPathEmpty
-	}
+	// Empty path is valid per RFC 6902 and json-joy.
 	return nil
 }

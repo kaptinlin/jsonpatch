@@ -144,10 +144,8 @@ func (a *AddOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the add operation.
 func (a *AddOperation) Validate() error {
-	if len(a.path) == 0 {
-		return ErrPathEmpty
-	}
-	// Note: value field is not validated here as it can be any value including nil
-	// The value field presence is validated at the JSON parsing level
+	// Note: empty path is valid (root replacement) per RFC 6902 and json-joy.
+	// Value field is not validated here as it can be any value including nil.
+	// The value field presence is validated at the JSON parsing level.
 	return nil
 }

@@ -96,13 +96,11 @@ func (si *StrInsOperation) applyStrIns(str string) string {
 	runes := []rune(str)
 	runeLen := len(runes)
 
-	// Handle position: negative positions count from end
-	pos := int(si.Pos)
+	// Clamp position matching json-joy: Math.min(pos, str.length)
+	// JS slice() handles negative indices as (length + pos), clamped to 0
+	pos := min(int(si.Pos), runeLen)
 	if pos < 0 {
-		// Negative position counts from end
 		pos = max(runeLen+pos, 0)
-	} else if pos > runeLen {
-		pos = runeLen
 	}
 
 	// Use strings.Builder for efficient string concatenation

@@ -169,12 +169,9 @@ func TestReplace_Validate(t *testing.T) {
 		t.Errorf("Validate() unexpected error: %v", err)
 	}
 
+	// Empty path is valid (root replacement) per RFC 6902 and json-joy
 	replaceOp = NewReplace([]string{}, "value")
-	err := replaceOp.Validate()
-	if err == nil {
-		assert.Fail(t, "Validate() expected error for empty path")
-	}
-	if !errors.Is(err, ErrPathEmpty) {
-		assert.Equal(t, ErrPathEmpty, err, "Validate() error")
+	if err := replaceOp.Validate(); err != nil {
+		t.Errorf("Validate() unexpected error for empty path: %v", err)
 	}
 }

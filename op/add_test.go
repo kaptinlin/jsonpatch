@@ -1,7 +1,6 @@
 package op
 
 import (
-	"errors"
 	"reflect"
 	"testing"
 
@@ -118,13 +117,10 @@ func TestAdd_Validate(t *testing.T) {
 		t.Errorf("Validate() unexpected error: %v", err)
 	}
 
+	// Empty path is valid (root replacement) per RFC 6902 and json-joy
 	addOp = NewAdd([]string{}, "bar")
-	err := addOp.Validate()
-	if err == nil {
-		assert.Fail(t, "Validate() expected error for empty path")
-	}
-	if !errors.Is(err, ErrPathEmpty) {
-		assert.Equal(t, ErrPathEmpty, err, "Validate() error")
+	if err := addOp.Validate(); err != nil {
+		t.Errorf("Validate() unexpected error for empty path: %v", err)
 	}
 }
 

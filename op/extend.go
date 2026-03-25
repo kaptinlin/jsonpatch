@@ -46,13 +46,10 @@ func (ex *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 			return internal.OpResult[any]{}, ErrNotObject
 		}
 
-		// Create a copy and extend it
-		original := maps.Clone(targetObj)
-
 		// Use objExtend to properly handle the extension with deleteNull
 		extendedObj := objExtend(targetObj, ex.Properties, ex.DeleteNull)
 
-		return internal.OpResult[any]{Doc: extendedObj, Old: original}, nil
+		return internal.OpResult[any]{Doc: extendedObj}, nil
 	}
 
 	// Get the target object
@@ -76,7 +73,7 @@ func (ex *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, err
 	}
 
-	return internal.OpResult[any]{Doc: doc, Old: target}, nil
+	return internal.OpResult[any]{Doc: doc}, nil
 }
 
 // ToJSON serializes the operation to JSON format.

@@ -1,6 +1,9 @@
 package op
 
-import "github.com/kaptinlin/jsonpatch/internal"
+import (
+	"github.com/kaptinlin/deepclone"
+	"github.com/kaptinlin/jsonpatch/internal"
+)
 
 // CopyOperation represents a copy operation that copies a value from one path to another.
 type CopyOperation struct {
@@ -31,18 +34,8 @@ func (c *CopyOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, err
 	}
 
-	// Avoid deep copy for simple types
-	var clonedValue any
-	switch v := val.(type) {
-	case string, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, bool, nil:
-		clonedValue = v // Simple types are assigned directly
-	default:
-		// Deep copy for complex types
-		clonedValue, err = DeepClone(v)
-		if err != nil {
-			return internal.OpResult[any]{}, err
-		}
-	}
+	// Deep clone the value uniformly to ensure immutability
+	clonedValue := deepclone.Clone(val)
 
 	// Handle empty path (root replacement)
 	if len(c.path) == 0 {

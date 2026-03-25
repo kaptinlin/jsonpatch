@@ -55,6 +55,7 @@ var (
 	ErrStringLengthMismatch     = errors.New("string length mismatch")
 	ErrPatternEmpty             = errors.New("pattern cannot be empty")
 	ErrLengthNegative           = errors.New("length cannot be negative")
+	ErrInvalidLength            = errors.New("length must be an integer")
 
 	// Type comparison errors
 	ErrTypeMismatch     = errors.New("type mismatch")

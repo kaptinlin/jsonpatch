@@ -119,5 +119,8 @@ func (tl *TestStringLenOperation) Validate() error {
 	if tl.Length < 0 {
 		return ErrLengthNegative
 	}
+	if tl.Length != float64(int(tl.Length)) {
+		return ErrInvalidLength
+	}
 	return nil
 }

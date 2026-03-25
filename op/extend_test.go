@@ -16,7 +16,6 @@ func TestExtend_Apply(t *testing.T) {
 		props      any
 		deleteNull bool
 		expected   any
-		oldValue   any
 		wantErr    bool
 	}{
 		{
@@ -26,7 +25,6 @@ func TestExtend_Apply(t *testing.T) {
 			props:      map[string]any{"age": 30, "city": "NYC"},
 			deleteNull: false,
 			expected:   map[string]any{"user": map[string]any{"name": "John", "age": 30, "city": "NYC"}},
-			oldValue:   map[string]any{"name": "John"},
 		},
 		{
 			name:       "update existing properties",
@@ -35,7 +33,6 @@ func TestExtend_Apply(t *testing.T) {
 			props:      map[string]any{"age": 30, "city": "NYC"},
 			deleteNull: false,
 			expected:   map[string]any{"user": map[string]any{"name": "John", "age": 30, "city": "NYC"}},
-			oldValue:   map[string]any{"name": "John", "age": 25},
 		},
 		{
 			name:       "delete null properties",
@@ -44,7 +41,6 @@ func TestExtend_Apply(t *testing.T) {
 			props:      map[string]any{"age": nil, "city": nil},
 			deleteNull: true,
 			expected:   map[string]any{"user": map[string]any{"name": "John"}},
-			oldValue:   map[string]any{"name": "John", "age": 25, "city": "NYC"},
 		},
 		{
 			name:       "keep null properties when deleteNull is false",
@@ -53,7 +49,6 @@ func TestExtend_Apply(t *testing.T) {
 			props:      map[string]any{"age": nil, "city": nil},
 			deleteNull: false,
 			expected:   map[string]any{"user": map[string]any{"name": "John", "age": nil, "city": nil}},
-			oldValue:   map[string]any{"name": "John", "age": 25},
 		},
 		{
 			name:       "extend at root",
@@ -62,7 +57,6 @@ func TestExtend_Apply(t *testing.T) {
 			props:      map[string]any{"age": 30, "city": "NYC"},
 			deleteNull: false,
 			expected:   map[string]any{"name": "John", "age": 30, "city": "NYC"},
-			oldValue:   map[string]any{"name": "John"},
 		},
 		{
 			name:       "extend nested object",
@@ -71,7 +65,6 @@ func TestExtend_Apply(t *testing.T) {
 			props:      map[string]any{"age": 30, "city": "NYC"},
 			deleteNull: false,
 			expected:   map[string]any{"user": map[string]any{"profile": map[string]any{"name": "John", "age": 30, "city": "NYC"}}},
-			oldValue:   map[string]any{"name": "John"},
 		},
 		{
 			name:       "extend with complex properties",
@@ -80,7 +73,6 @@ func TestExtend_Apply(t *testing.T) {
 			props:      map[string]any{"settings": map[string]any{"theme": "dark"}, "enabled": true, "count": 42},
 			deleteNull: false,
 			expected:   map[string]any{"config": map[string]any{"name": "app", "settings": map[string]any{"theme": "dark"}, "enabled": true, "count": 42}},
-			oldValue:   map[string]any{"name": "app"},
 		},
 		{
 			name:       "path not found",
@@ -130,7 +122,7 @@ func TestExtend_Apply(t *testing.T) {
 				t.Fatalf("Apply() unexpected error: %v", err)
 			}
 			assert.Equal(t, tt.expected, result.Doc)
-			assert.Equal(t, tt.oldValue, result.Old)
+			assert.Nil(t, result.Old, "extend should not return Old value")
 		})
 	}
 }

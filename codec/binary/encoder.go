@@ -11,7 +11,7 @@ import (
 
 // encodeOps writes the operation count followed by each encoded operation.
 func encodeOps(w *msgp.Writer, ops []internal.Op) error {
-	if err := w.WriteFloat64(float64(len(ops))); err != nil {
+	if err := w.WriteArrayHeader(uint32(len(ops))); err != nil { //nolint:gosec // ops length is bounded by practical limits.
 		return err
 	}
 	for _, o := range ops {
@@ -29,13 +29,16 @@ func encodeOp(w *msgp.Writer, v internal.Op) error {
 	case *op.AddOperation:
 		return encodePathValue(w, o.Code(), o.Path(), o.Value)
 	case *op.RemoveOperation:
+		if o.HasOldValue {
+			return encodePathValue(w, o.Code(), o.Path(), o.OldValue)
+		}
 		return encodePathOnly(w, o.Code(), o.Path())
 	case *op.ReplaceOperation:
 		return encodePathValue(w, o.Code(), o.Path(), o.Value)
 	case *op.MoveOperation:
-		return encodePathPaths(w, o.Code(), o.From(), o.Path())
+		return encodePathPaths(w, o.Code(), o.Path(), o.From())
 	case *op.CopyOperation:
-		return encodePathPaths(w, o.Code(), o.From(), o.Path())
+		return encodePathPaths(w, o.Code(), o.Path(), o.From())
 	case *op.TestOperation:
 		return encodePathValue(w, o.Code(), o.Path(), o.Value)
 
@@ -81,11 +84,11 @@ func encodeOp(w *msgp.Writer, v internal.Op) error {
 	case *op.StrDelOperation:
 		return encodeStrDel(w, o)
 	case *op.SplitOperation:
-		return encodePathFloat64Value(w, o.Code(), o.Path(), o.Pos, o.Props)
+		return encodeSplitOrMerge(w, o.Code(), o.Path(), o.Pos, o.Props)
 	case *op.ExtendOperation:
 		return encodeExtend(w, o)
 	case *op.MergeOperation:
-		return encodePathFloat64Value(w, o.Code(), o.Path(), o.Pos, o.Props)
+		return encodeSplitOrMerge(w, o.Code(), o.Path(), o.Pos, o.Props)
 
 	default:
 		return fmt.Errorf("unsupported op type %T: %w", v, ErrUnsupportedOp)
@@ -142,6 +145,21 @@ func encodePathFloat64Value(w *msgp.Writer, code int, path []string, f float64, 
 		return err
 	}
 	return encodeValue(w, value)
+}
+
+// encodeSplitOrMerge encodes split/merge operations with optional props.
+// When props is nil, format is [code, path, float64]; otherwise [code, path, float64, props].
+func encodeSplitOrMerge(w *msgp.Writer, code int, path []string, f float64, props any) error {
+	if props == nil {
+		if err := writeHeader(w, 3, code); err != nil {
+			return err
+		}
+		if err := encodePath(w, path); err != nil {
+			return err
+		}
+		return w.WriteFloat64(f)
+	}
+	return encodePathFloat64Value(w, code, path, f, props)
 }
 
 // encodeMatches encodes a matches predicate: [code, path, pattern, ignoreCase].
@@ -228,9 +246,9 @@ func encodeExtend(w *msgp.Writer, o *op.ExtendOperation) error {
 	return w.WriteBool(o.DeleteNull)
 }
 
-// encodePath writes a path as a float64 count followed by string segments.
+// encodePath writes a path as a msgpack native array of string segments.
 func encodePath(w *msgp.Writer, path []string) error {
-	if err := w.WriteFloat64(float64(len(path))); err != nil {
+	if err := w.WriteArrayHeader(uint32(len(path))); err != nil { //nolint:gosec // path length is bounded by practical limits.
 		return err
 	}
 	for _, seg := range path {

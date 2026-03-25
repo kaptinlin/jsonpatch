@@ -117,8 +117,6 @@ func (rp *ReplaceOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the replace operation.
 func (rp *ReplaceOperation) Validate() error {
-	if len(rp.path) == 0 {
-		return ErrPathEmpty
-	}
+	// Empty path is valid (root replacement) per RFC 6902 and json-joy.
 	return nil
 }

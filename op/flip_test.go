@@ -188,12 +188,8 @@ func TestFlip_ComplexTypes(t *testing.T) {
 	}{
 		{"float64 zero", 0.0, true},
 		{"float64 non-zero", 3.14, false},
-		{"int8 zero", int8(0), true},
-		{"int8 non-zero", int8(1), false},
-		{"uint zero", uint(0), true},
-		{"uint non-zero", uint(1), false},
-		{"float32 zero", float32(0.0), true},
-		{"float32 non-zero", float32(1.0), false},
+		{"int zero", 0, true},
+		{"int non-zero", 1, false},
 	}
 
 	for _, tt := range tests {

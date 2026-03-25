@@ -100,18 +100,11 @@ func (sd *StrDelOperation) applyStrDel(val string) string {
 	runes := []rune(val)
 	length := len(runes)
 
-	// Handle position: negative positions count from end
-	pos := int(sd.Pos)
+	// Clamp position matching json-joy: Math.min(pos, val.length)
+	// JS slice() handles negative indices as (length + pos), clamped to 0
+	pos := min(int(sd.Pos), length)
 	if pos < 0 {
-		// Negative position counts from end
-		pos = length + pos
-		if pos < 0 {
-			// Position before start, no deletion
-			return val
-		}
-	} else if pos > length {
-		// Position after end, no deletion
-		return val
+		pos = max(length+pos, 0)
 	}
 
 	// Determine deletion length: str takes precedence over len

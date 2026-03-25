@@ -98,22 +98,27 @@ func (t *TestOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // ToJSON serializes the operation to JSON format.
 func (t *TestOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
+	op := internal.Operation{
 		Op:    string(internal.OpTestType),
 		Path:  formatPath(t.path),
 		Value: t.Value,
-	}, nil
+	}
+	if t.NotFlag {
+		op.Not = true
+	}
+	return op, nil
 }
 
 // ToCompact serializes the operation to compact format.
 func (t *TestOperation) ToCompact() (internal.CompactOperation, error) {
+	if t.NotFlag {
+		return internal.CompactOperation{internal.OpTestCode, t.path, t.Value, 1}, nil
+	}
 	return internal.CompactOperation{internal.OpTestCode, t.path, t.Value}, nil
 }
 
 // Validate validates the test operation.
 func (t *TestOperation) Validate() error {
-	if len(t.Path()) == 0 {
-		return ErrPathEmpty
-	}
+	// Empty path is valid (test root document) per RFC 6902 and json-joy.
 	return nil
 }

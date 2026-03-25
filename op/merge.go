@@ -64,19 +64,27 @@ func (mg *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 	pos := int(mg.Pos)
 	// TypeScript: if (ref.key <= 0) throw new Error('INVALID_KEY');
-	if pos <= 0 || pos >= len(targetArray) {
+	if pos <= 0 {
 		return internal.OpResult[any]{}, ErrInvalidIndex
 	}
 
 	// Get elements to merge (pos-1 and pos)
-	one := targetArray[pos-1]
-	two := targetArray[pos]
+	// In JS, out-of-bounds array access returns undefined (nil in Go)
+	var one, two any
+	if pos-1 < len(targetArray) {
+		one = targetArray[pos-1]
+	}
+	if pos < len(targetArray) {
+		two = targetArray[pos]
+	}
 	merged := mg.mergeElements(one, two)
 
-	// Create new array with merged result using slices.Delete (Go 1.21+)
+	// Create new array with merged result
 	newSlice := slices.Clone(targetArray)
 	newSlice[pos-1] = merged
-	newSlice = slices.Delete(newSlice, pos, pos+1)
+	if pos < len(newSlice) {
+		newSlice = slices.Delete(newSlice, pos, pos+1)
+	}
 
 	// Update the document
 	if len(mg.Path()) == 0 {
