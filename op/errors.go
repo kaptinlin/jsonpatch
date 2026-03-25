@@ -17,6 +17,8 @@ var (
 	ErrArrayTooSmall       = errors.New("array must have at least 2 elements")
 	ErrPositionOutOfBounds = errors.New("position out of bounds")
 	ErrPositionNegative    = errors.New("position cannot be negative")
+	ErrInvalidPosition     = errors.New("invalid position")
+	ErrMissingStrOrLen     = errors.New("str_del requires either str or len")
 	ErrInvalidTarget       = errors.New("invalid target")
 
 	// Type validation errors

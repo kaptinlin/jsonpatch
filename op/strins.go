@@ -13,15 +13,15 @@ import (
 // Only supports string type fields.
 type StrInsOperation struct {
 	BaseOp
-	Pos float64 `json:"pos"` // Insert position
-	Str string  `json:"str"` // String to insert
+	Pos int    `json:"pos"` // Insert position
+	Str string `json:"str"` // String to insert
 }
 
 // NewStrIns creates a new string insert operation.
 func NewStrIns(path []string, pos float64, str string) *StrInsOperation {
 	return &StrInsOperation{
 		BaseOp: NewBaseOp(path),
-		Pos:    pos,
+		Pos:    int(pos),
 		Str:    str,
 	}
 }
@@ -39,9 +39,9 @@ func (si *StrInsOperation) Code() int {
 // getTargetString extracts and validates the target string from a value
 func (si *StrInsOperation) getTargetString(target any) (string, error) {
 	if target == nil {
-		// Handle undefined/nil case
+		// Handle undefined/nil case: json-joy throws POS when pos != 0
 		if si.Pos != 0 {
-			return "", ErrPositionNegative
+			return "", ErrInvalidPosition
 		}
 		return "", nil
 	}
@@ -96,11 +96,10 @@ func (si *StrInsOperation) applyStrIns(str string) string {
 	runes := []rune(str)
 	runeLen := len(runes)
 
-	// Clamp position matching json-joy: Math.min(pos, str.length)
-	// JS slice() handles negative indices as (length + pos), clamped to 0
-	pos := min(int(si.Pos), runeLen)
+	// Match json-joy: Math.min(pos, str.length), then JS slice semantics for negatives
+	pos := min(si.Pos, runeLen)
 	if pos < 0 {
-		pos = max(runeLen+pos, 0)
+		pos = max(runeLen+pos, 0) // JS slice semantics: negative counts from end
 	}
 
 	// Use strings.Builder for efficient string concatenation
@@ -125,7 +124,7 @@ func (si *StrInsOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:   string(internal.OpStrInsType),
 		Path: formatPath(si.Path()),
-		Pos:  int(si.Pos),
+		Pos:  si.Pos,
 		Str:  si.Str,
 	}, nil
 }
@@ -136,8 +135,7 @@ func (si *StrInsOperation) ToCompact() (internal.CompactOperation, error) {
 }
 
 // Validate validates the string insert operation.
+// Negative positions are valid (JS slice semantics: count from end).
 func (si *StrInsOperation) Validate() error {
-	// Empty path is valid for str_ins operation (root level)
-	// Position bounds are checked in Apply method
 	return nil
 }

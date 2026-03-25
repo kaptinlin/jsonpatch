@@ -48,18 +48,24 @@ func (tt *TestTypeOperation) getValueAndCheckType(doc any) (any, string, bool, e
 		return nil, "", false, err
 	}
 
-	actualType := getTypeNameWithIntegerSupport(val)
-	typeMatches := tt.checkTypeMatch(actualType)
+	actualType := getTypeName(val)
+	typeMatches := tt.checkTypeMatch(actualType, val)
 
 	return val, actualType, typeMatches, nil
 }
 
 // checkTypeMatch checks if actualType matches any expected type.
-func (tt *TestTypeOperation) checkTypeMatch(actualType string) bool {
+// Matches json-joy behavior: only "integer" as expected type gets special handling.
+func (tt *TestTypeOperation) checkTypeMatch(actualType string, val any) bool {
 	return slices.ContainsFunc(tt.Types, func(expectedType string) bool {
-		return actualType == expectedType ||
-			// Special case: if expected type is "number" and actual is "integer", it should match
-			(expectedType == "number" && actualType == "integer")
+		if actualType == expectedType {
+			return true
+		}
+		// Special case: "integer" matches whole numbers (json-joy behavior)
+		if expectedType == "integer" && isWholeNumber(val) {
+			return true
+		}
+		return false
 	})
 }
 
@@ -89,38 +95,18 @@ func (tt *TestTypeOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // getTypeName returns the JSON type name of a value.
-// All integer types are reported as "number" for backward compatibility.
-func getTypeName(value any) string {
-	return getTypeNameInternal(value, false)
-}
-
-// getTypeNameWithIntegerSupport returns the JSON type name of a value,
-// distinguishing integers from floats (returns "integer" for whole numbers).
-func getTypeNameWithIntegerSupport(value any) string {
-	return getTypeNameInternal(value, true)
-}
-
-// getTypeNameInternal is the shared implementation for type name detection.
-// When distinguishInteger is true, integer types return "integer" instead of "number".
-func getTypeNameInternal(value any, distinguishInteger bool) string {
-	if value == nil {
+// Uses typeof semantics: all numeric types return "number" (matching json-joy).
+func getTypeName(val any) string {
+	if val == nil {
 		return "null"
 	}
 
-	switch v := value.(type) {
+	switch val.(type) {
 	case bool:
 		return "boolean"
-	case float64:
-		if distinguishInteger && v == float64(int64(v)) {
-			return "integer"
-		}
-		return "number"
-	case float32:
+	case float64, float32:
 		return "number"
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-		if distinguishInteger {
-			return "integer"
-		}
 		return "number"
 	case string:
 		return "string"
@@ -129,20 +115,45 @@ func getTypeNameInternal(value any, distinguishInteger bool) string {
 	case map[string]any:
 		return "object"
 	default:
-		return getTypeNameViaReflection(v, distinguishInteger)
+		return getTypeNameViaReflection(val)
+	}
+}
+
+// isWholeNumber checks if a value is an integer or a whole-number float.
+// Matches json-joy: typeof val === 'number' && val === Math.round(val).
+func isWholeNumber(val any) bool {
+	switch v := val.(type) {
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+		return true
+	case float64:
+		return v == float64(int64(v))
+	case float32:
+		return v == float32(int32(v))
+	default:
+		rt := reflect.TypeOf(val)
+		if rt == nil {
+			return false
+		}
+		switch rt.Kind() { //nolint:exhaustive // only numeric kinds are relevant
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			return true
+		case reflect.Float32, reflect.Float64:
+			f := reflect.ValueOf(val).Float()
+			return f == float64(int64(f))
+		default:
+			return false
+		}
 	}
 }
 
 // getTypeNameViaReflection handles type detection for non-standard types using reflection.
-func getTypeNameViaReflection(v any, distinguishInteger bool) string {
+func getTypeNameViaReflection(v any) string {
 	rt := reflect.TypeOf(v)
 	switch rt.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
 		reflect.Uintptr:
-		if distinguishInteger {
-			return "integer"
-		}
 		return "number"
 	case reflect.Float32, reflect.Float64:
 		return "number"
@@ -156,7 +167,7 @@ func getTypeNameViaReflection(v any, distinguishInteger bool) string {
 		return "object"
 	case reflect.Pointer, reflect.Interface:
 		if rt.Elem() != nil {
-			return getTypeNameInternal(reflect.ValueOf(v).Elem().Interface(), distinguishInteger)
+			return getTypeName(reflect.ValueOf(v).Elem().Interface())
 		}
 		return "object"
 	case reflect.Invalid:

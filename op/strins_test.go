@@ -163,7 +163,7 @@ func TestStrIns_Constructor(t *testing.T) {
 	if diff := cmp.Diff(path, strInsOp.Path()); diff != "" {
 		t.Errorf("NewStrIns() Path mismatch (-want +got):\n%s", diff)
 	}
-	assert.Equal(t, pos, strInsOp.Pos, "NewStrIns() Pos")
+	assert.Equal(t, int(pos), strInsOp.Pos, "NewStrIns() Pos")
 	if strInsOp.Str != str {
 		assert.Equal(t, str, strInsOp.Str, "NewStrIns() Str")
 	}

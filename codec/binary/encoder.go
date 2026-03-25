@@ -212,7 +212,7 @@ func encodeStrIns(w *msgp.Writer, o *op.StrInsOperation) error {
 	if err := encodePath(w, o.Path()); err != nil {
 		return err
 	}
-	if err := w.WriteFloat64(o.Pos); err != nil {
+	if err := w.WriteFloat64(float64(o.Pos)); err != nil {
 		return err
 	}
 	return w.WriteString(o.Str)
@@ -226,10 +226,10 @@ func encodeStrDel(w *msgp.Writer, o *op.StrDelOperation) error {
 	if err := encodePath(w, o.Path()); err != nil {
 		return err
 	}
-	if err := w.WriteFloat64(o.Pos); err != nil {
+	if err := w.WriteFloat64(float64(o.Pos)); err != nil {
 		return err
 	}
-	return w.WriteFloat64(o.Len)
+	return w.WriteFloat64(float64(o.Len))
 }
 
 // encodeExtend encodes an extend operation: [code, path, properties, deleteNull].

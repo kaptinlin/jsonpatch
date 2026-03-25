@@ -181,8 +181,8 @@ func TestStrDel_Constructor(t *testing.T) {
 	if diff := cmp.Diff(path, strDelOp.Path()); diff != "" {
 		t.Errorf("NewStrDel() Path mismatch (-want +got):\n%s", diff)
 	}
-	assert.Equal(t, pos, strDelOp.Pos, "NewStrDel() Pos")
-	assert.Equal(t, length, strDelOp.Len, "NewStrDel() Len")
+	assert.Equal(t, int(pos), strDelOp.Pos, "NewStrDel() Pos")
+	assert.Equal(t, int(length), strDelOp.Len, "NewStrDel() Len")
 	if got := strDelOp.Op(); got != internal.OpStrDelType {
 		assert.Equal(t, internal.OpStrDelType, got, "Op()")
 	}

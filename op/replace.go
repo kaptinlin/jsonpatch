@@ -1,9 +1,6 @@
 package op
 
-import (
-	"github.com/kaptinlin/deepclone"
-	"github.com/kaptinlin/jsonpatch/internal"
-)
+import "github.com/kaptinlin/jsonpatch/internal"
 
 // ReplaceOperation represents a replace operation that replaces a value at a specified path.
 type ReplaceOperation struct {
@@ -41,8 +38,7 @@ func (rp *ReplaceOperation) Code() int {
 
 // Apply applies the replace operation to the document.
 func (rp *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
-	// Clone the new value to prevent external mutations
-	newValue := deepclone.Clone(rp.Value)
+	newValue := rp.Value
 
 	if len(rp.path) == 0 {
 		// Replace entire document

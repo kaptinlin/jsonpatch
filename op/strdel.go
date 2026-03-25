@@ -9,23 +9,24 @@ import (
 // StrDelOperation represents a string delete operation.
 // path: target path
 // pos: start position (rune index)
-// len: number of runes to delete (when Str is empty)
-// str: specific string to delete (when not empty, takes precedence)
+// len: number of runes to delete (when HasStr is false)
+// str: specific string to delete (when HasStr is true, takes precedence)
 // Only supports string type fields.
 type StrDelOperation struct {
 	BaseOp
-	Pos float64 `json:"pos"` // Delete position
-	Len float64 `json:"len"` // Number of characters to delete
-	Str string  `json:"str"` // Specific string to delete (optional)
+	Pos    int    `json:"pos"` // Delete position
+	Len    int    `json:"len"` // Number of characters to delete
+	Str    string `json:"str"` // Specific string to delete (optional)
+	HasStr bool   // true when str mode is explicitly set (distinguishes "" from unset)
 }
 
 // NewStrDel creates a new string delete operation with length.
 func NewStrDel(path []string, pos, length float64) *StrDelOperation {
 	return &StrDelOperation{
 		BaseOp: NewBaseOp(path),
-		Pos:    pos,
-		Len:    length,
-		Str:    "", // Empty string means use length mode
+		Pos:    int(pos),
+		Len:    int(length),
+		Str:    "",
 	}
 }
 
@@ -33,9 +34,10 @@ func NewStrDel(path []string, pos, length float64) *StrDelOperation {
 func NewStrDelWithStr(path []string, pos float64, str string) *StrDelOperation {
 	return &StrDelOperation{
 		BaseOp: NewBaseOp(path),
-		Pos:    pos,
-		Len:    float64(len([]rune(str))), // Set length to match string length
+		Pos:    int(pos),
+		Len:    len([]rune(str)),
 		Str:    str,
+		HasStr: true,
 	}
 }
 
@@ -100,19 +102,18 @@ func (sd *StrDelOperation) applyStrDel(val string) string {
 	runes := []rune(val)
 	length := len(runes)
 
-	// Clamp position matching json-joy: Math.min(pos, val.length)
-	// JS slice() handles negative indices as (length + pos), clamped to 0
-	pos := min(int(sd.Pos), length)
+	// Match json-joy: Math.min(pos, val.length), then JS slice semantics for negatives
+	pos := min(sd.Pos, length)
 	if pos < 0 {
-		pos = max(length+pos, 0)
+		pos = max(length+pos, 0) // JS slice semantics: negative counts from end
 	}
 
-	// Determine deletion length: str takes precedence over len
+	// Determine deletion length: str mode takes precedence over len mode
 	var deletionLength int
-	if sd.Str != "" {
+	if sd.HasStr {
 		deletionLength = len([]rune(sd.Str))
 	} else {
-		deletionLength = int(sd.Len)
+		deletionLength = sd.Len
 	}
 
 	// Handle negative length by treating it as 0 (no deletion)
@@ -149,28 +150,33 @@ func (sd *StrDelOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		Op:   string(internal.OpStrDelType),
 		Path: formatPath(sd.Path()),
-		Pos:  int(sd.Pos),
+		Pos:  sd.Pos,
 	}
 
-	// If we have a specific string to delete, use "str" field
-	if sd.Str != "" {
+	// If str mode is set, use "str" field
+	if sd.HasStr {
 		result.Str = sd.Str
 	} else {
-		// Otherwise use "len" field
-		result.Len = int(sd.Len)
+		result.Len = sd.Len
 	}
 
 	return result, nil
 }
 
 // ToCompact serializes the operation to compact format.
+// json-joy format: [opcode, path, pos, str] for str mode, [opcode, path, pos, 0, len] for len mode.
 func (sd *StrDelOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpStrDelCode, sd.Path(), sd.Pos, sd.Len}, nil
+	if sd.HasStr {
+		return internal.CompactOperation{internal.OpStrDelCode, sd.Path(), sd.Pos, sd.Str}, nil
+	}
+	return internal.CompactOperation{internal.OpStrDelCode, sd.Path(), sd.Pos, 0, sd.Len}, nil
 }
 
 // Validate validates the string delete operation.
+// Negative positions are valid (JS slice semantics: count from end).
 func (sd *StrDelOperation) Validate() error {
-	// Empty path is valid for str_del operation (root level)
-	// Position and length bounds are checked in Apply method
+	if !sd.HasStr && sd.Len <= 0 {
+		return ErrMissingStrOrLen
+	}
 	return nil
 }

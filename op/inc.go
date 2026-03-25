@@ -43,7 +43,9 @@ func (ic *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, ErrPathNotFound
 	}
 
-	// Check if path exists and get current value
+	// Get current value. json-joy's find() returns undefined for missing final elements,
+	// then Number(undefined) = NaN. In Go, we treat missing as 0 (practical adaptation
+	// since JSON has no NaN), which creates the field with the inc value.
 	var currentValue any
 	var oldValue float64
 	if pathExists(doc, ic.path) {
@@ -54,7 +56,6 @@ func (ic *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 			return internal.OpResult[any]{}, ErrNotNumber
 		}
 	} else {
-		// Path doesn't exist, treat as undefined (which becomes 0 in JavaScript)
 		currentValue = nil
 		oldValue = 0
 	}

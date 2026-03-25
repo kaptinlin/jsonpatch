@@ -187,6 +187,18 @@ func parseExtendedOp(opType internal.OpType, path []string, raw Op) (internal.Op
 		if err != nil {
 			return nil, ErrStrDelPosNotNumber
 		}
+		// json-joy format: [opcode, path, pos, str] for str mode,
+		// [opcode, path, pos, 0, len] for len mode
+		if str, ok := raw[3].(string); ok {
+			return op.NewStrDelWithStr(path, pos, str), nil
+		}
+		if len(raw) >= 5 {
+			length, err := toFloat64(raw[4])
+			if err != nil {
+				return nil, ErrStrDelLenNotNumber
+			}
+			return op.NewStrDel(path, pos, length), nil
+		}
 		length, err := toFloat64(raw[3])
 		if err != nil {
 			return nil, ErrStrDelLenNotNumber

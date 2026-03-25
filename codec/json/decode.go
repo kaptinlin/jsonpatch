@@ -174,7 +174,7 @@ func decodeExtendedOp(opType string, path []string, m map[string]any) (internal.
 		if !ok {
 			return nil, ErrStrDelOpMissingPos
 		}
-		if str, ok := m["str"].(string); ok && str != "" {
+		if str, ok := m["str"].(string); ok {
 			return op.NewStrDelWithStr(path, pos, str), nil
 		}
 		if lenVal, ok := op.ToFloat64(m["len"]); ok {
@@ -567,7 +567,10 @@ func setNumericFields(m map[string]any, o internal.Operation, nested bool) {
 		return
 	}
 	m["pos"] = float64(o.Pos)
-	m["str"] = o.Str
+	// Only set "str" when non-empty to avoid ambiguity with str_del's len mode
+	if o.Str != "" {
+		m["str"] = o.Str
+	}
 	m["len"] = float64(o.Len)
 }
 
