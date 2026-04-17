@@ -1,9 +1,11 @@
 package internal
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWithMutate(t *testing.T) {
@@ -21,8 +23,8 @@ func TestWithMutate(t *testing.T) {
 			var opts Options
 			WithMutate(tt.val)(&opts)
 			if opts.Mutate != tt.val {
-				t.Errorf("WithMutate(%v): got %v, want %v",
-					tt.val, opts.Mutate, tt.val)
+				assert.Fail(t, fmt.Sprintf("WithMutate(%v): got %v, want %v",
+					tt.val, opts.Mutate, tt.val))
 			}
 		})
 	}
@@ -40,7 +42,7 @@ func TestWithMatcher(t *testing.T) {
 	WithMatcher(matcher)(&opts)
 
 	if opts.CreateMatcher == nil {
-		t.Fatal("WithMatcher: CreateMatcher is nil")
+		require.FailNow(t, "WithMatcher: CreateMatcher is nil")
 	}
 
 	opts.CreateMatcher("test", false)

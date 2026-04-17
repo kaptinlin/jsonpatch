@@ -1,10 +1,12 @@
 package op
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTest_Basic(t *testing.T) {
@@ -18,7 +20,7 @@ func TestTest_Basic(t *testing.T) {
 
 	ok, err := testOp.Test(doc)
 	if err != nil {
-		t.Fatalf("Test() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("Test() unexpected error: %v", err))
 	}
 	if !ok {
 		assert.Fail(t, "Test() = false, want true for equal values")
@@ -27,7 +29,7 @@ func TestTest_Basic(t *testing.T) {
 	testOp = NewTest([]string{"foo"}, "qux")
 	ok, err = testOp.Test(doc)
 	if err != nil {
-		t.Fatalf("Test() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("Test() unexpected error: %v", err))
 	}
 	if ok {
 		assert.Fail(t, "Test() = true, want false for different values")
@@ -43,7 +45,7 @@ func TestTest_Apply(t *testing.T) {
 	testOp := NewTest([]string{"foo"}, "bar")
 	result, err := testOp.Apply(doc)
 	if err != nil {
-		t.Fatalf("Apply() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 	}
 	assert.Equal(t, doc, result.Doc)
 
@@ -60,7 +62,7 @@ func TestTest_ToJSON(t *testing.T) {
 
 	got, err := testOp.ToJSON()
 	if err != nil {
-		t.Fatalf("ToJSON() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("ToJSON() unexpected error: %v", err))
 	}
 
 	assert.Equal(t, "test", got.Op, "ToJSON().Op")
@@ -74,10 +76,10 @@ func TestTest_ToCompact(t *testing.T) {
 
 	compact, err := testOp.ToCompact()
 	if err != nil {
-		t.Fatalf("ToCompact() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("ToCompact() unexpected error: %v", err))
 	}
 	if len(compact) != 3 {
-		t.Fatalf("len(ToCompact()) = %d, want %d", len(compact), 3)
+		require.FailNow(t, fmt.Sprintf("len(ToCompact()) = %d, want %d", len(compact), 3))
 	}
 	assert.Equal(t, internal.OpTestCode, compact[0], "compact[0]")
 	assert.Equal(t, []string{"foo"}, compact[1])
@@ -88,13 +90,13 @@ func TestTest_Validate(t *testing.T) {
 	t.Parallel()
 	testOp := NewTest([]string{"foo"}, "bar")
 	if err := testOp.Validate(); err != nil {
-		t.Errorf("Validate() unexpected error: %v", err)
+		assert.Fail(t, fmt.Sprintf("Validate() unexpected error: %v", err))
 	}
 
 	// Empty path is valid (test root document) per RFC 6902 and json-joy
 	testOp = NewTest([]string{}, "bar")
 	if err := testOp.Validate(); err != nil {
-		t.Errorf("Validate() unexpected error for empty path: %v", err)
+		assert.Fail(t, fmt.Sprintf("Validate() unexpected error for empty path: %v", err))
 	}
 }
 

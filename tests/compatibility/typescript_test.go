@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
+	"github.com/stretchr/testify/assert"
 )
 
 type TypeScriptTestCase struct {
@@ -31,9 +32,7 @@ func TestTypeScriptParity(t *testing.T) {
 				_ = testutils.ApplyOperationsWithError(t, tc.Doc, tc.Patch)
 			} else {
 				result := testutils.ApplyOperations(t, tc.Doc, tc.Patch)
-				if diff := cmp.Diff(tc.Expected, result); diff != "" {
-					t.Errorf("ApplyOperations() mismatch (-want +got):\n%s\n%s", diff, tc.Comment)
-				}
+				assert.Empty(t, cmp.Diff(tc.Expected, result), "ApplyOperations() mismatch: %s", tc.Comment)
 			}
 		})
 	}

@@ -2,6 +2,7 @@ package op
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch/internal"
@@ -129,7 +130,7 @@ func TestTestString_Apply(t *testing.T) {
 				assert.Equal(t, internal.OpResult[any]{}, result)
 			} else {
 				if err != nil {
-					t.Errorf("Apply() failed: %v", err)
+					assert.Fail(t, fmt.Sprintf("Apply() failed: %v", err))
 				}
 				if result.Doc == nil {
 					assert.Fail(t, "Apply() result.Doc = nil, want non-nil")
@@ -166,7 +167,7 @@ func TestToString(t *testing.T) {
 				}
 			} else {
 				if err != nil {
-					t.Errorf("toString() failed: %v", err)
+					assert.Fail(t, fmt.Sprintf("toString() failed: %v", err))
 				}
 				if result != tt.expected {
 					assert.Equal(t, tt.expected, result, "toString()")

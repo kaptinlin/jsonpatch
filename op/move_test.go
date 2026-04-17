@@ -2,10 +2,12 @@ package op
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMove_Basic(t *testing.T) {
@@ -21,15 +23,15 @@ func TestMove_Basic(t *testing.T) {
 	moveOp := NewMove([]string{"qux", "moved"}, []string{"foo"})
 	result, err := moveOp.Apply(doc)
 	if err != nil {
-		t.Fatalf("Apply() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 	}
 
 	modifiedDoc := result.Doc.(map[string]any)
 	if result.Old != nil {
-		t.Errorf("result.Old = %v, want nil", result.Old)
+		assert.Fail(t, fmt.Sprintf("result.Old = %v, want nil", result.Old))
 	}
 	if _, ok := modifiedDoc["foo"]; ok {
-		t.Error("modifiedDoc contains key \"foo\" after move")
+		assert.Fail(t, "modifiedDoc contains key \"foo\" after move")
 	}
 	if got := modifiedDoc["qux"].(map[string]any)["moved"]; got != "bar" {
 		assert.Equal(t, "bar", got, "modifiedDoc[qux][moved]")
@@ -53,7 +55,7 @@ func TestMove_Array(t *testing.T) {
 	moveOp := NewMove([]string{"target", "moved"}, []string{"items", "1"})
 	result, err := moveOp.Apply(doc)
 	if err != nil {
-		t.Fatalf("Apply() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 	}
 
 	modifiedDoc := result.Doc.(map[string]any)
@@ -61,10 +63,10 @@ func TestMove_Array(t *testing.T) {
 	target := modifiedDoc["target"].(map[string]any)
 
 	if result.Old != nil {
-		t.Errorf("result.Old = %v, want nil", result.Old)
+		assert.Fail(t, fmt.Sprintf("result.Old = %v, want nil", result.Old))
 	}
 	if len(items) != 2 {
-		t.Fatalf("len(items) = %d, want %d", len(items), 2)
+		require.FailNow(t, fmt.Sprintf("len(items) = %d, want %d", len(items), 2))
 	}
 	assert.Equal(t, "first", items[0], "items[0]")
 	assert.Equal(t, "third", items[1], "items[1]")
@@ -93,11 +95,11 @@ func TestMove_SamePath(t *testing.T) {
 	moveOp := NewMove([]string{"foo"}, []string{"foo"})
 	result, err := moveOp.Apply(doc)
 	if err != nil {
-		t.Fatalf("Apply() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 	}
 	assert.Equal(t, doc, result.Doc)
 	if result.Old != nil {
-		t.Errorf("result.Old = %v, want nil", result.Old)
+		assert.Fail(t, fmt.Sprintf("result.Old = %v, want nil", result.Old))
 	}
 }
 
@@ -107,7 +109,7 @@ func TestMove_RootArray(t *testing.T) {
 	moveOp := NewMove([]string{"0"}, []string{"2"})
 	result, err := moveOp.Apply(doc)
 	if err != nil {
-		t.Fatalf("Apply() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 	}
 
 	resultArray := result.Doc.([]any)
@@ -163,7 +165,7 @@ func TestMove_ToJSON(t *testing.T) {
 
 	got, err := moveOp.ToJSON()
 	if err != nil {
-		t.Fatalf("ToJSON() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("ToJSON() unexpected error: %v", err))
 	}
 
 	assert.Equal(t, "move", got.Op, "ToJSON().Op")
@@ -177,10 +179,10 @@ func TestMove_ToCompact(t *testing.T) {
 
 	compact, err := moveOp.ToCompact()
 	if err != nil {
-		t.Fatalf("ToCompact() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("ToCompact() unexpected error: %v", err))
 	}
 	if len(compact) != 3 {
-		t.Fatalf("len(ToCompact()) = %d, want %d", len(compact), 3)
+		require.FailNow(t, fmt.Sprintf("len(ToCompact()) = %d, want %d", len(compact), 3))
 	}
 	assert.Equal(t, internal.OpMoveCode, compact[0], "compact[0]")
 	assert.Equal(t, []string{"target"}, compact[1])
@@ -191,7 +193,7 @@ func TestMove_Validate(t *testing.T) {
 	t.Parallel()
 	moveOp := NewMove([]string{"target"}, []string{"source"})
 	if err := moveOp.Validate(); err != nil {
-		t.Errorf("Validate() unexpected error: %v", err)
+		assert.Fail(t, fmt.Sprintf("Validate() unexpected error: %v", err))
 	}
 
 	moveOp = NewMove([]string{}, []string{"source"})
@@ -269,7 +271,7 @@ func TestMove_RFC6902_RemoveAddPattern(t *testing.T) {
 			moveOp := NewMove(tt.path, tt.from)
 			result, err := moveOp.Apply(tt.doc)
 			if err != nil {
-				t.Fatalf("Apply() unexpected error: %v", err)
+				require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 			}
 			assert.Equal(t, tt.expected, result.Doc)
 		})

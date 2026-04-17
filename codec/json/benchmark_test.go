@@ -1,6 +1,7 @@
 package json
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/go-json-experiment/json"
@@ -115,14 +116,14 @@ func TestBasicDecodeEncode(t *testing.T) {
 	ops, err := DecodeOperations(testOperations, options)
 	require.NoError(t, err)
 	if len(ops) != 4 {
-		t.Fatalf("DecodeOperations returned %d ops, want 4", len(ops))
+		require.FailNow(t, fmt.Sprintf("DecodeOperations returned %d ops, want 4", len(ops)))
 	}
 
 	// Test encode
 	encoded, err := Encode(ops)
 	require.NoError(t, err)
 	if len(encoded) != 4 {
-		t.Fatalf("Encode returned %d ops, want 4", len(encoded))
+		require.FailNow(t, fmt.Sprintf("Encode returned %d ops, want 4", len(encoded)))
 	}
 
 	// Verify roundtrip matches original structure
@@ -142,7 +143,7 @@ func TestJSONDecodeEncode(t *testing.T) {
 	ops, err := DecodeJSON([]byte(testPatch), options)
 	require.NoError(t, err)
 	if len(ops) != 4 {
-		t.Fatalf("DecodeJSON returned %d ops, want 4", len(ops))
+		require.FailNow(t, fmt.Sprintf("DecodeJSON returned %d ops, want 4", len(ops)))
 	}
 
 	// Test JSON encode
@@ -152,10 +153,10 @@ func TestJSONDecodeEncode(t *testing.T) {
 	// Verify it's valid JSON and roundtrip works
 	var decoded []map[string]any
 	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("json.Unmarshal: %v", err)
+		require.FailNow(t, fmt.Sprintf("json.Unmarshal: %v", err))
 	}
 	if len(decoded) != 4 {
-		t.Fatalf("json.Unmarshal returned %d ops, want 4", len(decoded))
+		require.FailNow(t, fmt.Sprintf("json.Unmarshal returned %d ops, want 4", len(decoded)))
 	}
 }
 
@@ -195,14 +196,14 @@ func TestAllOperationTypes(t *testing.T) {
 	ops, err := DecodeOperations(allOps, options)
 	require.NoError(t, err)
 	if len(ops) != len(allOps) {
-		t.Fatalf("DecodeOperations returned %d ops, want %d", len(ops), len(allOps))
+		require.FailNow(t, fmt.Sprintf("DecodeOperations returned %d ops, want %d", len(ops), len(allOps)))
 	}
 
 	// Test all operations can be encoded back
 	encoded, err := Encode(ops)
 	require.NoError(t, err)
 	if len(encoded) != len(allOps) {
-		t.Fatalf("Encode returned %d ops, want %d", len(encoded), len(allOps))
+		require.FailNow(t, fmt.Sprintf("Encode returned %d ops, want %d", len(encoded), len(allOps)))
 	}
 }
 

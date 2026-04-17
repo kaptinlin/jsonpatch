@@ -9,6 +9,7 @@ import (
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMutateOptionFunctionality(t *testing.T) {
@@ -31,17 +32,17 @@ func TestMutateOptionFunctionality(t *testing.T) {
 		options := jsonpatch.WithMutate(false)
 		result, err := jsonpatch.ApplyPatch(original, patch, options)
 		if err != nil {
-			t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 		}
 
 		assert.Equal(t, originalSnapshot, original)
 
 		resultDoc := result.Doc
 		if got := resultDoc["name"]; got != "Jane" {
-			t.Errorf("result name = %v, want %q", got, "Jane")
+			assert.Fail(t, fmt.Sprintf("result name = %v, want %q", got, "Jane"))
 		}
 		if got := resultDoc["email"]; got != "jane@example.com" {
-			t.Errorf("result email = %v, want %q", got, "jane@example.com")
+			assert.Fail(t, fmt.Sprintf("result email = %v, want %q", got, "jane@example.com"))
 		}
 		if _, ok := resultDoc["city"]; ok {
 			assert.Fail(t, "result should not have city field")
@@ -69,14 +70,14 @@ func TestMutateOptionFunctionality(t *testing.T) {
 		options := jsonpatch.WithMutate(true)
 		result, err := jsonpatch.ApplyPatch(original, patch, options)
 		if err != nil {
-			t.Fatalf("ApplyPatch() error = %v, want nil", err)
+			require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 		}
 
 		if got := original["name"]; got != "Jane" {
-			t.Errorf("original name = %v, want %q", got, "Jane")
+			assert.Fail(t, fmt.Sprintf("original name = %v, want %q", got, "Jane"))
 		}
 		if got := original["email"]; got != "jane@example.com" {
-			t.Errorf("original email = %v, want %q", got, "jane@example.com")
+			assert.Fail(t, fmt.Sprintf("original email = %v, want %q", got, "jane@example.com"))
 		}
 		if _, ok := original["city"]; ok {
 			assert.Fail(t, "original should not have city field")
@@ -106,17 +107,17 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			options := jsonpatch.WithMutate(false)
 			result, err := jsonpatch.ApplyPatch(original, patch, options)
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 
 			assert.Equal(t, originalSnapshot, original)
 
 			resultArray := result.Doc
 			if got := resultArray[1]; got != "blueberry" {
-				t.Errorf("result[1] = %v, want %q", got, "blueberry")
+				assert.Fail(t, fmt.Sprintf("result[1] = %v, want %q", got, "blueberry"))
 			}
 			if got := resultArray[3]; got != "date" {
-				t.Errorf("result[3] = %v, want %q", got, "date")
+				assert.Fail(t, fmt.Sprintf("result[3] = %v, want %q", got, "date"))
 			}
 		})
 
@@ -131,11 +132,11 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			options := jsonpatch.WithMutate(true)
 			result, err := jsonpatch.ApplyPatch(original, patch, options)
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 
 			if got := original[1]; got != "blueberry" {
-				t.Errorf("original[1] = %v, want %q", got, "blueberry")
+				assert.Fail(t, fmt.Sprintf("original[1] = %v, want %q", got, "blueberry"))
 			}
 
 			resultArray := result.Doc
@@ -155,19 +156,19 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			options := jsonpatch.WithMutate(true)
 			result, err := jsonpatch.ApplyPatch(original, patch, options)
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 
 			if got := len(original); got != 3 {
-				t.Errorf("original slice length = %d, want 3 (Go limitation)", got)
+				assert.Fail(t, fmt.Sprintf("original slice length = %d, want 3 (Go limitation)", got))
 			}
 
 			resultArray := result.Doc
 			if got := len(resultArray); got != 4 {
-				t.Errorf("result slice length = %d, want 4", got)
+				assert.Fail(t, fmt.Sprintf("result slice length = %d, want 4", got))
 			}
 			if got := resultArray[3]; got != "date" {
-				t.Errorf("result[3] = %v, want %q", got, "date")
+				assert.Fail(t, fmt.Sprintf("result[3] = %v, want %q", got, "date"))
 			}
 		})
 	})
@@ -210,11 +211,11 @@ func TestMutateOptionFunctionality(t *testing.T) {
 						options := jsonpatch.WithMutate(mutate)
 						result, err := jsonpatch.ApplyPatch(original, tc.patch, options)
 						if err != nil {
-							t.Fatalf("ApplyPatch() error = %v, want nil", err)
+							require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 						}
 
 						if original != tc.value {
-							t.Errorf("original = %v, want %v (primitives are immutable in Go)", original, tc.value)
+							assert.Fail(t, fmt.Sprintf("original = %v, want %v (primitives are immutable in Go)", original, tc.value))
 						}
 
 						assert.Equal(t, tc.expected, result.Doc, "result.Doc")
@@ -253,17 +254,17 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			options := jsonpatch.WithMutate(true)
 			result, err := jsonpatch.ApplyPatch(testDoc, patch, options)
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 
 			if got := testDoc["user"].(map[string]any)["name"]; got != "Jane" {
-				t.Errorf("testDoc user name = %v, want %q", got, "Jane")
+				assert.Fail(t, fmt.Sprintf("testDoc user name = %v, want %q", got, "Jane"))
 			}
 			if got := testDoc["user"].(map[string]any)["email"]; got != "jane@example.com" {
-				t.Errorf("testDoc user email = %v, want %q", got, "jane@example.com")
+				assert.Fail(t, fmt.Sprintf("testDoc user email = %v, want %q", got, "jane@example.com"))
 			}
 			if got := testDoc["items"].([]any)[0].(map[string]any)["name"]; got != "updated_item1" {
-				t.Errorf("testDoc items[0] name = %v, want %q", got, "updated_item1")
+				assert.Fail(t, fmt.Sprintf("testDoc items[0] name = %v, want %q", got, "updated_item1"))
 			}
 
 			if !isSameMapObject(testDoc, result.Doc) {
@@ -290,13 +291,13 @@ func TestMutatePerformanceCharacteristics(t *testing.T) {
 		optionsFalse := jsonpatch.WithMutate(false)
 		resultFalse, err := jsonpatch.ApplyPatch(deepCopyMap(largeDoc), patch, optionsFalse)
 		if err != nil {
-			t.Fatalf("ApplyPatch(mutate=false) error = %v, want nil", err)
+			require.FailNow(t, fmt.Sprintf("ApplyPatch(mutate=false) error = %v, want nil", err))
 		}
 
 		optionsTrue := jsonpatch.WithMutate(true)
 		resultTrue, err := jsonpatch.ApplyPatch(deepCopyMap(largeDoc), patch, optionsTrue)
 		if err != nil {
-			t.Fatalf("ApplyPatch(mutate=true) error = %v, want nil", err)
+			require.FailNow(t, fmt.Sprintf("ApplyPatch(mutate=true) error = %v, want nil", err))
 		}
 
 		assert.Equal(t, resultFalse.Doc, resultTrue.Doc)

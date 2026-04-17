@@ -1,10 +1,12 @@
 package ops_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLessOp(t *testing.T) {
@@ -21,7 +23,7 @@ func TestLessOp(t *testing.T) {
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch(123, patch, internal.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 		})
 
@@ -35,7 +37,7 @@ func TestLessOp(t *testing.T) {
 			patch1 := []internal.Operation{op1}
 			_, err1 := jsonpatch.ApplyPatch(123, patch1, internal.WithMutate(true))
 			if err1 == nil {
-				t.Fatal("ApplyPatch() error = nil, want error for equal value")
+				require.FailNow(t, "ApplyPatch() error = nil, want error for equal value")
 			}
 
 			op2 := internal.Operation{
@@ -46,7 +48,7 @@ func TestLessOp(t *testing.T) {
 			patch2 := []internal.Operation{op2}
 			_, err2 := jsonpatch.ApplyPatch(123, patch2, internal.WithMutate(true))
 			if err2 == nil {
-				t.Fatal("ApplyPatch() error = nil, want error for smaller value")
+				require.FailNow(t, "ApplyPatch() error = nil, want error for smaller value")
 			}
 		})
 	})

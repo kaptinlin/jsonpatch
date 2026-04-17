@@ -2,9 +2,11 @@ package jsonpatch_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/kaptinlin/jsonpatch"
 )
@@ -32,7 +34,7 @@ func TestValidateOperations(t *testing.T) {
 		ops := []jsonpatch.Operation{{}}
 		err := jsonpatch.ValidateOperations(ops, false)
 		if err == nil {
-			t.Fatal("ValidateOperations() error = nil, want error")
+			require.FailNow(t, "ValidateOperations() error = nil, want error")
 		}
 		if !errors.Is(err, jsonpatch.ErrMissingOp) {
 			assert.Equal(t, jsonpatch.ErrMissingOp, err, "ValidateOperations() error")
@@ -44,7 +46,7 @@ func TestValidateOperations(t *testing.T) {
 		ops := []jsonpatch.Operation{{Path: "/"}}
 		err := jsonpatch.ValidateOperations(ops, false)
 		if err == nil {
-			t.Fatal("ValidateOperations() error = nil, want error")
+			require.FailNow(t, "ValidateOperations() error = nil, want error")
 		}
 		if !errors.Is(err, jsonpatch.ErrMissingOp) {
 			assert.Equal(t, jsonpatch.ErrMissingOp, err, "ValidateOperations() error")
@@ -56,7 +58,7 @@ func TestValidateOperations(t *testing.T) {
 		ops := []jsonpatch.Operation{{Path: "/", Op: "123"}}
 		err := jsonpatch.ValidateOperations(ops, false)
 		if err == nil {
-			t.Fatal("ValidateOperations() error = nil, want error")
+			require.FailNow(t, "ValidateOperations() error = nil, want error")
 		}
 		if !errors.Is(err, jsonpatch.ErrInvalidOperation) {
 			assert.Equal(t, jsonpatch.ErrInvalidOperation, err, "ValidateOperations() error")
@@ -68,7 +70,7 @@ func TestValidateOperations(t *testing.T) {
 		ops := []jsonpatch.Operation{{Op: "add", Path: "/test", Value: 123}}
 		err := jsonpatch.ValidateOperations(ops, false)
 		if err != nil {
-			t.Errorf("ValidateOperations() error = %v, want nil", err)
+			assert.Fail(t, fmt.Sprintf("ValidateOperations() error = %v, want nil", err))
 		}
 	})
 
@@ -80,7 +82,7 @@ func TestValidateOperations(t *testing.T) {
 		}
 		err := jsonpatch.ValidateOperations(ops, false)
 		if err == nil {
-			t.Fatal("ValidateOperations() error = nil, want error")
+			require.FailNow(t, "ValidateOperations() error = nil, want error")
 		}
 		if !errors.Is(err, jsonpatch.ErrMissingValue) {
 			assert.Equal(t, jsonpatch.ErrMissingValue, err, "ValidateOperations() error")
@@ -95,7 +97,7 @@ func TestValidateOperations(t *testing.T) {
 		}
 		err := jsonpatch.ValidateOperations(ops, false)
 		if err == nil {
-			t.Fatal("ValidateOperations() error = nil, want error")
+			require.FailNow(t, "ValidateOperations() error = nil, want error")
 		}
 		if !errors.Is(err, jsonpatch.ErrInvalidJSONPointer) {
 			assert.Equal(t, jsonpatch.ErrInvalidJSONPointer, err, "ValidateOperations() error")

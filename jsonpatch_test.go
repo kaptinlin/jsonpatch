@@ -10,6 +10,7 @@ import (
 	"github.com/go-json-experiment/json/jsontext"
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // profile is a test struct for generic patch testing
@@ -54,13 +55,13 @@ func TestApplyPatchBasic(t *testing.T) {
 
 			if tt.wantErr {
 				if err == nil {
-					t.Fatal("ApplyPatch() error = nil, want error")
+					require.FailNow(t, "ApplyPatch() error = nil, want error")
 				}
 				return
 			}
 
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 
 			assert.Equal(t, tt.expected, result.Doc)
@@ -118,13 +119,13 @@ func TestValidateOperation(t *testing.T) {
 
 			if tt.wantErr != nil {
 				if err == nil {
-					t.Fatal("ValidateOperation() error = nil, want error")
+					require.FailNow(t, "ValidateOperation() error = nil, want error")
 				}
 				if !errors.Is(err, tt.wantErr) {
 					assert.Equal(t, tt.wantErr, err, "ValidateOperation() error")
 				}
 			} else if err != nil {
-				t.Errorf("ValidateOperation() error = %v, want nil", err)
+				assert.Fail(t, fmt.Sprintf("ValidateOperation() error = %v, want nil", err))
 			}
 		})
 	}
@@ -147,27 +148,27 @@ func TestApplyPatch_Struct(t *testing.T) {
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(before, patch)
 	if err != nil {
-		t.Fatalf("ApplyPatch() error = %v, want nil", err)
+		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 	}
 
 	// Verify results
 	if result.Doc.Name != "Jane" {
-		t.Errorf("ApplyPatch() Name = %v, want Jane", result.Doc.Name)
+		assert.Fail(t, fmt.Sprintf("ApplyPatch() Name = %v, want Jane", result.Doc.Name))
 	}
 	if result.Doc.Email != "jane@example.com" {
-		t.Errorf("ApplyPatch() Email = %v, want jane@example.com", result.Doc.Email)
+		assert.Fail(t, fmt.Sprintf("ApplyPatch() Email = %v, want jane@example.com", result.Doc.Email))
 	}
 	assert.Equal(t, []string{"dev", "golang"}, result.Doc.Tags)
 	if len(result.Res) != 3 {
-		t.Errorf("ApplyPatch() len(Res) = %d, want 3", len(result.Res))
+		assert.Fail(t, fmt.Sprintf("ApplyPatch() len(Res) = %d, want 3", len(result.Res)))
 	}
 
 	// Verify original is unchanged (immutable by default)
 	if before.Name != "John" {
-		t.Errorf("original Name = %v, want John", before.Name)
+		assert.Fail(t, fmt.Sprintf("original Name = %v, want John", before.Name))
 	}
 	if before.Email != "" {
-		t.Errorf("original Email = %q, want empty", before.Email)
+		assert.Fail(t, fmt.Sprintf("original Email = %q, want empty", before.Email))
 	}
 	assert.Equal(t, []string{"dev"}, before.Tags)
 }
@@ -189,7 +190,7 @@ func TestApplyPatch_Map(t *testing.T) {
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(before, patch)
 	if err != nil {
-		t.Fatalf("ApplyPatch() error = %v", err)
+		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v", err))
 	}
 
 	// Verify results
@@ -226,14 +227,14 @@ func TestApplyPatch_JSONBytes(t *testing.T) {
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(before, patch)
 	if err != nil {
-		t.Fatalf("ApplyPatch() error = %v", err)
+		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v", err))
 	}
 
 	// Parse result to verify
 	var resultMap map[string]any
 	err = json.Unmarshal(result.Doc, &resultMap)
 	if err != nil {
-		t.Fatalf("json.Unmarshal() error = %v", err)
+		require.FailNow(t, fmt.Sprintf("json.Unmarshal() error = %v", err))
 	}
 
 	// Verify results
@@ -250,7 +251,7 @@ func TestApplyPatch_JSONBytes(t *testing.T) {
 	var original map[string]any
 	err = json.Unmarshal(before, &original)
 	if err != nil {
-		t.Fatalf("json.Unmarshal(before) error = %v", err)
+		require.FailNow(t, fmt.Sprintf("json.Unmarshal(before) error = %v", err))
 	}
 	if got := original["name"]; got != "John" {
 		assert.Equal(t, "John", got, "original[name]")
@@ -275,14 +276,14 @@ func TestApplyPatch_JSONString(t *testing.T) {
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(before, patch)
 	if err != nil {
-		t.Fatalf("ApplyPatch() error = %v", err)
+		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v", err))
 	}
 
 	// Parse result to verify
 	var resultMap map[string]any
 	err = json.Unmarshal([]byte(result.Doc), &resultMap)
 	if err != nil {
-		t.Fatalf("json.Unmarshal() error = %v", err)
+		require.FailNow(t, fmt.Sprintf("json.Unmarshal() error = %v", err))
 	}
 
 	// Verify results
@@ -332,7 +333,7 @@ func TestArrayOperations(t *testing.T) {
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(doc, patch)
 	if err != nil {
-		t.Fatalf("ApplyPatch() error = %v", err)
+		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v", err))
 	}
 
 	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
@@ -368,7 +369,7 @@ func TestMultipleOperations(t *testing.T) {
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(doc, patch)
 	if err != nil {
-		t.Fatalf("ApplyPatch() error = %v", err)
+		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v", err))
 	}
 
 	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
@@ -399,7 +400,7 @@ func TestApplyPatch_WithMutate(t *testing.T) {
 	// Apply patch with mutate=true
 	result, err := jsonpatch.ApplyPatch(original, patch, jsonpatch.WithMutate(true))
 	if err != nil {
-		t.Fatalf("ApplyPatch() error = %v", err)
+		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v", err))
 	}
 
 	// Verify results
@@ -459,7 +460,7 @@ func TestComplexDocument(t *testing.T) {
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(doc, patch)
 	if err != nil {
-		t.Fatalf("ApplyPatch() error = %v", err)
+		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v", err))
 	}
 
 	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
@@ -514,7 +515,7 @@ func TestSpecialCharacters(t *testing.T) {
 	// Apply patch
 	result, err := jsonpatch.ApplyPatch(doc, patch)
 	if err != nil {
-		t.Fatalf("ApplyPatch() error = %v", err)
+		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v", err))
 	}
 
 	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
@@ -726,7 +727,7 @@ func FuzzOperationSequence(f *testing.F) {
 		if err == nil && result != nil {
 			_, jsonErr := json.Marshal(result.Doc)
 			if jsonErr != nil {
-				t.Errorf("Result is not valid JSON: %v", jsonErr)
+				assert.Fail(t, fmt.Sprintf("Result is not valid JSON: %v", jsonErr))
 			}
 
 			// Verify original document is unchanged (immutability)
@@ -749,7 +750,7 @@ func FuzzOperationSequence(f *testing.F) {
 		if err != nil {
 			// Verify error has proper structure
 			if err.Error() == "" {
-				t.Errorf("Error missing message")
+				assert.Fail(t, "Error missing message")
 			}
 		}
 	})
@@ -821,7 +822,7 @@ func FuzzJSONPointerPaths(f *testing.F) {
 		// and errors are properly structured
 		if err != nil {
 			if err.Error() == "" {
-				t.Errorf("Error missing message for path: %q", path)
+				assert.Fail(t, fmt.Sprintf("Error missing message for path: %q", path))
 			}
 		}
 	})
@@ -891,7 +892,7 @@ func FuzzOperationValues(f *testing.F) {
 			// Verify the added value can be serialized back to JSON
 			_, jsonErr := json.Marshal(result.Doc)
 			if jsonErr != nil {
-				t.Errorf("Result with fuzzed value is not valid JSON: %v", jsonErr)
+				assert.Fail(t, fmt.Sprintf("Result with fuzzed value is not valid JSON: %v", jsonErr))
 			}
 
 			// Verify the value was actually added
@@ -901,7 +902,7 @@ func FuzzOperationValues(f *testing.F) {
 				fuzzedJSON, _ := json.Marshal(fuzzedValue)
 				var testUnmarshal any
 				if err := json.Unmarshal(fuzzedJSON, &testUnmarshal); err != nil {
-					t.Errorf("Fuzzed value in result is not valid JSON")
+					assert.Fail(t, "Fuzzed value in result is not valid JSON")
 				}
 			}
 		}
@@ -922,7 +923,7 @@ func FuzzOperationValues(f *testing.F) {
 			// Verify result is valid JSON
 			_, jsonErr := json.Marshal(result.Doc)
 			if jsonErr != nil {
-				t.Errorf("Result with replaced value is not valid JSON: %v", jsonErr)
+				assert.Fail(t, fmt.Sprintf("Result with replaced value is not valid JSON: %v", jsonErr))
 			}
 		}
 	})
@@ -986,7 +987,7 @@ func FuzzArrayIndices(f *testing.F) {
 			// We expect many of these to fail (invalid indices), but they shouldn't panic
 			if err != nil {
 				if err.Error() == "" {
-					t.Errorf("Error missing message for index: %d", index)
+					assert.Fail(t, fmt.Sprintf("Error missing message for index: %d", index))
 				}
 			}
 		}
@@ -1066,14 +1067,14 @@ func FuzzComplexDocuments(f *testing.F) {
 				// Verify result is valid JSON
 				_, jsonErr := json.Marshal(result.Doc)
 				if jsonErr != nil {
-					t.Errorf("Result is not valid JSON: %v", jsonErr)
+					assert.Fail(t, fmt.Sprintf("Result is not valid JSON: %v", jsonErr))
 				}
 			}
 
 			// Verify errors are properly structured
 			if err != nil {
 				if err.Error() == "" {
-					t.Errorf("Error missing message")
+					assert.Fail(t, "Error missing message")
 				}
 			}
 		}
@@ -1153,20 +1154,20 @@ func FuzzEdgeCases(f *testing.F) {
 			// Result should be valid JSON
 			resultJSON, jsonErr := json.Marshal(result.Doc)
 			if jsonErr != nil {
-				t.Errorf("Result is not valid JSON: %v", jsonErr)
+				assert.Fail(t, fmt.Sprintf("Result is not valid JSON: %v", jsonErr))
 			}
 
 			// Result should be parseable back
 			var reparsed any
 			if json.Unmarshal(resultJSON, &reparsed) != nil {
-				t.Errorf("Result cannot be reparsed from JSON")
+				assert.Fail(t, "Result cannot be reparsed from JSON")
 			}
 		}
 
 		// Errors should be properly structured
 		if err != nil {
 			if err.Error() == "" {
-				t.Errorf("Error missing message")
+				assert.Fail(t, "Error missing message")
 			}
 		}
 	})

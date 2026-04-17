@@ -2,10 +2,12 @@ package op
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestReplace_Basic(t *testing.T) {
@@ -21,7 +23,7 @@ func TestReplace_Basic(t *testing.T) {
 	replaceOp := NewReplace([]string{"foo"}, "new_value")
 	result, err := replaceOp.Apply(doc)
 	if err != nil {
-		t.Fatalf("Apply() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 	}
 
 	modifiedDoc := result.Doc.(map[string]any)
@@ -48,7 +50,7 @@ func TestReplace_Nested(t *testing.T) {
 	replaceOp := NewReplace([]string{"foo", "bar"}, "new_nested_value")
 	result, err := replaceOp.Apply(doc)
 	if err != nil {
-		t.Fatalf("Apply() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 	}
 
 	modifiedDoc := result.Doc.(map[string]any)
@@ -75,7 +77,7 @@ func TestReplace_Array(t *testing.T) {
 	replaceOp := NewReplace([]string{"1"}, "new_second")
 	result, err := replaceOp.Apply(doc)
 	if err != nil {
-		t.Fatalf("Apply() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 	}
 
 	modifiedArray := result.Doc.([]any)
@@ -112,7 +114,7 @@ func TestReplace_EmptyPath(t *testing.T) {
 	replaceOp := NewReplace([]string{}, "new_value")
 	result, err := replaceOp.Apply(doc)
 	if err != nil {
-		t.Fatalf("Apply() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 	}
 	assert.Equal(t, "new_value", result.Doc, "result.Doc")
 	assert.Equal(t, doc, result.Old)
@@ -138,7 +140,7 @@ func TestReplace_ToJSON(t *testing.T) {
 
 	got, err := replaceOp.ToJSON()
 	if err != nil {
-		t.Fatalf("ToJSON() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("ToJSON() unexpected error: %v", err))
 	}
 
 	assert.Equal(t, "replace", got.Op, "ToJSON().Op")
@@ -152,10 +154,10 @@ func TestReplace_ToCompact(t *testing.T) {
 
 	compact, err := replaceOp.ToCompact()
 	if err != nil {
-		t.Fatalf("ToCompact() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("ToCompact() unexpected error: %v", err))
 	}
 	if len(compact) != 3 {
-		t.Fatalf("len(ToCompact()) = %d, want %d", len(compact), 3)
+		require.FailNow(t, fmt.Sprintf("len(ToCompact()) = %d, want %d", len(compact), 3))
 	}
 	assert.Equal(t, internal.OpReplaceCode, compact[0], "compact[0]")
 	assert.Equal(t, []string{"test"}, compact[1])
@@ -166,12 +168,12 @@ func TestReplace_Validate(t *testing.T) {
 	t.Parallel()
 	replaceOp := NewReplace([]string{"test"}, "value")
 	if err := replaceOp.Validate(); err != nil {
-		t.Errorf("Validate() unexpected error: %v", err)
+		assert.Fail(t, fmt.Sprintf("Validate() unexpected error: %v", err))
 	}
 
 	// Empty path is valid (root replacement) per RFC 6902 and json-joy
 	replaceOp = NewReplace([]string{}, "value")
 	if err := replaceOp.Validate(); err != nil {
-		t.Errorf("Validate() unexpected error for empty path: %v", err)
+		assert.Fail(t, fmt.Sprintf("Validate() unexpected error for empty path: %v", err))
 	}
 }

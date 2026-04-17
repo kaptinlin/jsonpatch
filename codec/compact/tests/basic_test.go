@@ -110,7 +110,7 @@ func TestStringOpcodes(t *testing.T) {
 	// Check that opcode is a string
 	opcode, ok := encoded[0].(string)
 	if !ok {
-		t.Fatal("opcode should be a string")
+		require.FailNow(t, "opcode should be a string")
 	}
 	assert.Equal(t, "add", opcode, "opcode")
 

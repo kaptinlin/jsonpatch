@@ -2,10 +2,12 @@ package op
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMore_Basic(t *testing.T) {
@@ -93,7 +95,7 @@ func TestMore_Basic(t *testing.T) {
 				assert.Equal(t, internal.OpResult[any]{}, result)
 			} else {
 				if err != nil {
-					t.Errorf("Apply() failed: %v", err)
+					assert.Fail(t, fmt.Sprintf("Apply() failed: %v", err))
 				}
 				if result.Doc == nil {
 					assert.Fail(t, "Apply() result.Doc = nil, want non-nil")
@@ -126,7 +128,7 @@ func TestMore_ToJSON(t *testing.T) {
 	got, err := moreOp.ToJSON()
 
 	if err != nil {
-		t.Fatalf("ToJSON() failed: %v", err)
+		require.FailNow(t, fmt.Sprintf("ToJSON() failed: %v", err))
 	}
 	if got.Op != string(internal.OpMoreType) {
 		assert.Equal(t, string(internal.OpMoreType), got.Op, "ToJSON().Op")
@@ -144,7 +146,7 @@ func TestMore_ToCompact(t *testing.T) {
 	moreOp := NewMore([]string{"age"}, 18.0)
 	compact, err := moreOp.ToCompact()
 	if err != nil {
-		t.Errorf("ToCompact() failed: %v", err)
+		assert.Fail(t, fmt.Sprintf("ToCompact() failed: %v", err))
 	}
 	want := []any{internal.OpMoreCode, []string{"age"}, 18.0}
 	assert.Equal(t, want, compact)

@@ -1,10 +1,12 @@
 package jsonpatch_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/go-json-experiment/json"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/tests/data"
@@ -49,7 +51,7 @@ func TestAutomated(t *testing.T) {
 						t.Parallel()
 						result, err := jsonpatch.ApplyPatch(test.Doc, test.Patch, options)
 						if err != nil {
-							t.Fatalf("ApplyPatch() unexpected error: %v", err)
+							require.FailNow(t, fmt.Sprintf("ApplyPatch() unexpected error: %v", err))
 						}
 
 						assert.Equal(t, test.Expected, result.Doc)
@@ -77,7 +79,7 @@ func TestAutomated(t *testing.T) {
 				default:
 					t.Run(testName, func(t *testing.T) {
 						t.Parallel()
-						t.Fatalf("Invalid test case: %+v", test)
+						require.FailNow(t, fmt.Sprintf("Invalid test case: %+v", test))
 					})
 				}
 			}

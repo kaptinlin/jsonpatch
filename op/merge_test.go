@@ -1,10 +1,12 @@
 package op
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMerge_Apply(t *testing.T) {
@@ -152,7 +154,7 @@ func TestMerge_Apply(t *testing.T) {
 			mergeOp := NewMerge(tt.path, tt.pos, props)
 			docCopy, err := DeepClone(tt.doc)
 			if err != nil {
-				t.Fatalf("DeepClone() error: %v", err)
+				require.FailNow(t, fmt.Sprintf("DeepClone() error: %v", err))
 			}
 
 			result, err := mergeOp.Apply(docCopy)
@@ -165,7 +167,7 @@ func TestMerge_Apply(t *testing.T) {
 			}
 
 			if err != nil {
-				t.Fatalf("Apply() unexpected error: %v", err)
+				require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 			}
 			assert.Equal(t, tt.expected, result.Doc)
 			assert.Equal(t, tt.oldValue, result.Old)

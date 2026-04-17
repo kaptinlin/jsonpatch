@@ -2,11 +2,13 @@ package op
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestOr_Basic(t *testing.T) {
@@ -23,7 +25,7 @@ func TestOr_Basic(t *testing.T) {
 
 	ok, err := orOp.Test(doc)
 	if err != nil {
-		t.Fatalf("Or.Test() failed: %v", err)
+		require.FailNow(t, fmt.Sprintf("Or.Test() failed: %v", err))
 	}
 	if !ok {
 		assert.Fail(t, "Or.Test() = false, want true when any operation passes")
@@ -44,7 +46,7 @@ func TestOr_AllFail(t *testing.T) {
 
 	ok, err := orOp.Test(doc)
 	if err != nil {
-		t.Fatalf("Or.Test() failed: %v", err)
+		require.FailNow(t, fmt.Sprintf("Or.Test() failed: %v", err))
 	}
 	if ok {
 		assert.Fail(t, "Or.Test() = true, want false when all operations fail")
@@ -58,7 +60,7 @@ func TestOr_Empty(t *testing.T) {
 	doc := map[string]any{"foo": "bar"}
 	ok, err := orOp.Test(doc)
 	if err != nil {
-		t.Fatalf("Or.Test() failed: %v", err)
+		require.FailNow(t, fmt.Sprintf("Or.Test() failed: %v", err))
 	}
 	if ok {
 		assert.Fail(t, "Or.Test() = true, want false for empty OR")
@@ -79,7 +81,7 @@ func TestOr_Apply(t *testing.T) {
 
 	result, err := orOp.Apply(doc)
 	if err != nil {
-		t.Fatalf("Or.Apply() failed: %v", err)
+		require.FailNow(t, fmt.Sprintf("Or.Apply() failed: %v", err))
 	}
 	if !deepEqual(result.Doc, doc) {
 		assert.Fail(t, "Or.Apply() did not return the original document")
@@ -120,13 +122,11 @@ func TestOr_InterfaceMethods(t *testing.T) {
 	if got := orOp.Code(); got != internal.OpOrCode {
 		assert.Equal(t, internal.OpOrCode, got, "Code()")
 	}
-	if diff := cmp.Diff([]string{"test"}, orOp.Path()); diff != "" {
-		t.Errorf("Path() mismatch (-want +got):\n%s", diff)
-	}
+	assert.Empty(t, cmp.Diff([]string{"test"}, orOp.Path()), "Path() mismatch")
 
 	ops := orOp.Ops()
 	if len(ops) != 2 {
-		t.Fatalf("len(Ops()) = %d, want 2", len(ops))
+		require.FailNow(t, fmt.Sprintf("len(Ops()) = %d, want 2", len(ops)))
 	}
 	if ops[0] != test1 {
 		assert.Fail(t, "Ops()[0] does not match first operation")
@@ -145,7 +145,7 @@ func TestOr_ToJSON(t *testing.T) {
 
 	got, err := orOp.ToJSON()
 	if err != nil {
-		t.Fatalf("ToJSON() failed: %v", err)
+		require.FailNow(t, fmt.Sprintf("ToJSON() failed: %v", err))
 	}
 	if got.Op != "or" {
 		assert.Equal(t, "or", got.Op, "ToJSON().Op")
@@ -154,10 +154,10 @@ func TestOr_ToJSON(t *testing.T) {
 		assert.Equal(t, "/test", got.Path, "ToJSON().Path")
 	}
 	if got.Apply == nil {
-		t.Fatal("ToJSON().Apply = nil, want non-nil")
+		require.FailNow(t, "ToJSON().Apply = nil, want non-nil")
 	}
 	if len(got.Apply) != 2 {
-		t.Errorf("len(ToJSON().Apply) = %d, want 2", len(got.Apply))
+		assert.Fail(t, fmt.Sprintf("len(ToJSON().Apply) = %d, want 2", len(got.Apply)))
 	}
 }
 
@@ -170,12 +170,12 @@ func TestOr_ToCompact(t *testing.T) {
 
 	compact, err := orOp.ToCompact()
 	if err != nil {
-		t.Fatalf("ToCompact() failed: %v", err)
+		require.FailNow(t, fmt.Sprintf("ToCompact() failed: %v", err))
 	}
 	assert.Equal(t, internal.OpOrCode, compact[0], "ToCompact()[0]")
 	assert.Equal(t, []string{"test"}, compact[1])
 	if _, ok := compact[2].([]any); !ok {
-		t.Errorf("ToCompact()[2] type = %T, want []any", compact[2])
+		assert.Fail(t, fmt.Sprintf("ToCompact()[2] type = %T, want []any", compact[2]))
 	}
 }
 
@@ -186,12 +186,12 @@ func TestOr_Validate(t *testing.T) {
 
 	orOp := NewOr([]string{"test"}, []any{test1, test2})
 	if err := orOp.Validate(); err != nil {
-		t.Errorf("Validate() = %v, want nil for valid operation", err)
+		assert.Fail(t, fmt.Sprintf("Validate() = %v, want nil for valid operation", err))
 	}
 
 	// Empty OR is valid, just returns false
 	orOp = NewOr([]string{"test"}, []any{})
 	if err := orOp.Validate(); err != nil {
-		t.Errorf("Validate() = %v, want nil for empty operations", err)
+		assert.Fail(t, fmt.Sprintf("Validate() = %v, want nil for empty operations", err))
 	}
 }

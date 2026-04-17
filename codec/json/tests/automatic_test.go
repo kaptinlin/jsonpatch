@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch/codec/json"
@@ -24,12 +25,12 @@ func TestAutomaticCodec(t *testing.T) {
 				t.Logf("Failed to decode operation %s: %v", name, err)
 				t.Logf("Operation: %+v", operation)
 				if err != nil {
-					t.Errorf("Decode() error = %v", err)
+					assert.Fail(t, fmt.Sprintf("Decode() error = %v", err))
 				}
 				return
 			}
 			if len(ops) != 1 {
-				t.Errorf("Decode() returned %d ops, want 1", len(ops))
+				assert.Fail(t, fmt.Sprintf("Decode() returned %d ops, want 1", len(ops)))
 			}
 
 			// Encode back to JSON
@@ -37,12 +38,12 @@ func TestAutomaticCodec(t *testing.T) {
 			if err != nil {
 				t.Logf("Failed to encode operation %s: %v", name, err)
 				if err != nil {
-					t.Errorf("Encode() error = %v", err)
+					assert.Fail(t, fmt.Sprintf("Encode() error = %v", err))
 				}
 				return
 			}
 			if len(encoded) != 1 {
-				t.Errorf("Encode() returned %d ops, want 1", len(encoded))
+				assert.Fail(t, fmt.Sprintf("Encode() returned %d ops, want 1", len(encoded)))
 			}
 
 			// Convert expected operation map to Operation struct for comparison
@@ -113,13 +114,13 @@ func TestCodecRoundTrip(t *testing.T) {
 	// Decode
 	decoded, err := json.Decode(originalOps, options)
 	if err != nil {
-		t.Errorf("Decode() error = %v", err)
+		assert.Fail(t, fmt.Sprintf("Decode() error = %v", err))
 	}
 
 	// Encode back
 	encoded, err := json.Encode(decoded)
 	if err != nil {
-		t.Errorf("Encode() error = %v", err)
+		assert.Fail(t, fmt.Sprintf("Encode() error = %v", err))
 	}
 
 	// Convert expected operations to Operation structs for comparison

@@ -1,6 +1,7 @@
 package ops_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch/internal"
@@ -44,7 +45,7 @@ func TestFlipOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOps(t, true, []internal.Operation{operation})
 			if result != false {
-				t.Errorf("result = %v, want false", result)
+				assert.Fail(t, fmt.Sprintf("result = %v, want false", result))
 			}
 		})
 
@@ -56,7 +57,7 @@ func TestFlipOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOps(t, false, []internal.Operation{operation})
 			if result != true {
-				t.Errorf("result = %v, want true", result)
+				assert.Fail(t, fmt.Sprintf("result = %v, want true", result))
 			}
 		})
 
@@ -68,7 +69,7 @@ func TestFlipOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOps(t, 123, []internal.Operation{operation})
 			if result != false {
-				t.Errorf("result = %v, want false", result)
+				assert.Fail(t, fmt.Sprintf("result = %v, want false", result))
 			}
 		})
 
@@ -80,7 +81,7 @@ func TestFlipOp(t *testing.T) {
 			}
 			result := testutils.ApplyInternalOps(t, 0, []internal.Operation{operation})
 			if result != true {
-				t.Errorf("result = %v, want true", result)
+				assert.Fail(t, fmt.Sprintf("result = %v, want true", result))
 			}
 		})
 	})

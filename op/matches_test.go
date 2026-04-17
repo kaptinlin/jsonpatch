@@ -2,10 +2,12 @@ package op
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMatches_Basic(t *testing.T) {
@@ -88,7 +90,7 @@ func TestMatches_Basic(t *testing.T) {
 				assert.Equal(t, internal.OpResult[any]{}, result)
 			} else {
 				if err != nil {
-					t.Errorf("Apply() failed: %v", err)
+					assert.Fail(t, fmt.Sprintf("Apply() failed: %v", err))
 				}
 				if result.Doc == nil {
 					assert.Fail(t, "Apply() result.Doc = nil, want non-nil")
@@ -129,7 +131,7 @@ func TestMatches_InvalidPattern(t *testing.T) {
 	// (aligned with json-joy's behavior)
 	matchesOp := NewMatches(path, invalidPattern, false, nil)
 	if matchesOp == nil {
-		t.Fatal("NewMatches() = nil, want non-nil")
+		require.FailNow(t, "NewMatches() = nil, want non-nil")
 	}
 
 	result, _ := matchesOp.Test(map[string]any{"email": "test@example.com"})
@@ -144,7 +146,7 @@ func TestMatches_ToJSON(t *testing.T) {
 
 	got, err := matchesOp.ToJSON()
 	if err != nil {
-		t.Fatalf("ToJSON() failed: %v", err)
+		require.FailNow(t, fmt.Sprintf("ToJSON() failed: %v", err))
 	}
 
 	if got.Op != string(internal.OpMatchesType) {
@@ -154,10 +156,10 @@ func TestMatches_ToJSON(t *testing.T) {
 		assert.Equal(t, "/email", got.Path, "ToJSON().Path")
 	}
 	if got.Value != `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$` {
-		t.Errorf("ToJSON().Value = %v, want pattern string", got.Value)
+		assert.Fail(t, fmt.Sprintf("ToJSON().Value = %v, want pattern string", got.Value))
 	}
 	if got.IgnoreCase != true {
-		t.Errorf("ToJSON().IgnoreCase = %v, want true", got.IgnoreCase)
+		assert.Fail(t, fmt.Sprintf("ToJSON().IgnoreCase = %v, want true", got.IgnoreCase))
 	}
 }
 
@@ -166,7 +168,7 @@ func TestMatches_ToCompact(t *testing.T) {
 	matchesOp := NewMatches([]string{"name"}, "john", true, nil)
 	compact, err := matchesOp.ToCompact()
 	if err != nil {
-		t.Errorf("ToCompact() failed: %v", err)
+		assert.Fail(t, fmt.Sprintf("ToCompact() failed: %v", err))
 	}
 	want := []any{internal.OpMatchesCode, []string{"name"}, "john", true}
 	assert.Equal(t, want, compact)
@@ -177,7 +179,7 @@ func TestMatches_ToCompact_WithoutIgnoreCase(t *testing.T) {
 	matchesOp := NewMatches([]string{"name"}, "john", false, nil)
 	compact, err := matchesOp.ToCompact()
 	if err != nil {
-		t.Errorf("ToCompact() failed: %v", err)
+		assert.Fail(t, fmt.Sprintf("ToCompact() failed: %v", err))
 	}
 	want := []any{internal.OpMatchesCode, []string{"name"}, "john", false}
 	assert.Equal(t, want, compact)

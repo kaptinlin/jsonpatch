@@ -2,10 +2,12 @@ package op
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAnd_Basic(t *testing.T) {
@@ -22,7 +24,7 @@ func TestAnd_Basic(t *testing.T) {
 
 	ok, err := andOp.Test(doc)
 	if err != nil {
-		t.Fatalf("And.Test() failed: %v", err)
+		require.FailNow(t, fmt.Sprintf("And.Test() failed: %v", err))
 	}
 	if !ok {
 		assert.Fail(t, "And.Test() = false, want true when all operations pass")
@@ -43,7 +45,7 @@ func TestAnd_OneFails(t *testing.T) {
 
 	ok, err := andOp.Test(doc)
 	if err != nil {
-		t.Fatalf("And.Test() failed: %v", err)
+		require.FailNow(t, fmt.Sprintf("And.Test() failed: %v", err))
 	}
 	if ok {
 		assert.Fail(t, "And.Test() = true, want false when any operation fails")
@@ -57,7 +59,7 @@ func TestAnd_Empty(t *testing.T) {
 	doc := map[string]any{"foo": "bar"}
 	ok, err := andOp.Test(doc)
 	if err != nil {
-		t.Fatalf("And.Test() failed: %v", err)
+		require.FailNow(t, fmt.Sprintf("And.Test() failed: %v", err))
 	}
 	if !ok {
 		assert.Fail(t, "And.Test() = false, want true for empty AND (vacuous truth)")
@@ -78,7 +80,7 @@ func TestAnd_Apply(t *testing.T) {
 
 	result, err := andOp.Apply(doc)
 	if err != nil {
-		t.Fatalf("And.Apply() failed: %v", err)
+		require.FailNow(t, fmt.Sprintf("And.Apply() failed: %v", err))
 	}
 	assert.Equal(t, doc, result.Doc)
 }
@@ -121,7 +123,7 @@ func TestAnd_InterfaceMethods(t *testing.T) {
 
 	ops := andOp.Ops()
 	if len(ops) != 2 {
-		t.Fatalf("len(Ops()) = %d, want 2", len(ops))
+		require.FailNow(t, fmt.Sprintf("len(Ops()) = %d, want 2", len(ops)))
 	}
 	if ops[0] != test1 {
 		assert.Fail(t, "Ops()[0] does not match first operation")
@@ -140,7 +142,7 @@ func TestAnd_ToJSON(t *testing.T) {
 
 	got, err := andOp.ToJSON()
 	if err != nil {
-		t.Fatalf("ToJSON() failed: %v", err)
+		require.FailNow(t, fmt.Sprintf("ToJSON() failed: %v", err))
 	}
 	if got.Op != "and" {
 		assert.Equal(t, "and", got.Op, "ToJSON().Op")
@@ -149,7 +151,7 @@ func TestAnd_ToJSON(t *testing.T) {
 		assert.Equal(t, "/test", got.Path, "ToJSON().Path")
 	}
 	if len(got.Apply) != 2 {
-		t.Errorf("len(ToJSON().Apply) = %d, want 2", len(got.Apply))
+		assert.Fail(t, fmt.Sprintf("len(ToJSON().Apply) = %d, want 2", len(got.Apply)))
 	}
 }
 
@@ -162,12 +164,12 @@ func TestAnd_ToCompact(t *testing.T) {
 
 	compact, err := andOp.ToCompact()
 	if err != nil {
-		t.Fatalf("ToCompact() failed: %v", err)
+		require.FailNow(t, fmt.Sprintf("ToCompact() failed: %v", err))
 	}
 	assert.Equal(t, internal.OpAndCode, compact[0], "ToCompact()[0]")
 	assert.Equal(t, []string{"test"}, compact[1])
 	if _, ok := compact[2].([]any); !ok {
-		t.Errorf("ToCompact()[2] type = %T, want []any", compact[2])
+		assert.Fail(t, fmt.Sprintf("ToCompact()[2] type = %T, want []any", compact[2]))
 	}
 }
 
@@ -178,12 +180,12 @@ func TestAnd_Validate(t *testing.T) {
 
 	andOp := NewAnd([]string{"test"}, []any{test1, test2})
 	if err := andOp.Validate(); err != nil {
-		t.Errorf("Validate() = %v, want nil for valid operation", err)
+		assert.Fail(t, fmt.Sprintf("Validate() = %v, want nil for valid operation", err))
 	}
 
 	// Vacuous truth allows empty operations
 	andOp = NewAnd([]string{"test"}, []any{})
 	if err := andOp.Validate(); err != nil {
-		t.Errorf("Validate() = %v, want nil for empty operations (vacuous truth)", err)
+		assert.Fail(t, fmt.Sprintf("Validate() = %v, want nil for empty operations (vacuous truth)", err))
 	}
 }

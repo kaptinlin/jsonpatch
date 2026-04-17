@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"math"
 	"testing"
 
@@ -15,14 +16,14 @@ func TestIsValidJSONPatchType(t *testing.T) {
 	}
 	for _, v := range valid {
 		if !IsValidJSONPatchType(v) {
-			t.Errorf("IsValidJSONPatchType(%q) = false, want true", v)
+			assert.Fail(t, fmt.Sprintf("IsValidJSONPatchType(%q) = false, want true", v))
 		}
 	}
 
 	invalid := []string{"", "unknown", "float", "map", "slice", "int"}
 	for _, v := range invalid {
 		if IsValidJSONPatchType(v) {
-			t.Errorf("IsValidJSONPatchType(%q) = true, want false", v)
+			assert.Fail(t, fmt.Sprintf("IsValidJSONPatchType(%q) = true, want false", v))
 		}
 	}
 }

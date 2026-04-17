@@ -1,11 +1,13 @@
 package op
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSplit_Apply(t *testing.T) {
@@ -144,7 +146,7 @@ func TestSplit_Apply(t *testing.T) {
 			splitOp := NewSplit(tt.path, tt.pos, tt.props)
 			docCopy, err := DeepClone(tt.doc)
 			if err != nil {
-				t.Fatalf("DeepClone() error: %v", err)
+				require.FailNow(t, fmt.Sprintf("DeepClone() error: %v", err))
 			}
 
 			result, err := splitOp.Apply(docCopy)
@@ -157,7 +159,7 @@ func TestSplit_Apply(t *testing.T) {
 			}
 
 			if err != nil {
-				t.Fatalf("Apply() unexpected error: %v", err)
+				require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 			}
 			assert.Equal(t, tt.expected, result.Doc)
 			assert.Equal(t, tt.oldValue, result.Old)
@@ -171,9 +173,7 @@ func TestSplit_Constructor(t *testing.T) {
 	pos := 2.0
 	props := map[string]any{"type": "split"}
 	splitOp := NewSplit(path, pos, props)
-	if diff := cmp.Diff(path, splitOp.Path()); diff != "" {
-		t.Errorf("NewSplit() Path mismatch (-want +got):\n%s", diff)
-	}
+	assert.Empty(t, cmp.Diff(path, splitOp.Path()), "NewSplit() Path mismatch")
 	assert.Equal(t, pos, splitOp.Pos, "NewSplit() Pos")
 	assert.Equal(t, props, splitOp.Props)
 	if got := splitOp.Op(); got != internal.OpSplitType {
@@ -237,7 +237,7 @@ func TestSplit_TypeScript_Compatibility(t *testing.T) {
 			splitOp := NewSplit(tt.path, tt.pos, tt.props)
 			result, err := splitOp.Apply(tt.doc)
 			if err != nil {
-				t.Fatalf("Apply() unexpected error: %v", err)
+				require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 			}
 			assert.Equal(t, tt.expected, result.Doc)
 		})

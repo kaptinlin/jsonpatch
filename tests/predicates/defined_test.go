@@ -1,10 +1,12 @@
 package ops_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDefinedOp(t *testing.T) {
@@ -20,7 +22,7 @@ func TestDefinedOp(t *testing.T) {
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch("hello", patch, internal.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 		})
 
@@ -33,7 +35,7 @@ func TestDefinedOp(t *testing.T) {
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch(map[string]any{}, patch, internal.WithMutate(true))
 			if err == nil {
-				t.Fatal("ApplyPatch() error = nil, want error")
+				require.FailNow(t, "ApplyPatch() error = nil, want error")
 			}
 		})
 	})
@@ -49,7 +51,7 @@ func TestDefinedOp(t *testing.T) {
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch(map[string]any{"foo": "bar"}, patch, internal.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 		})
 
@@ -62,7 +64,7 @@ func TestDefinedOp(t *testing.T) {
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch(map[string]any{"foo": "bar"}, patch, internal.WithMutate(true))
 			if err == nil {
-				t.Fatal("ApplyPatch() error = nil, want error")
+				require.FailNow(t, "ApplyPatch() error = nil, want error")
 			}
 		})
 	})
@@ -78,7 +80,7 @@ func TestDefinedOp(t *testing.T) {
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch([]any{"hello"}, patch, internal.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 		})
 
@@ -91,7 +93,7 @@ func TestDefinedOp(t *testing.T) {
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch([]any{"hello"}, patch, internal.WithMutate(true))
 			if err == nil {
-				t.Fatal("ApplyPatch() error = nil, want error")
+				require.FailNow(t, "ApplyPatch() error = nil, want error")
 			}
 		})
 	})

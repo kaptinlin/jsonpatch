@@ -2,9 +2,11 @@ package ops_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/kaptinlin/jsonpatch"
 	operrors "github.com/kaptinlin/jsonpatch/op"
@@ -24,7 +26,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch("123", patch, jsonpatch.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 			if got := result.Doc; got != "123" {
 				assert.Equal(t, "123", got, "ApplyPatch() doc")
@@ -41,7 +43,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			_, err := jsonpatch.ApplyPatch("asdf", patch, jsonpatch.WithMutate(true))
 			if err == nil {
-				t.Fatal("ApplyPatch() error = nil, want error")
+				require.FailNow(t, "ApplyPatch() error = nil, want error")
 			}
 			if !errors.Is(err, operrors.ErrStringMismatch) {
 				assert.Equal(t, operrors.ErrStringMismatch, err, "ApplyPatch() error")
@@ -59,7 +61,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch("hello world", patch, jsonpatch.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 			if got := result.Doc; got != "hello world" {
 				assert.Equal(t, "hello world", got, "ApplyPatch() doc")
@@ -77,7 +79,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			_, err := jsonpatch.ApplyPatch("hello world", patch, jsonpatch.WithMutate(true))
 			if err == nil {
-				t.Fatal("ApplyPatch() error = nil, want error")
+				require.FailNow(t, "ApplyPatch() error = nil, want error")
 			}
 		})
 	})
@@ -97,7 +99,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 			if got := result.Doc["email"]; got != "user@example.com" {
 				assert.Equal(t, "user@example.com", got, "result.Doc[email]")
@@ -117,7 +119,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
 			if err == nil {
-				t.Fatal("ApplyPatch() error = nil, want error")
+				require.FailNow(t, "ApplyPatch() error = nil, want error")
 			}
 		})
 
@@ -134,7 +136,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 			if got := result.Doc["phone"]; got != "123-456-7890" {
 				assert.Equal(t, "123-456-7890", got, "result.Doc[phone]")
@@ -157,7 +159,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 			items := result.Doc["items"].([]any)
 			if got := items[1]; got != "banana" {
@@ -181,7 +183,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 			if got := result.Doc["website"]; got != "https://example.com" {
 				assert.Equal(t, "https://example.com", got, "result.Doc[website]")
@@ -201,7 +203,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 			if got := result.Doc["id"]; got != "123e4567-e89b-12d3-a456-426614174000" {
 				assert.Equal(t, "123e4567-e89b-12d3-a456-426614174000", got, "result.Doc[id]")
@@ -221,7 +223,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch("", patch, jsonpatch.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 			if got := result.Doc; got != "" {
 				assert.Equal(t, "", got, "ApplyPatch() doc")
@@ -238,7 +240,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			result, err := jsonpatch.ApplyPatch("x", patch, jsonpatch.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 			if got := result.Doc; got != "x" {
 				assert.Equal(t, "x", got, "ApplyPatch() doc")
@@ -258,7 +260,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
 			if err == nil {
-				t.Fatal("ApplyPatch() error = nil, want error")
+				require.FailNow(t, "ApplyPatch() error = nil, want error")
 			}
 			if !errors.Is(err, operrors.ErrNotString) {
 				assert.Equal(t, operrors.ErrNotString, err, "ApplyPatch() error")
@@ -278,7 +280,7 @@ func TestMatchesOp(t *testing.T) {
 			patch := []jsonpatch.Operation{op}
 			_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
 			if err == nil {
-				t.Fatal("ApplyPatch() error = nil, want error")
+				require.FailNow(t, "ApplyPatch() error = nil, want error")
 			}
 			if !errors.Is(err, operrors.ErrPathNotFound) {
 				assert.Equal(t, operrors.ErrPathNotFound, err, "ApplyPatch() error")

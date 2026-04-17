@@ -1,6 +1,7 @@
 package jsonpatch_test
 
 import (
+	"fmt"
 	"math"
 	"testing"
 
@@ -76,7 +77,7 @@ func TestNumberTypeCoercion(t *testing.T) {
 		resultMap := result.(map[string]any)
 		resultVal := resultMap["val"].(float64)
 		if math.Abs(resultVal-0.3) > 0.0001 {
-			t.Errorf("result val = %v, want ~0.3 (within 0.0001)", resultVal)
+			assert.Fail(t, fmt.Sprintf("result val = %v, want ~0.3 (within 0.0001)", resultVal))
 		}
 	})
 }

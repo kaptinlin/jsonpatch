@@ -1,11 +1,13 @@
 package op
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAdd_Basic(t *testing.T) {
@@ -18,7 +20,7 @@ func TestAdd_Basic(t *testing.T) {
 
 	result, err := addOp.Apply(doc)
 	if err != nil {
-		t.Fatalf("Apply() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 	}
 
 	if got := doc["foo"]; got != "bar" {
@@ -36,7 +38,7 @@ func TestAdd_Basic(t *testing.T) {
 		assert.Equal(t, "qux", got, "resultDoc[baz]")
 	}
 	if result.Old != nil {
-		t.Errorf("result.Old = %v, want nil", result.Old)
+		assert.Fail(t, fmt.Sprintf("result.Old = %v, want nil", result.Old))
 	}
 
 	// Mutate behavior: result should point to the same underlying object
@@ -55,7 +57,7 @@ func TestAdd_ReplaceExisting(t *testing.T) {
 
 	result, err := addOp.Apply(doc)
 	if err != nil {
-		t.Fatalf("Apply() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 	}
 
 	resultDoc := result.Doc.(map[string]any)
@@ -86,7 +88,7 @@ func TestAdd_ToJSON(t *testing.T) {
 
 	got, err := addOp.ToJSON()
 	if err != nil {
-		t.Fatalf("ToJSON() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("ToJSON() unexpected error: %v", err))
 	}
 
 	assert.Equal(t, "add", got.Op, "ToJSON().Op")
@@ -100,10 +102,10 @@ func TestAdd_ToCompact(t *testing.T) {
 
 	compact, err := addOp.ToCompact()
 	if err != nil {
-		t.Fatalf("ToCompact() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("ToCompact() unexpected error: %v", err))
 	}
 	if len(compact) != 3 {
-		t.Fatalf("len(ToCompact()) = %d, want %d", len(compact), 3)
+		require.FailNow(t, fmt.Sprintf("len(ToCompact()) = %d, want %d", len(compact), 3))
 	}
 	assert.Equal(t, internal.OpAddCode, compact[0], "compact[0]")
 	assert.Equal(t, []string{"foo"}, compact[1])
@@ -114,13 +116,13 @@ func TestAdd_Validate(t *testing.T) {
 	t.Parallel()
 	addOp := NewAdd([]string{"foo"}, "bar")
 	if err := addOp.Validate(); err != nil {
-		t.Errorf("Validate() unexpected error: %v", err)
+		assert.Fail(t, fmt.Sprintf("Validate() unexpected error: %v", err))
 	}
 
 	// Empty path is valid (root replacement) per RFC 6902 and json-joy
 	addOp = NewAdd([]string{}, "bar")
 	if err := addOp.Validate(); err != nil {
-		t.Errorf("Validate() unexpected error for empty path: %v", err)
+		assert.Fail(t, fmt.Sprintf("Validate() unexpected error for empty path: %v", err))
 	}
 }
 
@@ -135,7 +137,7 @@ func TestAdd_Constructor(t *testing.T) {
 	// Verify value indirectly through ToJSON since the value field is unexported
 	got, err := addOp.ToJSON()
 	if err != nil {
-		t.Fatalf("ToJSON() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("ToJSON() unexpected error: %v", err))
 	}
 	assert.Equal(t, value, got.Value, "ToJSON().Value")
 }

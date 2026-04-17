@@ -1,10 +1,12 @@
 package ops_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStartsOp(t *testing.T) {
@@ -21,7 +23,7 @@ func TestStartsOp(t *testing.T) {
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch("Hello world", patch, internal.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 		})
 
@@ -35,7 +37,7 @@ func TestStartsOp(t *testing.T) {
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch("Hello world", patch, internal.WithMutate(true))
 			if err == nil {
-				t.Fatal("ApplyPatch() error = nil, want error")
+				require.FailNow(t, "ApplyPatch() error = nil, want error")
 			}
 		})
 
@@ -50,7 +52,7 @@ func TestStartsOp(t *testing.T) {
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch("Hello world", patch, internal.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 		})
 	})
@@ -67,7 +69,7 @@ func TestStartsOp(t *testing.T) {
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch(map[string]any{"msg": "Hello world"}, patch, internal.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 		})
 
@@ -81,7 +83,7 @@ func TestStartsOp(t *testing.T) {
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch(map[string]any{"msg": "Hello world"}, patch, internal.WithMutate(true))
 			if err == nil {
-				t.Fatal("ApplyPatch() error = nil, want error")
+				require.FailNow(t, "ApplyPatch() error = nil, want error")
 			}
 		})
 	})
@@ -98,7 +100,7 @@ func TestStartsOp(t *testing.T) {
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch([]any{"Hello world"}, patch, internal.WithMutate(true))
 			if err != nil {
-				t.Fatalf("ApplyPatch() error = %v, want nil", err)
+				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
 			}
 		})
 
@@ -112,7 +114,7 @@ func TestStartsOp(t *testing.T) {
 			patch := []internal.Operation{op}
 			_, err := jsonpatch.ApplyPatch([]any{"Hello world"}, patch, internal.WithMutate(true))
 			if err == nil {
-				t.Fatal("ApplyPatch() error = nil, want error")
+				require.FailNow(t, "ApplyPatch() error = nil, want error")
 			}
 		})
 	})

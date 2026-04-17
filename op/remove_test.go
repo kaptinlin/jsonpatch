@@ -2,9 +2,11 @@ package op
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRemove_Basic(t *testing.T) {
@@ -18,7 +20,7 @@ func TestRemove_Basic(t *testing.T) {
 	removeOp := NewRemove([]string{"foo"})
 	result, err := removeOp.Apply(doc)
 	if err != nil {
-		t.Fatalf("Apply() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 	}
 
 	modifiedDoc := result.Doc.(map[string]any)
@@ -26,13 +28,13 @@ func TestRemove_Basic(t *testing.T) {
 		assert.Equal(t, "bar", got, "result.Old")
 	}
 	if _, ok := modifiedDoc["foo"]; ok {
-		t.Error("modifiedDoc contains key \"foo\" after remove")
+		assert.Fail(t, "modifiedDoc contains key \"foo\" after remove")
 	}
 	if _, ok := modifiedDoc["baz"]; !ok {
-		t.Error("modifiedDoc missing key \"baz\"")
+		assert.Fail(t, "modifiedDoc missing key \"baz\"")
 	}
 	if _, ok := modifiedDoc["qux"]; !ok {
-		t.Error("modifiedDoc missing key \"qux\"")
+		assert.Fail(t, "modifiedDoc missing key \"qux\"")
 	}
 }
 
@@ -45,7 +47,7 @@ func TestRemove_Nested(t *testing.T) {
 	removeOp := NewRemove([]string{"foo", "bar"})
 	result, err := removeOp.Apply(doc)
 	if err != nil {
-		t.Fatalf("Apply() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 	}
 
 	modifiedDoc := result.Doc.(map[string]any)
@@ -54,10 +56,10 @@ func TestRemove_Nested(t *testing.T) {
 		assert.Equal(t, "baz", got, "result.Old")
 	}
 	if _, ok := foo["bar"]; ok {
-		t.Error("foo contains key \"bar\" after remove")
+		assert.Fail(t, "foo contains key \"bar\" after remove")
 	}
 	if _, ok := foo["qux"]; !ok {
-		t.Error("foo missing key \"qux\"")
+		assert.Fail(t, "foo missing key \"qux\"")
 	}
 }
 
@@ -68,7 +70,7 @@ func TestRemove_Array(t *testing.T) {
 	removeOp := NewRemove([]string{"1"})
 	result, err := removeOp.Apply(doc)
 	if err != nil {
-		t.Fatalf("Apply() unexpected error: %v", err)
+		require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 	}
 
 	modifiedArray := result.Doc.([]any)
@@ -76,7 +78,7 @@ func TestRemove_Array(t *testing.T) {
 		assert.Equal(t, "second", got, "result.Old")
 	}
 	if len(modifiedArray) != 2 {
-		t.Fatalf("len(modifiedArray) = %d, want %d", len(modifiedArray), 2)
+		require.FailNow(t, fmt.Sprintf("len(modifiedArray) = %d, want %d", len(modifiedArray), 2))
 	}
 	assert.Equal(t, "first", modifiedArray[0], "modifiedArray[0]")
 	assert.Equal(t, "third", modifiedArray[1], "modifiedArray[1]")
