@@ -5,6 +5,7 @@ import (
 
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestExtend_Apply(t *testing.T) {
@@ -105,9 +106,7 @@ func TestExtend_Apply(t *testing.T) {
 			t.Parallel()
 			extendOp := NewExtend(tt.path, tt.props.(map[string]any), tt.deleteNull)
 			docCopy, err := DeepClone(tt.doc)
-			if err != nil {
-				t.Fatalf("DeepClone() error: %v", err)
-			}
+			require.NoError(t, err, "DeepClone() error")
 
 			result, err := extendOp.Apply(docCopy)
 
@@ -118,9 +117,7 @@ func TestExtend_Apply(t *testing.T) {
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("Apply() unexpected error: %v", err)
-			}
+			require.NoError(t, err, "Apply() unexpected error")
 			assert.Equal(t, tt.expected, result.Doc)
 			assert.Nil(t, result.Old, "extend should not return Old value")
 		})
@@ -136,10 +133,6 @@ func TestExtend_Constructor(t *testing.T) {
 	assert.Equal(t, path, extendOp.Path(), "Path()")
 	assert.Equal(t, props, extendOp.Properties)
 	assert.Equal(t, deleteNull, extendOp.DeleteNull, "NewExtend() DeleteNull")
-	if got := extendOp.Op(); got != internal.OpExtendType {
-		assert.Equal(t, internal.OpExtendType, got, "Op()")
-	}
-	if got := extendOp.Code(); got != internal.OpExtendCode {
-		assert.Equal(t, internal.OpExtendCode, got, "Code()")
-	}
+	assert.Equal(t, internal.OpExtendType, extendOp.Op(), "Op()")
+	assert.Equal(t, internal.OpExtendCode, extendOp.Code(), "Code()")
 }

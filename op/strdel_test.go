@@ -6,6 +6,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStrDel_Apply(t *testing.T) {
@@ -150,9 +151,7 @@ func TestStrDel_Apply(t *testing.T) {
 			t.Parallel()
 			strDelOp := NewStrDel(tt.path, tt.pos, tt.length)
 			docCopy, err := DeepClone(tt.doc)
-			if err != nil {
-				t.Fatalf("DeepClone() error: %v", err)
-			}
+			require.NoError(t, err, "DeepClone() error")
 
 			result, err := strDelOp.Apply(docCopy)
 
@@ -163,9 +162,7 @@ func TestStrDel_Apply(t *testing.T) {
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("Apply() unexpected error: %v", err)
-			}
+			require.NoError(t, err, "Apply() unexpected error")
 			assert.Equal(t, tt.expected, result.Doc)
 			assert.Equal(t, tt.oldValue, result.Old)
 		})
@@ -178,15 +175,9 @@ func TestStrDel_Constructor(t *testing.T) {
 	pos := 2.0
 	length := 3.0
 	strDelOp := NewStrDel(path, pos, length)
-	if diff := cmp.Diff(path, strDelOp.Path()); diff != "" {
-		t.Errorf("NewStrDel() Path mismatch (-want +got):\n%s", diff)
-	}
+	assert.Empty(t, cmp.Diff(path, strDelOp.Path()), "NewStrDel() Path mismatch")
 	assert.Equal(t, int(pos), strDelOp.Pos, "NewStrDel() Pos")
 	assert.Equal(t, int(length), strDelOp.Len, "NewStrDel() Len")
-	if got := strDelOp.Op(); got != internal.OpStrDelType {
-		assert.Equal(t, internal.OpStrDelType, got, "Op()")
-	}
-	if got := strDelOp.Code(); got != internal.OpStrDelCode {
-		assert.Equal(t, internal.OpStrDelCode, got, "Code()")
-	}
+	assert.Equal(t, internal.OpStrDelType, strDelOp.Op(), "Op()")
+	assert.Equal(t, internal.OpStrDelCode, strDelOp.Code(), "Code()")
 }

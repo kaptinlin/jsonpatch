@@ -6,6 +6,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStrIns_Apply(t *testing.T) {
@@ -132,9 +133,7 @@ func TestStrIns_Apply(t *testing.T) {
 			t.Parallel()
 			strInsOp := NewStrIns(tt.path, tt.pos, tt.str)
 			docCopy, err := DeepClone(tt.doc)
-			if err != nil {
-				t.Fatalf("DeepClone() error: %v", err)
-			}
+			require.NoError(t, err, "DeepClone() error")
 
 			result, err := strInsOp.Apply(docCopy)
 
@@ -145,9 +144,7 @@ func TestStrIns_Apply(t *testing.T) {
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("Apply() unexpected error: %v", err)
-			}
+			require.NoError(t, err, "Apply() unexpected error")
 			assert.Equal(t, tt.expected, result.Doc)
 			assert.Equal(t, tt.oldValue, result.Old)
 		})
@@ -160,17 +157,9 @@ func TestStrIns_Constructor(t *testing.T) {
 	pos := 2.0
 	str := "abc"
 	strInsOp := NewStrIns(path, pos, str)
-	if diff := cmp.Diff(path, strInsOp.Path()); diff != "" {
-		t.Errorf("NewStrIns() Path mismatch (-want +got):\n%s", diff)
-	}
+	assert.Empty(t, cmp.Diff(path, strInsOp.Path()), "NewStrIns() Path mismatch")
 	assert.Equal(t, int(pos), strInsOp.Pos, "NewStrIns() Pos")
-	if strInsOp.Str != str {
-		assert.Equal(t, str, strInsOp.Str, "NewStrIns() Str")
-	}
-	if got := strInsOp.Op(); got != internal.OpStrInsType {
-		assert.Equal(t, internal.OpStrInsType, got, "Op()")
-	}
-	if got := strInsOp.Code(); got != internal.OpStrInsCode {
-		assert.Equal(t, internal.OpStrInsCode, got, "Code()")
-	}
+	assert.Equal(t, str, strInsOp.Str, "NewStrIns() Str")
+	assert.Equal(t, internal.OpStrInsType, strInsOp.Op(), "Op()")
+	assert.Equal(t, internal.OpStrInsCode, strInsOp.Code(), "Code()")
 }

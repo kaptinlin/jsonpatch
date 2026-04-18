@@ -5,6 +5,7 @@ import (
 
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestInc_Apply(t *testing.T) {
@@ -103,9 +104,7 @@ func TestInc_Apply(t *testing.T) {
 			t.Parallel()
 			incOp := NewInc(tt.path, tt.inc)
 			docCopy, err := DeepClone(tt.doc)
-			if err != nil {
-				t.Fatalf("DeepClone() error: %v", err)
-			}
+			require.NoError(t, err, "DeepClone() error")
 
 			result, err := incOp.Apply(docCopy)
 
@@ -116,9 +115,7 @@ func TestInc_Apply(t *testing.T) {
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("Apply() unexpected error: %v", err)
-			}
+			require.NoError(t, err, "Apply() unexpected error")
 			assert.Equal(t, tt.expected, result.Doc)
 			assert.Equal(t, tt.oldValue, result.Old)
 		})
@@ -132,27 +129,17 @@ func TestInc_Constructor(t *testing.T) {
 	incOp := NewInc(path, inc)
 	assert.Equal(t, path, incOp.path)
 	assert.Equal(t, inc, incOp.Inc, "NewInc() Inc")
-	if got := incOp.Op(); got != internal.OpIncType {
-		assert.Equal(t, internal.OpIncType, got, "Op()")
-	}
-	if got := incOp.Code(); got != internal.OpIncCode {
-		assert.Equal(t, internal.OpIncCode, got, "Code()")
-	}
+	assert.Equal(t, internal.OpIncType, incOp.Op(), "Op()")
+	assert.Equal(t, internal.OpIncCode, incOp.Code(), "Code()")
 }
 
 func TestInc_ToJSON(t *testing.T) {
 	t.Parallel()
 	incOp := NewInc([]string{"count"}, 5.5)
 	got, err := incOp.ToJSON()
-	if err != nil {
-		t.Fatalf("ToJSON() error: %v", err)
-	}
+	require.NoError(t, err, "ToJSON() error")
 
-	if got.Op != "inc" {
-		assert.Equal(t, "inc", got.Op, "ToJSON() Op")
-	}
-	if got.Path != "/count" {
-		assert.Equal(t, "/count", got.Path, "ToJSON() Path")
-	}
+	assert.Equal(t, "inc", got.Op, "ToJSON() Op")
+	assert.Equal(t, "/count", got.Path, "ToJSON() Path")
 	assert.Equal(t, 5.5, got.Inc, "ToJSON() Inc")
 }

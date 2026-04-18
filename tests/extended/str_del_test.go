@@ -7,6 +7,7 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStrDelOp(t *testing.T) {
@@ -44,9 +45,7 @@ func TestStrDelOp(t *testing.T) {
 			Len:  10,
 		}
 		result := testutils.ApplyInternalOp(t, "Hello beautiful world", operation)
-		if result != "Hello world" {
-			assert.Equal(t, "Hello world", result, "result")
-		}
+		assert.Equal(t, "Hello world", result, "result")
 	})
 
 	t.Run("can delete multiple times", func(t *testing.T) {
@@ -67,13 +66,9 @@ func TestStrDelOp(t *testing.T) {
 		}
 		doc := "Hello beautiful world"
 		result1, err := jsonpatch.ApplyPatch(doc, []internal.Operation{operations[0]}, internal.WithMutate(true))
-		if err != nil {
-			t.Fatalf("ApplyPatch() first operation error: %v", err)
-		}
+		require.NoError(t, err, "ApplyPatch() first operation error")
 		result2, err := jsonpatch.ApplyPatch(result1.Doc, []internal.Operation{operations[1]}, internal.WithMutate(true))
-		if err != nil {
-			t.Fatalf("ApplyPatch() second operation error: %v", err)
-		}
+		require.NoError(t, err, "ApplyPatch() second operation error")
 		assert.Equal(t, "Helloworld", result2.Doc, "result")
 	})
 

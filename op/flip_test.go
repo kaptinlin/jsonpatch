@@ -1,10 +1,12 @@
 package op
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFlip_Apply(t *testing.T) {
@@ -144,7 +146,7 @@ func TestFlip_Apply(t *testing.T) {
 
 			docCopy, err := DeepClone(tt.doc)
 			if err != nil {
-				t.Fatalf("DeepClone() error: %v", err)
+				require.FailNow(t, fmt.Sprintf("DeepClone() error: %v", err))
 			}
 
 			result, err := flipOp.Apply(docCopy)
@@ -157,7 +159,7 @@ func TestFlip_Apply(t *testing.T) {
 			}
 
 			if err != nil {
-				t.Fatalf("Apply() unexpected error: %v", err)
+				require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 			}
 			assert.Equal(t, tt.expected, result.Doc)
 			assert.Equal(t, tt.oldValue, result.Old)
@@ -200,7 +202,7 @@ func TestFlip_ComplexTypes(t *testing.T) {
 
 			result, err := flipOp.Apply(doc)
 			if err != nil {
-				t.Fatalf("Apply() unexpected error: %v", err)
+				require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 			}
 
 			resultDoc := result.Doc.(map[string]any)
