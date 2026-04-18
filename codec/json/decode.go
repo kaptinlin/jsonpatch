@@ -7,9 +7,10 @@ import (
 
 	"github.com/go-json-experiment/json"
 
+	"github.com/kaptinlin/jsonpointer"
+
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/op"
-	"github.com/kaptinlin/jsonpointer"
 )
 
 // Decode converts JSON operation maps to Op instances.
@@ -28,8 +29,8 @@ func Decode(operations []map[string]any, opts internal.JSONPatchOptions) ([]inte
 // DecodeOperations converts Operation structs to Op instances.
 func DecodeOperations(operations []internal.Operation, opts internal.JSONPatchOptions) ([]internal.Op, error) {
 	maps := make([]map[string]any, len(operations))
-	for i, o := range operations {
-		maps[i] = operationToMap(o, false)
+	for i := range operations {
+		maps[i] = operationToMap(&operations[i], false)
 	}
 	return Decode(maps, opts)
 }
@@ -512,7 +513,7 @@ func mergePaths(base, sub jsonpointer.Path) jsonpointer.Path {
 // operationToMap converts an Operation struct to a map for decoding.
 // When nested is true, zero-value fields are omitted and top-level-only
 // fields (Apply, Props, DeleteNull, OldValue) are excluded.
-func operationToMap(o internal.Operation, nested bool) map[string]any {
+func operationToMap(o *internal.Operation, nested bool) map[string]any {
 	m := make(map[string]any, 8)
 	m["op"] = o.Op
 	m["path"] = o.Path
@@ -536,7 +537,7 @@ func operationToMap(o internal.Operation, nested bool) map[string]any {
 }
 
 // setValueField sets the "value" field based on operation type and nesting.
-func setValueField(m map[string]any, o internal.Operation, nested bool) {
+func setValueField(m map[string]any, o *internal.Operation, nested bool) {
 	if nested {
 		if o.Value != nil {
 			m["value"] = o.Value
@@ -550,7 +551,7 @@ func setValueField(m map[string]any, o internal.Operation, nested bool) {
 
 // setNumericFields sets inc, pos, str, and len fields for extended operations.
 // In nested mode, zero-value fields are omitted.
-func setNumericFields(m map[string]any, o internal.Operation, nested bool) {
+func setNumericFields(m map[string]any, o *internal.Operation, nested bool) {
 	if o.Inc != 0 {
 		m["inc"] = o.Inc
 	}
@@ -567,7 +568,6 @@ func setNumericFields(m map[string]any, o internal.Operation, nested bool) {
 		return
 	}
 	m["pos"] = float64(o.Pos)
-	// Only set "str" when non-empty to avoid ambiguity with str_del's len mode
 	if o.Str != "" {
 		m["str"] = o.Str
 	}
@@ -575,7 +575,7 @@ func setNumericFields(m map[string]any, o internal.Operation, nested bool) {
 }
 
 // setTypeField sets the "type" field based on operation type and nesting.
-func setTypeField(m map[string]any, o internal.Operation, nested bool) {
+func setTypeField(m map[string]any, o *internal.Operation, nested bool) {
 	if nested {
 		if o.Type != nil {
 			m["type"] = o.Type
@@ -595,11 +595,11 @@ func setTypeField(m map[string]any, o internal.Operation, nested bool) {
 }
 
 // setTopLevelFields sets fields only present at the top level (not nested).
-func setTopLevelFields(m map[string]any, o internal.Operation) {
+func setTopLevelFields(m map[string]any, o *internal.Operation) {
 	if len(o.Apply) > 0 {
 		subs := make([]any, len(o.Apply))
-		for i, sub := range o.Apply {
-			subs[i] = operationToMap(sub, true)
+		for i := range o.Apply {
+			subs[i] = operationToMap(&o.Apply[i], true)
 		}
 		m["apply"] = subs
 	}

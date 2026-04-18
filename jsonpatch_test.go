@@ -8,9 +8,10 @@ import (
 
 	"github.com/go-json-experiment/json"
 	"github.com/go-json-experiment/json/jsontext"
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kaptinlin/jsonpatch"
 )
 
 // profile is a test struct for generic patch testing
@@ -734,8 +735,8 @@ func FuzzOperationSequence(f *testing.F) {
 			if reflect.DeepEqual(doc, result.Doc) && len(operations) > 0 {
 				// Check if operations actually modify the document
 				hasModifyingOp := false
-				for _, op := range operations {
-					if op.Op != "" && op.Op != "test" {
+				for i := range operations {
+					if operations[i].Op != "" && operations[i].Op != "test" {
 						hasModifyingOp = true
 						break
 					}

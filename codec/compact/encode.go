@@ -3,8 +3,9 @@ package compact
 import (
 	"github.com/go-json-experiment/json"
 
-	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpointer"
+
+	"github.com/kaptinlin/jsonpatch/internal"
 )
 
 // Encoder encodes operations into compact format.

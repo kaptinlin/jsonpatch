@@ -3,9 +3,10 @@ package op
 import (
 	"testing"
 
-	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kaptinlin/jsonpatch/internal"
 )
 
 func TestInc_Apply(t *testing.T) {

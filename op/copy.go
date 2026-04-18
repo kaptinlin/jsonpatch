@@ -2,6 +2,7 @@ package op
 
 import (
 	"github.com/kaptinlin/deepclone"
+
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 

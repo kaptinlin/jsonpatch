@@ -6,9 +6,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
-	"github.com/stretchr/testify/assert"
 )
 
 type TypeScriptTestCase struct {

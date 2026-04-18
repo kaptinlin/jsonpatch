@@ -35,19 +35,18 @@ func main() {
 	for i := range 3 {
 		serverPath := fmt.Sprintf("/servers/%d", i)
 
-		// Update status
-		patch = append(patch, jsonpatch.Operation{
-			Op:    "replace",
-			Path:  serverPath + "/status",
-			Value: "updated",
-		})
-
-		// Update version
-		patch = append(patch, jsonpatch.Operation{
-			Op:    "replace",
-			Path:  serverPath + "/version",
-			Value: "2.0",
-		})
+		patch = append(patch,
+			jsonpatch.Operation{
+				Op:    "replace",
+				Path:  serverPath + "/status",
+				Value: "updated",
+			},
+			jsonpatch.Operation{
+				Op:    "replace",
+				Path:  serverPath + "/version",
+				Value: "2.0",
+			},
+		)
 	}
 
 	// Update counter

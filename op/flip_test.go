@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kaptinlin/jsonpatch/internal"
 )
 
 func TestFlip_Apply(t *testing.T) {

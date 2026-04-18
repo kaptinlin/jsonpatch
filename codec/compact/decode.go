@@ -5,9 +5,10 @@ import (
 
 	"github.com/go-json-experiment/json"
 
+	"github.com/kaptinlin/jsonpointer"
+
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/op"
-	"github.com/kaptinlin/jsonpointer"
 )
 
 // Decoder decodes compact format operations.
@@ -84,7 +85,7 @@ func parseOp(raw Op) (internal.Op, error) {
 		return nil, err
 	}
 
-	switch opType { //nolint:exhaustive // All cases covered across sub-functions.
+	switch opType {
 	case internal.OpAddType, internal.OpRemoveType, internal.OpReplaceType,
 		internal.OpMoveType, internal.OpCopyType, internal.OpTestType:
 		return parseCoreOp(opType, path, raw)
@@ -101,7 +102,7 @@ func parseOp(raw Op) (internal.Op, error) {
 
 // parseCoreOp decodes standard JSON Patch (RFC 6902) operations.
 func parseCoreOp(opType internal.OpType, path []string, raw Op) (internal.Op, error) {
-	switch opType { //nolint:exhaustive // Only handles core RFC 6902 operations.
+	switch opType {
 	case internal.OpAddType:
 		if len(raw) < 3 {
 			return nil, ErrAddMissingValue
@@ -151,7 +152,7 @@ func parseCoreOp(opType internal.OpType, path []string, raw Op) (internal.Op, er
 
 // parseExtendedOp decodes extended operations (flip, inc, str_ins, str_del, split, merge, extend).
 func parseExtendedOp(opType internal.OpType, path []string, raw Op) (internal.Op, error) {
-	switch opType { //nolint:exhaustive // Only handles extended operations.
+	switch opType {
 	case internal.OpFlipType:
 		return op.NewFlip(path), nil
 
@@ -253,7 +254,7 @@ func parseExtendedOp(opType internal.OpType, path []string, raw Op) (internal.Op
 
 // parsePredicateOp decodes JSON Predicate operations.
 func parsePredicateOp(opType internal.OpType, path []string, raw Op) (internal.Op, error) {
-	switch opType { //nolint:exhaustive // Only handles predicate operations.
+	switch opType {
 	case internal.OpDefinedType:
 		return op.NewDefined(path), nil
 
@@ -367,7 +368,7 @@ func parsePredicateOp(opType internal.OpType, path []string, raw Op) (internal.O
 // parseCompositeOp decodes second-order predicate operations (and, or, not).
 func parseCompositeOp(opType internal.OpType, path []string, raw Op) (internal.Op, error) {
 	if len(raw) < 3 {
-		switch opType { //nolint:exhaustive // Only handles composite operations.
+		switch opType {
 		case internal.OpAndType:
 			return nil, ErrAndMissingOps
 		case internal.OpOrType:
@@ -382,7 +383,7 @@ func parseCompositeOp(opType internal.OpType, path []string, raw Op) (internal.O
 		return nil, err
 	}
 
-	switch opType { //nolint:exhaustive // Only handles composite operations.
+	switch opType {
 	case internal.OpAndType:
 		return op.NewAnd(path, subOps), nil
 	case internal.OpOrType:

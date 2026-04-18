@@ -34,6 +34,7 @@ import (
 	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/deepclone"
+
 	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
 	"github.com/kaptinlin/jsonpatch/internal"
 )
@@ -144,7 +145,7 @@ func dispatchByReflection[T internal.Document](doc T, patch []internal.Operation
 		return handleStructDocument(doc, patch, options)
 	}
 
-	switch docValue.Type().Kind() { //nolint:exhaustive // only slice/interface need special handling
+	switch docValue.Type().Kind() {
 	case reflect.Slice, reflect.Interface:
 		return handlePrimitiveDocument(doc, patch, options)
 	default:
@@ -469,7 +470,7 @@ func dispatchOpsByReflection[T internal.Document](doc T, ops []internal.Op, opti
 	if !docValue.IsValid() || (docValue.Kind() == reflect.Pointer && docValue.IsNil()) {
 		return handleStructDocumentOps(doc, ops, options)
 	}
-	switch docValue.Type().Kind() { //nolint:exhaustive // only slice/interface need special handling
+	switch docValue.Type().Kind() {
 	case reflect.Slice, reflect.Interface:
 		return handlePrimitiveDocumentOps(doc, ops, options)
 	default:

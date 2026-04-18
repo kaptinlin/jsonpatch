@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kaptinlin/jsonpatch"
-	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kaptinlin/jsonpatch"
+	"github.com/kaptinlin/jsonpatch/internal"
 )
 
 func TestSplitOp(t *testing.T) {

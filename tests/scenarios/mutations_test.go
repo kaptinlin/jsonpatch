@@ -7,9 +7,10 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kaptinlin/jsonpatch"
 )
 
 func TestMutateOptionFunctionality(t *testing.T) {

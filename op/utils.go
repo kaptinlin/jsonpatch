@@ -7,8 +7,9 @@ import (
 	"strings"
 
 	"github.com/kaptinlin/deepclone"
-	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpointer"
+
+	"github.com/kaptinlin/jsonpatch/internal"
 )
 
 // extractString extracts a string from a value, handling string and []byte types.

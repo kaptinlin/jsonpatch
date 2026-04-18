@@ -68,7 +68,6 @@ func (sp *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 	if slice, ok := parent.([]any); ok {
 		if index, ok := key.(int); ok {
-			// TypeScript: ref.obj[ref.key] = tuple[0]; ref.obj.splice(ref.key + 1, 0, tuple[1]);
 			splitResult := parts.([]any)
 
 			// Create new array with split

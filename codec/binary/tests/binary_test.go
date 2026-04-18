@@ -186,10 +186,10 @@ func isOpEqual(a, b internal.Op) bool {
 		return false
 	}
 
-	return areOperationsEqual(jsonA, jsonB)
+	return areOperationsEqual(&jsonA, &jsonB)
 }
 
-func areOperationsEqual(a, b internal.Operation) bool {
+func areOperationsEqual(a, b *internal.Operation) bool {
 	if a.Op != b.Op || a.Path != b.Path {
 		return false
 	}
@@ -218,7 +218,7 @@ func areOperationsEqual(a, b internal.Operation) bool {
 		return false
 	}
 	for i := range a.Apply {
-		if !areOperationsEqual(a.Apply[i], b.Apply[i]) {
+		if !areOperationsEqual(&a.Apply[i], &b.Apply[i]) {
 			return false
 		}
 	}

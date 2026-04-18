@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/kaptinlin/jsonpatch/internal"
 )
 
 func TestIn_Apply(t *testing.T) {

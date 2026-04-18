@@ -4,12 +4,15 @@ package testutils
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
-	"github.com/stretchr/testify/assert"
 )
 
 // ApplyOperation applies a single operation to a document.
+//
+//nolint:gocritic // Tests pass operations by value for readability at call sites.
 func ApplyOperation(t *testing.T, doc any, operation jsonpatch.Operation) any {
 	t.Helper()
 	patch := []jsonpatch.Operation{operation}
@@ -21,6 +24,8 @@ func ApplyOperation(t *testing.T, doc any, operation jsonpatch.Operation) any {
 }
 
 // ApplyOperationWithError applies an operation expecting it to fail.
+//
+//nolint:gocritic // Tests pass operations by value for readability at call sites.
 func ApplyOperationWithError(t *testing.T, doc any, operation jsonpatch.Operation) error {
 	t.Helper()
 	patch := []jsonpatch.Operation{operation}
@@ -52,6 +57,8 @@ func ApplyOperationsWithError(t *testing.T, doc any, operations []jsonpatch.Oper
 }
 
 // ApplyInternalOp applies a single internal.Operation to a document.
+//
+//nolint:gocritic // Tests pass operations by value for readability at call sites.
 func ApplyInternalOp(t *testing.T, doc any, op internal.Operation) any {
 	t.Helper()
 	patch := []internal.Operation{op}
@@ -63,6 +70,8 @@ func ApplyInternalOp(t *testing.T, doc any, op internal.Operation) any {
 }
 
 // ApplyInternalOpWithError applies an internal.Operation expecting it to fail.
+//
+//nolint:gocritic // Tests pass operations by value for readability at call sites.
 func ApplyInternalOpWithError(t *testing.T, doc any, op internal.Operation) {
 	t.Helper()
 	patch := []internal.Operation{op}
@@ -112,6 +121,8 @@ type MultiOperationTestCase struct {
 }
 
 // RunTestCase executes a single test case.
+//
+//nolint:gocritic // Table-driven tests are assembled by value for readability.
 func RunTestCase(t *testing.T, tc TestCase) {
 	t.Helper()
 	t.Run(tc.Name, func(t *testing.T) {
@@ -126,6 +137,8 @@ func RunTestCase(t *testing.T, tc TestCase) {
 }
 
 // RunMultiOperationTestCase executes a multi-operation test case.
+//
+//nolint:gocritic // Table-driven tests are assembled by value for readability.
 func RunMultiOperationTestCase(t *testing.T, tc MultiOperationTestCase) {
 	t.Helper()
 	t.Run(tc.Name, func(t *testing.T) {
@@ -142,15 +155,15 @@ func RunMultiOperationTestCase(t *testing.T, tc MultiOperationTestCase) {
 // RunTestCases executes multiple test cases.
 func RunTestCases(t *testing.T, testCases []TestCase) {
 	t.Helper()
-	for _, tc := range testCases {
-		RunTestCase(t, tc)
+	for i := range testCases {
+		RunTestCase(t, testCases[i])
 	}
 }
 
 // RunMultiOperationTestCases executes multiple multi-operation test cases.
 func RunMultiOperationTestCases(t *testing.T, testCases []MultiOperationTestCase) {
 	t.Helper()
-	for _, tc := range testCases {
-		RunMultiOperationTestCase(t, tc)
+	for i := range testCases {
+		RunMultiOperationTestCase(t, testCases[i])
 	}
 }

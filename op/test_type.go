@@ -134,7 +134,7 @@ func isWholeNumber(val any) bool {
 		if rt == nil {
 			return false
 		}
-		switch rt.Kind() { //nolint:exhaustive // only numeric kinds are relevant
+		switch rt.Kind() {
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			return true

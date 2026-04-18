@@ -6,9 +6,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kaptinlin/jsonpatch/internal"
 )
 
 func TestUndefined_Basic(t *testing.T) {

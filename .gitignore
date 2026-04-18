@@ -51,3 +51,13 @@ ANALYSIS.md
 
 # Meeting records
 .meetings/
+
+# Additional scratch/planning patterns
+improve*.md
+refactor*.md
+plan*.md
+.plan/*.md
+.plans/*
+TODO*.md
+reports/*
+.ralphy/*.json
