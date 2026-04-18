@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/kaptinlin/jsonpatch"
+	"github.com/kaptinlin/jsonpatch/op"
 )
 
 // profile is a test struct for generic patch testing
@@ -130,6 +131,39 @@ func TestValidateOperation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestOperationInterfacesExposeCanonicalMethods(t *testing.T) {
+	t.Parallel()
+
+	add := op.NewAdd([]string{"items", "-"}, "x")
+	require.NoError(t, add.Validate())
+	assert.Equal(t, jsonpatch.OpAddType, add.Op())
+	assert.Equal(t, jsonpatch.OpAddCode, add.Code())
+	assert.Equal(t, []string{"items", "-"}, add.Path())
+
+	applied, err := add.Apply(map[string]any{"items": []any{"a"}})
+	require.NoError(t, err)
+	assert.Equal(t, map[string]any{"items": []any{"a", "x"}}, applied.Doc)
+
+	jsonOp, err := add.ToJSON()
+	require.NoError(t, err)
+	assert.Equal(t, jsonpatch.Operation{Op: "add", Path: "/items/-", Value: "x"}, jsonOp)
+
+	compactOp, err := add.ToCompact()
+	require.NoError(t, err)
+	assert.Equal(t, []any{jsonpatch.OpAddCode, []string{"items", "-"}, "x"}, []any(compactOp))
+
+	predicate := op.NewTestWithNot([]string{"active"}, true, true)
+	ok, err := predicate.Test(map[string]any{"active": false})
+	require.NoError(t, err)
+	assert.True(t, ok)
+	assert.True(t, predicate.Not())
+
+	secondOrder := op.NewNot(op.NewDefined([]string{"active"}))
+	assert.True(t, secondOrder.Not())
+	assert.Len(t, secondOrder.Ops(), 1)
+	assert.Equal(t, []string{"active"}, secondOrder.Ops()[0].Path())
 }
 
 func TestApplyPatch_Struct(t *testing.T) {
