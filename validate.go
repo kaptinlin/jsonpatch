@@ -92,28 +92,20 @@ func validateOperation(op *Operation, allowMatchesOp bool) error {
 	switch op.Op {
 	case "add":
 		return validateOperationAdd(op)
-	case "remove":
-		return validateOperationRemove(op)
+	case "remove", "flip", "inc", "extend", "split":
+		return nil
 	case "replace":
 		return validateOperationReplace(op)
 	case "copy":
 		return validateOperationCopy(op)
 	case "move":
 		return validateOperationMove(op)
-	case "flip":
-		return nil
-	case "inc":
-		return validateOperationInc(op)
 	case "str_ins":
 		return validateOperationStrIns(op)
 	case "str_del":
 		return validateOperationStrDel(op)
-	case "extend":
-		return validateOperationExtend(op)
 	case "merge":
 		return validateOperationMerge(op)
-	case "split":
-		return validateOperationSplit(op)
 	default:
 		return validatePredicateOperation(op, op.Op, allowMatchesOp)
 	}
@@ -167,10 +159,6 @@ func validateOperationAdd(op *Operation) error {
 	return nil
 }
 
-func validateOperationRemove(_ *Operation) error {
-	return nil
-}
-
 func validateOperationReplace(op *Operation) error {
 	if op.Value == nil {
 		return ErrMissingValue
@@ -207,10 +195,6 @@ func validateOperationTest(op *Operation) error {
 }
 
 // Extended operation validators
-func validateOperationInc(_ *Operation) error {
-	return nil
-}
-
 func validateOperationStrIns(op *Operation) error {
 	if op.Pos < 0 {
 		return ErrNegativeNumber
@@ -228,18 +212,10 @@ func validateOperationStrDel(op *Operation) error {
 	return nil
 }
 
-func validateOperationExtend(_ *Operation) error {
-	return nil
-}
-
 func validateOperationMerge(op *Operation) error {
 	if op.Pos < 1 {
 		return ErrPosGreaterThanZero
 	}
-	return nil
-}
-
-func validateOperationSplit(_ *Operation) error {
 	return nil
 }
 

@@ -87,6 +87,22 @@ func TestValidateOperation(t *testing.T) {
 			operation: jsonpatch.Operation{Op: "add", Path: "/a", Value: 1},
 		},
 		{
+			name:      "valid remove operation",
+			operation: jsonpatch.Operation{Op: "remove", Path: "/a"},
+		},
+		{
+			name:      "valid inc operation",
+			operation: jsonpatch.Operation{Op: "inc", Path: "/a"},
+		},
+		{
+			name:      "valid extend operation",
+			operation: jsonpatch.Operation{Op: "extend", Path: "/a"},
+		},
+		{
+			name:      "valid split operation",
+			operation: jsonpatch.Operation{Op: "split", Path: "/a"},
+		},
+		{
 			name:      "missing op field",
 			operation: jsonpatch.Operation{Path: "/a", Value: 1},
 			wantErr:   jsonpatch.ErrMissingOp,
