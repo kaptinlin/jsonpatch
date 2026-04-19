@@ -100,7 +100,7 @@ func main() {
 - **Automatic Type Inference** - Result types match input types
 - **Multiple Document Types** - `map[string]any`, structs, `[]byte`, `string`
 
-### RFC 6902 Standard Operations ([docs](docs/json-patch.md))
+### RFC 6902 Standard Operations ([docs](SPECS/20-api-specs.md))
 
 | Operation | Description |
 |-----------|-------------|
@@ -111,7 +111,7 @@ func main() {
 | `copy` | Copy values to new locations |
 | `test` | Test values for conditional operations |
 
-### JSON Predicate Operations ([docs](docs/json-predicate.md))
+### JSON Predicate Operations ([docs](SPECS/25-predicate-specs.md))
 
 | Operation | Description |
 |-----------|-------------|
@@ -126,7 +126,7 @@ func main() {
 | `test_string_len` | String length validation |
 | `and` / `or` / `not` | Logical predicate combinations |
 
-### Extended Operations ([docs](docs/json-patch-extended.md))
+### Extended Operations ([docs](SPECS/26-extended-operation-specs.md))
 
 | Operation | Description |
 |-----------|-------------|
