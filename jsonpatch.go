@@ -1,29 +1,11 @@
-// Package jsonpatch provides comprehensive JSON Patch operations with generic type support.
+// Package jsonpatch applies JSON Patch, predicate, and extended operations to Go values.
 //
-// Implements JSON mutation operations including:
-//   - JSON Patch (RFC 6902): Standard operations (add, remove, replace, move, copy, test)
-//     https://tools.ietf.org/html/rfc6902
-//   - JSON Predicate: Test operations (contains, defined, type, less, more, etc.)
-//     https://tools.ietf.org/id/draft-snell-json-test-01.html
-//   - Extended operations: Additional operations (flip, inc, str_ins, str_del, split, merge)
+// It implements RFC 6902 JSON Patch together with the predicate and extended
+// operations used by json-joy while preserving the input document type across
+// ApplyPatch, ApplyOp, and ApplyOps.
 //
-// Core API Functions:
-//   - ApplyOp: Apply a single operation
-//   - ApplyOps: Apply multiple operations
-//   - ApplyPatch: Apply a JSON Patch to a document (main generic API)
-//   - ValidateOperations: Validate an array of operations
-//   - ValidateOperation: Validate a single operation
-//
-// Basic usage:
-//
-//	doc := map[string]any{"name": "John", "age": 30}
-//	patch := []Operation{
-//		{"op": "replace", "path": "/name", "value": "Jane"},
-//		{"op": "add", "path": "/email", "value": "jane@example.com"},
-//	}
-//	result, err := ApplyPatch(doc, patch, WithMutate(false))
-//
-// The library provides type-safe operations for any supported document type.
+// See https://www.rfc-editor.org/rfc/rfc6902
+// See https://www.ietf.org/archive/id/draft-snell-json-test-01.txt
 package jsonpatch
 
 import (
@@ -39,12 +21,15 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// Operation application errors.
 var (
-	ErrNoOperationDecoded  = errors.New("no operation decoded")
+	// ErrNoOperationDecoded reports that decoding produced no operations.
+	ErrNoOperationDecoded = errors.New("no operation decoded")
+	// ErrInvalidDocumentType reports that the input document cannot be handled.
 	ErrInvalidDocumentType = errors.New("invalid document type")
-	ErrConversionFailed    = errors.New("failed to convert result back to original type")
-	ErrNoOperationResult   = errors.New("no operation result")
+	// ErrConversionFailed reports that a patched result could not be converted back.
+	ErrConversionFailed = errors.New("failed to convert result back to original type")
+	// ErrNoOperationResult reports that ApplyOp received no per-operation result.
+	ErrNoOperationResult = errors.New("no operation result")
 )
 
 // defaultOptions is the shared zero-value options used when no custom options are provided.
@@ -63,7 +48,6 @@ func buildOptions(opts []internal.Option) *internal.Options {
 	return &o
 }
 
-// convertOpResults converts []internal.OpResult[any] to []internal.OpResult[T].
 func convertOpResults[T internal.Document](resultOps []internal.OpResult[any], resultDoc T) []internal.OpResult[T] {
 	converted := make([]internal.OpResult[T], len(resultOps))
 	for i, op := range resultOps {
@@ -75,49 +59,17 @@ func convertOpResults[T internal.Document](resultOps []internal.OpResult[any], r
 	return converted
 }
 
-// ApplyPatch applies a JSON Patch to any supported document type.
-// It automatically detects the document type and applies the appropriate strategy.
-// Returns a PatchResult containing the patched document and operation results.
+// ApplyPatch applies patch to doc and returns the patched document with
+// per-operation results.
 //
-// Supported document types:
-//   - struct: Converted via JSON marshaling/unmarshaling
-//   - map[string]any: Applied directly using existing implementation
-//   - []byte: Parsed as JSON, patched, and re-encoded
-//   - string: Parsed as JSON string, patched, and re-encoded
-//
-// Example usage:
-//
-//	// Struct
-//	user := User{Name: "John", Age: 30}
-//	result, err := ApplyPatch(user, patch)
-//	if err == nil {
-//		patchedUser := result.Doc // Type: User
-//		operations := result.Res  // Operation results
-//	}
-//
-//	// Map
-//	doc := map[string]any{"name": "John", "age": 30}
-//	result, err := ApplyPatch(doc, patch)
-//	if err == nil {
-//		patchedDoc := result.Doc // Type: map[string]any
-//	}
-//
-//	// JSON bytes
-//	data := []byte(`{"name":"John","age":30}`)
-//	result, err := ApplyPatch(data, patch)
-//	if err == nil {
-//		patchedData := result.Doc // Type: []byte
-//	}
-//
-// The function preserves the input type: struct input returns struct output,
-// map input returns map output, etc.
+// ApplyPatch preserves the input document type. String inputs are parsed as JSON
+// only when they begin with '{' or '['. Unless WithMutate(true) is set, ApplyPatch
+// works on a clone.
 func ApplyPatch[T internal.Document](doc T, patch []internal.Operation, opts ...internal.Option) (*internal.PatchResult[T], error) {
 	options := buildOptions(opts)
 	return dispatchByDocumentType(doc, patch, options)
 }
 
-// dispatchByDocumentType routes the patch operation to the appropriate handler
-// based on the runtime type of the document.
 func dispatchByDocumentType[T internal.Document](doc T, patch []internal.Operation, options *internal.Options) (*internal.PatchResult[T], error) {
 	switch any(doc).(type) {
 	case []byte:
@@ -137,7 +89,6 @@ func dispatchByDocumentType[T internal.Document](doc T, patch []internal.Operati
 	}
 }
 
-// dispatchByReflection handles complex types that require reflection-based dispatch.
 func dispatchByReflection[T internal.Document](doc T, patch []internal.Operation, options *internal.Options) (*internal.PatchResult[T], error) {
 	docValue := reflect.ValueOf(any(doc))
 

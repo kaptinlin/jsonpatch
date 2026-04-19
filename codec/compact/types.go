@@ -1,6 +1,4 @@
-// Package compact implements a compact array-based codec for JSON Patch operations.
-// It uses arrays instead of objects to represent operations, reducing the physical
-// space required for encoding while maintaining readability.
+// Package compact implements an array-based codec for JSON Patch operations.
 package compact
 
 import "github.com/kaptinlin/jsonpatch/internal"

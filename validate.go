@@ -12,45 +12,77 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// Base validation errors - define clearly and concisely
 var (
-	ErrNotArray             = errors.New("not an array")
-	ErrEmptyPatch           = errors.New("empty operation patch")
-	ErrInvalidOperation     = errors.New("invalid operation")
-	ErrMissingPath          = errors.New("missing required field 'path'")
-	ErrMissingOp            = errors.New("missing required field 'op'")
-	ErrMissingValue         = errors.New("missing required field 'value'")
-	ErrMissingFrom          = errors.New("missing required field 'from'")
-	ErrInvalidPath          = errors.New("field 'path' must be a string")
-	ErrInvalidOp            = errors.New("field 'op' must be a string")
-	ErrInvalidFrom          = errors.New("field 'from' must be a string")
-	ErrInvalidJSONPointer   = errors.New("invalid JSON pointer")
-	ErrInvalidOldValue      = errors.New("invalid oldValue")
+	// ErrNotArray reports that a patch value is not an operation array.
+	ErrNotArray = errors.New("not an array")
+	// ErrEmptyPatch reports that no operations were provided.
+	ErrEmptyPatch = errors.New("empty operation patch")
+	// ErrInvalidOperation reports that an operation name is unknown.
+	ErrInvalidOperation = errors.New("invalid operation")
+	// ErrMissingPath reports that an operation is missing its path field.
+	ErrMissingPath = errors.New("missing required field 'path'")
+	// ErrMissingOp reports that an operation is missing its op field.
+	ErrMissingOp = errors.New("missing required field 'op'")
+	// ErrMissingValue reports that an operation is missing its value field.
+	ErrMissingValue = errors.New("missing required field 'value'")
+	// ErrMissingFrom reports that an operation is missing its from field.
+	ErrMissingFrom = errors.New("missing required field 'from'")
+	// ErrInvalidPath reports that path has the wrong JSON type.
+	ErrInvalidPath = errors.New("field 'path' must be a string")
+	// ErrInvalidOp reports that op has the wrong JSON type.
+	ErrInvalidOp = errors.New("field 'op' must be a string")
+	// ErrInvalidFrom reports that from has the wrong JSON type.
+	ErrInvalidFrom = errors.New("field 'from' must be a string")
+	// ErrInvalidJSONPointer reports that a path or from value is not a valid JSON Pointer.
+	ErrInvalidJSONPointer = errors.New("invalid JSON pointer")
+	// ErrInvalidOldValue reports that oldValue has an invalid shape.
+	ErrInvalidOldValue = errors.New("invalid oldValue")
+	// ErrCannotMoveToChildren reports that a move target is nested under its source.
 	ErrCannotMoveToChildren = errors.New("cannot move into own children")
-	ErrInvalidIncValue      = errors.New("invalid inc value")
-	ErrExpectedStringField  = errors.New("expected string field")
+	// ErrInvalidIncValue reports that an inc operand has an invalid type.
+	ErrInvalidIncValue = errors.New("invalid inc value")
+	// ErrExpectedStringField reports that a field must contain a string.
+	ErrExpectedStringField = errors.New("expected string field")
+	// ErrExpectedBooleanField reports that a field must contain a boolean.
 	ErrExpectedBooleanField = errors.New("expected field to be boolean")
+	// ErrExpectedIntegerField reports that a field must contain an integer.
 	ErrExpectedIntegerField = errors.New("not an integer")
-	ErrNegativeNumber       = errors.New("number is negative")
-	ErrInvalidProps         = errors.New("invalid props field")
-	ErrInvalidTypeField     = errors.New("invalid type field")
-	ErrEmptyTypeList        = errors.New("empty type list")
-	ErrInvalidType          = errors.New("invalid type")
-	ErrValueMustBeString    = errors.New("value must be a string")
-	ErrValueMustBeNumber    = errors.New("value must be a number")
-	ErrValueMustBeArray     = errors.New("value must be an array")
-	ErrValueTooLong         = errors.New("value too long")
-	ErrInvalidNotModifier   = errors.New("invalid not modifier")
-	ErrMatchesNotAllowed    = errors.New("matches operation not allowed")
-	ErrMustBeArray          = errors.New("must be an array")
-	ErrEmptyPredicateList   = errors.New("predicate list is empty")
-	ErrPosGreaterThanZero   = errors.New("expected pos field to be greater than 0")
-
-	// Additional static errors for err113 compliance
+	// ErrNegativeNumber reports that a numeric field is negative.
+	ErrNegativeNumber = errors.New("number is negative")
+	// ErrInvalidProps reports that props has an invalid shape.
+	ErrInvalidProps = errors.New("invalid props field")
+	// ErrInvalidTypeField reports that type has an invalid shape.
+	ErrInvalidTypeField = errors.New("invalid type field")
+	// ErrEmptyTypeList reports that a type list is empty.
+	ErrEmptyTypeList = errors.New("empty type list")
+	// ErrInvalidType reports that a JSON type name is unsupported.
+	ErrInvalidType = errors.New("invalid type")
+	// ErrValueMustBeString reports that value must be a string.
+	ErrValueMustBeString = errors.New("value must be a string")
+	// ErrValueMustBeNumber reports that value must be numeric.
+	ErrValueMustBeNumber = errors.New("value must be a number")
+	// ErrValueMustBeArray reports that value must be an array.
+	ErrValueMustBeArray = errors.New("value must be an array")
+	// ErrValueTooLong reports that a provided value exceeds the allowed length.
+	ErrValueTooLong = errors.New("value too long")
+	// ErrInvalidNotModifier reports that not was supplied where it is unsupported.
+	ErrInvalidNotModifier = errors.New("invalid not modifier")
+	// ErrMatchesNotAllowed reports that matches is disabled for this validation pass.
+	ErrMatchesNotAllowed = errors.New("matches operation not allowed")
+	// ErrMustBeArray reports that a value must decode to an array.
+	ErrMustBeArray = errors.New("must be an array")
+	// ErrEmptyPredicateList reports that a composite predicate has no operands.
+	ErrEmptyPredicateList = errors.New("predicate list is empty")
+	// ErrPosGreaterThanZero reports that pos must be greater than zero.
+	ErrPosGreaterThanZero = errors.New("expected pos field to be greater than 0")
+	// ErrInOperationValueMustBeArray reports that in requires an array value.
 	ErrInOperationValueMustBeArray = errors.New("in operation value must be an array")
-	ErrExpectedValueToBeString     = errors.New("expected value to be string")
-	ErrExpectedIgnoreCaseBoolean   = errors.New("expected ignore_case to be boolean")
-	ErrExpectedFieldString         = errors.New("expected field to be string")
+	// ErrExpectedValueToBeString reports that value must decode as a string.
+	ErrExpectedValueToBeString = errors.New("expected value to be string")
+	// ErrExpectedIgnoreCaseBoolean reports that ignore_case must decode as a boolean.
+	ErrExpectedIgnoreCaseBoolean = errors.New("expected ignore_case to be boolean")
+	// ErrExpectedFieldString reports that a field must decode as a string.
+	ErrExpectedFieldString = errors.New("expected field to be string")
 )
 
 // ValidateOperations validates an array of JSON Patch operations.
@@ -111,7 +143,6 @@ func validateOperation(op *Operation, allowMatchesOp bool) error {
 	}
 }
 
-// validatePredicateOperation validates predicate operations
 func validatePredicateOperation(op *Operation, opStr string, allowMatchesOp bool) error {
 	switch opStr {
 	case "test":
@@ -151,7 +182,6 @@ func validatePredicateOperation(op *Operation, opStr string, allowMatchesOp bool
 	}
 }
 
-// Core operation validators
 func validateOperationAdd(op *Operation) error {
 	if op.Value == nil {
 		return ErrMissingValue
@@ -194,7 +224,6 @@ func validateOperationTest(op *Operation) error {
 	return nil
 }
 
-// Extended operation validators
 func validateOperationStrIns(op *Operation) error {
 	if op.Pos < 0 {
 		return ErrNegativeNumber
@@ -219,7 +248,6 @@ func validateOperationMerge(op *Operation) error {
 	return nil
 }
 
-// Predicate operation validators
 func validateOperationTestType(op *Operation) error {
 	if op.Type == nil {
 		return fmt.Errorf("%w: missing required field 'type'", ErrInvalidTypeField)
@@ -268,8 +296,6 @@ func validateOperationTestStringLen(op *Operation) error {
 	return nil
 }
 
-// requireStringValue validates that op.Value is a non-nil string.
-// This eliminates code duplication across string predicate validators.
 func requireStringValue(op *Operation) error {
 	if op.Value == nil {
 		return ErrExpectedValueToBeString
@@ -280,8 +306,6 @@ func requireStringValue(op *Operation) error {
 	return nil
 }
 
-// requireNumberValue validates that op.Value is a non-nil number.
-// This eliminates code duplication across numeric predicate validators.
 func requireNumberValue(op *Operation) error {
 	if op.Value == nil {
 		return ErrValueMustBeNumber
@@ -349,8 +373,6 @@ func validateCompositeOperation(op *internal.Operation, allowMatchesOp bool) err
 	}
 	return nil
 }
-
-// Helper validation functions
 
 func validateJSONPointer(path string) error {
 	return jsonpointer.Validate(path)

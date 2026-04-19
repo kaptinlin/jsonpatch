@@ -2,45 +2,42 @@ package jsonpatch
 
 import "github.com/kaptinlin/jsonpatch/internal"
 
-// Re-export all types from the internal package for convenience.
-
-// Operation represents a JSON patch operation.
+// Operation aliases internal.Operation.
 type Operation = internal.Operation
 
-// OpType represents the type of a JSON patch operation.
+// OpType names a JSON Patch operation.
 type OpType = internal.OpType
 
-// Op represents an executable operation.
+// Op applies itself to a document.
 type Op = internal.Op
 
-// Document defines the supported document types for JSON Patch operations.
+// Document is the set of document types supported by the generic API.
 type Document = internal.Document
 
-// Option represents functional options for configuring patch operations.
+// Option applies one patch option.
 type Option = internal.Option
 
-// Options holds configuration parameters for patch operations.
+// Options configures patch application.
 type Options = internal.Options
 
-// WithMutate configures whether the patch operation should modify the original document.
+// WithMutate enables or disables in-place mutation.
 var WithMutate = internal.WithMutate
 
-// WithMatcher configures a custom regex matcher for pattern operations.
+// WithMatcher sets the regex matcher factory used by pattern operations.
 var WithMatcher = internal.WithMatcher
 
-// DefaultOptions returns the default configuration for patch operations.
-// By default, operations are immutable (documents are cloned before patching).
+// DefaultOptions returns the default patch options.
 func DefaultOptions() *internal.Options {
 	return &internal.Options{}
 }
 
-// OpResult represents the result of a single operation with generic type support.
+// OpResult is the result of applying one operation.
 type OpResult[T Document] = internal.OpResult[T]
 
-// PatchResult represents the result of applying a JSON Patch with generic type support.
+// PatchResult is the result of applying a sequence of operations.
 type PatchResult[T Document] = internal.PatchResult[T]
 
-// Operation type constants (string constants)
+// These constants name the supported operations.
 const (
 	// JSON Patch (RFC 6902) operations
 	OpAddType     = internal.OpAddType
