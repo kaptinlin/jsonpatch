@@ -124,20 +124,50 @@ func TestStringOpcodes(t *testing.T) {
 	}
 }
 
-func TestEncodeDoesNotMutateCompactOperation(t *testing.T) {
+func TestEncodeDoesNotMutateSourceCompactSlice(t *testing.T) {
 	t.Parallel()
 
-	addOp := op.NewAdd([]string{"foo"}, "bar")
-	compactOp, err := addOp.ToCompact()
-	require.NoError(t, err)
+	source := compact.Op{internal.OpAddCode, []string{"foo"}, "bar"}
+	op := staticCompactOp{compact: source}
 
-	originalPath := compactOp[1].([]string)
 	encoder := compact.NewEncoder(compact.WithStringOpcode(true))
-	encoded, err := encoder.Encode(addOp)
+	encoded, err := encoder.Encode(op)
 	require.NoError(t, err)
 
-	assert.Equal(t, []string{"foo"}, originalPath)
-	assert.Equal(t, "/foo", encoded[1])
+	assert.Equal(t, compact.Op{internal.OpAddCode, []string{"foo"}, "bar"}, source)
+	assert.Equal(t, compact.Op{"add", "/foo", "bar"}, encoded)
+}
+
+type staticCompactOp struct {
+	compact compact.Op
+}
+
+func (o staticCompactOp) Op() internal.OpType {
+	return internal.OpAddType
+}
+
+func (o staticCompactOp) Code() int {
+	return internal.OpAddCode
+}
+
+func (o staticCompactOp) Path() []string {
+	return []string{"foo"}
+}
+
+func (o staticCompactOp) Apply(doc any) (internal.OpResult[any], error) {
+	return internal.OpResult[any]{Doc: doc}, nil
+}
+
+func (o staticCompactOp) ToJSON() (internal.Operation, error) {
+	return internal.Operation{Op: "add", Path: "/foo", Value: "bar"}, nil
+}
+
+func (o staticCompactOp) ToCompact() (internal.CompactOperation, error) {
+	return o.compact, nil
+}
+
+func (o staticCompactOp) Validate() error {
+	return nil
 }
 
 func TestSliceOperations(t *testing.T) {

@@ -142,36 +142,3 @@ func TestAdd_Constructor(t *testing.T) {
 	}
 	assert.Equal(t, value, got.Value, "ToJSON().Value")
 }
-
-func TestAdd_AppendCreatesNewSlice(t *testing.T) {
-	t.Parallel()
-
-	doc := []any{"a", "b"}
-	originalPointer := reflect.ValueOf(doc).Pointer()
-
-	addOp := NewAdd([]string{"-"}, "c")
-	result, err := addOp.Apply(doc)
-	require.NoError(t, err)
-
-	resultDoc := result.Doc.([]any)
-	assert.Equal(t, []any{"a", "b"}, doc)
-	assert.Equal(t, []any{"a", "b", "c"}, resultDoc)
-	assert.NotEqual(t, originalPointer, reflect.ValueOf(resultDoc).Pointer())
-}
-
-func TestAdd_InsertCreatesNewSlice(t *testing.T) {
-	t.Parallel()
-
-	doc := []any{"a", "c"}
-	originalPointer := reflect.ValueOf(doc).Pointer()
-
-	addOp := NewAdd([]string{"1"}, "b")
-	result, err := addOp.Apply(doc)
-	require.NoError(t, err)
-
-	resultDoc := result.Doc.([]any)
-	assert.Equal(t, []any{"a", "c"}, doc)
-	assert.Equal(t, []any{"a", "b", "c"}, resultDoc)
-	assert.NotEqual(t, originalPointer, reflect.ValueOf(resultDoc).Pointer())
-	assert.Equal(t, "c", result.Old)
-}

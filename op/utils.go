@@ -272,10 +272,15 @@ func setValueAtPathWithMode(doc any, path []string, value any, insertMode bool) 
 				var newSlice []any
 				if index == len(slice) {
 					// Append to end
-					newSlice = append(slices.Clone(slice), value)
+					newSlice = make([]any, len(slice)+1)
+					copy(newSlice, slice)
+					newSlice[len(slice)] = value
 				} else {
 					// Insert at index - move elements to make room
-					newSlice = slices.Insert(slices.Clone(slice), index, value)
+					newSlice = make([]any, len(slice)+1)
+					copy(newSlice[:index], slice[:index])
+					newSlice[index] = value
+					copy(newSlice[index+1:], slice[index:])
 				}
 
 				// We need to replace the array in its parent context
@@ -291,7 +296,9 @@ func setValueAtPathWithMode(doc any, path []string, value any, insertMode bool) 
 				return updateParent(parent, key, value)
 			}
 			// This is append at end
-			newSlice := append(slices.Clone(slice), value)
+			newSlice := make([]any, len(slice)+1)
+			copy(newSlice, slice)
+			newSlice[len(slice)] = value
 
 			// We need to replace the array in its parent context
 			if len(path) == 1 {

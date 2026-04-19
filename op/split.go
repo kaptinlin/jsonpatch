@@ -71,7 +71,11 @@ func (sp *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 			splitResult := parts.([]any)
 
 			// Create new array with split
-			newSlice := slices.Replace(slices.Clone(slice), index, index+1, splitResult...)
+			newSlice := make([]any, len(slice)+1)
+			copy(newSlice[:index], slice[:index])
+			newSlice[index] = splitResult[0]
+			newSlice[index+1] = splitResult[1]
+			copy(newSlice[index+2:], slice[index+1:])
 
 			// Update parent
 			parentPath := sp.Path()[:len(sp.Path())-1]

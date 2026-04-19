@@ -185,6 +185,26 @@ func TestSplit_Constructor(t *testing.T) {
 	}
 }
 
+func TestSplit_ArrayElementCreatesNewSlice(t *testing.T) {
+	t.Parallel()
+
+	doc := map[string]any{
+		"lines": []any{"foo", "hello world", "baz", nil, nil},
+	}
+	originalLines := doc["lines"].([]any)
+	originalPointer := fmt.Sprintf("%p", originalLines)
+
+	splitOp := NewSplit([]string{"lines", "1"}, 5, nil)
+	result, err := splitOp.Apply(doc)
+	require.NoError(t, err)
+
+	resultDoc := result.Doc.(map[string]any)
+	resultLines := resultDoc["lines"].([]any)
+	assert.Equal(t, []any{"foo", "hello world", "baz", nil, nil}, originalLines)
+	assert.Equal(t, []any{"foo", "hello", " world", "baz", nil, nil}, resultLines)
+	assert.NotEqual(t, originalPointer, fmt.Sprintf("%p", resultLines))
+}
+
 func TestSplit_TypeScript_Compatibility(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
