@@ -1,6 +1,8 @@
 package compact
 
 import (
+	"slices"
+
 	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpointer"
@@ -73,8 +75,7 @@ func encodeOp(o internal.Op, opts Options) (Op, error) {
 		return nil, err
 	}
 
-	result := make(Op, len(raw))
-	copy(result, raw)
+	result := slices.Clone(raw)
 
 	if opts.StringOpcode {
 		result[0] = string(o.Op())

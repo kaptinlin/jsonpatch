@@ -124,6 +124,22 @@ func TestStringOpcodes(t *testing.T) {
 	}
 }
 
+func TestEncodeDoesNotMutateCompactOperation(t *testing.T) {
+	t.Parallel()
+
+	addOp := op.NewAdd([]string{"foo"}, "bar")
+	compactOp, err := addOp.ToCompact()
+	require.NoError(t, err)
+
+	originalPath := compactOp[1].([]string)
+	encoder := compact.NewEncoder(compact.WithStringOpcode(true))
+	encoded, err := encoder.Encode(addOp)
+	require.NoError(t, err)
+
+	assert.Equal(t, []string{"foo"}, originalPath)
+	assert.Equal(t, "/foo", encoded[1])
+}
+
 func TestSliceOperations(t *testing.T) {
 	t.Parallel()
 	ops := []internal.Op{
