@@ -101,6 +101,7 @@ if err != nil {
 This codec supports all JSON Patch+ operations with complete TypeScript compatibility:
 
 ### Core JSON Patch (RFC 6902)
+
 - `add` - Add a value to the document
 - `remove` - Remove a value from the document  
 - `replace` - Replace a value in the document
@@ -109,6 +110,7 @@ This codec supports all JSON Patch+ operations with complete TypeScript compatib
 - `test` - Test that a value is as expected
 
 ### JSON Predicate Operations
+
 - `defined` - Test if path exists in document
 - `undefined` - Test if path does not exist in document
 - `contains` - Test if string contains substring
@@ -124,6 +126,7 @@ This codec supports all JSON Patch+ operations with complete TypeScript compatib
 - `not` - Logical NOT of multiple predicates
 
 ### Extended Operations
+
 - `str_ins` - Insert string at position
 - `str_del` - Delete string at position  
 - `flip` - Flip boolean value
@@ -133,6 +136,7 @@ This codec supports all JSON Patch+ operations with complete TypeScript compatib
 - `extend` - Extend object with properties
 
 ### Additional Test Operations
+
 - `test_type` - Test value type with array support
 - `test_string` - Test string at specific position
 - `test_string_len` - Test string length
@@ -158,7 +162,7 @@ This implementation maintains 100% compatibility with the json-joy TypeScript im
 
 The codec follows the layered architecture pattern from rules.md:
 
-```
+```text
 codec/json/
 ├── types.go      # Core type definitions and helpers
 ├── decode.go     # JSON to Op conversion (matches decode.ts)  

@@ -123,7 +123,12 @@ tasks:
   markdownlint:
     desc: Run markdownlint
     cmds:
-      - markdownlint-cli2 "**/*.md"
+      - |
+        if command -v markdownlint-cli2 >/dev/null 2>&1; then
+          markdownlint-cli2 "**/*.md"
+        else
+          npx -y markdownlint-cli2 "**/*.md"
+        fi
 
   yamllint:
     desc: Run yamllint

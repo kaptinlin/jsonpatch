@@ -6,22 +6,26 @@ The `compact` codec provides a highly optimized **array-based encoding format** 
 
 ## Format Comparison & Space Savings
 
-### Standard Struct API:
+### Standard Struct API
+
 ```go
 {Op: "add", Path: "/foo/bar", Value: 123}
 ```
 
-### Standard JSON format:
+### Standard JSON format
+
 ```json
 {"op": "add", "path": "/foo/bar", "value": 123}
 ```
 
-### Compact format (numeric opcodes):
+### Compact format (numeric opcodes)
+
 ```json
 [0, "/foo/bar", 123]
 ```
 
-### Compact format (string opcodes):
+### Compact format (string opcodes)
+
 ```json
 ["add", "/foo/bar", 123]
 ```
@@ -222,14 +226,18 @@ func WithStringOpcode(useString bool) EncoderOption
 
 The compact codec now supports **all** JSON Patch operations with full encoding and decoding:
 
-### Standard JSON Patch (RFC 6902)
+### Supported Standard JSON Patch (RFC 6902)
+
 ✅ add, remove, replace, move, copy, test
 
-### Extended Operations
+### Supported Extended Operations
+
 ✅ flip, inc, str_ins, str_del, split, merge, extend
 
-### JSON Predicate Operations
+### Supported JSON Predicate Operations
+
 ✅ defined, undefined, contains, starts, ends, matches, type, test_type, test_string, test_string_len, in, less, more
 
-### Second-Order Predicates (Composite Operations)
+### Supported Second-Order Predicates (Composite Operations)
+
 ✅ and, or, not

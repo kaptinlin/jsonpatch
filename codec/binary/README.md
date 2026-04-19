@@ -16,7 +16,7 @@ The **binary** codec provides **maximum performance and space efficiency** by se
 
 The binary codec uses **MessagePack arrays** with the same structure as the compact codec:
 
-```
+```text
 [opcode, path, ...args]
 ```
 
@@ -112,25 +112,32 @@ Based on deep analysis of `encoder.go` and `decoder.go`, the binary codec suppor
 ## MessagePack Technical Details
 
 ### Path Encoding
+
 Paths are encoded as **variable-length arrays**:
-```
+
+```text
 [path_length, segment1, segment2, ...]
 ```
 
 For example, path `"/user/name"` becomes:
-```
+
+```text
 [2.0, "user", "name"]  // Binary MessagePack representation
 ```
 
 ### Value Encoding  
+
 Values use MessagePack's native type preservation:
+
 - **Strings**: Direct UTF-8 binary encoding
 - **Numbers**: Compact binary number representation
 - **Objects**: Recursive MessagePack object encoding
 - **Arrays**: Recursive MessagePack array encoding
 
 ### Special Float Support
+
 The binary codec handles special IEEE 754 values correctly:
+
 - **NaN**: Preserved in binary format
 - **+Infinity**: Native MessagePack representation
 - **-Infinity**: Native MessagePack representation
@@ -138,6 +145,7 @@ The binary codec handles special IEEE 754 values correctly:
 ## API Reference
 
 ### Codec Structure
+
 ```go
 type Codec struct{}  // Stateless codec instance
 
@@ -157,6 +165,7 @@ func (c *Codec) Decode(data []byte) ([]jsonpatch.Operation, error)
 ## Use Cases
 
 ### High-Performance Applications
+
 ```go
 // For maximum performance in hot paths
 codec := &binary.Codec{}
@@ -165,6 +174,7 @@ SendOverNetwork(data)  // Smallest payload
 ```
 
 ### Storage Optimization
+
 ```go
 // For efficient storage in databases
 operations := []jsonpatch.Operation{
@@ -175,6 +185,7 @@ database.Store(binaryData)  // 40-60% space savings
 ```
 
 ### Real-time Applications
+
 ```go
 // For real-time collaboration (like Slate.js)
 operations := []jsonpatch.Operation{

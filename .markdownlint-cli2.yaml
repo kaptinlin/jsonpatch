@@ -17,6 +17,8 @@ ignores:
   - "node_modules/**"
   - "vendor/**"
   - ".references/**"
+  - ".reference/**"
   - ".agents/**"
   - ".claude/**"
   - ".research/**"
+  - ".plans/**"
