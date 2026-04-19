@@ -30,6 +30,10 @@ func TestIsValidJSONPatchType(t *testing.T) {
 
 func TestGetJSONPatchType(t *testing.T) {
 	t.Parallel()
+
+	type customSlice []int
+	type customArray [2]string
+
 	tests := []struct {
 		name string
 		val  any
@@ -54,6 +58,8 @@ func TestGetJSONPatchType(t *testing.T) {
 		{"[]uint", []uint{1, 2}, JSONPatchTypeArray},
 		{"[]int64", []int64{1, 2}, JSONPatchTypeArray},
 		{"[2]int", [2]int{1, 2}, JSONPatchTypeArray},
+		{"custom slice", customSlice{1, 2}, JSONPatchTypeArray},
+		{"custom array", customArray{"a", "b"}, JSONPatchTypeArray},
 		// Object.
 		{"map[string]any", map[string]any{"k": "v"}, JSONPatchTypeObject},
 		// Integer types.
