@@ -1132,6 +1132,166 @@ func FuzzComplexDocuments(f *testing.F) {
 	})
 }
 
+func TestPublicHelpersAndOps(t *testing.T) {
+	t.Parallel()
+
+	t.Run("default options are zero-valued and distinct", func(t *testing.T) {
+		t.Parallel()
+
+		first := jsonpatch.DefaultOptions()
+		second := jsonpatch.DefaultOptions()
+
+		require.NotNil(t, first)
+		require.NotNil(t, second)
+		assert.False(t, first.Mutate)
+		assert.Nil(t, first.CreateMatcher)
+		assert.NotSame(t, first, second)
+	})
+
+	t.Run("create matcher default honors ignore case and invalid patterns", func(t *testing.T) {
+		t.Parallel()
+
+		matcher := jsonpatch.CreateMatcherDefault("^hello$", true)
+		assert.True(t, matcher("HELLO"))
+		assert.False(t, matcher("HELLO!"))
+
+		invalid := jsonpatch.CreateMatcherDefault("(", false)
+		assert.False(t, invalid("anything"))
+	})
+
+	t.Run("validate operations covers public error paths", func(t *testing.T) {
+		t.Parallel()
+
+		tests := []struct {
+			name         string
+			ops          []jsonpatch.Operation
+			allowMatches bool
+			wantErr      error
+		}{
+			{name: "nil patch", ops: nil, wantErr: jsonpatch.ErrNotArray},
+			{name: "empty patch", ops: []jsonpatch.Operation{}, wantErr: jsonpatch.ErrEmptyPatch},
+			{
+				name:    "matches disabled",
+				ops:     []jsonpatch.Operation{{Op: "matches", Path: "/name", Value: "^a"}},
+				wantErr: jsonpatch.ErrMatchesNotAllowed,
+			},
+			{
+				name:         "matches allowed",
+				ops:          []jsonpatch.Operation{{Op: "matches", Path: "/name", Value: "^a"}},
+				allowMatches: true,
+			},
+			{
+				name:    "copy missing from",
+				ops:     []jsonpatch.Operation{{Op: "copy", Path: "/name"}},
+				wantErr: jsonpatch.ErrMissingFrom,
+			},
+			{
+				name:    "move into own children",
+				ops:     []jsonpatch.Operation{{Op: "move", Path: "/a/b", From: "/a"}},
+				wantErr: jsonpatch.ErrCannotMoveToChildren,
+			},
+			{
+				name: "test type list validates",
+				ops:  []jsonpatch.Operation{{Op: "test_type", Path: "/kind", Type: []any{"string", "number"}}},
+			},
+			{
+				name:    "test type invalid member",
+				ops:     []jsonpatch.Operation{{Op: "test_type", Path: "/kind", Type: []any{"string", 1}}},
+				wantErr: jsonpatch.ErrInvalidType,
+			},
+			{
+				name:    "in requires array",
+				ops:     []jsonpatch.Operation{{Op: "in", Path: "/kind", Value: "admin"}},
+				wantErr: jsonpatch.ErrInOperationValueMustBeArray,
+			},
+			{
+				name:    "merge position must be positive",
+				ops:     []jsonpatch.Operation{{Op: "merge", Path: "/items/1", Pos: 0}},
+				wantErr: jsonpatch.ErrPosGreaterThanZero,
+			},
+			{
+				name:    "composite requires operands",
+				ops:     []jsonpatch.Operation{{Op: "and", Path: "/user", Apply: []jsonpatch.Operation{}}},
+				wantErr: jsonpatch.ErrEmptyPredicateList,
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
+
+				err := jsonpatch.ValidateOperations(tt.ops, tt.allowMatches)
+				if tt.wantErr == nil {
+					require.NoError(t, err)
+					return
+				}
+				require.Error(t, err)
+				assert.ErrorIs(t, err, tt.wantErr)
+			})
+		}
+	})
+
+	t.Run("apply op preserves document types", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("map document", func(t *testing.T) {
+			t.Parallel()
+
+			doc := map[string]any{"name": "Ada"}
+			result, err := jsonpatch.ApplyOp(doc, op.NewReplace([]string{"name"}, "Grace"))
+			require.NoError(t, err)
+			assert.Equal(t, map[string]any{"name": "Grace"}, result.Doc)
+			assert.Equal(t, "Ada", result.Old)
+		})
+
+		t.Run("json bytes document", func(t *testing.T) {
+			t.Parallel()
+
+			result, err := jsonpatch.ApplyOp([]byte(`{"name":"Ada"}`), op.NewAdd([]string{"role"}, "admin"))
+			require.NoError(t, err)
+			assert.JSONEq(t, `{"name":"Ada","role":"admin"}`, string(result.Doc))
+		})
+
+		t.Run("json string document", func(t *testing.T) {
+			t.Parallel()
+
+			result, err := jsonpatch.ApplyOp(`{"name":"Ada"}`, op.NewAdd([]string{"role"}, "admin"))
+			require.NoError(t, err)
+			assert.JSONEq(t, `{"name":"Ada","role":"admin"}`, result.Doc)
+		})
+
+		t.Run("primitive document conversion failure is reported", func(t *testing.T) {
+			t.Parallel()
+
+			result, err := jsonpatch.ApplyOp(10, op.NewInc(nil, 5))
+			require.Error(t, err)
+			assert.Nil(t, result)
+			assert.ErrorIs(t, err, jsonpatch.ErrConversionFailed)
+		})
+
+		t.Run("struct document", func(t *testing.T) {
+			t.Parallel()
+
+			before := profile{Name: "Ada", Tags: []string{"go"}}
+			result, err := jsonpatch.ApplyOp(before, op.NewReplace([]string{"name"}, "Grace"))
+			require.NoError(t, err)
+			assert.Equal(t, profile{Name: "Grace", Tags: []string{"go"}}, result.Doc)
+			assert.Equal(t, "Ada", result.Old)
+		})
+	})
+
+	t.Run("apply ops preserves nil interface results", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := jsonpatch.ApplyOps[any](map[string]any{"name": "Ada"}, []jsonpatch.Op{op.NewReplace(nil, nil)})
+		require.NoError(t, err)
+		assert.Nil(t, result.Doc)
+		require.Len(t, result.Res, 1)
+		assert.Nil(t, result.Res[0].Doc)
+		assert.Equal(t, map[string]any{"name": "Ada"}, result.Res[0].Old)
+	})
+}
+
 func FuzzEdgeCases(f *testing.F) {
 	// Seed with edge case scenarios
 	seeds := []struct {

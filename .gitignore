@@ -39,6 +39,10 @@ TODO.md
 
 # vscode
 .vscode/
+
+# Claude local tooling
+.claude/
+
 # Scratch/planning docs
 .plans/
 reports/
