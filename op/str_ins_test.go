@@ -86,6 +86,15 @@ func TestStrIns_Apply(t *testing.T) {
 			oldValue: "abc",
 		},
 		{
+			name:     "insert into nil root at zero position",
+			path:     []string{},
+			doc:      nil,
+			pos:      0.0,
+			str:      "abc",
+			expected: "abc",
+			oldValue: nil,
+		},
+		{
 			name:    "path not found",
 			path:    []string{"notfound"},
 			doc:     map[string]any{"text": "abc"},

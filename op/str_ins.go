@@ -55,20 +55,8 @@ func (si *StrInsOperation) getTargetString(target any) (string, error) {
 
 // Apply applies the string insert operation.
 func (si *StrInsOperation) Apply(doc any) (internal.OpResult[any], error) {
-	// Handle root level specially
-	if len(si.Path()) == 0 {
-		targetStr, err := si.getTargetString(doc)
-		if err != nil {
-			return internal.OpResult[any]{}, err
-		}
-
-		// Apply string insertion with optimized implementation
-		result := si.applyStrIns(targetStr)
-		return internal.OpResult[any]{Doc: result, Old: doc}, nil
-	}
-
-	// Get the target value for non-root paths
-	target, err := value(doc, si.Path())
+	path := si.Path()
+	target, err := value(doc, path)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -78,12 +66,12 @@ func (si *StrInsOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, err
 	}
 
-	// Apply string insertion with optimized implementation
 	result := si.applyStrIns(targetStr)
+	if len(path) == 0 {
+		return internal.OpResult[any]{Doc: result, Old: target}, nil
+	}
 
-	// Set the result back
-	err = setValueAtPath(doc, si.Path(), result)
-	if err != nil {
+	if err := setValueAtPath(doc, path, result); err != nil {
 		return internal.OpResult[any]{}, err
 	}
 

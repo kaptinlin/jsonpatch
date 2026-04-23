@@ -38,38 +38,23 @@ func (ex *ExtendOperation) Code() int {
 
 // Apply applies the object extend operation.
 func (ex *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
-	// Handle root level extend specially
-	if len(ex.Path()) == 0 {
-		// Target is the root document
-		targetObj, ok := doc.(map[string]any)
-		if !ok {
-			return internal.OpResult[any]{}, ErrNotObject
-		}
-
-		// Use objExtend to properly handle the extension with deleteNull
-		extendedObj := objExtend(targetObj, ex.Properties, ex.DeleteNull)
-
-		return internal.OpResult[any]{Doc: extendedObj}, nil
-	}
-
-	// Get the target object
-	target, err := value(doc, ex.Path())
+	path := ex.Path()
+	target, err := value(doc, path)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
-	// Check if target is an object
 	targetObj, ok := target.(map[string]any)
 	if !ok {
 		return internal.OpResult[any]{}, ErrNotObject
 	}
 
-	// Use objExtend to properly handle the extension with deleteNull
-	extendedObj := objExtend(targetObj, ex.Properties, ex.DeleteNull)
+	extendedObj := extendObject(targetObj, ex.Properties, ex.DeleteNull)
+	if len(path) == 0 {
+		return internal.OpResult[any]{Doc: extendedObj}, nil
+	}
 
-	// Set the extended object back
-	err = setValueAtPath(doc, ex.Path(), extendedObj)
-	if err != nil {
+	if err := setValueAtPath(doc, path, extendedObj); err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
@@ -93,24 +78,18 @@ func (ex *ExtendOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the extend operation.
 func (ex *ExtendOperation) Validate() error {
-	// Empty path is valid for extend operation (root level)
 	if ex.Properties == nil {
 		return ErrPropertiesNil
 	}
 	return nil
 }
 
-// objExtend extends object obj with properties from props.
-// If deleteNull is true, properties with null values are deleted.
-func objExtend(obj map[string]any, props map[string]any, deleteNull bool) map[string]any {
-	// Create a copy of the original object
+func extendObject(obj map[string]any, props map[string]any, deleteNull bool) map[string]any {
 	result := maps.Clone(obj)
 
-	// Add/update properties from props
 	for k, v := range props {
-		// Security check: prevent __proto__ pollution
 		if k == "__proto__" {
-			continue // Skip __proto__ keys for security
+			continue
 		}
 
 		if deleteNull && v == nil {

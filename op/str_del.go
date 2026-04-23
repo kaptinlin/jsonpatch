@@ -61,20 +61,8 @@ func (sd *StrDelOperation) getTargetString(target any) (string, error) {
 
 // Apply applies the string delete operation.
 func (sd *StrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
-	// Handle root level specially
-	if len(sd.Path()) == 0 {
-		targetStr, err := sd.getTargetString(doc)
-		if err != nil {
-			return internal.OpResult[any]{}, err
-		}
-
-		// Apply string deletion with optimized implementation
-		result := sd.applyStrDel(targetStr)
-		return internal.OpResult[any]{Doc: result, Old: doc}, nil
-	}
-
-	// Get the target value for non-root paths
-	target, err := value(doc, sd.Path())
+	path := sd.Path()
+	target, err := value(doc, path)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
@@ -84,12 +72,12 @@ func (sd *StrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, err
 	}
 
-	// Apply string deletion with optimized implementation
 	result := sd.applyStrDel(targetStr)
+	if len(path) == 0 {
+		return internal.OpResult[any]{Doc: result, Old: target}, nil
+	}
 
-	// Set the result back
-	err = setValueAtPath(doc, sd.Path(), result)
-	if err != nil {
+	if err := setValueAtPath(doc, path, result); err != nil {
 		return internal.OpResult[any]{}, err
 	}
 

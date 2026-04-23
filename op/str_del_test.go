@@ -170,6 +170,19 @@ func TestStrDel_Apply(t *testing.T) {
 	}
 }
 
+func TestStrDel_Apply_WithStrTakesPrecedence(t *testing.T) {
+	t.Parallel()
+
+	op := NewStrDelWithStr([]string{"text"}, 1, "XYZ")
+	op.Len = 1
+	doc := map[string]any{"text": "aXYZb"}
+
+	result, err := op.Apply(doc)
+	require.NoError(t, err)
+	assert.Equal(t, map[string]any{"text": "ab"}, result.Doc)
+	assert.Equal(t, "aXYZb", result.Old)
+}
+
 func TestStrDel_Constructor(t *testing.T) {
 	t.Parallel()
 	path := []string{"user", "bio"}
