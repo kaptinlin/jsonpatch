@@ -8,14 +8,6 @@ func boolAt(raw Op, index int) bool {
 	return toBool(raw[index])
 }
 
-// float64At safely extracts a float64 value at the given index.
-func float64At(raw Op, index int) (float64, error) {
-	if len(raw) <= index {
-		return 0, nil
-	}
-	return toFloat64(raw[index])
-}
-
 // toBool converts a value to bool.
 func toBool(v any) bool {
 	switch val := v.(type) {

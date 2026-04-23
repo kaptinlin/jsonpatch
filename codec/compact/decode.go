@@ -39,15 +39,7 @@ func (d *Decoder) DecodeSlice(ops []Op) ([]internal.Op, error) {
 
 // Decode decodes compact format operations.
 func Decode(ops []Op) ([]internal.Op, error) {
-	result := make([]internal.Op, len(ops))
-	for i, raw := range ops {
-		parsed, err := parseOp(raw)
-		if err != nil {
-			return nil, err
-		}
-		result[i] = parsed
-	}
-	return result, nil
+	return NewDecoder().DecodeSlice(ops)
 }
 
 // DecodeJSON decodes compact format JSON bytes into operations.
@@ -310,7 +302,10 @@ func parsePredicateOp(opType internal.OpType, path []string, raw Op) (internal.O
 		if !ok {
 			return nil, ErrTestStringNotString
 		}
-		pos, _ := float64At(raw, 3)
+		var pos float64
+		if len(raw) >= 4 {
+			pos, _ = toFloat64(raw[3])
+		}
 		not := boolAt(raw, 4)
 		return op.NewTestString(path, str, pos, not, false), nil
 

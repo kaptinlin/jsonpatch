@@ -44,19 +44,7 @@ func (e *Encoder) EncodeSlice(ops []internal.Op) ([]Op, error) {
 
 // Encode encodes operations into compact format.
 func Encode(ops []internal.Op, opts ...Option) ([]Op, error) {
-	var o Options
-	for _, opt := range opts {
-		opt(&o)
-	}
-	result := make([]Op, len(ops))
-	for i, op := range ops {
-		encoded, err := encodeOp(op, o)
-		if err != nil {
-			return nil, err
-		}
-		result[i] = encoded
-	}
-	return result, nil
+	return NewEncoder(opts...).EncodeSlice(ops)
 }
 
 // EncodeJSON encodes operations into compact JSON bytes.
@@ -84,17 +72,13 @@ func encodeOp(o internal.Op, opts Options) (Op, error) {
 	// Convert []string path fields to JSON Pointer strings.
 	for i := 1; i <= 2 && i < len(result); i++ {
 		if segments, ok := result[i].([]string); ok {
-			result[i] = formatPath(segments)
+			if len(segments) == 0 {
+				result[i] = ""
+				continue
+			}
+			result[i] = jsonpointer.Format(segments...)
 		}
 	}
 
 	return result, nil
-}
-
-// formatPath converts a path slice to a JSON Pointer string.
-func formatPath(segments []string) string {
-	if len(segments) == 0 {
-		return ""
-	}
-	return jsonpointer.Format(segments...)
 }
