@@ -99,7 +99,6 @@ func (sp *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 	return internal.OpResult[any]{Doc: doc, Old: target}, nil
 }
 
-// splitValue splits a value based on its type
 func (sp *SplitOperation) splitValue(value any) any {
 	switch v := value.(type) {
 	case string:
@@ -136,7 +135,6 @@ func (sp *SplitOperation) splitValue(value any) any {
 	}
 }
 
-// splitString splits a string at the specified position
 func (sp *SplitOperation) splitString(s string) []any {
 	runes := []rune(s)
 	pos := int(sp.Pos)

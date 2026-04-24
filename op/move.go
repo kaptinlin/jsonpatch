@@ -1,6 +1,10 @@
 package op
 
-import "github.com/kaptinlin/jsonpatch/internal"
+import (
+	"slices"
+
+	"github.com/kaptinlin/jsonpatch/internal"
+)
 
 // MoveOperation represents a move operation that moves a value from one path to another.
 type MoveOperation struct {
@@ -26,7 +30,7 @@ func (m *MoveOperation) Code() int {
 
 // Apply applies the move operation following RFC 6902: remove then add.
 func (m *MoveOperation) Apply(doc any) (internal.OpResult[any], error) {
-	if pathEquals(m.path, m.from) {
+	if slices.Equal(m.path, m.from) {
 		return internal.OpResult[any]{Doc: doc, Old: nil}, nil
 	}
 
@@ -80,7 +84,7 @@ func (m *MoveOperation) Validate() error {
 	if len(m.from) == 0 {
 		return ErrFromPathEmpty
 	}
-	if pathEquals(m.path, m.from) {
+	if slices.Equal(m.path, m.from) {
 		return ErrPathsIdentical
 	}
 	if isPrefix(m.from, m.path) {

@@ -1,6 +1,8 @@
 package op
 
 import (
+	"slices"
+
 	"github.com/kaptinlin/deepclone"
 
 	"github.com/kaptinlin/jsonpatch/internal"
@@ -75,7 +77,7 @@ func (c *CopyOperation) Validate() error {
 	if len(c.from) == 0 {
 		return ErrFromPathEmpty
 	}
-	if pathEquals(c.path, c.from) {
+	if slices.Equal(c.path, c.from) {
 		return ErrPathsIdentical
 	}
 	return nil

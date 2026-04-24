@@ -183,13 +183,14 @@ func validatePredicateOperation(op *Operation, opStr string, allowMatchesOp bool
 }
 
 func validateOperationAdd(op *Operation) error {
-	if op.Value == nil {
-		return ErrMissingValue
-	}
-	return nil
+	return validateValueRequired(op)
 }
 
 func validateOperationReplace(op *Operation) error {
+	return validateValueRequired(op)
+}
+
+func validateValueRequired(op *Operation) error {
 	if op.Value == nil {
 		return ErrMissingValue
 	}
@@ -218,10 +219,7 @@ func validateOperationMove(op *Operation) error {
 }
 
 func validateOperationTest(op *Operation) error {
-	if op.Value == nil {
-		return ErrMissingValue
-	}
-	return nil
+	return validateValueRequired(op)
 }
 
 func validateOperationStrIns(op *Operation) error {

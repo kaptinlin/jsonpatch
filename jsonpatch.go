@@ -194,12 +194,8 @@ func convertStringResult[T internal.Document](resultDoc any, originalWasJSON boo
 		return result, nil
 	}
 
-	// Check if T is an interface type (e.g., any)
 	zeroTType := reflect.TypeOf(zeroT)
 	if zeroTType == nil || zeroTType.Kind() == reflect.Interface {
-		if result, ok := resultDoc.(T); ok {
-			return result, nil
-		}
 		return zeroT, fmt.Errorf("%w: failed to convert result to interface type", ErrConversionFailed)
 	}
 
