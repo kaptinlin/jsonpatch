@@ -6,7 +6,7 @@ require (
 	github.com/go-json-experiment/json v0.0.0-20260214004413-d219187c3433
 	github.com/google/go-cmp v0.7.0
 	github.com/kaptinlin/deepclone v0.2.11
-	github.com/kaptinlin/jsonpointer v0.4.18
+	github.com/kaptinlin/jsonpointer v0.4.19
 	github.com/stretchr/testify v1.11.1
 	github.com/tinylib/msgp v1.6.4
 )
