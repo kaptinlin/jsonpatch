@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -88,6 +89,32 @@ func TestReplace_Array(t *testing.T) {
 	assert.Equal(t, "new_second", modifiedArray[1], "modifiedArray[1]")
 	assert.Equal(t, "first", modifiedArray[0], "modifiedArray[0]")
 	assert.Equal(t, "third", modifiedArray[2], "modifiedArray[2]")
+}
+
+func TestReplace_EmptyStringRootKey(t *testing.T) {
+	t.Parallel()
+
+	doc := map[string]any{"": "root-key", "name": "Ada"}
+	result, err := NewReplace([]string{""}, "new-root-key").Apply(doc)
+	require.NoError(t, err)
+
+	wantDoc := map[string]any{"": "new-root-key", "name": "Ada"}
+	if diff := cmp.Diff(wantDoc, result.Doc); diff != "" {
+		t.Errorf("Apply() document mismatch (-want +got):\n%s", diff)
+	}
+	assert.Equal(t, "root-key", result.Old)
+}
+
+func TestReplace_WithOldValueSerializesOldValue(t *testing.T) {
+	t.Parallel()
+
+	replaceOp := NewReplaceWithOldValue([]string{"name"}, "Grace", "Ada")
+	jsonOp, err := replaceOp.ToJSON()
+	require.NoError(t, err)
+	wantJSON := internal.Operation{Op: "replace", Path: "/name", Value: "Grace", OldValue: "Ada"}
+	if diff := cmp.Diff(wantJSON, jsonOp); diff != "" {
+		t.Errorf("ToJSON() mismatch (-want +got):\n%s", diff)
+	}
 }
 
 func TestReplace_NonExistent(t *testing.T) {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/kaptinlin/jsonpatch/internal"
@@ -136,4 +137,40 @@ func TestTestStringLen_Apply(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestTestStringLen_Contracts(t *testing.T) {
+	t.Parallel()
+
+	op := NewTestStringLenWithNot([]string{"name"}, 3, true)
+	assert.Equal(t, internal.OpTestStringLenType, op.Op())
+	assert.Equal(t, internal.OpTestStringLenCode, op.Code())
+	assert.True(t, op.Not())
+
+	doc := map[string]any{"name": "Ada"}
+	matched, err := op.Test(doc)
+	assert.NoError(t, err)
+	assert.False(t, matched)
+
+	matched, err = op.Test(map[string]any{"other": "Ada"})
+	assert.NoError(t, err)
+	assert.False(t, matched)
+
+	jsonOp, err := op.ToJSON()
+	assert.NoError(t, err)
+	wantJSON := internal.Operation{Op: "test_string_len", Path: "/name", Len: 3, Not: true}
+	if diff := cmp.Diff(wantJSON, jsonOp); diff != "" {
+		t.Errorf("ToJSON() mismatch (-want +got):\n%s", diff)
+	}
+
+	compactOp, err := op.ToCompact()
+	assert.NoError(t, err)
+	wantCompact := internal.CompactOperation{internal.OpTestStringLenCode, []string{"name"}, 3.0}
+	if diff := cmp.Diff(wantCompact, compactOp); diff != "" {
+		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
+	}
+	assert.NoError(t, op.Validate())
+	assert.ErrorIs(t, NewTestStringLen(nil, 3).Validate(), ErrPathEmpty)
+	assert.ErrorIs(t, NewTestStringLen([]string{"name"}, -1).Validate(), ErrLengthNegative)
+	assert.ErrorIs(t, NewTestStringLen([]string{"name"}, 1.5).Validate(), ErrInvalidLength)
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/kaptinlin/jsonpatch/internal"
@@ -133,6 +134,28 @@ func TestTestType_Apply(t *testing.T) {
 				assert.Equal(t, tt.doc, result.Doc)
 			}
 		})
+	}
+}
+
+func TestTestType_SingleTypeSerialization(t *testing.T) {
+	t.Parallel()
+
+	op := NewTestType([]string{"name"}, "string")
+	assert.Equal(t, internal.OpTestTypeType, op.Op())
+	assert.Equal(t, internal.OpTestTypeCode, op.Code())
+
+	jsonOp, err := op.ToJSON()
+	assert.NoError(t, err)
+	wantJSON := internal.Operation{Op: "test_type", Path: "/name", Type: "string"}
+	if diff := cmp.Diff(wantJSON, jsonOp); diff != "" {
+		t.Errorf("ToJSON() mismatch (-want +got):\n%s", diff)
+	}
+
+	compactOp, err := op.ToCompact()
+	assert.NoError(t, err)
+	wantCompact := internal.CompactOperation{internal.OpTestTypeCode, []string{"name"}, []string{"string"}}
+	if diff := cmp.Diff(wantCompact, compactOp); diff != "" {
+		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
 	}
 }
 

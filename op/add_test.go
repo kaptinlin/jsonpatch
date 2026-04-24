@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -67,6 +68,48 @@ func TestAdd_ReplaceExisting(t *testing.T) {
 	}
 	if got := result.Old; got != "bar" {
 		assert.Equal(t, "bar", got, "result.Old")
+	}
+}
+
+func TestAdd_ArrayBoundaries(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		path []string
+		want []any
+		old  any
+	}{
+		{name: "append token", path: []string{"-"}, want: []any{"a", "b", "x"}},
+		{name: "insert at end", path: []string{"2"}, want: []any{"a", "b", "x"}},
+		{name: "insert before existing", path: []string{"1"}, want: []any{"a", "x", "b"}, old: "b"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := NewAdd(tc.path, "x").Apply([]any{"a", "b"})
+			require.NoError(t, err)
+			if diff := cmp.Diff(tc.want, result.Doc); diff != "" {
+				t.Errorf("Apply() document mismatch (-want +got):\n%s", diff)
+			}
+			assert.Equal(t, tc.old, result.Old)
+		})
+	}
+}
+
+func TestAdd_RootReplacement(t *testing.T) {
+	t.Parallel()
+
+	doc := map[string]any{"name": "Ada"}
+	result, err := NewAdd(nil, []any{"Grace"}).Apply(doc)
+	require.NoError(t, err)
+	if diff := cmp.Diff([]any{"Grace"}, result.Doc); diff != "" {
+		t.Errorf("Apply() document mismatch (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(doc, result.Old); diff != "" {
+		t.Errorf("Apply() old value mismatch (-want +got):\n%s", diff)
 	}
 }
 

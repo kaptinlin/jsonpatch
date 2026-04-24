@@ -73,6 +73,20 @@ func TestRunCaseHelpers(t *testing.T) {
 		Expected: map[string]any{"name": "Grace", "role": "admin"},
 	})
 
+	RunTestCase(t, TestCase{
+		Name:      "single error",
+		Doc:       map[string]any{"name": "Ada"},
+		Operation: jsonpatch.Operation{Op: "remove", Path: "/missing"},
+		WantErr:   true,
+	})
+
+	RunMultiOperationTestCase(t, MultiOperationTestCase{
+		Name:       "multi error",
+		Doc:        map[string]any{"name": "Ada"},
+		Operations: []jsonpatch.Operation{{Op: "remove", Path: "/missing"}},
+		WantErr:    true,
+	})
+
 	RunTestCases(t, []TestCase{{
 		Name:      "run test cases",
 		Doc:       map[string]any{"name": "Ada"},

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -83,8 +84,49 @@ func TestTest_ToCompact(t *testing.T) {
 		require.FailNow(t, fmt.Sprintf("len(ToCompact()) = %d, want %d", len(compact), 3))
 	}
 	assert.Equal(t, internal.OpTestCode, compact[0], "compact[0]")
-	assert.Equal(t, []string{"foo"}, compact[1])
+	if diff := cmp.Diff([]string{"foo"}, compact[1]); diff != "" {
+		t.Errorf("compact[1] mismatch (-want +got):\n%s", diff)
+	}
 	assert.Equal(t, "bar", compact[2], "compact[2]")
+}
+
+func TestTest_NegatedContract(t *testing.T) {
+	t.Parallel()
+
+	doc := map[string]any{"foo": "bar"}
+	testOp := NewTestWithNot([]string{"foo"}, "bar", true)
+	assert.True(t, testOp.Not())
+
+	matched, err := testOp.Test(doc)
+	assert.NoError(t, err)
+	assert.False(t, matched)
+
+	matched, err = testOp.Test(map[string]any{"other": "bar"})
+	assert.NoError(t, err)
+	assert.True(t, matched)
+
+	result, err := testOp.Apply(map[string]any{"other": "bar"})
+	assert.NoError(t, err)
+	if diff := cmp.Diff(map[string]any{"other": "bar"}, result.Doc); diff != "" {
+		t.Errorf("Apply() document mismatch (-want +got):\n%s", diff)
+	}
+
+	_, err = testOp.Apply(doc)
+	assert.ErrorIs(t, err, ErrTestOperationFailed)
+
+	jsonOp, err := testOp.ToJSON()
+	assert.NoError(t, err)
+	wantJSON := internal.Operation{Op: "test", Path: "/foo", Value: "bar", Not: true}
+	if diff := cmp.Diff(wantJSON, jsonOp); diff != "" {
+		t.Errorf("ToJSON() mismatch (-want +got):\n%s", diff)
+	}
+
+	compactOp, err := testOp.ToCompact()
+	assert.NoError(t, err)
+	wantCompact := internal.CompactOperation{internal.OpTestCode, []string{"foo"}, "bar", 1}
+	if diff := cmp.Diff(wantCompact, compactOp); diff != "" {
+		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
+	}
 }
 
 func TestTest_Validate(t *testing.T) {

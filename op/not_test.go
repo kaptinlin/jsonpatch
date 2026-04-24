@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -159,4 +160,62 @@ func TestNot_Validate(t *testing.T) {
 	if !errors.Is(err, ErrNotNoOperands) {
 		assert.Equal(t, ErrNotNoOperands, err, "Validate() error")
 	}
+}
+
+func TestNot_MultipleOperandsContract(t *testing.T) {
+	t.Parallel()
+
+	first := NewTest([]string{"name"}, "Grace")
+	second := NewTest([]string{"role"}, "owner")
+	notOp := NewNotMultiple([]string{"profile"}, []any{first, second})
+	assert.True(t, notOp.Not())
+
+	ops := notOp.Ops()
+	require.Len(t, ops, 2)
+	assert.Same(t, first, ops[0])
+	assert.Same(t, second, ops[1])
+
+	matched, err := notOp.Test(map[string]any{"name": "Ada", "role": "admin"})
+	assert.NoError(t, err)
+	assert.True(t, matched)
+
+	_, err = notOp.Apply(map[string]any{"name": "Grace", "role": "admin"})
+	assert.ErrorIs(t, err, ErrNotTestFailed)
+
+	jsonOp, err := notOp.ToJSON()
+	assert.NoError(t, err)
+	wantJSON := internal.Operation{
+		Op:   "not",
+		Path: "/profile",
+		Apply: []internal.Operation{
+			{Op: "test", Path: "/name", Value: "Grace"},
+			{Op: "test", Path: "/role", Value: "owner"},
+		},
+	}
+	if diff := cmp.Diff(wantJSON, jsonOp); diff != "" {
+		t.Errorf("ToJSON() mismatch (-want +got):\n%s", diff)
+	}
+
+	compactOp, err := notOp.ToCompact()
+	assert.NoError(t, err)
+	wantCompact := internal.CompactOperation{
+		internal.OpNotCode,
+		[]string{"profile"},
+		[]any{
+			internal.CompactOperation{internal.OpTestCode, []string{"name"}, "Grace"},
+			internal.CompactOperation{internal.OpTestCode, []string{"role"}, "owner"},
+		},
+	}
+	if diff := cmp.Diff(wantCompact, compactOp); diff != "" {
+		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
+	}
+
+	invalid := NewNotMultiple([]string{"profile"}, []any{"not a predicate"})
+	assert.ErrorIs(t, invalid.Validate(), ErrInvalidPredicateInNot)
+	_, err = invalid.Test(map[string]any{})
+	assert.ErrorIs(t, err, ErrInvalidPredicateInNot)
+	_, err = invalid.ToJSON()
+	assert.ErrorIs(t, err, ErrInvalidPredicateInNot)
+	_, err = invalid.ToCompact()
+	assert.ErrorIs(t, err, ErrInvalidPredicateInNot)
 }
