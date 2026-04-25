@@ -2,6 +2,7 @@ package op
 
 import (
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -262,41 +263,19 @@ func setValueAtPathWithMode(doc any, path []string, value any, insertMode bool) 
 	if slice, ok := parent.([]any); ok {
 		if index, ok := key.(int); ok && index >= 0 && index <= len(slice) {
 			if insertMode {
-				// Insert mode: always insert/append
-				var newSlice []any
-				if index == len(slice) {
-					// Append to end
-					newSlice = make([]any, len(slice)+1)
-					copy(newSlice, slice)
-					newSlice[len(slice)] = value
-				} else {
-					// Insert at index - move elements to make room
-					newSlice = make([]any, len(slice)+1)
-					copy(newSlice[:index], slice[:index])
-					newSlice[index] = value
-					copy(newSlice[index+1:], slice[index:])
-				}
+				newSlice := slices.Insert(slices.Clone(slice), index, value)
 
-				// We need to replace the array in its parent context
 				if len(path) == 1 {
-					// This is modifying the root array, but we can't change doc directly
 					return ErrCannotModifyRootArray
 				}
 				return updateGrandparent(doc, path, newSlice)
 			}
-			// Set mode: replace if within bounds, append if at end
 			if index < len(slice) {
-				// This is a replacement, use normal updateParent
 				return updateParent(parent, key, value)
 			}
-			// This is append at end
-			newSlice := make([]any, len(slice)+1)
-			copy(newSlice, slice)
-			newSlice[len(slice)] = value
+			newSlice := slices.Insert(slices.Clone(slice), len(slice), value)
 
-			// We need to replace the array in its parent context
 			if len(path) == 1 {
-				// This is modifying the root array, but we can't change doc directly
 				return ErrCannotModifyRootArray
 			}
 			return updateGrandparent(doc, path, newSlice)

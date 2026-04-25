@@ -505,9 +505,7 @@ func mergePaths(base, sub jsonpointer.Path) jsonpointer.Path {
 	if slices.Equal(base, sub) {
 		return sub
 	}
-	result := make(jsonpointer.Path, 0, len(base)+len(sub))
-	result = append(result, base...)
-	return append(result, sub...)
+	return slices.Concat(base, sub)
 }
 
 // operationToMap converts an Operation struct to a map for decoding.
