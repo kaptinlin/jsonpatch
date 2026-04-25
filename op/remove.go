@@ -62,7 +62,6 @@ func (r *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 				return internal.OpResult[any]{}, ErrIndexOutOfRange
 			}
 			oldValue := v[index]
-			// Use slices.Delete (Go 1.21+) for efficient element removal
 			newArray := slices.Delete(slices.Clone(v), index, index+1)
 			return internal.OpResult[any]{Doc: newArray, Old: oldValue}, nil
 		default:
@@ -96,7 +95,6 @@ func (r *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 			return internal.OpResult[any]{}, ErrIndexOutOfRange
 		}
 		oldValue := p[k]
-		// Use slices.Delete (Go 1.21+) for efficient element removal
 		newSlice := slices.Delete(slices.Clone(p), k, k+1)
 		if err := setValueAtPath(doc, r.path[:len(r.path)-1], newSlice); err != nil {
 			return internal.OpResult[any]{}, err

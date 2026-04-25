@@ -148,20 +148,16 @@ func (sp *SplitOperation) splitString(s string) []any {
 	before := string(runes[:pos])
 	after := string(runes[pos:])
 
-	// If props are specified, wrap in text nodes
-	if sp.Props != nil {
-		if propsMap, ok := sp.Props.(map[string]any); ok {
-			beforeNode := map[string]any{"text": before}
-			afterNode := map[string]any{"text": after}
+	if propsMap, ok := sp.Props.(map[string]any); ok {
+		beforeNode := map[string]any{"text": before}
+		afterNode := map[string]any{"text": after}
 
-			// Copy props to both nodes
-			for k, v := range propsMap {
-				beforeNode[k] = v
-				afterNode[k] = v
-			}
-
-			return []any{beforeNode, afterNode}
+		for k, v := range propsMap {
+			beforeNode[k] = v
+			afterNode[k] = v
 		}
+
+		return []any{beforeNode, afterNode}
 	}
 
 	return []any{before, after}

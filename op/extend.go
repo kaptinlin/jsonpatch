@@ -94,9 +94,10 @@ func extendObject(obj map[string]any, props map[string]any, deleteNull bool) map
 
 		if deleteNull && v == nil {
 			delete(result, k)
-		} else {
-			result[k] = v
+			continue
 		}
+
+		result[k] = v
 	}
 
 	return result

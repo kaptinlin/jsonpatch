@@ -96,12 +96,9 @@ func (sd *StrDelOperation) applyStrDel(val string) string {
 		pos = max(length+pos, 0) // JS slice semantics: negative counts from end
 	}
 
-	// Determine deletion length: str mode takes precedence over len mode
-	var deletionLength int
+	deletionLength := sd.Len
 	if sd.HasStr {
 		deletionLength = len([]rune(sd.Str))
-	} else {
-		deletionLength = sd.Len
 	}
 
 	// Handle negative length by treating it as 0 (no deletion)
