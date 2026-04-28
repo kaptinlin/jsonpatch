@@ -84,42 +84,27 @@ func (sd *StrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
 	return internal.OpResult[any]{Doc: doc, Old: target}, nil
 }
 
-// applyStrDel applies string deletion with optimized string building
 func (sd *StrDelOperation) applyStrDel(val string) string {
-	// Convert to runes once for proper Unicode handling
 	runes := []rune(val)
 	length := len(runes)
-
-	// Match json-joy: Math.min(pos, val.length), then JS slice semantics for negatives
-	pos := min(sd.Pos, length)
-	if pos < 0 {
-		pos = max(length+pos, 0) // JS slice semantics: negative counts from end
-	}
+	pos := clampStringPosition(sd.Pos, length)
 
 	deletionLength := sd.Len
 	if sd.HasStr {
 		deletionLength = len([]rune(sd.Str))
 	}
-
-	// Handle negative length by treating it as 0 (no deletion)
 	if deletionLength <= 0 {
 		return val
 	}
 
-	// Calculate end position with bounds checking
 	end := min(pos+deletionLength, length)
-
-	// If no actual deletion needed, return original
 	if pos >= length || pos == end {
 		return val
 	}
 
-	// Use strings.Builder for efficient string concatenation
 	var builder strings.Builder
-	// Pre-allocate capacity to avoid reallocations
 	builder.Grow(len(val) - (end - pos))
 
-	// Build the result string efficiently
 	if pos > 0 {
 		builder.WriteString(string(runes[:pos]))
 	}
@@ -138,7 +123,6 @@ func (sd *StrDelOperation) ToJSON() (internal.Operation, error) {
 		Pos:  sd.Pos,
 	}
 
-	// If str mode is set, use "str" field
 	if sd.HasStr {
 		result.Str = sd.Str
 	} else {

@@ -152,11 +152,7 @@ func decodeExtendedOp(opType string, path []string, m map[string]any) (internal.
 		return op.NewInc(path, val), nil
 
 	case "str_ins":
-		raw, hasPos := m["pos"]
-		if !hasPos {
-			return nil, ErrStrInsOpMissingPos
-		}
-		pos, ok := op.ToFloat64(raw)
+		pos, ok := requiredFloat64(m, "pos")
 		if !ok {
 			return nil, ErrStrInsOpMissingPos
 		}
@@ -167,11 +163,7 @@ func decodeExtendedOp(opType string, path []string, m map[string]any) (internal.
 		return op.NewStrIns(path, pos, str), nil
 
 	case "str_del":
-		raw, hasPos := m["pos"]
-		if !hasPos {
-			return nil, ErrStrDelOpMissingPos
-		}
-		pos, ok := op.ToFloat64(raw)
+		pos, ok := requiredFloat64(m, "pos")
 		if !ok {
 			return nil, ErrStrDelOpMissingPos
 		}
@@ -184,11 +176,7 @@ func decodeExtendedOp(opType string, path []string, m map[string]any) (internal.
 		return nil, ErrStrDelOpMissingFields
 
 	case "split":
-		raw, hasPos := m["pos"]
-		if !hasPos {
-			return nil, ErrSplitOpMissingPos
-		}
-		pos, ok := op.ToFloat64(raw)
+		pos, ok := requiredFloat64(m, "pos")
 		if !ok {
 			return nil, ErrSplitOpMissingPos
 		}
@@ -256,34 +244,30 @@ func decodePredicateOp(opType string, path []string, m map[string]any, opts inte
 		return decodeTestStringLen(path, m)
 
 	case "contains":
-		val, ok := m["value"]
-		if !ok {
-			return nil, ErrContainsOpMissingValue
+		val, err := requiredString(m, "value", ErrContainsOpMissingValue, op.ErrContainsValueMustBeString)
+		if err != nil {
+			return nil, err
 		}
-		s, ok := val.(string)
-		if !ok {
-			return nil, op.ErrContainsValueMustBeString
-		}
-		return op.NewContainsWithIgnoreCase(path, s, boolField(m, "ignore_case")), nil
+		return op.NewContainsWithIgnoreCase(path, val, boolField(m, "ignore_case")), nil
 
 	case "ends":
-		val, ok := m["value"].(string)
-		if !ok {
-			return nil, ErrEndsOpMissingValue
+		val, err := requiredString(m, "value", ErrEndsOpMissingValue, ErrEndsOpMissingValue)
+		if err != nil {
+			return nil, err
 		}
 		return op.NewEndsWithIgnoreCase(path, val, boolField(m, "ignore_case")), nil
 
 	case "starts":
-		val, ok := m["value"].(string)
-		if !ok {
-			return nil, ErrStartsOpMissingValue
+		val, err := requiredString(m, "value", ErrStartsOpMissingValue, ErrStartsOpMissingValue)
+		if err != nil {
+			return nil, err
 		}
 		return op.NewStartsWithIgnoreCase(path, val, boolField(m, "ignore_case")), nil
 
 	case "matches":
-		val, ok := m["value"].(string)
-		if !ok {
-			return nil, ErrMatchesOpMissingValue
+		val, err := requiredString(m, "value", ErrMatchesOpMissingValue, ErrMatchesOpMissingValue)
+		if err != nil {
+			return nil, err
 		}
 		return op.NewMatches(path, val, boolField(m, "ignore_case"), opts.CreateMatcher), nil
 
@@ -355,31 +339,32 @@ func decodeTestType(path []string, m map[string]any) (internal.Op, error) {
 
 // decodeTestTypeArray decodes a test_type operation with []any type list.
 func decodeTestTypeArray(path []string, v []any) (internal.Op, error) {
-	if len(v) == 0 {
-		return nil, ErrEmptyTypeList
-	}
 	types := make([]string, len(v))
 	for i, t := range v {
 		s, ok := t.(string)
-		if !ok || !internal.IsValidJSONPatchType(s) {
+		if !ok {
 			return nil, ErrInvalidType
 		}
 		types[i] = s
 	}
-	return op.NewTestTypeMultiple(path, types), nil
+	return newTestTypeMultiple(path, types)
 }
 
 // decodeTestTypeStringArray decodes a test_type operation with []string type list.
 func decodeTestTypeStringArray(path []string, v []string) (internal.Op, error) {
-	if len(v) == 0 {
+	return newTestTypeMultiple(path, v)
+}
+
+func newTestTypeMultiple(path []string, types []string) (internal.Op, error) {
+	if len(types) == 0 {
 		return nil, ErrEmptyTypeList
 	}
-	for _, s := range v {
+	for _, s := range types {
 		if !internal.IsValidJSONPatchType(s) {
 			return nil, ErrInvalidType
 		}
 	}
-	return op.NewTestTypeMultiple(path, v), nil
+	return op.NewTestTypeMultiple(path, types), nil
 }
 
 // decodeTestString decodes a test_string operation.
@@ -494,6 +479,26 @@ func decodeSubPredicates(apply []any, base jsonpointer.Path, opts internal.JSONP
 func boolField(m map[string]any, field string) bool {
 	v, _ := m[field].(bool)
 	return v
+}
+
+func requiredFloat64(m map[string]any, field string) (float64, bool) {
+	raw, ok := m[field]
+	if !ok {
+		return 0, false
+	}
+	return op.ToFloat64(raw)
+}
+
+func requiredString(m map[string]any, field string, missingErr, typeErr error) (string, error) {
+	raw, ok := m[field]
+	if !ok {
+		return "", missingErr
+	}
+	value, ok := raw.(string)
+	if !ok {
+		return "", typeErr
+	}
+	return value, nil
 }
 
 // mergePaths combines base and sub paths for composite operations.

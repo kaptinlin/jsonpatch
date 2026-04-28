@@ -78,29 +78,26 @@ func (si *StrInsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	return internal.OpResult[any]{Doc: doc, Old: target}, nil
 }
 
-// applyStrIns applies string insertion with optimized string building
-func (si *StrInsOperation) applyStrIns(str string) string {
-	// Convert to runes once for proper Unicode handling
-	runes := []rune(str)
-	runeLen := len(runes)
-
-	// Match json-joy: Math.min(pos, str.length), then JS slice semantics for negatives
-	pos := min(si.Pos, runeLen)
+func clampStringPosition(pos, length int) int {
+	pos = min(pos, length)
 	if pos < 0 {
-		pos = max(runeLen+pos, 0) // JS slice semantics: negative counts from end
+		return max(length+pos, 0)
 	}
+	return pos
+}
 
-	// Use strings.Builder for efficient string concatenation
+func (si *StrInsOperation) applyStrIns(str string) string {
+	runes := []rune(str)
+	pos := clampStringPosition(si.Pos, len(runes))
+
 	var builder strings.Builder
-	// Pre-allocate capacity to avoid reallocations
 	builder.Grow(len(str) + len(si.Str))
 
-	// Build the result string efficiently
 	if pos > 0 {
 		builder.WriteString(string(runes[:pos]))
 	}
 	builder.WriteString(si.Str)
-	if pos < runeLen {
+	if pos < len(runes) {
 		builder.WriteString(string(runes[pos:]))
 	}
 

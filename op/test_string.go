@@ -42,6 +42,13 @@ func (ts *TestStringOperation) Not() bool {
 	return ts.NotFlag
 }
 
+func (ts *TestStringOperation) matches(substring string) bool {
+	if ts.IgnoreCase {
+		return strings.EqualFold(substring, ts.Str)
+	}
+	return substring == ts.Str
+}
+
 // Test evaluates the test string predicate condition.
 func (ts *TestStringOperation) Test(doc any) (bool, error) {
 	val, err := value(doc, ts.Path())
@@ -55,19 +62,11 @@ func (ts *TestStringOperation) Test(doc any) (bool, error) {
 		return false, nil
 	}
 
-	// Match json-joy behavior: clamp positions to string bounds
 	length := len(str)
 	start := min(ts.Pos, length)
 	end := min(ts.Pos+len(ts.Str), length)
 
-	substring := str[start:end]
-	var match bool
-	if ts.IgnoreCase {
-		match = strings.EqualFold(substring, ts.Str)
-	} else {
-		match = substring == ts.Str
-	}
-	return ts.NotFlag != match, nil
+	return ts.NotFlag != ts.matches(str[start:end]), nil
 }
 
 // Apply applies the test string operation to the document.
@@ -93,15 +92,7 @@ func (ts *TestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	substring := str[pos:endPos]
-	var matches bool
-	if ts.IgnoreCase {
-		matches = strings.EqualFold(substring, ts.Str)
-	} else {
-		matches = substring == ts.Str
-	}
-
-	// Apply negation logic using XOR (same as Test method)
-	shouldPass := matches != ts.NotFlag
+	shouldPass := ts.matches(substring) != ts.NotFlag
 	if !shouldPass {
 		if ts.NotFlag {
 			// When Not is true and test fails, it means the string DID match when we expected it not to
