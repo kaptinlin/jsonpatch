@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -77,11 +78,39 @@ func TestRemove_Array(t *testing.T) {
 	if got := result.Old; got != "second" {
 		assert.Equal(t, "second", got, "result.Old")
 	}
-	if len(modifiedArray) != 2 {
-		require.FailNow(t, fmt.Sprintf("len(modifiedArray) = %d, want %d", len(modifiedArray), 2))
+	want := []any{"first", "third"}
+	if diff := cmp.Diff(want, modifiedArray); diff != "" {
+		t.Errorf("Apply() document mismatch (-want +got):\n%s", diff)
 	}
-	assert.Equal(t, "first", modifiedArray[0], "modifiedArray[0]")
-	assert.Equal(t, "third", modifiedArray[1], "modifiedArray[1]")
+}
+
+func TestRemove_NestedArrayUpdatesParent(t *testing.T) {
+	t.Parallel()
+
+	doc := map[string]any{"items": []any{"first", "second", "third"}}
+	result, err := NewRemove([]string{"items", "1"}).Apply(doc)
+	require.NoError(t, err)
+
+	want := map[string]any{"items": []any{"first", "third"}}
+	if diff := cmp.Diff(want, result.Doc); diff != "" {
+		t.Errorf("Apply() document mismatch (-want +got):\n%s", diff)
+	}
+	assert.Equal(t, "second", result.Old)
+}
+
+func TestRemove_RejectsScalarDocument(t *testing.T) {
+	t.Parallel()
+
+	_, err := NewRemove([]string{"name"}).Apply("Ada")
+	require.ErrorIs(t, err, ErrCannotRemoveFromValue)
+}
+
+func TestRemove_RejectsNestedArrayIndexOutOfRange(t *testing.T) {
+	t.Parallel()
+
+	doc := map[string]any{"items": []any{"first"}}
+	_, err := NewRemove([]string{"items", "1"}).Apply(doc)
+	require.ErrorIs(t, err, ErrIndexOutOfRange)
 }
 
 func TestRemove_NonExistent(t *testing.T) {
