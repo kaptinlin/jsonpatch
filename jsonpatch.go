@@ -194,8 +194,8 @@ func convertStringResult[T internal.Document](resultDoc any, originalWasJSON boo
 		return result, nil
 	}
 
-	zeroTType := reflect.TypeOf(zeroT)
-	if zeroTType == nil || zeroTType.Kind() == reflect.Interface {
+	zeroTType := reflect.TypeFor[T]()
+	if zeroTType.Kind() == reflect.Interface {
 		return zeroT, fmt.Errorf("%w: failed to convert result to interface type", ErrConversionFailed)
 	}
 
@@ -287,8 +287,8 @@ func convertNullableResult[T internal.Document](resultDoc any, doc T) (T, error)
 	}
 
 	// Result is nil - only valid for interface types
-	zeroTType := reflect.TypeOf(zeroT)
-	if zeroTType == nil || zeroTType.Kind() == reflect.Interface {
+	zeroTType := reflect.TypeFor[T]()
+	if zeroTType.Kind() == reflect.Interface {
 		if nilResult, ok := any(nil).(T); ok {
 			return nilResult, nil
 		}
