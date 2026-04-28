@@ -122,12 +122,10 @@ func validateOperation(op *Operation, allowMatchesOp bool) error {
 	}
 
 	switch op.Op {
-	case "add":
-		return validateOperationAdd(op)
+	case "add", "replace":
+		return validateValueRequired(op)
 	case "remove", "flip", "inc", "extend", "split":
 		return nil
-	case "replace":
-		return validateOperationReplace(op)
 	case "copy":
 		return validateOperationCopy(op)
 	case "move":
@@ -146,7 +144,7 @@ func validateOperation(op *Operation, allowMatchesOp bool) error {
 func validatePredicateOperation(op *Operation, opStr string, allowMatchesOp bool) error {
 	switch opStr {
 	case "test":
-		return validateOperationTest(op)
+		return validateValueRequired(op)
 	case "test_type":
 		return validateOperationTestType(op)
 	case "test_string":
@@ -182,14 +180,6 @@ func validatePredicateOperation(op *Operation, opStr string, allowMatchesOp bool
 	}
 }
 
-func validateOperationAdd(op *Operation) error {
-	return validateValueRequired(op)
-}
-
-func validateOperationReplace(op *Operation) error {
-	return validateValueRequired(op)
-}
-
 func validateValueRequired(op *Operation) error {
 	if op.Value == nil {
 		return ErrMissingValue
@@ -216,10 +206,6 @@ func validateOperationMove(op *Operation) error {
 		return ErrCannotMoveToChildren
 	}
 	return nil
-}
-
-func validateOperationTest(op *Operation) error {
-	return validateValueRequired(op)
 }
 
 func validateOperationStrIns(op *Operation) error {
@@ -356,7 +342,10 @@ func validateOperationType(op *Operation) error {
 	if !isString {
 		return ErrExpectedValueToBeString
 	}
-	return validateTestType(valueStr)
+	if !slices.Contains(validTypes, valueStr) {
+		return ErrInvalidType
+	}
+	return nil
 }
 
 func validateCompositeOperation(op *internal.Operation, allowMatchesOp bool) error {
@@ -380,13 +369,6 @@ var validTypes = []string{
 	"string", "number", "boolean", "object", "integer", "array", "null",
 }
 
-func validateTestType(typeStr string) error {
-	if !slices.Contains(validTypes, typeStr) {
-		return ErrInvalidType
-	}
-	return nil
-}
-
 // isNumber reports whether value is a numeric type.
 func isNumber(value any) bool {
 	switch value.(type) {
@@ -402,11 +384,6 @@ func isArray(value any) bool {
 	if value == nil {
 		return false
 	}
-	switch value.(type) {
-	case []any, []string, []int, []float64:
-		return true
-	default:
-		rv := reflect.ValueOf(value)
-		return rv.Kind() == reflect.Slice || rv.Kind() == reflect.Array
-	}
+	rv := reflect.ValueOf(value)
+	return rv.Kind() == reflect.Slice || rv.Kind() == reflect.Array
 }
