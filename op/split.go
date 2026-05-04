@@ -199,13 +199,11 @@ func (sp *SplitOperation) Validate() error {
 // splitNodePair creates two new nodes from an original, copying all properties
 // except excludeKey, and applying optional extra properties to both.
 func splitNodePair(nodeMap map[string]any, excludeKey string, props map[string]any) (map[string]any, map[string]any) {
-	beforeNode := make(map[string]any, len(nodeMap)+len(props))
-	maps.Copy(beforeNode, nodeMap)
+	beforeNode := maps.Clone(nodeMap)
 	delete(beforeNode, excludeKey)
 	maps.Copy(beforeNode, props)
 
-	afterNode := make(map[string]any, len(beforeNode))
-	maps.Copy(afterNode, beforeNode)
+	afterNode := maps.Clone(beforeNode)
 	return beforeNode, afterNode
 }
 

@@ -203,8 +203,7 @@ func isSlateElementNode(value any) bool {
 // copyPropsExcluding copies properties from two maps into a new map,
 // skipping the specified key. Properties from the second map overwrite the first.
 func copyPropsExcluding(one, two map[string]any, excludeKey string) map[string]any {
-	result := make(map[string]any, len(one)+len(two))
-	maps.Copy(result, one)
+	result := maps.Clone(one)
 	maps.Copy(result, two)
 	delete(result, excludeKey)
 	return result
