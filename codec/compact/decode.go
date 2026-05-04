@@ -431,8 +431,8 @@ func parsePredicateOps(value any) ([]any, error) {
 		return nil, ErrPredicateNotArray
 	}
 
-	result := make([]any, 0, len(arr))
-	for _, item := range arr {
+	result := make([]any, len(arr))
+	for i, item := range arr {
 		raw, ok := item.([]any)
 		if !ok {
 			return nil, ErrPredicateOpInvalid
@@ -444,7 +444,7 @@ func parsePredicateOps(value any) ([]any, error) {
 		if _, ok := decoded.(internal.PredicateOp); !ok {
 			return nil, ErrNotPredicate
 		}
-		result = append(result, decoded)
+		result[i] = decoded
 	}
 	return result, nil
 }

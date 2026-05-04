@@ -5,12 +5,7 @@ func boolAt(raw Op, index int) bool {
 	if len(raw) <= index {
 		return false
 	}
-	return toBool(raw[index])
-}
-
-// toBool converts a value to bool.
-func toBool(v any) bool {
-	switch val := v.(type) {
+	switch val := raw[index].(type) {
 	case bool:
 		return val
 	case float64:

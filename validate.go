@@ -117,7 +117,7 @@ func validateOperation(op *Operation, allowMatchesOp bool) error {
 	if op.Path == "" {
 		return ErrMissingPath
 	}
-	if err := validateJSONPointer(op.Path); err != nil {
+	if err := jsonpointer.Validate(op.Path); err != nil {
 		return ErrInvalidJSONPointer
 	}
 
@@ -131,7 +131,7 @@ func validateOperation(op *Operation, allowMatchesOp bool) error {
 	case "move":
 		return validateOperationMove(op)
 	case "str_ins":
-		return validateOperationStrIns(op)
+		return validateOperationPosition(op)
 	case "str_del":
 		return validateOperationStrDel(op)
 	case "merge":
@@ -148,26 +148,20 @@ func validatePredicateOperation(op *Operation, opStr string, allowMatchesOp bool
 	case "test_type":
 		return validateOperationTestType(op)
 	case "test_string":
-		return validateOperationTestString(op)
+		return validateOperationPosition(op)
 	case "test_string_len":
 		return validateOperationTestStringLen(op)
 	case "matches":
 		if !allowMatchesOp {
 			return ErrMatchesNotAllowed
 		}
-		return validateOperationMatches(op)
-	case "contains":
-		return validateOperationContains(op)
-	case "ends":
-		return validateOperationEnds(op)
-	case "starts":
-		return validateOperationStarts(op)
+		return requireStringValue(op)
+	case "contains", "ends", "starts":
+		return requireStringValue(op)
 	case "in":
 		return validateOperationIn(op)
-	case "more":
-		return validateOperationMore(op)
-	case "less":
-		return validateOperationLess(op)
+	case "more", "less":
+		return requireNumberValue(op)
 	case "type":
 		return validateOperationType(op)
 	case "defined", "undefined":
@@ -191,14 +185,14 @@ func validateOperationCopy(op *Operation) error {
 	if op.From == "" {
 		return ErrMissingFrom
 	}
-	return validateJSONPointer(op.From)
+	return jsonpointer.Validate(op.From)
 }
 
 func validateOperationMove(op *Operation) error {
 	if op.From == "" {
 		return ErrMissingFrom
 	}
-	if err := validateJSONPointer(op.From); err != nil {
+	if err := jsonpointer.Validate(op.From); err != nil {
 		return err
 	}
 
@@ -208,7 +202,7 @@ func validateOperationMove(op *Operation) error {
 	return nil
 }
 
-func validateOperationStrIns(op *Operation) error {
+func validateOperationPosition(op *Operation) error {
 	if op.Pos < 0 {
 		return ErrNegativeNumber
 	}
@@ -266,13 +260,6 @@ func validateOperationTestType(op *Operation) error {
 	return fmt.Errorf("%w: type field must be string or array of strings", ErrInvalidType)
 }
 
-func validateOperationTestString(op *Operation) error {
-	if op.Pos < 0 {
-		return ErrNegativeNumber
-	}
-	return nil
-}
-
 func validateOperationTestStringLen(op *Operation) error {
 	if op.Len < 0 {
 		return ErrNegativeNumber
@@ -300,22 +287,6 @@ func requireNumberValue(op *Operation) error {
 	return nil
 }
 
-func validateOperationMatches(op *Operation) error {
-	return requireStringValue(op)
-}
-
-func validateOperationContains(op *Operation) error {
-	return requireStringValue(op)
-}
-
-func validateOperationEnds(op *Operation) error {
-	return requireStringValue(op)
-}
-
-func validateOperationStarts(op *Operation) error {
-	return requireStringValue(op)
-}
-
 func validateOperationIn(op *Operation) error {
 	if op.Value == nil {
 		return ErrInOperationValueMustBeArray
@@ -324,14 +295,6 @@ func validateOperationIn(op *Operation) error {
 		return ErrInOperationValueMustBeArray
 	}
 	return nil
-}
-
-func validateOperationMore(op *Operation) error {
-	return requireNumberValue(op)
-}
-
-func validateOperationLess(op *Operation) error {
-	return requireNumberValue(op)
 }
 
 func validateOperationType(op *Operation) error {
@@ -359,10 +322,6 @@ func validateCompositeOperation(op *internal.Operation, allowMatchesOp bool) err
 		}
 	}
 	return nil
-}
-
-func validateJSONPointer(path string) error {
-	return jsonpointer.Validate(path)
 }
 
 var validTypes = []string{

@@ -15,13 +15,13 @@ import (
 
 // Decode converts JSON operation maps to Op instances.
 func Decode(operations []map[string]any, opts internal.JSONPatchOptions) ([]internal.Op, error) {
-	ops := make([]internal.Op, 0, len(operations))
-	for _, m := range operations {
+	ops := make([]internal.Op, len(operations))
+	for i, m := range operations {
 		o, err := decodeOp(m, opts)
 		if err != nil {
 			return nil, err
 		}
-		ops = append(ops, o)
+		ops[i] = o
 	}
 	return ops, nil
 }
@@ -331,7 +331,7 @@ func decodeTestType(path []string, m map[string]any) (internal.Op, error) {
 	case []any:
 		return decodeTestTypeArray(path, v)
 	case []string:
-		return decodeTestTypeStringArray(path, v)
+		return newTestTypeMultiple(path, v)
 	default:
 		return nil, ErrTestTypeOpMissingType
 	}
@@ -348,11 +348,6 @@ func decodeTestTypeArray(path []string, v []any) (internal.Op, error) {
 		types[i] = s
 	}
 	return newTestTypeMultiple(path, types)
-}
-
-// decodeTestTypeStringArray decodes a test_type operation with []string type list.
-func decodeTestTypeStringArray(path []string, v []string) (internal.Op, error) {
-	return newTestTypeMultiple(path, v)
 }
 
 func newTestTypeMultiple(path []string, types []string) (internal.Op, error) {

@@ -119,7 +119,7 @@ func encodePathValue(w *msgp.Writer, code int, path []string, value any) error {
 	if err := encodePath(w, path); err != nil {
 		return err
 	}
-	return encodeValue(w, value)
+	return w.WriteIntf(value)
 }
 
 // encodePathPaths encodes operations with format: [code, from, path].
@@ -131,20 +131,6 @@ func encodePathPaths(w *msgp.Writer, code int, from, path []string) error {
 		return err
 	}
 	return encodePath(w, path)
-}
-
-// encodePathFloat64Value encodes operations with format: [code, path, float64, value].
-func encodePathFloat64Value(w *msgp.Writer, code int, path []string, f float64, value any) error {
-	if err := writeHeader(w, 4, code); err != nil {
-		return err
-	}
-	if err := encodePath(w, path); err != nil {
-		return err
-	}
-	if err := w.WriteFloat64(f); err != nil {
-		return err
-	}
-	return encodeValue(w, value)
 }
 
 // encodeSplitOrMerge encodes split/merge operations with optional props.
@@ -159,7 +145,16 @@ func encodeSplitOrMerge(w *msgp.Writer, code int, path []string, f float64, prop
 		}
 		return w.WriteFloat64(f)
 	}
-	return encodePathFloat64Value(w, code, path, f, props)
+	if err := writeHeader(w, 4, code); err != nil {
+		return err
+	}
+	if err := encodePath(w, path); err != nil {
+		return err
+	}
+	if err := w.WriteFloat64(f); err != nil {
+		return err
+	}
+	return w.WriteIntf(props)
 }
 
 // encodeMatches encodes a matches predicate: [code, path, pattern, ignoreCase].
@@ -240,7 +235,7 @@ func encodeExtend(w *msgp.Writer, o *op.ExtendOperation) error {
 	if err := encodePath(w, o.Path()); err != nil {
 		return err
 	}
-	if err := encodeValue(w, o.Properties); err != nil {
+	if err := w.WriteIntf(o.Properties); err != nil {
 		return err
 	}
 	return w.WriteBool(o.DeleteNull)
@@ -257,9 +252,4 @@ func encodePath(w *msgp.Writer, path []string) error {
 		}
 	}
 	return nil
-}
-
-// encodeValue writes an arbitrary value using msgp interface encoding.
-func encodeValue(w *msgp.Writer, value any) error {
-	return w.WriteIntf(value)
 }
