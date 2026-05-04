@@ -48,14 +48,21 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if len(decodedOps) == len(ops) {
-		fmt.Println("✅ Round-trip successful (operation count matches)")
-	} else {
-		fmt.Println("❌ Round-trip failed (operation count mismatch)")
-	}
+	fmt.Println(roundTripMessage(ops, decodedOps))
 
 	fmt.Println("\n=== Quick Usage ===")
 	fmt.Println("codec := binary.Codec{}")
 	fmt.Println("data, _ := codec.Encode(ops)")
 	fmt.Println("decoded, _ := codec.Decode(data)")
+}
+
+func roundTripMessage(original, decoded []internal.Op) string {
+	if sameOperationCount(original, decoded) {
+		return "✅ Round-trip successful (operation count matches)"
+	}
+	return "❌ Round-trip failed (operation count mismatch)"
+}
+
+func sameOperationCount(original, decoded []internal.Op) bool {
+	return len(decoded) == len(original)
 }

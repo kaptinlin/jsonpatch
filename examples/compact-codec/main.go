@@ -88,38 +88,7 @@ func main() {
 	fmt.Printf("Original operations:  %d\n", len(ops))
 	fmt.Printf("Decoded operations:   %d\n", len(decodedOps))
 
-	// Verify all operations match
-	allMatch := true
-	for i, originalOp := range ops {
-		if i >= len(decodedOps) {
-			allMatch = false
-			break
-		}
-		decodedOp := decodedOps[i]
-		if originalOp.Op() != decodedOp.Op() {
-			allMatch = false
-			break
-		}
-		// Check paths match
-		origPath := originalOp.Path()
-		decodedPath := decodedOp.Path()
-		if len(origPath) != len(decodedPath) {
-			allMatch = false
-			break
-		}
-		for j, segment := range origPath {
-			if decodedPath[j] != segment {
-				allMatch = false
-				break
-			}
-		}
-	}
-
-	if allMatch {
-		fmt.Println("✅ All operations perfectly decoded!")
-	} else {
-		fmt.Println("❌ Some operations failed to decode correctly")
-	}
+	fmt.Println(roundTripMessage(ops, decodedOps))
 
 	fmt.Println("\n=== Usage Examples ===")
 
@@ -147,4 +116,34 @@ func main() {
 	fmt.Println("decoded, err := decoder.DecodeSlice(encoded)")
 
 	fmt.Println("\n=== Demo Complete ===")
+}
+
+func roundTripMessage(original, decoded []internal.Op) string {
+	if sameOperations(original, decoded) {
+		return "✅ All operations perfectly decoded!"
+	}
+	return "❌ Some operations failed to decode correctly"
+}
+
+func sameOperations(original, decoded []internal.Op) bool {
+	for i, originalOp := range original {
+		if i >= len(decoded) {
+			return false
+		}
+		decodedOp := decoded[i]
+		if originalOp.Op() != decodedOp.Op() {
+			return false
+		}
+		origPath := originalOp.Path()
+		decodedPath := decodedOp.Path()
+		if len(origPath) != len(decodedPath) {
+			return false
+		}
+		for j, segment := range origPath {
+			if decodedPath[j] != segment {
+				return false
+			}
+		}
+	}
+	return true
 }

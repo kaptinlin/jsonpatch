@@ -7,20 +7,26 @@ import (
 	"github.com/kaptinlin/jsonpatch"
 )
 
-func main() {
-	doc := map[string]any{"name": "John", "age": 30}
+var patch = []jsonpatch.Operation{
+	{Op: "add", Path: "/email", Value: "john@example.com"},
+	{Op: "replace", Path: "/name", Value: "Jane"},
+}
 
-	// Create patch operations
-	patch := []jsonpatch.Operation{
-		{Op: "add", Path: "/email", Value: "john@example.com"},
-		{Op: "replace", Path: "/name", Value: "Jane"},
+func main() {
+	if err := run(patch); err != nil {
+		return
 	}
+}
+
+func run(patch []jsonpatch.Operation) error {
+	doc := map[string]any{"name": "John", "age": 30}
 
 	result, err := jsonpatch.ApplyPatch(doc, patch)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
-		return
+		return err
 	}
 
 	fmt.Printf("After operations: %+v\n", result.Doc)
+	return nil
 }
