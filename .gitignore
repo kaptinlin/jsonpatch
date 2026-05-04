@@ -71,3 +71,4 @@ plan*.md
 TODO*.md
 reports/*
 .ralphy/*.json
+.plans

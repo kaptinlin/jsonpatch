@@ -20,7 +20,6 @@ task test
 task lint
 
 # Run markdownlint for docs and specs
-task markdownlint
 
 # Format Go code
 task fmt
@@ -113,7 +112,7 @@ See `SPECS/` for detailed rules:
 - Use table-driven tests for multi-case behavior.
 - Use `t.Parallel()` for top-level tests and independent subtests.
 - Add success and failure coverage for each new behavior.
-- Run `task test`, `task lint`, and `task markdownlint` after code or docs changes.
+- Run `task test` and `task lint` after code or docs changes.
 - Add example-oriented tests when `README.md` or public usage snippets change.
 
 ## Dependencies

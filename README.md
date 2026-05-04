@@ -188,7 +188,6 @@ Explore the runnable examples in [`examples/`](examples/):
 ```bash
 task test
 task lint
-task markdownlint
 ```
 
 For development guidelines, see [AGENTS.md](AGENTS.md).
