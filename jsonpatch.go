@@ -211,10 +211,8 @@ func convertStringResult[T internal.Document](resultDoc any, originalWasJSON boo
 func marshalToStringType[T internal.Document](resultDoc any, doc T) (T, error) {
 	var zeroT T
 
-	var resultStr string
-	if str, ok := resultDoc.(string); ok {
-		resultStr = str
-	} else {
+	resultStr, ok := resultDoc.(string)
+	if !ok {
 		resultBytes, err := json.Marshal(resultDoc)
 		if err != nil {
 			return zeroT, fmt.Errorf("failed to marshal patched document: %w", err)

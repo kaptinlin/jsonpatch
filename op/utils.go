@@ -226,10 +226,8 @@ func valueFromParent(parent any, key any) any {
 		}
 		return nil
 	case []any:
-		if k, ok := key.(int); ok {
-			if k >= 0 && k < len(p) {
-				return p[k]
-			}
+		if k, ok := key.(int); ok && k >= 0 && k < len(p) {
+			return p[k]
 		}
 		return nil
 	default:

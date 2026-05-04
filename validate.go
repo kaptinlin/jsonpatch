@@ -235,10 +235,7 @@ func validateOperationTestType(op *Operation) error {
 		if typeStr == "" {
 			return fmt.Errorf("%w: missing required field 'type'", ErrInvalidTypeField)
 		}
-		if !slices.Contains(validTypes, typeStr) {
-			return fmt.Errorf("%w: invalid type '%s'", ErrInvalidType, typeStr)
-		}
-		return nil
+		return validateTypeName(typeStr)
 	}
 
 	if typeSlice, ok := op.Type.([]any); ok {
@@ -250,8 +247,8 @@ func validateOperationTestType(op *Operation) error {
 			if !isString {
 				return fmt.Errorf("%w: all types must be strings", ErrInvalidType)
 			}
-			if !slices.Contains(validTypes, typeStr) {
-				return fmt.Errorf("%w: invalid type '%s'", ErrInvalidType, typeStr)
+			if err := validateTypeName(typeStr); err != nil {
+				return err
 			}
 		}
 		return nil
@@ -268,9 +265,6 @@ func validateOperationTestStringLen(op *Operation) error {
 }
 
 func requireStringValue(op *Operation) error {
-	if op.Value == nil {
-		return ErrExpectedValueToBeString
-	}
 	if _, isString := op.Value.(string); !isString {
 		return ErrExpectedValueToBeString
 	}
@@ -278,9 +272,6 @@ func requireStringValue(op *Operation) error {
 }
 
 func requireNumberValue(op *Operation) error {
-	if op.Value == nil {
-		return ErrValueMustBeNumber
-	}
 	if !isNumber(op.Value) {
 		return ErrValueMustBeNumber
 	}
@@ -288,9 +279,6 @@ func requireNumberValue(op *Operation) error {
 }
 
 func validateOperationIn(op *Operation) error {
-	if op.Value == nil {
-		return ErrInOperationValueMustBeArray
-	}
 	if !isArray(op.Value) {
 		return ErrInOperationValueMustBeArray
 	}
@@ -326,6 +314,13 @@ func validateCompositeOperation(op *internal.Operation, allowMatchesOp bool) err
 
 var validTypes = []string{
 	"string", "number", "boolean", "object", "integer", "array", "null",
+}
+
+func validateTypeName(typeStr string) error {
+	if !slices.Contains(validTypes, typeStr) {
+		return fmt.Errorf("%w: invalid type '%s'", ErrInvalidType, typeStr)
+	}
+	return nil
 }
 
 // isNumber reports whether value is a numeric type.

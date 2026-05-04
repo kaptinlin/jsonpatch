@@ -38,7 +38,6 @@ func (oo *OrOperation) Test(doc any) (bool, error) {
 		return false, nil
 	}
 
-	// Test all operations
 	for _, op := range oo.Operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {
@@ -49,12 +48,10 @@ func (oo *OrOperation) Test(doc any) (bool, error) {
 			return false, err
 		}
 		if ok {
-			// If any operation passes, OR passes
 			return true, nil
 		}
 	}
 
-	// No operations passed
 	return false, nil
 }
 

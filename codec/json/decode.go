@@ -536,13 +536,10 @@ func operationToMap(o *internal.Operation, nested bool) map[string]any {
 
 // setValueField sets the "value" field based on operation type and nesting.
 func setValueField(m map[string]any, o *internal.Operation, nested bool) {
-	if nested {
-		if o.Value != nil {
-			m["value"] = o.Value
-		}
+	if nested && o.Value == nil {
 		return
 	}
-	if o.Value != nil || o.Op == "add" || o.Op == "replace" || o.Op == "test" {
+	if nested || o.Value != nil || o.Op == "add" || o.Op == "replace" || o.Op == "test" {
 		m["value"] = o.Value
 	}
 }
@@ -574,16 +571,10 @@ func setNumericFields(m map[string]any, o *internal.Operation, nested bool) {
 
 // setTypeField sets the "type" field based on operation type and nesting.
 func setTypeField(m map[string]any, o *internal.Operation, nested bool) {
-	if nested {
-		if o.Type != nil {
-			m["type"] = o.Type
-		}
-		return
-	}
 	if o.Type == nil {
 		return
 	}
-	if o.Op == "test_type" {
+	if nested || o.Op == "test_type" {
 		m["type"] = o.Type
 		return
 	}

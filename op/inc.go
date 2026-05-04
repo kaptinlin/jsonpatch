@@ -55,9 +55,6 @@ func (ic *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 		if !ok {
 			return internal.OpResult[any]{}, ErrNotNumber
 		}
-	} else {
-		currentValue = nil
-		oldValue = 0
 	}
 	result := oldValue + ic.Inc
 

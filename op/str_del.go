@@ -121,12 +121,12 @@ func (sd *StrDelOperation) ToJSON() (internal.Operation, error) {
 		Op:   string(internal.OpStrDelType),
 		Path: formatPath(sd.Path()),
 		Pos:  sd.Pos,
+		Len:  sd.Len,
 	}
 
 	if sd.HasStr {
 		result.Str = sd.Str
-	} else {
-		result.Len = sd.Len
+		result.Len = 0
 	}
 
 	return result, nil

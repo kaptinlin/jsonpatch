@@ -20,16 +20,13 @@ type MatchesOperation struct {
 // If the pattern is invalid, returns a matcher that always returns false.
 // This aligns with json-joy's createMatcherDefault behavior.
 func createMatcherDefault(pattern string, ignoreCase bool) internal.RegexMatcher {
-	var regexPattern string
+	regexPattern := pattern
 	if ignoreCase {
 		regexPattern = "(?i)" + pattern
-	} else {
-		regexPattern = pattern
 	}
 
 	re, err := regexp.Compile(regexPattern)
 	if err != nil {
-		// Return a matcher that always returns false if compilation fails
 		return func(_ string) bool { return false }
 	}
 
