@@ -35,13 +35,10 @@ func (f *FlipOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	value, err := value(doc, f.Path())
-	var oldValue any
 	if err != nil {
-		// Path doesn't exist: treat as undefined (false), flip to true
 		value = nil
 	}
-	oldValue = value
-
+	oldValue := value
 	flipped := flipValue(value)
 
 	err = setValueAtPath(doc, f.Path(), flipped)

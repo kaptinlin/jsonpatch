@@ -53,13 +53,12 @@ func GetJSONPatchType(value any) JSONPatchType {
 		uint, uint8, uint16, uint32, uint64:
 		return JSONPatchTypeInteger
 	case float32:
-		f := float64(v)
-		if !math.IsNaN(f) && !math.IsInf(f, 0) && math.Trunc(f) == f {
+		if isWholeNumberFloat(float64(v)) {
 			return JSONPatchTypeInteger
 		}
 		return JSONPatchTypeNumber
 	case float64:
-		if !math.IsNaN(v) && !math.IsInf(v, 0) && math.Trunc(v) == v {
+		if isWholeNumberFloat(v) {
 			return JSONPatchTypeInteger
 		}
 		return JSONPatchTypeNumber
@@ -71,4 +70,8 @@ func GetJSONPatchType(value any) JSONPatchType {
 			return JSONPatchTypeNull
 		}
 	}
+}
+
+func isWholeNumberFloat(value float64) bool {
+	return !math.IsNaN(value) && !math.IsInf(value, 0) && math.Trunc(value) == value
 }

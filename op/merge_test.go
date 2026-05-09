@@ -192,3 +192,53 @@ func TestMerge_Constructor(t *testing.T) {
 		assert.Equal(t, internal.OpMergeCode, got, "Code()")
 	}
 }
+
+func TestMerge_SlateNodesApplyProps(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name     string
+		doc      []any
+		props    map[string]any
+		expected []any
+	}{
+		{
+			name: "text nodes",
+			doc: []any{
+				map[string]any{"text": "hello", "bold": true},
+				map[string]any{"text": " world", "italic": true},
+			},
+			props: map[string]any{"mark": "merged"},
+			expected: []any{
+				map[string]any{"text": "hello world", "bold": true, "italic": true, "mark": "merged"},
+			},
+		},
+		{
+			name: "element nodes",
+			doc: []any{
+				map[string]any{"type": "paragraph", "children": []any{map[string]any{"text": "a"}}},
+				map[string]any{"align": "center", "children": []any{map[string]any{"text": "b"}}},
+			},
+			props: map[string]any{"type": "merged"},
+			expected: []any{
+				map[string]any{
+					"type":     "merged",
+					"align":    "center",
+					"children": []any{map[string]any{"text": "a"}, map[string]any{"text": "b"}},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			mergeOp := NewMerge(nil, 1, tt.props)
+
+			result, err := mergeOp.Apply(tt.doc)
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, result.Doc)
+			assert.Equal(t, tt.doc, result.Old)
+		})
+	}
+}

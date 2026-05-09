@@ -212,8 +212,8 @@ func validateOperationPosition(op *Operation) error {
 }
 
 func validateOperationStrDel(op *Operation) error {
-	if op.Pos < 0 {
-		return ErrNegativeNumber
+	if err := validateOperationPosition(op); err != nil {
+		return err
 	}
 	if op.Len < 0 {
 		return ErrNegativeNumber
@@ -233,19 +233,18 @@ func validateOperationTestType(op *Operation) error {
 		return fmt.Errorf("%w: missing required field 'type'", ErrInvalidTypeField)
 	}
 
-	if typeStr, ok := op.Type.(string); ok {
-		if typeStr == "" {
+	switch typeValue := op.Type.(type) {
+	case string:
+		if typeValue == "" {
 			return fmt.Errorf("%w: missing required field 'type'", ErrInvalidTypeField)
 		}
-		return validateTypeName(typeStr)
-	}
-
-	if typeSlice, ok := op.Type.([]any); ok {
-		if len(typeSlice) == 0 {
+		return validateTypeName(typeValue)
+	case []any:
+		if len(typeValue) == 0 {
 			return fmt.Errorf("%w: type array cannot be empty", ErrInvalidTypeField)
 		}
-		for i := range typeSlice {
-			typeStr, isString := typeSlice[i].(string)
+		for i := range typeValue {
+			typeStr, isString := typeValue[i].(string)
 			if !isString {
 				return fmt.Errorf("%w: all types must be strings", ErrInvalidType)
 			}
@@ -254,9 +253,9 @@ func validateOperationTestType(op *Operation) error {
 			}
 		}
 		return nil
+	default:
+		return fmt.Errorf("%w: type field must be string or array of strings", ErrInvalidType)
 	}
-
-	return fmt.Errorf("%w: type field must be string or array of strings", ErrInvalidType)
 }
 
 func requireStringValue(op *Operation) error {

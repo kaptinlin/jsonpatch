@@ -134,22 +134,22 @@ func (mg *MergeOperation) mergeElements(one, two any) any {
 
 	// Slate-like text node merging
 	if isSlateTextNode(one) && isSlateTextNode(two) {
-		merged := mergeSlateTextNodes(one.(map[string]any), two.(map[string]any))
-		// Apply props if specified
-		maps.Copy(merged, mg.Props)
-		return merged
+		return mg.mergeSlateNodes(one, two, mergeSlateTextNodes)
 	}
 
 	// Slate-like element node merging
 	if isSlateElementNode(one) && isSlateElementNode(two) {
-		merged := mergeSlateElementNodes(one.(map[string]any), two.(map[string]any))
-		// Apply props if specified
-		maps.Copy(merged, mg.Props)
-		return merged
+		return mg.mergeSlateNodes(one, two, mergeSlateElementNodes)
 	}
 
 	// Default: return array of both elements
 	return []any{one, two}
+}
+
+func (mg *MergeOperation) mergeSlateNodes(one, two any, merge func(map[string]any, map[string]any) map[string]any) map[string]any {
+	merged := merge(one.(map[string]any), two.(map[string]any))
+	maps.Copy(merged, mg.Props)
+	return merged
 }
 
 // ToJSON serializes the operation to JSON format.
