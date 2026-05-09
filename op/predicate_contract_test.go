@@ -298,6 +298,12 @@ func TestPredicateOperationContracts(t *testing.T) {
 			wantCompact: internal.CompactOperation{internal.OpTypeCode, []string{"age"}, "integer"},
 		},
 		{
+			name:        "matches ignore case",
+			op:          NewMatches([]string{"name"}, `^ada\s+lovelace$`, true, nil),
+			wantJSON:    internal.Operation{Op: "matches", Path: "/name", Value: `^ada\s+lovelace$`, IgnoreCase: true},
+			wantCompact: internal.CompactOperation{internal.OpMatchesCode, []string{"name"}, `^ada\s+lovelace$`, true},
+		},
+		{
 			name:        "test type multiple",
 			op:          NewTestTypeMultiple([]string{"name"}, []string{"string", "null"}),
 			wantJSON:    internal.Operation{Op: "test_type", Path: "/name", Value: []string{"string", "null"}},
@@ -356,6 +362,7 @@ func TestPredicateOperationsReportFailures(t *testing.T) {
 		{name: "in mismatch", op: NewIn([]string{"role"}, []any{"admin"}), wantErr: ErrOperationFailed},
 		{name: "less mismatch", op: NewLess([]string{"score"}, 5), wantErr: ErrComparisonFailed},
 		{name: "more mismatch", op: NewMore([]string{"score"}, 5), wantErr: ErrComparisonFailed},
+		{name: "matches mismatch", op: NewMatches([]string{"name"}, `^Grace$`, false, nil), wantErr: ErrStringMismatch},
 		{name: "type mismatch", op: NewType([]string{"name"}, "number"), wantErr: ErrTypeMismatch},
 		{name: "test_type mismatch", op: NewTestType([]string{"name"}, "number"), wantErr: ErrTypeMismatch},
 	}
@@ -393,6 +400,8 @@ func TestPredicateOperationValidateRejectsInvalidOperands(t *testing.T) {
 		{name: "in empty values", op: NewIn([]string{"role"}, nil), wantErr: ErrValuesArrayEmpty},
 		{name: "less empty path", op: NewLess(nil, 1), wantErr: ErrPathEmpty},
 		{name: "more empty path", op: NewMore(nil, 1), wantErr: ErrPathEmpty},
+		{name: "matches empty path", op: NewMatches(nil, `^Ada$`, false, nil), wantErr: ErrPathEmpty},
+		{name: "matches empty pattern", op: NewMatches([]string{"name"}, "", false, nil), wantErr: ErrPatternEmpty},
 		{name: "type empty path", op: NewType(nil, "string"), wantErr: ErrPathEmpty},
 		{name: "type invalid type", op: NewType([]string{"name"}, "invalid"), wantErr: ErrInvalidType},
 		{name: "test_type empty path", op: NewTestType(nil, "string"), wantErr: ErrPathEmpty},
