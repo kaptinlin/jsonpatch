@@ -138,10 +138,8 @@ func (sp *SplitOperation) splitString(s string) []any {
 		beforeNode := map[string]any{"text": before}
 		afterNode := map[string]any{"text": after}
 
-		for k, v := range propsMap {
-			beforeNode[k] = v
-			afterNode[k] = v
-		}
+		maps.Copy(beforeNode, propsMap)
+		maps.Copy(afterNode, propsMap)
 
 		return []any{beforeNode, afterNode}
 	}
