@@ -36,23 +36,6 @@ func (si *StrInsOperation) Code() int {
 	return internal.OpStrInsCode
 }
 
-// getTargetString extracts and validates the target string from a value
-func (si *StrInsOperation) getTargetString(target any) (string, error) {
-	if target == nil {
-		// Handle undefined/nil case: json-joy throws POS when pos != 0
-		if si.Pos != 0 {
-			return "", ErrInvalidPosition
-		}
-		return "", nil
-	}
-
-	if str, ok := target.(string); ok {
-		return str, nil
-	}
-
-	return "", ErrNotString
-}
-
 // Apply applies the string insert operation.
 func (si *StrInsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	path := si.Path()
@@ -61,9 +44,13 @@ func (si *StrInsOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, err
 	}
 
-	targetStr, err := si.getTargetString(target)
-	if err != nil {
-		return internal.OpResult[any]{}, err
+	targetStr, ok := target.(string)
+	if target == nil {
+		if si.Pos != 0 {
+			return internal.OpResult[any]{}, ErrInvalidPosition
+		}
+	} else if !ok {
+		return internal.OpResult[any]{}, ErrNotString
 	}
 
 	result := si.applyStrIns(targetStr)

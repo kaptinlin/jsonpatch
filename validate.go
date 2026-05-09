@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"slices"
 	"strings"
 
 	"github.com/kaptinlin/jsonpointer"
@@ -150,7 +149,10 @@ func validatePredicateOperation(op *Operation, opStr string, allowMatchesOp bool
 	case "test_string":
 		return validateOperationPosition(op)
 	case "test_string_len":
-		return validateOperationTestStringLen(op)
+		if op.Len < 0 {
+			return ErrNegativeNumber
+		}
+		return nil
 	case "matches":
 		if !allowMatchesOp {
 			return ErrMatchesNotAllowed
@@ -257,13 +259,6 @@ func validateOperationTestType(op *Operation) error {
 	return fmt.Errorf("%w: type field must be string or array of strings", ErrInvalidType)
 }
 
-func validateOperationTestStringLen(op *Operation) error {
-	if op.Len < 0 {
-		return ErrNegativeNumber
-	}
-	return nil
-}
-
 func requireStringValue(op *Operation) error {
 	if _, isString := op.Value.(string); !isString {
 		return ErrExpectedValueToBeString
@@ -293,7 +288,7 @@ func validateOperationType(op *Operation) error {
 	if !isString {
 		return ErrExpectedValueToBeString
 	}
-	if !slices.Contains(validTypes, valueStr) {
+	if !internal.IsValidJSONPatchType(valueStr) {
 		return ErrInvalidType
 	}
 	return nil
@@ -312,12 +307,8 @@ func validateCompositeOperation(op *internal.Operation, allowMatchesOp bool) err
 	return nil
 }
 
-var validTypes = []string{
-	"string", "number", "boolean", "object", "integer", "array", "null",
-}
-
 func validateTypeName(typeStr string) error {
-	if !slices.Contains(validTypes, typeStr) {
+	if !internal.IsValidJSONPatchType(typeStr) {
 		return fmt.Errorf("%w: invalid type '%s'", ErrInvalidType, typeStr)
 	}
 	return nil

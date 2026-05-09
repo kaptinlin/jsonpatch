@@ -51,14 +51,6 @@ func (sd *StrDelOperation) Code() int {
 	return internal.OpStrDelCode
 }
 
-// getTargetString extracts and validates the target string from a value
-func (sd *StrDelOperation) getTargetString(target any) (string, error) {
-	if str, ok := target.(string); ok {
-		return str, nil
-	}
-	return "", ErrNotString
-}
-
 // Apply applies the string delete operation.
 func (sd *StrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
 	path := sd.Path()
@@ -67,9 +59,9 @@ func (sd *StrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, err
 	}
 
-	targetStr, err := sd.getTargetString(target)
-	if err != nil {
-		return internal.OpResult[any]{}, err
+	targetStr, ok := target.(string)
+	if !ok {
+		return internal.OpResult[any]{}, ErrNotString
 	}
 
 	result := sd.applyStrDel(targetStr)

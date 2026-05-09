@@ -39,7 +39,6 @@ func (sp *SplitOperation) Code() int {
 
 // Apply applies the split operation following TypeScript reference.
 func (sp *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
-	// Get the target value
 	var target any
 	var err error
 
@@ -52,16 +51,12 @@ func (sp *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 		}
 	}
 
-	// Split the value following TypeScript logic
 	parts := sp.splitValue(target)
 
-	// Following TypeScript reference behavior
 	if len(sp.Path()) == 0 {
-		// Root level split - return the split result as new document
 		return internal.OpResult[any]{Doc: parts, Old: target}, nil
 	}
 
-	// For array elements, follow TypeScript pattern: replace element and insert new one
 	parent, key, err := navigateToParent(doc, sp.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
@@ -74,10 +69,8 @@ func (sp *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 			newSlice[index] = splitResult[0]
 			newSlice = slices.Insert(newSlice, index+1, splitResult[1])
 
-			// Update parent
 			parentPath := sp.Path()[:len(sp.Path())-1]
 			if len(parentPath) == 0 {
-				// Root array - return new array
 				return internal.OpResult[any]{Doc: newSlice, Old: target}, nil
 			}
 			err = setValueAtPath(doc, parentPath, newSlice)
@@ -86,7 +79,6 @@ func (sp *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 			}
 		}
 	} else {
-		// For objects, replace the value with split result
 		err = setValueAtPath(doc, sp.Path(), parts)
 		if err != nil {
 			return internal.OpResult[any]{}, err
@@ -101,14 +93,12 @@ func (sp *SplitOperation) splitValue(value any) any {
 	case string:
 		return sp.splitString(v)
 	case float64:
-		return sp.splitNumber(v)
+		return []any{sp.Pos, v - sp.Pos}
 	case int:
-		return sp.splitNumber(float64(v))
+		return []any{sp.Pos, float64(v) - sp.Pos}
 	case bool:
-		// For boolean, return a tuple of the same value
 		return []any{v, v}
 	case map[string]any:
-		// Check if it's a Slate-like text node
 		if isSlateTextNode(v) {
 			propsMap, _ := sp.Props.(map[string]any)
 			results := splitSlateTextNode(v, int(sp.Pos), propsMap)
@@ -116,7 +106,6 @@ func (sp *SplitOperation) splitValue(value any) any {
 				return []any{results[0], results[1]}
 			}
 		}
-		// Check if it's a Slate-like element node with children
 		if isSlateElementNode(v) {
 			propsMap, _ := sp.Props.(map[string]any)
 			results := splitSlateElementNode(v, int(sp.Pos), propsMap)
@@ -124,10 +113,8 @@ func (sp *SplitOperation) splitValue(value any) any {
 				return []any{results[0], results[1]}
 			}
 		}
-		// For other objects, return a tuple of the same value
 		return []any{v, v}
 	default:
-		// For unknown types, return a tuple of the same value
 		return []any{value, value}
 	}
 }
@@ -136,12 +123,10 @@ func (sp *SplitOperation) splitString(s string) []any {
 	runes := []rune(s)
 	pos := int(sp.Pos)
 
-	// Handle negative positions (count from end)
 	if pos < 0 {
 		pos = max(len(runes)+pos, 0)
 	}
 
-	// Handle positions beyond string length
 	if pos > len(runes) {
 		pos = len(runes)
 	}
@@ -162,11 +147,6 @@ func (sp *SplitOperation) splitString(s string) []any {
 	}
 
 	return []any{before, after}
-}
-
-// splitNumber splits a number at the specified position (no clamping, matching json-joy behavior)
-func (sp *SplitOperation) splitNumber(n float64) []any {
-	return []any{sp.Pos, n - sp.Pos}
 }
 
 // ToJSON serializes the operation to JSON format.
@@ -191,8 +171,6 @@ func (sp *SplitOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the split operation.
 func (sp *SplitOperation) Validate() error {
-	// Empty path is valid for split operation (root level)
-	// Position bounds are checked in Apply method
 	return nil
 }
 
