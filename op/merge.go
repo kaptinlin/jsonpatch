@@ -191,13 +191,12 @@ func isSlateTextNode(value any) bool {
 
 // isSlateElementNode checks if a value is a Slate.js element node
 func isSlateElementNode(value any) bool {
-	if nodeMap, ok := value.(map[string]any); ok {
-		if children, hasChildren := nodeMap["children"]; hasChildren {
-			_, isArray := children.([]any)
-			return isArray
-		}
+	nodeMap, ok := value.(map[string]any)
+	if !ok {
+		return false
 	}
-	return false
+	_, ok = nodeMap["children"].([]any)
+	return ok
 }
 
 // copyPropsExcluding copies properties from two maps into a new map,
