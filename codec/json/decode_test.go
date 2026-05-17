@@ -67,6 +67,19 @@ func TestDecodeOperationFamilies(t *testing.T) {
 				{Op: "defined", Path: "/profile"},
 			}},
 		},
+		{
+			name: "nested not merges operand path",
+			raw: map[string]any{"op": "and", "path": "/profile", "apply": []any{
+				map[string]any{"op": "not", "path": "/flags", "apply": []any{
+					map[string]any{"op": "contains", "path": "/role", "value": "admin"},
+				}},
+			}},
+			want: internal.Operation{Op: "and", Path: "/profile", Apply: []internal.Operation{
+				{Op: "not", Path: "/profile/flags/role", Apply: []internal.Operation{
+					{Op: "contains", Path: "/profile/flags/role", Value: "admin"},
+				}},
+			}},
+		},
 	}
 
 	for _, tc := range tests {
