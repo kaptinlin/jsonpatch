@@ -2,6 +2,7 @@ package op
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 )
@@ -62,14 +63,10 @@ func (in *InOperation) getValueAndCheckInArray(doc any) (any, bool, error) {
 		return nil, false, ErrPathNotFound
 	}
 
-	// Check if the value is in the specified array
-	for _, v := range in.Value {
-		if deepEqual(val, v) {
-			return val, true, nil
-		}
-	}
-
-	return val, false, nil
+	found := slices.ContainsFunc(in.Value, func(v any) bool {
+		return deepEqual(val, v)
+	})
+	return val, found, nil
 }
 
 // ToJSON serializes the operation to JSON format.

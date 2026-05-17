@@ -354,10 +354,10 @@ func newTestTypeMultiple(path []string, types []string) (internal.Op, error) {
 	if len(types) == 0 {
 		return nil, ErrEmptyTypeList
 	}
-	for _, s := range types {
-		if !internal.IsValidJSONPatchType(s) {
-			return nil, ErrInvalidType
-		}
+	if slices.ContainsFunc(types, func(s string) bool {
+		return !internal.IsValidJSONPatchType(s)
+	}) {
+		return nil, ErrInvalidType
 	}
 	return op.NewTestTypeMultiple(path, types), nil
 }

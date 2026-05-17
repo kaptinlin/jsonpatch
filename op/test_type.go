@@ -210,10 +210,10 @@ func (tt *TestTypeOperation) Validate() error {
 	if len(tt.Types) == 0 {
 		return ErrEmptyTypeList
 	}
-	for _, t := range tt.Types {
-		if !internal.IsValidJSONPatchType(t) {
-			return ErrInvalidType
-		}
+	if slices.ContainsFunc(tt.Types, func(t string) bool {
+		return !internal.IsValidJSONPatchType(t)
+	}) {
+		return ErrInvalidType
 	}
 	return nil
 }
