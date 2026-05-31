@@ -49,6 +49,17 @@ func TestCodecRoundTripPreservesOperationJSON(t *testing.T) {
 		{name: "extend operation", op: op.NewExtend([]string{"profile"}, map[string]any{"name": "Ada", "nested": map[string]any{"ok": true}}, true)},
 		{name: "merge without props", op: op.NewMerge([]string{"nodes", "1"}, 1, nil)},
 		{name: "merge with props", op: op.NewMerge([]string{"nodes", "1"}, 1, map[string]any{"merged": true})},
+		{name: "and predicate", op: op.NewAnd([]string{"profile"}, []any{
+			op.NewDefined([]string{"profile", "name"}),
+			op.NewContains([]string{"profile", "role"}, "admin"),
+		})},
+		{name: "or predicate", op: op.NewOr([]string{"profile"}, []any{
+			op.NewUndefined([]string{"profile", "deleted"}),
+			op.NewContainsWithIgnoreCase([]string{"profile", "role"}, "ADMIN", true),
+		})},
+		{name: "not predicate", op: op.NewNotMultiple([]string{"profile"}, []any{
+			op.NewUndefined([]string{"profile", "deleted"}),
+		})},
 	}
 
 	codec := New()
@@ -291,6 +302,180 @@ func TestCodecEncodeCompositeUsesParentRelativePaths(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, uint32(1), grandchildCount)
 	readBinaryOpHeader(t, reader, 2, internal.OpUndefinedCode, []string{"deleted"})
+}
+
+func TestCodecDecodeCompositePredicates(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		data []byte
+		want internal.Operation
+	}{
+		{
+			name: "and merges relative child paths",
+			data: binaryFixture(t, func(writer *msgp.Writer) {
+				require.NoError(t, writer.WriteArrayHeader(1))
+				writeBinaryHeader(t, writer, 3, internal.OpAndCode, "profile")
+				require.NoError(t, writer.WriteArrayHeader(2))
+				writeBinaryHeader(t, writer, 2, internal.OpDefinedCode, "name")
+				writeBinaryHeader(t, writer, 3, internal.OpContainsCode, "role")
+				require.NoError(t, writer.WriteString("admin"))
+			}),
+			want: internal.Operation{Op: "and", Path: "/profile", Apply: []internal.Operation{
+				{Op: "defined", Path: "/profile/name"},
+				{Op: "contains", Path: "/profile/role", Value: "admin"},
+			}},
+		},
+		{
+			name: "or keeps child path equal to parent unchanged",
+			data: binaryFixture(t, func(writer *msgp.Writer) {
+				require.NoError(t, writer.WriteArrayHeader(1))
+				writeBinaryHeader(t, writer, 3, internal.OpOrCode, "profile")
+				require.NoError(t, writer.WriteArrayHeader(1))
+				writeBinaryHeader(t, writer, 2, internal.OpDefinedCode, "profile")
+			}),
+			want: internal.Operation{Op: "or", Path: "/profile", Apply: []internal.Operation{
+				{Op: "defined", Path: "/profile"},
+			}},
+		},
+		{
+			name: "not uses parent path for empty child path",
+			data: binaryFixture(t, func(writer *msgp.Writer) {
+				require.NoError(t, writer.WriteArrayHeader(1))
+				writeBinaryHeader(t, writer, 3, internal.OpNotCode, "profile")
+				require.NoError(t, writer.WriteArrayHeader(1))
+				writeBinaryHeader(t, writer, 2, internal.OpUndefinedCode)
+			}),
+			want: internal.Operation{Op: "not", Path: "/profile", Apply: []internal.Operation{
+				{Op: "undefined", Path: "/profile"},
+			}},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			decoded, err := New().Decode(tc.data)
+			require.NoError(t, err)
+			require.Len(t, decoded, 1)
+
+			got, err := decoded[0].ToJSON()
+			require.NoError(t, err)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("decoded operation mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestCodecDecodeRejectsInvalidCompositePredicates(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		write   func(t *testing.T, writer *msgp.Writer)
+		wantErr error
+	}{
+		{
+			name: "predicate list is not an array",
+			write: func(t *testing.T, writer *msgp.Writer) {
+				t.Helper()
+				require.NoError(t, writer.WriteArrayHeader(1))
+				writeBinaryHeader(t, writer, 3, internal.OpAndCode, "profile")
+				require.NoError(t, writer.WriteString("not-array"))
+			},
+		},
+		{
+			name: "child operation is malformed",
+			write: func(t *testing.T, writer *msgp.Writer) {
+				t.Helper()
+				require.NoError(t, writer.WriteArrayHeader(1))
+				writeBinaryHeader(t, writer, 3, internal.OpAndCode, "profile")
+				require.NoError(t, writer.WriteArrayHeader(1))
+				require.NoError(t, writer.WriteArrayHeader(3))
+				require.NoError(t, writer.WriteUint8(internal.OpDefinedCode))
+				require.NoError(t, writer.WriteString("name"))
+			},
+		},
+		{
+			name: "child operation is not a predicate",
+			write: func(t *testing.T, writer *msgp.Writer) {
+				t.Helper()
+				require.NoError(t, writer.WriteArrayHeader(1))
+				writeBinaryHeader(t, writer, 3, internal.OpAndCode, "profile")
+				require.NoError(t, writer.WriteArrayHeader(1))
+				writeBinaryHeader(t, writer, 3, internal.OpAddCode, "name")
+				require.NoError(t, writer.WriteString("Ada"))
+			},
+			wantErr: ErrInvalidPredicate,
+		},
+		{
+			name: "not contains more than one predicate",
+			write: func(t *testing.T, writer *msgp.Writer) {
+				t.Helper()
+				require.NoError(t, writer.WriteArrayHeader(1))
+				writeBinaryHeader(t, writer, 3, internal.OpNotCode, "profile")
+				require.NoError(t, writer.WriteArrayHeader(2))
+				writeBinaryHeader(t, writer, 2, internal.OpDefinedCode, "name")
+				writeBinaryHeader(t, writer, 2, internal.OpUndefinedCode, "deleted")
+			},
+			wantErr: ErrNotSinglePredicate,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			decoded, err := New().Decode(binaryFixture(t, func(writer *msgp.Writer) {
+				tc.write(t, writer)
+			}))
+			require.Error(t, err)
+			assert.Nil(t, decoded)
+			if tc.wantErr != nil {
+				assert.ErrorIs(t, err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestCodecEncodeRejectsInvalidCompositePredicates(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		op      internal.Op
+		wantErr error
+	}{
+		{
+			name:    "not with multiple predicates fails validation before encoding",
+			op:      op.NewNotMultiple([]string{"profile"}, []any{op.NewDefined([]string{"profile", "name"}), op.NewUndefined([]string{"profile", "deleted"})}),
+			wantErr: op.ErrInvalidPredicateInNot,
+		},
+		{
+			name:    "and rejects non-predicate child",
+			op:      op.NewAnd([]string{"profile"}, []any{op.NewAdd([]string{"profile", "name"}, "Ada")}),
+			wantErr: op.ErrInvalidPredicateInAnd,
+		},
+		{
+			name:    "or rejects child outside parent path",
+			op:      op.NewOr([]string{"profile"}, []any{op.NewDefined([]string{"settings", "enabled"})}),
+			wantErr: op.ErrPredicatePathOutsideParent,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			data, err := New().Encode([]internal.Op{tc.op})
+			require.Error(t, err)
+			assert.Nil(t, data)
+			assert.ErrorIs(t, err, tc.wantErr)
+		})
+	}
 }
 
 func TestCodecDecodeRejectsMalformedOperations(t *testing.T) {
