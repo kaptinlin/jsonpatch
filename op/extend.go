@@ -73,7 +73,11 @@ func (ex *ExtendOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (ex *ExtendOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpExtendCode, ex.Path(), ex.Properties}, nil
+	compact := internal.CompactOperation{internal.OpExtendCode, ex.Path(), ex.Properties}
+	if ex.DeleteNull {
+		compact = append(compact, true)
+	}
+	return compact, nil
 }
 
 // Validate validates the extend operation.
@@ -88,10 +92,6 @@ func extendObject(obj map[string]any, props map[string]any, deleteNull bool) map
 	result := maps.Clone(obj)
 
 	for k, v := range props {
-		if k == "__proto__" {
-			continue
-		}
-
 		if deleteNull && v == nil {
 			delete(result, k)
 			continue

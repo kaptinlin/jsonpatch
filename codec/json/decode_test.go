@@ -1,8 +1,10 @@
 package json
 
 import (
+	"os"
 	"testing"
 
+	jsonv2 "github.com/go-json-experiment/json"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -37,14 +39,14 @@ func TestDecodeOperationFamilies(t *testing.T) {
 		{name: "undefined", raw: map[string]any{"op": "undefined", "path": "/profile/deleted"}, want: internal.Operation{Op: "undefined", Path: "/profile/deleted"}},
 		{name: "type", raw: map[string]any{"op": "type", "path": "/profile/name", "value": "string"}, want: internal.Operation{Op: "type", Path: "/profile/name", Value: "string"}},
 		{name: "test_type single", raw: map[string]any{"op": "test_type", "path": "/profile/name", "type": "string"}, want: internal.Operation{Op: "test_type", Path: "/profile/name", Type: "string"}},
-		{name: "test_type value fallback", raw: map[string]any{"op": "test_type", "path": "/profile/name", "value": []any{"string", "null"}}, want: internal.Operation{Op: "test_type", Path: "/profile/name", Value: []string{"string", "null"}}},
+		{name: "test_type type list", raw: map[string]any{"op": "test_type", "path": "/profile/name", "type": []any{"string", "null"}}, want: internal.Operation{Op: "test_type", Path: "/profile/name", Type: []string{"string", "null"}}},
 		{name: "test_string", raw: map[string]any{"op": "test_string", "path": "/profile/name", "str": "da", "pos": 1, "not": true, "ignore_case": true}, want: internal.Operation{Op: "test_string", Path: "/profile/name", Str: "da", Pos: 1, Not: true, IgnoreCase: true}},
 		{name: "test_string_len", raw: map[string]any{"op": "test_string_len", "path": "/profile/name", "len": 3, "not": true}, want: internal.Operation{Op: "test_string_len", Path: "/profile/name", Len: 3, Not: true}},
 		{name: "contains", raw: map[string]any{"op": "contains", "path": "/profile/name", "value": "Ad", "ignore_case": true}, want: internal.Operation{Op: "contains", Path: "/profile/name", Value: "Ad", IgnoreCase: true}},
 		{name: "starts", raw: map[string]any{"op": "starts", "path": "/profile/name", "value": "A", "ignore_case": true}, want: internal.Operation{Op: "starts", Path: "/profile/name", Value: "A", IgnoreCase: true}},
 		{name: "ends", raw: map[string]any{"op": "ends", "path": "/profile/name", "value": "a", "ignore_case": true}, want: internal.Operation{Op: "ends", Path: "/profile/name", Value: "a", IgnoreCase: true}},
 		{name: "matches", raw: map[string]any{"op": "matches", "path": "/profile/name", "value": "^ad", "ignore_case": true}, want: internal.Operation{Op: "matches", Path: "/profile/name", Value: "^ad", IgnoreCase: true}},
-		{name: "in wraps scalar", raw: map[string]any{"op": "in", "path": "/role", "value": "admin"}, want: internal.Operation{Op: "in", Path: "/role", Value: []any{"admin"}}},
+		{name: "in", raw: map[string]any{"op": "in", "path": "/role", "value": []any{"admin"}}, want: internal.Operation{Op: "in", Path: "/role", Value: []any{"admin"}}},
 		{name: "less", raw: map[string]any{"op": "less", "path": "/score", "value": 10}, want: internal.Operation{Op: "less", Path: "/score", Value: 10}},
 		{name: "more", raw: map[string]any{"op": "more", "path": "/score", "value": 5}, want: internal.Operation{Op: "more", Path: "/score", Value: 5}},
 		{
@@ -75,7 +77,7 @@ func TestDecodeOperationFamilies(t *testing.T) {
 				}},
 			}},
 			want: internal.Operation{Op: "and", Path: "/profile", Apply: []internal.Operation{
-				{Op: "not", Path: "/profile/flags/role", Apply: []internal.Operation{
+				{Op: "not", Path: "/profile/flags", Apply: []internal.Operation{
 					{Op: "contains", Path: "/profile/flags/role", Value: "admin"},
 				}},
 			}},
@@ -99,6 +101,73 @@ func TestDecodeOperationFamilies(t *testing.T) {
 	}
 }
 
+func TestDecodePresenceGolden(t *testing.T) {
+	t.Parallel()
+
+	fixture := loadPresenceFixture(t)
+	tests := []struct {
+		name    string
+		key     string
+		want    []internal.Operation
+		wantErr error
+	}{
+		{
+			name:    "missing path is rejected even though root path is valid",
+			key:     "missing_path",
+			wantErr: ErrOpMissingPathField,
+		},
+		{
+			name: "root path with null value is decoded as a value",
+			key:  "root_path_null_value",
+			want: []internal.Operation{{Op: "add", Path: "", Value: nil}},
+		},
+		{
+			name:    "missing value is rejected",
+			key:     "missing_value",
+			wantErr: ErrAddOpMissingValue,
+		},
+		{
+			name: "test null value is decoded as a value",
+			key:  "test_null_value",
+			want: []internal.Operation{{Op: "test", Path: "/value", Value: nil}},
+		},
+		{
+			name: "zero numeric and string fields are decoded as values",
+			key:  "zero_values",
+			want: []internal.Operation{
+				{Op: "str_ins", Path: "/text", Pos: 0, Str: ""},
+				{Op: "str_del", Path: "/text", Pos: 0, Len: 0},
+				{Op: "test_string", Path: "/text", Str: "", Pos: 0},
+				{Op: "test_string_len", Path: "/text", Len: 0},
+				{Op: "inc", Path: "/count", Inc: 0},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			raw, ok := fixture[tc.key]
+			require.True(t, ok)
+
+			decoded, err := Decode(raw, PatchOptions{})
+			if tc.wantErr != nil {
+				require.Error(t, err)
+				assert.Nil(t, decoded)
+				assert.ErrorIs(t, err, tc.wantErr)
+				return
+			}
+			require.NoError(t, err)
+
+			got := operationsToJSON(t, decoded)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("decoded presence fixture mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestDecodeRejectsInvalidOperationPayloads(t *testing.T) {
 	t.Parallel()
 
@@ -109,6 +178,7 @@ func TestDecodeRejectsInvalidOperationPayloads(t *testing.T) {
 	}{
 		{name: "missing op", raw: map[string]any{"path": "/x"}, wantErr: ErrOpMissingOpField},
 		{name: "missing path", raw: map[string]any{"op": "add", "value": "x"}, wantErr: ErrOpMissingPathField},
+		{name: "root path is valid when present", raw: map[string]any{"op": "remove", "path": ""}},
 		{name: "invalid pointer", raw: map[string]any{"op": "add", "path": "x", "value": "x"}, wantErr: ErrInvalidPointer},
 		{name: "unknown operation", raw: map[string]any{"op": "unknown", "path": "/x"}, wantErr: ErrCodecOpUnknown},
 		{name: "add missing value", raw: map[string]any{"op": "add", "path": "/x"}, wantErr: ErrAddOpMissingValue},
@@ -124,26 +194,35 @@ func TestDecodeRejectsInvalidOperationPayloads(t *testing.T) {
 		{name: "split missing pos", raw: map[string]any{"op": "split", "path": "/x"}, wantErr: ErrSplitOpMissingPos},
 		{name: "extend props not object", raw: map[string]any{"op": "extend", "path": "/x", "props": "props"}, wantErr: ErrValueNotObject},
 		{name: "test missing value", raw: map[string]any{"op": "test", "path": "/x"}, wantErr: ErrMissingValueField},
+		{name: "test null value", raw: map[string]any{"op": "test", "path": "/x", "value": nil}},
 		{name: "type missing value", raw: map[string]any{"op": "type", "path": "/x"}, wantErr: ErrTypeOpMissingValue},
 		{name: "test_type missing type", raw: map[string]any{"op": "test_type", "path": "/x"}, wantErr: ErrTestTypeOpMissingType},
+		{name: "test_type rejects value field", raw: map[string]any{"op": "test_type", "path": "/x", "value": []any{"string"}}, wantErr: ErrTestTypeOpMissingType},
 		{name: "test_type invalid scalar", raw: map[string]any{"op": "test_type", "path": "/x", "type": "invalid"}, wantErr: ErrInvalidType},
 		{name: "test_type empty array", raw: map[string]any{"op": "test_type", "path": "/x", "type": []any{}}, wantErr: ErrEmptyTypeList},
 		{name: "test_type invalid item", raw: map[string]any{"op": "test_type", "path": "/x", "type": []any{"string", 1}}, wantErr: ErrInvalidType},
 		{name: "test_type empty string array", raw: map[string]any{"op": "test_type", "path": "/x", "type": []string{}}, wantErr: ErrEmptyTypeList},
 		{name: "test_type invalid string array item", raw: map[string]any{"op": "test_type", "path": "/x", "type": []string{"string", "invalid"}}, wantErr: ErrInvalidType},
 		{name: "test_string missing str", raw: map[string]any{"op": "test_string", "path": "/x"}, wantErr: ErrTestStringOpMissingStr},
+		{name: "test_string missing pos", raw: map[string]any{"op": "test_string", "path": "/x", "str": ""}, wantErr: ErrTestStringOpMissingPos},
+		{name: "test_string zero pos", raw: map[string]any{"op": "test_string", "path": "/x", "str": "", "pos": 0}},
 		{name: "test_string_len invalid len", raw: map[string]any{"op": "test_string_len", "path": "/x", "len": struct{}{}}, wantErr: ErrTestStringLenOpMissingLen},
 		{name: "contains missing value", raw: map[string]any{"op": "contains", "path": "/x"}, wantErr: ErrContainsOpMissingValue},
 		{name: "ends missing value", raw: map[string]any{"op": "ends", "path": "/x"}, wantErr: ErrEndsOpMissingValue},
 		{name: "starts missing value", raw: map[string]any{"op": "starts", "path": "/x"}, wantErr: ErrStartsOpMissingValue},
 		{name: "matches missing value", raw: map[string]any{"op": "matches", "path": "/x"}, wantErr: ErrMatchesOpMissingValue},
+		{name: "matches invalid ignore_case", raw: map[string]any{"op": "matches", "path": "/x", "value": "x", "ignore_case": 1}, wantErr: ErrInvalidBooleanField},
+		{name: "in value must be array", raw: map[string]any{"op": "in", "path": "/x", "value": "admin"}, wantErr: ErrInOpValueMustBeArray},
 		{name: "less invalid value", raw: map[string]any{"op": "less", "path": "/x", "value": struct{}{}}, wantErr: ErrLessOpMissingValue},
 		{name: "more invalid value", raw: map[string]any{"op": "more", "path": "/x", "value": struct{}{}}, wantErr: ErrMoreOpMissingValue},
 		{name: "and missing apply", raw: map[string]any{"op": "and", "path": "/x"}, wantErr: ErrAndOpMissingApply},
 		{name: "or missing apply", raw: map[string]any{"op": "or", "path": "/x"}, wantErr: ErrOrOpMissingApply},
 		{name: "not missing apply", raw: map[string]any{"op": "not", "path": "/x"}, wantErr: ErrNotOpMissingApply},
 		{name: "not empty apply", raw: map[string]any{"op": "not", "path": "/x", "apply": []any{}}, wantErr: ErrNotOpRequiresOperand},
-		{name: "nested not invalid operand", raw: map[string]any{"op": "and", "path": "/x", "apply": []any{map[string]any{"op": "not", "path": "/y", "apply": []any{"bad"}}}}, wantErr: ErrNotOpRequiresValidOperand},
+		{name: "not multiple operands", raw: map[string]any{"op": "not", "path": "/x", "apply": []any{map[string]any{"op": "defined", "path": "/a"}, map[string]any{"op": "defined", "path": "/b"}}}, wantErr: ErrNotOpRequiresSingleOperand},
+		{name: "composite rejects non-map operand", raw: map[string]any{"op": "and", "path": "/x", "apply": []any{"bad"}}, wantErr: ErrInvalidPredicateOperand},
+		{name: "composite rejects mutation operand", raw: map[string]any{"op": "and", "path": "/x", "apply": []any{map[string]any{"op": "add", "path": "/y", "value": 1}}}, wantErr: ErrInvalidPredicateOperand},
+		{name: "nested not invalid operand", raw: map[string]any{"op": "and", "path": "/x", "apply": []any{map[string]any{"op": "not", "path": "/y", "apply": []any{"bad"}}}}, wantErr: ErrInvalidPredicateOperand},
 	}
 
 	for _, tc := range tests {
@@ -151,9 +230,52 @@ func TestDecodeRejectsInvalidOperationPayloads(t *testing.T) {
 			t.Parallel()
 
 			decoded, err := Decode([]map[string]any{tc.raw}, PatchOptions{})
+			if tc.wantErr == nil {
+				require.NoError(t, err)
+				require.Len(t, decoded, 1)
+				return
+			}
 			require.Error(t, err)
 			assert.Nil(t, decoded)
 			assert.ErrorIs(t, err, tc.wantErr)
 		})
 	}
+}
+
+func TestDecodeCompositeDoesNotMutateInput(t *testing.T) {
+	t.Parallel()
+
+	child := map[string]any{"op": "defined", "path": "/name"}
+	raw := map[string]any{
+		"op":    "and",
+		"path":  "/profile",
+		"apply": []any{child},
+	}
+
+	_, err := Decode([]map[string]any{raw}, PatchOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, "/name", child["path"])
+}
+
+func loadPresenceFixture(t *testing.T) map[string][]map[string]any {
+	t.Helper()
+
+	data, err := os.ReadFile("testdata/presence.json")
+	require.NoError(t, err)
+
+	var fixture map[string][]map[string]any
+	require.NoError(t, jsonv2.Unmarshal(data, &fixture))
+	return fixture
+}
+
+func operationsToJSON(t *testing.T, ops []internal.Op) []internal.Operation {
+	t.Helper()
+
+	result := make([]internal.Operation, len(ops))
+	for i, decoded := range ops {
+		jsonOp, err := decoded.ToJSON()
+		require.NoError(t, err)
+		result[i] = jsonOp
+	}
+	return result
 }

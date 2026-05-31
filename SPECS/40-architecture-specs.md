@@ -46,6 +46,16 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 >
 > **Rejected**: Pushing document conversion into each operation would duplicate conversion rules across the library. Collapsing codec logic into the root package would make alternative encodings harder to support and test.
 
+## Codec Wire Contract
+
+- Compact and binary codecs use path segment arrays as their only path representation.
+- Compact and binary operation arrays are `[code, path, ...payload]`; `move` and `copy` use `[code, path, from]`.
+- `test_string` uses `[code, path, pos, str, not?]`.
+- Optional boolean fields are emitted only when true: `test.not`, `test_string.not`, `test_string_len.not`, and `ignore_case` for `matches`, `contains`, `starts`, and `ends`. `extend.deleteNull` is likewise omitted when false.
+- Optional structural payloads such as `split.props` and `merge.props` are omitted when absent.
+- Composite predicates encode child predicate paths relative to the containing predicate path. Decoding merges those paths into executable absolute paths.
+- Binary supports the same operation tree as compact, including `and`, `or`, and unary `not`.
+
 ## Dependency Rules
 
 - The root package is the public entry point.
@@ -57,7 +67,7 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 
 - Do not bypass the codec layer when the public input is `[]Operation`; JSON-shaped operations are decoded through `codec/json`.
 - Do not create package cycles between root, `op`, `codec/*`, and `internal`.
-- Do not move technical contracts back into `CLAUDE.md`; keep architectural contracts here.
+- Do not put architectural promises in `CLAUDE.md`; keep CLAUDE operational and record tested architecture here.
 - Do not let format-specific codecs define behavioral semantics that conflict with executable operations.
 
 ## Acceptance Criteria
@@ -66,5 +76,3 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 - [ ] The path from `ApplyPatch` to operation execution is explicit.
 - [ ] Document-shape conversion rules are defined once.
 - [ ] Codec responsibilities stay separate from operation behavior.
-
-**Origin:** `CLAUDE.md` (Architecture), `jsonpatch.go`, `index.go`, `internal/interfaces.go`.

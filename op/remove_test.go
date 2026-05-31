@@ -132,11 +132,8 @@ func TestRemove_EmptyPath(t *testing.T) {
 	doc := map[string]any{"foo": "bar"}
 
 	removeOp := NewRemove([]string{})
-	_, err := removeOp.Apply(doc)
-	if err == nil {
-		assert.Fail(t, "Apply() expected error for empty path")
-	}
-	if !errors.Is(err, ErrPathEmpty) {
-		assert.Equal(t, ErrPathEmpty, err, "Apply() error")
-	}
+	result, err := removeOp.Apply(doc)
+	require.NoError(t, err)
+	assert.Nil(t, result.Doc)
+	assert.Equal(t, doc, result.Old)
 }

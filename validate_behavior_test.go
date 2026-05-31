@@ -20,12 +20,9 @@ func TestValidateOperationRejectsInvalidPayloads(t *testing.T) {
 		wantErr   error
 	}{
 		{name: "invalid pointer", operation: jsonpatch.Operation{Op: "test", Path: "name", Value: "Ada"}, wantErr: jsonpatch.ErrInvalidJSONPointer},
-		{name: "replace missing value", operation: jsonpatch.Operation{Op: "replace", Path: "/name"}, wantErr: jsonpatch.ErrMissingValue},
-		{name: "copy missing from", operation: jsonpatch.Operation{Op: "copy", Path: "/name"}, wantErr: jsonpatch.ErrMissingFrom},
 		{name: "copy invalid from", operation: jsonpatch.Operation{Op: "copy", Path: "/name", From: "name"}, wantErr: jsonpointer.ErrPointerInvalid},
 		{name: "move invalid from", operation: jsonpatch.Operation{Op: "move", Path: "/name", From: "name"}, wantErr: jsonpointer.ErrPointerInvalid},
 		{name: "move into own child", operation: jsonpatch.Operation{Op: "move", Path: "/profile/name", From: "/profile"}, wantErr: jsonpatch.ErrCannotMoveToChildren},
-		{name: "test missing value", operation: jsonpatch.Operation{Op: "test", Path: "/name"}, wantErr: jsonpatch.ErrMissingValue},
 		{name: "str_ins negative position", operation: jsonpatch.Operation{Op: "str_ins", Path: "/name", Pos: -1}, wantErr: jsonpatch.ErrNegativeNumber},
 		{name: "str_del negative position", operation: jsonpatch.Operation{Op: "str_del", Path: "/name", Pos: -1}, wantErr: jsonpatch.ErrNegativeNumber},
 		{name: "str_del negative length", operation: jsonpatch.Operation{Op: "str_del", Path: "/name", Len: -1}, wantErr: jsonpatch.ErrNegativeNumber},
@@ -51,7 +48,9 @@ func TestValidateOperationRejectsInvalidPayloads(t *testing.T) {
 		{name: "type value missing", operation: jsonpatch.Operation{Op: "type", Path: "/name"}, wantErr: jsonpatch.ErrExpectedValueToBeString},
 		{name: "type invalid value", operation: jsonpatch.Operation{Op: "type", Path: "/name", Value: "invalid"}, wantErr: jsonpatch.ErrInvalidType},
 		{name: "and empty apply", operation: jsonpatch.Operation{Op: "and", Path: "/profile"}, wantErr: jsonpatch.ErrEmptyPredicateList},
-		{name: "composite invalid child", operation: jsonpatch.Operation{Op: "or", Path: "/profile", Apply: []jsonpatch.Operation{{Op: "test", Path: "/name"}}}, wantErr: jsonpatch.ErrMissingValue},
+		{name: "not requires one predicate", operation: jsonpatch.Operation{Op: "not", Path: "/profile", Apply: []jsonpatch.Operation{{Op: "defined", Path: "/profile/name"}, {Op: "defined", Path: "/profile/role"}}}, wantErr: jsonpatch.ErrNotRequiresSinglePredicate},
+		{name: "composite rejects mutation child", operation: jsonpatch.Operation{Op: "and", Path: "/profile", Apply: []jsonpatch.Operation{{Op: "add", Path: "/profile/name", Value: "Ada"}}}, wantErr: jsonpatch.ErrInvalidOperation},
+		{name: "composite invalid child", operation: jsonpatch.Operation{Op: "or", Path: "/profile", Apply: []jsonpatch.Operation{{Op: "test", Path: "name", Value: "Ada"}}}, wantErr: jsonpatch.ErrInvalidJSONPointer},
 	}
 
 	for _, tc := range tests {
@@ -73,8 +72,14 @@ func TestValidateOperationAcceptsPredicateFamilies(t *testing.T) {
 		operation jsonpatch.Operation
 		allow     bool
 	}{
+		{name: "root add with null", operation: jsonpatch.Operation{Op: "add", Path: "", Value: nil}},
+		{name: "root replace with null", operation: jsonpatch.Operation{Op: "replace", Path: "", Value: nil}},
+		{name: "root remove", operation: jsonpatch.Operation{Op: "remove", Path: ""}},
+		{name: "root test with null", operation: jsonpatch.Operation{Op: "test", Path: "", Value: nil}},
+		{name: "copy from root", operation: jsonpatch.Operation{Op: "copy", Path: "/backup", From: ""}},
 		{name: "test_type string", operation: jsonpatch.Operation{Op: "test_type", Path: "/name", Type: "string"}},
 		{name: "test_type array", operation: jsonpatch.Operation{Op: "test_type", Path: "/name", Type: []any{"string", "null"}}},
+		{name: "test_type string array", operation: jsonpatch.Operation{Op: "test_type", Path: "/name", Type: []string{"string", "null"}}},
 		{name: "matches allowed", operation: jsonpatch.Operation{Op: "matches", Path: "/name", Value: "^A"}, allow: true},
 		{name: "contains", operation: jsonpatch.Operation{Op: "contains", Path: "/name", Value: "A"}},
 		{name: "ends", operation: jsonpatch.Operation{Op: "ends", Path: "/name", Value: "a"}},

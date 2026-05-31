@@ -108,7 +108,11 @@ func (tl *TestStringLenOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (tl *TestStringLenOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpTestStringLenCode, tl.Path(), tl.Length}, nil
+	compact := internal.CompactOperation{internal.OpTestStringLenCode, tl.Path(), tl.Length}
+	if tl.NotFlag {
+		compact = append(compact, true)
+	}
+	return compact, nil
 }
 
 // Validate validates the test string length operation.

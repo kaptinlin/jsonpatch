@@ -158,8 +158,8 @@ func TestAnd_ToJSON(t *testing.T) {
 
 func TestAnd_ToCompact(t *testing.T) {
 	t.Parallel()
-	test1 := NewTest([]string{"foo"}, "bar")
-	test2 := NewTest([]string{"baz"}, 123)
+	test1 := NewTest([]string{"test", "foo"}, "bar")
+	test2 := NewTest([]string{"test", "baz"}, 123)
 
 	andOp := NewAnd([]string{"test"}, []any{test1, test2})
 
@@ -169,9 +169,12 @@ func TestAnd_ToCompact(t *testing.T) {
 	}
 	assert.Equal(t, internal.OpAndCode, compact[0], "ToCompact()[0]")
 	assert.Equal(t, []string{"test"}, compact[1])
-	if _, ok := compact[2].([]any); !ok {
+	children, ok := compact[2].([]any)
+	if !ok {
 		assert.Fail(t, fmt.Sprintf("ToCompact()[2] type = %T, want []any", compact[2]))
 	}
+	assert.Equal(t, []string{"foo"}, children[0].([]any)[1])
+	assert.Equal(t, []string{"baz"}, children[1].([]any)[1])
 }
 
 func TestAnd_Validate(t *testing.T) {

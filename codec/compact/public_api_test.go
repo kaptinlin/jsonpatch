@@ -18,7 +18,7 @@ func TestPublicEncoderDecoderAPI(t *testing.T) {
 
 	encoded, err := encoder.Encode(op.NewAdd([]string{"items", "0"}, "x"))
 	require.NoError(t, err)
-	assert.Equal(t, Op{"add", "/items/0", "x"}, encoded)
+	assert.Equal(t, Op{"add", []string{"items", "0"}, "x"}, encoded)
 
 	decoded, err := decoder.Decode(encoded)
 	require.NoError(t, err)
@@ -62,17 +62,13 @@ func TestDecodeErrorsAndOptions(t *testing.T) {
 	WithStringOpcode(true)(options)
 	assert.True(t, options.StringOpcode)
 
-	t.Run("test_string defaults missing position to zero", func(t *testing.T) {
+	t.Run("test_string requires position", func(t *testing.T) {
 		t.Parallel()
 
-		decoded, err := Decode([]Op{{CodeTestString, "/name", "Ad"}})
-		require.NoError(t, err)
-		require.Len(t, decoded, 1)
-
-		testString, ok := decoded[0].(*op.TestStringOperation)
-		require.True(t, ok)
-		assert.Equal(t, 0, testString.Pos)
-		assert.Equal(t, "Ad", testString.Str)
+		decoded, err := Decode([]Op{{CodeTestString, []string{"name"}, "Ad"}})
+		require.Error(t, err)
+		assert.Nil(t, decoded)
+		assert.ErrorIs(t, err, ErrTestStringPosNotNumber)
 	})
 
 	_, err := Decode([]Op{{CodeAdd}})

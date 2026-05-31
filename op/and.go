@@ -82,7 +82,7 @@ func (ao *AndOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (ao *AndOperation) ToCompact() (internal.CompactOperation, error) {
-	opsCompact, err := predicateOpsToCompact(ao.Operations, ErrInvalidPredicateInAnd)
+	opsCompact, err := predicateOpsToCompact(ao.Operations, ao.Path(), ErrInvalidPredicateInAnd)
 	if err != nil {
 		return nil, err
 	}

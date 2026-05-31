@@ -18,7 +18,6 @@ type MatchesOperation struct {
 // createMatcherDefault is the default regex matcher factory using Go's regexp package.
 // It creates a RegexMatcher function from a pattern and ignoreCase flag.
 // If the pattern is invalid, returns a matcher that always returns false.
-// This aligns with json-joy's createMatcherDefault behavior.
 func createMatcherDefault(pattern string, ignoreCase bool) internal.RegexMatcher {
 	regexPattern := pattern
 	if ignoreCase {
@@ -35,7 +34,6 @@ func createMatcherDefault(pattern string, ignoreCase bool) internal.RegexMatcher
 
 // NewMatches creates a new matches operation.
 // If createMatcher is nil, uses the default Go regexp implementation.
-// This aligns with json-joy's OpMatches constructor pattern.
 func NewMatches(path []string, pattern string, ignoreCase bool, createMatcher internal.CreateRegexMatcher) *MatchesOperation {
 	if createMatcher == nil {
 		createMatcher = createMatcherDefault
@@ -95,7 +93,11 @@ func (ma *MatchesOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact converts the operation to compact array representation.
 func (ma *MatchesOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpMatchesCode, ma.Path(), ma.Pattern, ma.IgnoreCase}, nil
+	compact := internal.CompactOperation{internal.OpMatchesCode, ma.Path(), ma.Pattern}
+	if ma.IgnoreCase {
+		compact = append(compact, true)
+	}
+	return compact, nil
 }
 
 // Validate validates the matches operation.

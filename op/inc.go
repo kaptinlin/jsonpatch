@@ -43,9 +43,7 @@ func (ic *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, ErrPathNotFound
 	}
 
-	// Get current value. json-joy's find() returns undefined for missing final elements,
-	// then Number(undefined) = NaN. In Go, we treat missing as 0 (practical adaptation
-	// since JSON has no NaN), which creates the field with the inc value.
+	// Missing final targets are treated as 0, creating the field with the incremented value.
 	var currentValue any
 	var oldValue float64
 	if pathExists(doc, ic.path) {

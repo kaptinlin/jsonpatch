@@ -10,11 +10,14 @@ Covered operations: `test`, `contains`, `defined`, `undefined`, `starts`, `ends`
 
 - Direct `not` is supported only by `test`, `test_string`, and `test_string_len`.
 - All other negated predicates must be wrapped in the second-order `not` operation.
-- `and`, `or`, and `not` use `path: ""` and absolute child paths inside `apply`.
+- `and` and `or` accept a non-empty predicate list.
+- `not` accepts exactly one predicate. Multiple negated predicates are expressed with explicit structure such as `not(or(...))`.
+- Child paths inside `apply` are relative to the containing predicate path. Use `path: ""` on the container when children should be root-scoped absolute paths.
+- Compact and binary codecs preserve this model directly: child paths are encoded relative to the parent and decoded into executable absolute paths.
 
-> **Why**: This matches the json-joy predicate model and keeps simple unary negation where it exists while reserving structural composition for second-order predicates.
+> **Why**: This keeps simple unary negation where it exists, makes structural negation unambiguous, and lets composite predicates name a common parent path once.
 >
-> **Rejected**: Allowing direct `not` on every predicate would diverge from the compatibility target. Relative child paths inside `apply` would make nested predicate trees harder to read and reason about.
+> **Rejected**: Allowing direct `not` on every predicate would blur the operation vocabulary. Letting `not` carry an implicit list would hide whether the caller meant `not(and(...))` or `not(or(...))`.
 
 ## Predicate Contracts
 
@@ -24,7 +27,7 @@ Covered operations: `test`, `contains`, `defined`, `undefined`, `starts`, `ends`
 | `defined` | none | Succeeds when the target path exists. |
 | `undefined` | none | Succeeds when the target path does not exist. |
 | `type` | `value` string | Check one JSON type name: `string`, `number`, `boolean`, `object`, `array`, `null`, or `integer`. |
-| `test_type` | `type` string or list | Check one or more JSON type names. The decoder also accepts `value` for compatibility, but `type` is canonical. |
+| `test_type` | `type` string or list | Check one or more JSON type names. |
 | `contains` | `value` string, optional `ignore_case` | Check whether a string or `[]byte` target contains the given substring. |
 | `starts` | `value` string, optional `ignore_case` | Check string or `[]byte` prefix match. |
 | `ends` | `value` string, optional `ignore_case` | Check string or `[]byte` suffix match. |
@@ -41,7 +44,7 @@ Covered operations: `test`, `contains`, `defined`, `undefined`, `starts`, `ends`
 |-----------|---------|----------|
 | `and` | `apply` predicate list | Succeeds only when every child predicate succeeds. |
 | `or` | `apply` predicate list | Succeeds when any child predicate succeeds. |
-| `not` | `apply` predicate list | Negates the child predicate sequence. |
+| `not` | `apply` with one predicate | Negates its single child predicate. |
 
 ## Type Vocabulary
 
@@ -56,16 +59,15 @@ Covered operations: `test`, `contains`, `defined`, `undefined`, `starts`, `ends`
 ## Forbidden
 
 - Do not add a direct `not` field to predicates other than `test`, `test_string`, and `test_string_len`.
-- Do not use relative paths inside `and`, `or`, or `not`; child predicates must carry absolute paths.
+- Do not put mutation operations inside `and`, `or`, or `not`; every child must be a predicate.
+- Do not put multiple direct children inside `not`; wrap them in `and` or `or` first.
 - Do not use `contains` for array membership; use `in`.
 - Do not document `matches` as requiring a custom matcher; the library ships with a default matcher.
 - Do not describe `test_string_len` as exact-length matching; its contract is minimum length (`>= len`).
 
 ## Acceptance Criteria
 
-- [ ] Each predicate operation has one canonical contract.
+- [ ] Each predicate operation has one documented contract.
 - [ ] Negation rules are explicit and non-duplicated.
 - [ ] Composite predicate path rules are documented.
 - [ ] String, numeric, and type predicates describe the actual payload fields they accept.
-
-**Origin:** former docs file `json-predicate.md`.

@@ -78,14 +78,14 @@ func TestValidateOperations(t *testing.T) {
 		t.Parallel()
 		ops := []jsonpatch.Operation{
 			{Op: "add", Path: "/test", Value: 123},
-			{Op: "test", Path: "/test"},
+			{Op: "test", Path: "test", Value: 1},
 		}
 		err := jsonpatch.ValidateOperations(ops, false)
 		if err == nil {
 			require.FailNow(t, "ValidateOperations() error = nil, want error")
 		}
-		if !errors.Is(err, jsonpatch.ErrMissingValue) {
-			assert.Equal(t, jsonpatch.ErrMissingValue, err, "ValidateOperations() error")
+		if !errors.Is(err, jsonpatch.ErrInvalidJSONPointer) {
+			assert.Equal(t, jsonpatch.ErrInvalidJSONPointer, err, "ValidateOperations() error")
 		}
 	})
 

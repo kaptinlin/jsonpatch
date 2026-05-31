@@ -37,7 +37,7 @@ func (sp *SplitOperation) Code() int {
 	return internal.OpSplitCode
 }
 
-// Apply applies the split operation following TypeScript reference.
+// Apply applies the split operation to the document.
 func (sp *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 	var target any
 	var err error
@@ -164,7 +164,11 @@ func (sp *SplitOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (sp *SplitOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpSplitCode, sp.Path(), sp.Pos, sp.Props}, nil
+	compact := internal.CompactOperation{internal.OpSplitCode, sp.Path(), sp.Pos}
+	if sp.Props != nil {
+		compact = append(compact, sp.Props)
+	}
+	return compact, nil
 }
 
 // Validate validates the split operation.

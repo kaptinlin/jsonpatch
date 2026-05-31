@@ -33,7 +33,7 @@ func (a *AddOperation) Code() int {
 
 // Apply applies the add operation.
 // Note: Values are not cloned here; the caller (applyInternalOps) handles
-// document cloning. This matches json-joy's approach of clone-once-at-entry.
+// document cloning once at entry.
 func (a *AddOperation) Apply(doc any) (internal.OpResult[any], error) {
 	// Handle empty path (root replacement) - only for truly empty path, not empty string key
 	if len(a.path) == 0 {
@@ -142,7 +142,7 @@ func (a *AddOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the add operation.
 func (a *AddOperation) Validate() error {
-	// Note: empty path is valid (root replacement) per RFC 6902 and json-joy.
+	// Empty path is valid root replacement.
 	// Value field is not validated here as it can be any value including nil.
 	// The value field presence is validated at the JSON parsing level.
 	return nil

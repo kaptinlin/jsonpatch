@@ -91,7 +91,7 @@ func TestOperationSerializationContracts(t *testing.T) {
 			wantType:    internal.OpMergeType,
 			wantCode:    internal.OpMergeCode,
 			wantJSON:    internal.Operation{Op: "merge", Path: "/nodes/1", Pos: 1, Props: map[string]any{"merged": true}},
-			wantCompact: internal.CompactOperation{internal.OpMergeCode, []string{"nodes", "1"}, map[string]any{"merged": true}},
+			wantCompact: internal.CompactOperation{internal.OpMergeCode, []string{"nodes", "1"}, 1.0, map[string]any{"merged": true}},
 		},
 		{
 			name:        "extend with delete null",
@@ -99,7 +99,7 @@ func TestOperationSerializationContracts(t *testing.T) {
 			wantType:    internal.OpExtendType,
 			wantCode:    internal.OpExtendCode,
 			wantJSON:    internal.Operation{Op: "extend", Path: "/profile", Props: map[string]any{"name": "Ada"}, DeleteNull: true},
-			wantCompact: internal.CompactOperation{internal.OpExtendCode, []string{"profile"}, map[string]any{"name": "Ada"}},
+			wantCompact: internal.CompactOperation{internal.OpExtendCode, []string{"profile"}, map[string]any{"name": "Ada"}, true},
 		},
 	}
 
@@ -259,19 +259,19 @@ func TestPredicateOperationContracts(t *testing.T) {
 			name:        "contains ignore case",
 			op:          NewContainsWithIgnoreCase([]string{"name"}, "lovelace", true),
 			wantJSON:    internal.Operation{Op: "contains", Path: "/name", Value: "lovelace", IgnoreCase: true},
-			wantCompact: internal.CompactOperation{internal.OpContainsCode, []string{"name"}, "lovelace"},
+			wantCompact: internal.CompactOperation{internal.OpContainsCode, []string{"name"}, "lovelace", true},
 		},
 		{
 			name:        "starts ignore case",
 			op:          NewStartsWithIgnoreCase([]string{"name"}, "ada", true),
 			wantJSON:    internal.Operation{Op: "starts", Path: "/name", Value: "ada", IgnoreCase: true},
-			wantCompact: internal.CompactOperation{internal.OpStartsCode, []string{"name"}, "ada"},
+			wantCompact: internal.CompactOperation{internal.OpStartsCode, []string{"name"}, "ada", true},
 		},
 		{
 			name:        "ends ignore case",
 			op:          NewEndsWithIgnoreCase([]string{"name"}, "LOVELACE", true),
 			wantJSON:    internal.Operation{Op: "ends", Path: "/name", Value: "LOVELACE", IgnoreCase: true},
-			wantCompact: internal.CompactOperation{internal.OpEndsCode, []string{"name"}, "LOVELACE"},
+			wantCompact: internal.CompactOperation{internal.OpEndsCode, []string{"name"}, "LOVELACE", true},
 		},
 		{
 			name:        "in",
@@ -306,7 +306,7 @@ func TestPredicateOperationContracts(t *testing.T) {
 		{
 			name:        "test type multiple",
 			op:          NewTestTypeMultiple([]string{"name"}, []string{"string", "null"}),
-			wantJSON:    internal.Operation{Op: "test_type", Path: "/name", Value: []string{"string", "null"}},
+			wantJSON:    internal.Operation{Op: "test_type", Path: "/name", Type: []string{"string", "null"}},
 			wantCompact: internal.CompactOperation{internal.OpTestTypeCode, []string{"name"}, []string{"string", "null"}},
 		},
 	}

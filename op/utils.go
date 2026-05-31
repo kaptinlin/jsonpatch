@@ -509,7 +509,7 @@ func predicateOpsToJSON(operations []any, errInvalid error) ([]internal.Operatio
 
 // predicateOpsToCompact converts a slice of predicate operations to compact format.
 // Used by composite predicates (And, Or, Not) to serialize their sub-operations.
-func predicateOpsToCompact(operations []any, errInvalid error) ([]any, error) {
+func predicateOpsToCompact(operations []any, base []string, errInvalid error) ([]any, error) {
 	result := make([]any, 0, len(operations))
 	for _, op := range operations {
 		predicateOp, ok := op.(internal.PredicateOp)
@@ -520,9 +520,24 @@ func predicateOpsToCompact(operations []any, errInvalid error) ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		relative, err := relativePredicatePath(base, predicateOp.Path())
+		if err != nil {
+			return nil, err
+		}
+		compact[1] = relative
 		result = append(result, compact)
 	}
 	return result, nil
+}
+
+func relativePredicatePath(base, path []string) ([]string, error) {
+	if len(base) == 0 {
+		return slices.Clone(path), nil
+	}
+	if len(path) < len(base) || !slices.Equal(path[:len(base)], base) {
+		return nil, ErrPredicatePathOutsideParent
+	}
+	return slices.Clone(path[len(base):]), nil
 }
 
 // validatePredicateOps validates a slice of predicate operations.

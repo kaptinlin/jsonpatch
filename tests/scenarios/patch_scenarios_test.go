@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/kaptinlin/jsonpatch"
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
 	"github.com/kaptinlin/jsonpatch/tests/data"
 )
 
@@ -59,6 +60,9 @@ func TestAutomated(t *testing.T) {
 				case test.Error != "":
 					t.Run(testName, func(t *testing.T) {
 						t.Parallel()
+						if _, err := jsoncodec.Decode(test.RawPatch, jsoncodec.PatchOptions{}); err != nil {
+							return
+						}
 						// First validate operations
 						validationFailed := false
 						for _, op := range test.Patch {
@@ -95,6 +99,7 @@ type AutomatedTestSuite struct {
 type AutomatedTestCase struct {
 	Comment  string
 	Doc      any
+	RawPatch []map[string]any
 	Patch    []jsonpatch.Operation
 	Expected any
 	Error    string
@@ -107,6 +112,7 @@ func convertSpecTestCases(specCases []data.TestCase) []AutomatedTestCase {
 		result[i] = AutomatedTestCase{
 			Comment:  tc.Comment,
 			Doc:      tc.Doc,
+			RawPatch: tc.Patch,
 			Patch:    convertPatch(tc.Patch),
 			Expected: tc.Expected,
 			Error:    tc.Error,
@@ -122,6 +128,7 @@ func convertTestCases(testCases []data.TestCase) []AutomatedTestCase {
 		result[i] = AutomatedTestCase{
 			Comment:  tc.Comment,
 			Doc:      tc.Doc,
+			RawPatch: tc.Patch,
 			Patch:    convertPatch(tc.Patch),
 			Expected: tc.Expected,
 			Error:    tc.Error,

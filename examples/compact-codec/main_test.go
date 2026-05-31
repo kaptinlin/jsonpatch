@@ -13,7 +13,7 @@ import (
 func TestMainShowsExpectedOutput(t *testing.T) {
 	// This test redirects process-wide stdout.
 	output := captureOutput(t, main)
-	assertOutputContains(t, output, "All operations perfectly decoded")
+	assertOutputContains(t, output, "All operations decoded successfully")
 	assertOutputContains(t, output, "encoded, err := compact.Encode(operations)")
 }
 
@@ -21,7 +21,7 @@ func TestRoundTripMessageReportsDecodedOperationMismatch(t *testing.T) {
 	t.Parallel()
 
 	ops := []internal.Op{op.NewAdd([]string{"user", "name"}, "Grace")}
-	if got, want := roundTripMessage(ops, ops), "✅ All operations perfectly decoded!"; got != want {
+	if got, want := roundTripMessage(ops, ops), "All operations decoded successfully"; got != want {
 		t.Fatalf("roundTripMessage() = %q, want %q", got, want)
 	}
 
@@ -38,7 +38,7 @@ func TestRoundTripMessageReportsDecodedOperationMismatch(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got, want := roundTripMessage(ops, tc.decoded), "❌ Some operations failed to decode correctly"; got != want {
+			if got, want := roundTripMessage(ops, tc.decoded), "Some operations failed to decode correctly"; got != want {
 				t.Fatalf("roundTripMessage() = %q, want %q", got, want)
 			}
 		})

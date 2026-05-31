@@ -1,7 +1,7 @@
 // Package tests provides test data and automated codec tests for the JSON codec.
 package tests
 
-// SampleOperations contains all the test operations from TypeScript version
+// SampleOperations contains JSON-shaped operations used by codec round-trip tests.
 var SampleOperations = map[string]map[string]any{
 	// JSON Patch core operations
 	"add1": {
@@ -371,18 +371,30 @@ var SampleOperations = map[string]map[string]any{
 		"op":   "not",
 		"path": "/",
 		"apply": []any{
-			map[string]any{"op": "less", "path": "", "value": 0},
-			map[string]any{"op": "more", "path": "", "value": 1},
-			map[string]any{"op": "in", "path": "/", "value": []any{"asdf"}},
+			map[string]any{
+				"op":   "or",
+				"path": "",
+				"apply": []any{
+					map[string]any{"op": "less", "path": "", "value": 0},
+					map[string]any{"op": "more", "path": "", "value": 1},
+					map[string]any{"op": "in", "path": "/", "value": []any{"asdf"}},
+				},
+			},
 		},
 	},
 	"not2": {
 		"op":   "not",
 		"path": "/a/1/.",
 		"apply": []any{
-			map[string]any{"op": "test", "path": "", "value": nil},
-			map[string]any{"op": "test", "path": "/ha/hi", "value": map[string]any{"foo": "bar"}},
-			map[string]any{"op": "test", "path": "/ha/1/2", "value": []any{1, map[string]any{"a": false}, "null"}},
+			map[string]any{
+				"op":   "or",
+				"path": "",
+				"apply": []any{
+					map[string]any{"op": "test", "path": "", "value": nil},
+					map[string]any{"op": "test", "path": "/ha/hi", "value": map[string]any{"foo": "bar"}},
+					map[string]any{"op": "test", "path": "/ha/1/2", "value": []any{1, map[string]any{"a": false}, "null"}},
+				},
+			},
 		},
 	},
 

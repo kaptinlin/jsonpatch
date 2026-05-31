@@ -85,7 +85,7 @@ var (
 	ErrLengthNegative = errors.New("length cannot be negative")
 	// ErrInvalidLength reports that a length is not an integer.
 	ErrInvalidLength = errors.New("length must be an integer")
-	// ErrTypeMismatch reports that two values have incompatible JSON types.
+	// ErrTypeMismatch reports that two values have mismatched JSON types.
 	ErrTypeMismatch = errors.New("type mismatch")
 	// ErrContainsMismatch reports that a contains predicate failed.
 	ErrContainsMismatch = errors.New("contains check failed")
@@ -95,6 +95,8 @@ var (
 	ErrInvalidPredicateInNot = errors.New("invalid predicate in not operation")
 	// ErrInvalidPredicateInOr reports that or received a non-predicate operand.
 	ErrInvalidPredicateInOr = errors.New("invalid predicate in or operation")
+	// ErrPredicatePathOutsideParent reports that a compact child predicate cannot be represented relative to its parent.
+	ErrPredicatePathOutsideParent = errors.New("predicate path is outside parent path")
 	// ErrNotNoOperands reports that not received no operands.
 	ErrNotNoOperands = errors.New("not operation requires operands")
 	// ErrCannotModifyRootArray reports that the root array cannot be edited in place.

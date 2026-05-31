@@ -37,9 +37,8 @@ func (mg *MergeOperation) Code() int {
 	return internal.OpMergeCode
 }
 
-// Apply applies the merge operation following TypeScript reference.
+// Apply applies the merge operation to the document.
 func (mg *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
-	// TypeScript reference: merge works on arrays directly using pos parameter
 	var targetArray []any
 
 	if len(mg.Path()) == 0 {
@@ -63,7 +62,6 @@ func (mg *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	pos := int(mg.Pos)
-	// TypeScript: if (ref.key <= 0) throw new Error('INVALID_KEY');
 	if pos <= 0 {
 		return internal.OpResult[any]{}, ErrInvalidIndex
 	}
@@ -167,7 +165,11 @@ func (mg *MergeOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (mg *MergeOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpMergeCode, mg.Path(), mg.Props}, nil
+	compact := internal.CompactOperation{internal.OpMergeCode, mg.Path(), mg.Pos}
+	if mg.Props != nil {
+		compact = append(compact, mg.Props)
+	}
+	return compact, nil
 }
 
 // Validate validates the merge operation.

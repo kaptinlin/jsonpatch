@@ -31,8 +31,6 @@ func (tp *TypeOperation) Code() int {
 }
 
 // Test evaluates the type predicate condition.
-// Matches json-joy behavior: uses typeof semantics, with special case
-// only when expected type is "integer" and value is a whole number.
 func (tp *TypeOperation) Test(doc any) (bool, error) {
 	val, err := value(doc, tp.Path())
 	if err != nil {
@@ -44,7 +42,6 @@ func (tp *TypeOperation) Test(doc any) (bool, error) {
 	if actualType == tp.TypeValue {
 		return true, nil
 	}
-	// Special case: "integer" matches whole numbers (json-joy behavior)
 	if tp.TypeValue == "integer" && isWholeNumber(val) {
 		return true, nil
 	}

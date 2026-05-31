@@ -1,175 +1,75 @@
 # JSON Codec for JSON Patch Operations
 
-The `json` codec implements the standard JSON encoding/decoding for JSON Patch operations as defined in [RFC 6902](https://datatracker.ietf.org/doc/html/rfc6902), with full support for extended operations and JSON Predicate.
+The `json` codec converts object-shaped JSON Patch operations to executable operations and back.
 
-**🎯 Key Features**: 100% json-joy compatibility, modern struct-based API, high-performance JSON v2 integration.
+Use this package when you need direct control over JSON operation decoding or encoding. Most callers should use `jsonpatch.ApplyPatch`, which uses this codec internally.
 
-Operations use clean struct literals, for example:
+## Wire Shape
 
-```go
-// New struct-based API ✅
-{Op: "add", Path: "/foo/bar", Value: 123}
+JSON operations use JSON Pointer strings at the JSON boundary:
 
-// JSON representation
-{"op": "add", "path": "/foo/bar", "value": 123}
+```json
+{"op": "add", "path": "/profile/name", "value": "Ada"}
 ```
 
-## Features
-
-- **Complete json-joy compatibility** - 100% functional compatibility with TypeScript implementation
-- **All 47 operation types supported** - JSON Patch (RFC6902) + JSON Predicate + JSON Patch Extended  
-- **High-performance optimizations** - Uses JSON v2 for better type preservation and performance
-- **Zero-allocation hot paths** - Optimized for common operation patterns
-- **Comprehensive TypeScript documentation** - Every function includes original TypeScript code references
+Raw JSON/map decoding owns field-presence checks. Missing required fields are rejected, while present `null`, `0`, and empty-string values remain real payload values.
 
 ## Usage
 
-### Basic Usage with Struct API
-
 ```go
+package main
+
 import (
-    "github.com/kaptinlin/jsonpatch"
-    "github.com/kaptinlin/jsonpatch/codec/json"
+    "fmt"
+    "log"
+
+    jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
 )
 
-// Create operations using clean struct syntax
-operations := []jsonpatch.Operation{
-    {Op: "test", Path: "/foo", Value: "bar"},
-    {Op: "replace", Path: "/foo", Value: "baz"},
-    {Op: "inc", Path: "/counter", Inc: 5},
-    {Op: "str_ins", Path: "/text", Pos: 0, Str: "Hello "},
-}
+func main() {
+    raw := []map[string]any{
+        {"op": "test", "path": "/name", "value": "Ada"},
+        {"op": "replace", "path": "/name", "value": "Grace"},
+    }
 
-// Apply directly using main API (recommended)
-result, err := jsonpatch.ApplyPatch(doc, operations)
-if err != nil {
-    // handle error
-}
+    ops, err := jsoncodec.Decode(raw, jsoncodec.PatchOptions{})
+    if err != nil {
+        log.Fatal(err)
+    }
 
-// Advanced: Use codec directly for custom workflows
-decoder := json.NewDecoder(json.Options{
-    CreateMatcher: func(pattern string, ignoreCase bool) func(string) bool {
-        // Custom regex implementation for security
-        return customRegexMatcher(pattern, ignoreCase)
-    },
-})
+    encoded, err := jsoncodec.EncodeJSON(ops)
+    if err != nil {
+        log.Fatal(err)
+    }
 
-// Convert struct operations to Op instances  
-ops, err := json.DecodeOperations(operations, decoder.Options())
-if err != nil {
-    // handle error
-}
-
-// Encode Op instances back to JSON
-encoded, err := json.EncodeJSON(ops)
-if err != nil {
-    // handle error
+    fmt.Println(len(encoded) > 0)
 }
 ```
 
-### Using Decoder and Encoder Classes
+## API
 
 ```go
-import (
-    "github.com/kaptinlin/jsonpatch/codec/json"
-)
+func Decode(operations []map[string]any, opts PatchOptions) ([]jsonpatch.Op, error)
+func DecodeOperations(operations []jsonpatch.Operation, opts PatchOptions) ([]jsonpatch.Op, error)
+func DecodeJSON(data []byte, opts PatchOptions) ([]jsonpatch.Op, error)
 
-// Using Decoder (matches TypeScript Decoder class)
-options := json.JsonPatchOptions{}
-decoder := json.NewDecoder(options)
-ops, err := decoder.Decode(patch)
-if err != nil {
-    // handle error
-}
-
-// Using Encoder (matches TypeScript Encoder class)
-encoder := json.NewEncoder()
-operations, err := encoder.Encode(ops)
-if err != nil {
-    // handle error
-}
-
-// Encode to JSON bytes
-jsonBytes, err := encoder.EncodeJSON(ops)
-if err != nil {
-    // handle error
-}
+func Encode(ops []jsonpatch.Op) ([]jsonpatch.Operation, error)
+func EncodeJSON(ops []jsonpatch.Op) ([]byte, error)
 ```
 
-## Supported Operations
+`PatchOptions` configures JSON decoding. Its main use is providing the matcher factory for `matches` predicates.
 
-This codec supports all JSON Patch+ operations with complete TypeScript compatibility:
+## Operation Families
 
-### Core JSON Patch (RFC 6902)
+The JSON codec decodes the same operation language used by the root package:
 
-- `add` - Add a value to the document
-- `remove` - Remove a value from the document  
-- `replace` - Replace a value in the document
-- `move` - Move a value within the document
-- `copy` - Copy a value within the document
-- `test` - Test that a value is as expected
+- RFC 6902 operations: `add`, `remove`, `replace`, `move`, `copy`, `test`
+- Predicate operations: `defined`, `undefined`, `contains`, `starts`, `ends`, `matches`, `type`, `test_type`, `test_string`, `test_string_len`, `in`, `less`, `more`
+- Composite predicates: `and`, `or`, unary `not`
+- Extended operations: `flip`, `inc`, `str_ins`, `str_del`, `split`, `merge`, `extend`
 
-### JSON Predicate Operations
+Composite predicate child paths are decoded relative to the containing predicate path. Use `path: ""` on the containing predicate when children should be root-scoped.
 
-- `defined` - Test if path exists in document
-- `undefined` - Test if path does not exist in document
-- `contains` - Test if string contains substring
-- `starts` - Test if string starts with prefix
-- `ends` - Test if string ends with suffix
-- `matches` - Test if string matches regex pattern (requires CreateMatcher)
-- `type` - Test value type (string, number, boolean, object, integer, array, null)
-- `in` - Test if value is in array
-- `less` - Test if number is less than value
-- `more` - Test if number is greater than value
-- `and` - Logical AND of multiple predicates
-- `or` - Logical OR of multiple predicates
-- `not` - Logical NOT of multiple predicates
+## Testing Contract
 
-### Extended Operations
-
-- `str_ins` - Insert string at position
-- `str_del` - Delete string at position  
-- `flip` - Flip boolean value
-- `inc` - Increment number value
-- `split` - Split object at specified position
-- `merge` - Merge objects
-- `extend` - Extend object with properties
-
-### Additional Test Operations
-
-- `test_type` - Test value type with array support
-- `test_string` - Test string at specific position
-- `test_string_len` - Test string length
-
-## TypeScript Compatibility
-
-This implementation maintains 100% compatibility with the json-joy TypeScript implementation:
-
-- **Identical operation semantics** - All operations behave exactly like TypeScript
-- **Compatible error handling** - Error types and messages match TypeScript
-- **Same JSON format** - Generated JSON is identical to TypeScript output
-- **Matching API design** - Function signatures mirror TypeScript interfaces
-
-## Performance Optimizations
-
-- **JSON v2 integration** - Uses `github.com/go-json-experiment/json` for better type preservation
-- **Pre-allocated slices** - Avoids memory reallocations in hot paths
-- **Zero-allocation type checking** - Fast operation type detection
-- **Optimized path handling** - Uses `github.com/kaptinlin/jsonpointer` for efficient JSON Pointer operations
-- **Bulk operation processing** - Efficient handling of operation arrays
-
-## Architecture
-
-The codec follows the layered architecture pattern from rules.md:
-
-```text
-codec/json/
-├── types.go      # Core type definitions and helpers
-├── decode.go     # JSON to Op conversion (matches decode.ts)  
-├── encode.go     # Op to JSON conversion (matches encode.ts)
-├── decoder.go    # Decoder class (matches Decoder.ts)
-├── encoder.go    # Encoder class (matches Encoder.ts)
-└── index.go      # Package exports (matches index.ts)
-```
-
-Every function includes complete TypeScript original code references for maintainability and compatibility verification.
+The codec has fixture coverage for field presence: missing required fields, present `null`, root path, zero numeric fields, and empty strings.

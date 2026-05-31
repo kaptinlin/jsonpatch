@@ -1,8 +1,8 @@
 // Package jsonpatch applies JSON Patch, predicate, and extended operations to Go values.
 //
-// It implements RFC 6902 JSON Patch together with the predicate and extended
-// operations used by json-joy while preserving the input document type across
-// ApplyPatch, ApplyOp, and ApplyOps.
+// It implements RFC 6902 JSON Patch together with predicate and extended
+// operations while preserving the input document type across ApplyPatch,
+// ApplyOp, and ApplyOps.
 //
 // See https://www.rfc-editor.org/rfc/rfc6902
 // See https://www.ietf.org/archive/id/draft-snell-json-test-01.txt
@@ -16,6 +16,7 @@ import (
 	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/deepclone"
+	"github.com/kaptinlin/jsonpointer"
 
 	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
 	"github.com/kaptinlin/jsonpatch/internal"
@@ -59,6 +60,8 @@ func convertOpResults[T internal.Document](resultOps []internal.OpResult[any], r
 	return converted
 }
 
+type applyFunc func(any, *internal.Options) (any, []internal.OpResult[any], error)
+
 // ApplyPatch applies patch to doc and returns the patched document with
 // per-operation results.
 //
@@ -67,46 +70,48 @@ func convertOpResults[T internal.Document](resultOps []internal.OpResult[any], r
 // works on a clone.
 func ApplyPatch[T internal.Document](doc T, patch []internal.Operation, opts ...internal.Option) (*internal.PatchResult[T], error) {
 	options := buildOptions(opts)
-	return dispatchByDocumentType(doc, patch, options)
+	return applyByDocumentType(doc, options, func(document any, options *internal.Options) (any, []internal.OpResult[any], error) {
+		return applyInternalPatch(document, patch, options)
+	})
 }
 
-func dispatchByDocumentType[T internal.Document](doc T, patch []internal.Operation, options *internal.Options) (*internal.PatchResult[T], error) {
+func applyByDocumentType[T internal.Document](doc T, options *internal.Options, apply applyFunc) (*internal.PatchResult[T], error) {
 	switch any(doc).(type) {
 	case []byte:
-		return handleJSONBytes(doc, patch, options)
+		return applyJSONBytes(doc, options, apply)
 	case string:
-		return handleJSONString(doc, patch, options)
+		return applyJSONString(doc, options, apply)
 	case map[string]any:
-		return handleMapDocument(doc, patch, options)
+		return applyMapDocument(doc, options, apply)
 	case nil:
-		return handleStructDocument(doc, patch, options)
+		return applyStructDocument(doc, options, apply)
 	case bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
-		return handlePrimitiveDocument(doc, patch, options)
+		return applyPrimitiveDocument(doc, options, apply)
 	case []any:
-		return handlePrimitiveDocument(doc, patch, options)
+		return applyPrimitiveDocument(doc, options, apply)
 	default:
-		return dispatchByReflection(doc, patch, options)
+		return applyByReflection(doc, options, apply)
 	}
 }
 
-func dispatchByReflection[T internal.Document](doc T, patch []internal.Operation, options *internal.Options) (*internal.PatchResult[T], error) {
+func applyByReflection[T internal.Document](doc T, options *internal.Options, apply applyFunc) (*internal.PatchResult[T], error) {
 	docValue := reflect.ValueOf(any(doc))
 
 	if !docValue.IsValid() || (docValue.Kind() == reflect.Pointer && docValue.IsNil()) {
-		return handleStructDocument(doc, patch, options)
+		return applyStructDocument(doc, options, apply)
 	}
 
 	switch docValue.Type().Kind() {
 	case reflect.Slice, reflect.Interface:
-		return handlePrimitiveDocument(doc, patch, options)
+		return applyPrimitiveDocument(doc, options, apply)
 	default:
-		return handleStructDocument(doc, patch, options)
+		return applyStructDocument(doc, options, apply)
 	}
 }
 
-// handleJSONBytes processes []byte documents containing JSON data.
+// applyJSONBytes processes []byte documents containing JSON data.
 // The bytes are parsed, patched, and re-encoded to maintain format consistency.
-func handleJSONBytes[T internal.Document](doc T, patch []internal.Operation, options *internal.Options) (*internal.PatchResult[T], error) {
+func applyJSONBytes[T internal.Document](doc T, options *internal.Options, apply applyFunc) (*internal.PatchResult[T], error) {
 	docBytes, ok := any(doc).([]byte)
 	if !ok {
 		return nil, fmt.Errorf("%w: expected []byte, got %T", ErrInvalidDocumentType, doc)
@@ -117,7 +122,7 @@ func handleJSONBytes[T internal.Document](doc T, patch []internal.Operation, opt
 		return nil, fmt.Errorf("failed to parse JSON bytes: %w", err)
 	}
 
-	resultDoc, resultOps, err := applyInternalPatch(parsedDoc, patch, options)
+	resultDoc, resultOps, err := apply(parsedDoc, options)
 	if err != nil {
 		return nil, err
 	}
@@ -138,9 +143,9 @@ func handleJSONBytes[T internal.Document](doc T, patch []internal.Operation, opt
 	}, nil
 }
 
-// handleJSONString processes JSON string documents.
+// applyJSONString processes JSON string documents.
 // Handles both JSON-encoded strings (starting with { or [) and plain string values.
-func handleJSONString[T internal.Document](doc T, patch []internal.Operation, options *internal.Options) (*internal.PatchResult[T], error) {
+func applyJSONString[T internal.Document](doc T, options *internal.Options, apply applyFunc) (*internal.PatchResult[T], error) {
 	docStr, ok := any(doc).(string)
 	if !ok {
 		return nil, fmt.Errorf("%w: expected string, got %T", ErrInvalidDocumentType, doc)
@@ -148,7 +153,7 @@ func handleJSONString[T internal.Document](doc T, patch []internal.Operation, op
 
 	parsedDoc, originalWasJSON := parseStringDocument(docStr)
 
-	resultDoc, resultOps, err := applyInternalPatch(parsedDoc, patch, options)
+	resultDoc, resultOps, err := apply(parsedDoc, options)
 	if err != nil {
 		return nil, err
 	}
@@ -226,10 +231,10 @@ func marshalToStringType[T internal.Document](resultDoc any, doc T) (T, error) {
 	return zeroT, fmt.Errorf("%w: failed to convert result back to type %T", ErrConversionFailed, doc)
 }
 
-// handlePrimitiveDocument processes primitive type documents (bool, numbers, []any)
+// applyPrimitiveDocument processes primitive type documents (bool, numbers, []any)
 // directly without JSON serialization.
-func handlePrimitiveDocument[T internal.Document](doc T, patch []internal.Operation, options *internal.Options) (*internal.PatchResult[T], error) {
-	resultDoc, resultOps, err := applyInternalPatch(any(doc), patch, options)
+func applyPrimitiveDocument[T internal.Document](doc T, options *internal.Options, apply applyFunc) (*internal.PatchResult[T], error) {
+	resultDoc, resultOps, err := apply(any(doc), options)
 	if err != nil {
 		return nil, err
 	}
@@ -245,15 +250,15 @@ func handlePrimitiveDocument[T internal.Document](doc T, patch []internal.Operat
 	}, nil
 }
 
-// handleMapDocument processes map[string]any documents directly.
+// applyMapDocument processes map[string]any documents directly.
 // This is the most efficient path as no marshaling/unmarshaling is needed.
-func handleMapDocument[T internal.Document](doc T, patch []internal.Operation, options *internal.Options) (*internal.PatchResult[T], error) {
+func applyMapDocument[T internal.Document](doc T, options *internal.Options, apply applyFunc) (*internal.PatchResult[T], error) {
 	docMap, ok := any(doc).(map[string]any)
 	if !ok {
 		return nil, fmt.Errorf("%w: expected map[string]any, got %T", ErrInvalidDocumentType, doc)
 	}
 
-	resultDoc, resultOps, err := applyInternalPatch(docMap, patch, options)
+	resultDoc, resultOps, err := apply(docMap, options)
 	if err != nil {
 		return nil, err
 	}
@@ -296,9 +301,9 @@ func convertNullableResult[T internal.Document](resultDoc any, doc T) (T, error)
 	return zeroT, fmt.Errorf("%w: operation resulted in null value, but target type %T cannot be null", ErrConversionFailed, doc)
 }
 
-// handleStructDocument processes struct documents and other complex types.
+// applyStructDocument processes struct documents and other complex types.
 // Uses JSON marshaling for type-safe conversion that respects struct tags.
-func handleStructDocument[T internal.Document](doc T, patch []internal.Operation, options *internal.Options) (*internal.PatchResult[T], error) {
+func applyStructDocument[T internal.Document](doc T, options *internal.Options, apply applyFunc) (*internal.PatchResult[T], error) {
 	// Marshal struct to JSON, then unmarshal to any for processing.
 	// This ensures proper handling of json tags and embedded fields.
 	data, err := json.Marshal(doc)
@@ -311,7 +316,7 @@ func handleStructDocument[T internal.Document](doc T, patch []internal.Operation
 		return nil, fmt.Errorf("failed to unmarshal JSON to any: %w", err)
 	}
 
-	resultDoc, resultOps, err := applyInternalPatch(parsedDoc, patch, options)
+	resultDoc, resultOps, err := apply(parsedDoc, options)
 	if err != nil {
 		return nil, err
 	}
@@ -387,133 +392,9 @@ func ApplyOp[T internal.Document](doc T, op internal.Op, opts ...internal.Option
 // map input returns map output, etc.
 func ApplyOps[T internal.Document](doc T, ops []internal.Op, opts ...internal.Option) (*internal.PatchResult[T], error) {
 	options := buildOptions(opts)
-	return dispatchOpsByDocumentType(doc, ops, options)
-}
-
-// dispatchOpsByDocumentType routes Op-based patch application to the appropriate handler.
-func dispatchOpsByDocumentType[T internal.Document](doc T, ops []internal.Op, options *internal.Options) (*internal.PatchResult[T], error) {
-	switch any(doc).(type) {
-	case []byte:
-		return handleJSONBytesOps(doc, ops, options)
-	case string:
-		return handleJSONStringOps(doc, ops, options)
-	case map[string]any:
-		return handleMapDocumentOps(doc, ops, options)
-	case nil:
-		return handleStructDocumentOps(doc, ops, options)
-	case bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
-		return handlePrimitiveDocumentOps(doc, ops, options)
-	case []any:
-		return handlePrimitiveDocumentOps(doc, ops, options)
-	default:
-		return dispatchOpsByReflection(doc, ops, options)
-	}
-}
-
-func dispatchOpsByReflection[T internal.Document](doc T, ops []internal.Op, options *internal.Options) (*internal.PatchResult[T], error) {
-	docValue := reflect.ValueOf(any(doc))
-	if !docValue.IsValid() || (docValue.Kind() == reflect.Pointer && docValue.IsNil()) {
-		return handleStructDocumentOps(doc, ops, options)
-	}
-	switch docValue.Type().Kind() {
-	case reflect.Slice, reflect.Interface:
-		return handlePrimitiveDocumentOps(doc, ops, options)
-	default:
-		return handleStructDocumentOps(doc, ops, options)
-	}
-}
-
-func handleJSONBytesOps[T internal.Document](doc T, ops []internal.Op, options *internal.Options) (*internal.PatchResult[T], error) {
-	docBytes, ok := any(doc).([]byte)
-	if !ok {
-		return nil, fmt.Errorf("%w: expected []byte, got %T", ErrInvalidDocumentType, doc)
-	}
-	var parsedDoc any
-	if err := json.Unmarshal(docBytes, &parsedDoc); err != nil {
-		return nil, fmt.Errorf("failed to parse JSON bytes: %w", err)
-	}
-	resultDoc, resultOps, err := applyInternalOps(parsedDoc, ops, options)
-	if err != nil {
-		return nil, err
-	}
-	resultBytes, err := json.Marshal(resultDoc)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal patched document: %w", err)
-	}
-	resultT, ok := any(resultBytes).(T)
-	if !ok {
-		return nil, fmt.Errorf("%w: failed to convert result back to type %T", ErrConversionFailed, doc)
-	}
-	return &internal.PatchResult[T]{Doc: resultT, Res: convertOpResults(resultOps, resultT)}, nil
-}
-
-func handleJSONStringOps[T internal.Document](doc T, ops []internal.Op, options *internal.Options) (*internal.PatchResult[T], error) {
-	docStr, ok := any(doc).(string)
-	if !ok {
-		return nil, fmt.Errorf("%w: expected string, got %T", ErrInvalidDocumentType, doc)
-	}
-	parsedDoc, originalWasJSON := parseStringDocument(docStr)
-	resultDoc, resultOps, err := applyInternalOps(parsedDoc, ops, options)
-	if err != nil {
-		return nil, err
-	}
-	resultT, err := convertStringResult(resultDoc, originalWasJSON, doc)
-	if err != nil {
-		return nil, err
-	}
-	return &internal.PatchResult[T]{Doc: resultT, Res: convertOpResults(resultOps, resultT)}, nil
-}
-
-func handleMapDocumentOps[T internal.Document](doc T, ops []internal.Op, options *internal.Options) (*internal.PatchResult[T], error) {
-	docMap, ok := any(doc).(map[string]any)
-	if !ok {
-		return nil, fmt.Errorf("%w: expected map[string]any, got %T", ErrInvalidDocumentType, doc)
-	}
-	resultDoc, resultOps, err := applyInternalOps(docMap, ops, options)
-	if err != nil {
-		return nil, err
-	}
-	resultT, err := convertNullableResult(resultDoc, doc)
-	if err != nil {
-		return nil, err
-	}
-	return &internal.PatchResult[T]{Doc: resultT, Res: convertOpResults(resultOps, resultT)}, nil
-}
-
-func handlePrimitiveDocumentOps[T internal.Document](doc T, ops []internal.Op, options *internal.Options) (*internal.PatchResult[T], error) {
-	resultDoc, resultOps, err := applyInternalOps(any(doc), ops, options)
-	if err != nil {
-		return nil, err
-	}
-	resultT, ok := resultDoc.(T)
-	if !ok {
-		return nil, fmt.Errorf("%w: failed to convert result back to type %T", ErrConversionFailed, doc)
-	}
-	return &internal.PatchResult[T]{Doc: resultT, Res: convertOpResults(resultOps, resultT)}, nil
-}
-
-func handleStructDocumentOps[T internal.Document](doc T, ops []internal.Op, options *internal.Options) (*internal.PatchResult[T], error) {
-	data, err := json.Marshal(doc)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal struct to JSON: %w", err)
-	}
-	var parsedDoc any
-	if err := json.Unmarshal(data, &parsedDoc); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON to any: %w", err)
-	}
-	resultDoc, resultOps, err := applyInternalOps(parsedDoc, ops, options)
-	if err != nil {
-		return nil, err
-	}
-	resultData, err := json.Marshal(resultDoc)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal patched data: %w", err)
-	}
-	var resultStruct T
-	if err := json.Unmarshal(resultData, &resultStruct); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal patched data to struct: %w", err)
-	}
-	return &internal.PatchResult[T]{Doc: resultStruct, Res: convertOpResults(resultOps, resultStruct)}, nil
+	return applyByDocumentType(doc, options, func(document any, options *internal.Options) (any, []internal.OpResult[any], error) {
+		return applyInternalOps(document, ops, options)
+	})
 }
 
 // applyInternalPatch decodes and applies patch operations to a document.
@@ -539,13 +420,23 @@ func applyInternalOps(doc any, ops []internal.Op, options *internal.Options) (an
 
 	results := make([]internal.OpResult[any], 0, len(ops))
 	for i := range ops {
+		if ops[i] == nil {
+			return nil, nil, fmt.Errorf("%s failed: %w: nil operation", operationContext(i, nil), ErrInvalidOperation)
+		}
 		opResult, err := ops[i].Apply(workingDoc)
 		if err != nil {
-			return nil, nil, fmt.Errorf("operation %d failed: %w", i, err)
+			return nil, nil, fmt.Errorf("%s failed: %w", operationContext(i, ops[i]), err)
 		}
 		workingDoc = opResult.Doc
 		results = append(results, opResult)
 	}
 
 	return workingDoc, results, nil
+}
+
+func operationContext(index int, operation internal.Op) string {
+	if operation == nil {
+		return fmt.Sprintf("operation %d", index)
+	}
+	return fmt.Sprintf("operation %d (%s %q)", index, operation.Op(), jsonpointer.Format(operation.Path()...))
 }

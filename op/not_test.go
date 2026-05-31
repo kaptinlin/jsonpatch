@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -175,40 +174,15 @@ func TestNot_MultipleOperandsContract(t *testing.T) {
 	assert.Same(t, first, ops[0])
 	assert.Same(t, second, ops[1])
 
-	matched, err := notOp.Test(map[string]any{"name": "Ada", "role": "admin"})
-	assert.NoError(t, err)
-	assert.True(t, matched)
-
+	_, err := notOp.Test(map[string]any{"name": "Ada", "role": "admin"})
+	assert.ErrorIs(t, err, ErrInvalidPredicateInNot)
 	_, err = notOp.Apply(map[string]any{"name": "Grace", "role": "admin"})
-	assert.ErrorIs(t, err, ErrNotTestFailed)
-
-	jsonOp, err := notOp.ToJSON()
-	assert.NoError(t, err)
-	wantJSON := internal.Operation{
-		Op:   "not",
-		Path: "/profile",
-		Apply: []internal.Operation{
-			{Op: "test", Path: "/name", Value: "Grace"},
-			{Op: "test", Path: "/role", Value: "owner"},
-		},
-	}
-	if diff := cmp.Diff(wantJSON, jsonOp); diff != "" {
-		t.Errorf("ToJSON() mismatch (-want +got):\n%s", diff)
-	}
-
-	compactOp, err := notOp.ToCompact()
-	assert.NoError(t, err)
-	wantCompact := internal.CompactOperation{
-		internal.OpNotCode,
-		[]string{"profile"},
-		[]any{
-			internal.CompactOperation{internal.OpTestCode, []string{"name"}, "Grace"},
-			internal.CompactOperation{internal.OpTestCode, []string{"role"}, "owner"},
-		},
-	}
-	if diff := cmp.Diff(wantCompact, compactOp); diff != "" {
-		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
-	}
+	assert.ErrorIs(t, err, ErrInvalidPredicateInNot)
+	assert.ErrorIs(t, notOp.Validate(), ErrInvalidPredicateInNot)
+	_, err = notOp.ToJSON()
+	assert.ErrorIs(t, err, ErrInvalidPredicateInNot)
+	_, err = notOp.ToCompact()
+	assert.ErrorIs(t, err, ErrInvalidPredicateInNot)
 
 	invalid := NewNotMultiple([]string{"profile"}, []any{"not a predicate"})
 	assert.ErrorIs(t, invalid.Validate(), ErrInvalidPredicateInNot)

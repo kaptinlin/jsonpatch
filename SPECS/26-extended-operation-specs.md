@@ -4,7 +4,7 @@
 
 This spec defines the non-RFC operations implemented by `jsonpatch`: `flip`, `inc`, `str_ins`, `str_del`, `split`, `merge`, and `extend`.
 
-These operations exist to match the json-joy extended patch vocabulary while still fitting Go's type-preserving API.
+These operations keep the extended patch vocabulary useful in Go while fitting the library's type-preserving API.
 
 ## Operation Contracts
 
@@ -42,9 +42,9 @@ These operations exist to match the json-joy extended patch vocabulary while sti
 
 - Empty path extends the root object.
 - `extend` is shallow, not recursive.
-- `__proto__` keys are ignored during extension.
+- `__proto__` is an ordinary `map[string]any` key in Go and is preserved during extension. JavaScript prototype-pollution concerns belong in a JavaScript adapter or codec boundary, not in Go document mutation.
 
-> **Why**: Extended operations are intentionally narrow. They encode the behaviors the compatibility target already defines instead of inventing a generic transformation language.
+> **Why**: Extended operations are intentionally narrow. They encode concrete patch behaviors instead of inventing a generic transformation language.
 >
 > **Rejected**: Replacing `extend` with recursive merge semantics would hide too much behavior inside one operation. Expanding `merge` beyond arrays would break the operation's adjacency-based contract.
 
@@ -58,9 +58,7 @@ These operations exist to match the json-joy extended patch vocabulary while sti
 
 ## Acceptance Criteria
 
-- [ ] Each extended operation has one canonical payload definition.
+- [ ] Each extended operation has one payload definition.
 - [ ] Numeric coercion and missing-path behavior for `inc` are explicit.
 - [ ] `split`, `merge`, and `extend` document their non-obvious structural behavior.
-- [ ] Security-relevant `extend` behavior (`__proto__` skipping) is preserved in the spec.
-
-**Origin:** former docs file `json-patch-extended.md`.
+- [ ] Go-specific `extend` behavior for ordinary string keys, including `__proto__`, is preserved in the spec.

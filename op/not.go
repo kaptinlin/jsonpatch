@@ -40,25 +40,15 @@ func (n *NotOperation) Code() int {
 
 // Test evaluates the NOT predicate condition.
 func (n *NotOperation) Test(doc any) (bool, error) {
-	// NOT operation: returns true if ALL operands are false
-	for _, op := range n.Operations {
-		predicateOp, ok := op.(internal.PredicateOp)
-		if !ok {
-			return false, ErrInvalidPredicateInNot
-		}
-		result, err := predicateOp.Test(doc)
-		if err != nil {
-			// For NOT operations, an error in the operand (like path not found)
-			// should be treated as the operand returning false, continue to next
-			continue
-		}
-		if result {
-			// If any operand is true, NOT returns false
-			return false, nil
-		}
+	predicateOp, err := n.operand()
+	if err != nil {
+		return false, err
 	}
-	// All operands are false, NOT returns true
-	return true, nil
+	result, err := predicateOp.Test(doc)
+	if err != nil {
+		return false, err
+	}
+	return !result, nil
 }
 
 // Not returns true since this is a NOT operation.
@@ -80,6 +70,9 @@ func (n *NotOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 // ToJSON serializes the operation to JSON format.
 func (n *NotOperation) ToJSON() (internal.Operation, error) {
+	if _, err := n.operand(); err != nil {
+		return internal.Operation{}, err
+	}
 	opsJSON, err := predicateOpsToJSON(n.Operations, ErrInvalidPredicateInNot)
 	if err != nil {
 		return internal.Operation{}, err
@@ -94,7 +87,10 @@ func (n *NotOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (n *NotOperation) ToCompact() (internal.CompactOperation, error) {
-	opsCompact, err := predicateOpsToCompact(n.Operations, ErrInvalidPredicateInNot)
+	if _, err := n.operand(); err != nil {
+		return nil, err
+	}
+	opsCompact, err := predicateOpsToCompact(n.Operations, n.Path(), ErrInvalidPredicateInNot)
 	if err != nil {
 		return nil, err
 	}
@@ -109,8 +105,20 @@ func (n *NotOperation) Ops() []internal.PredicateOp {
 
 // Validate validates the NOT operation.
 func (n *NotOperation) Validate() error {
+	_, err := n.operand()
+	return err
+}
+
+func (n *NotOperation) operand() (internal.PredicateOp, error) {
 	if len(n.Operations) == 0 {
-		return ErrNotNoOperands
+		return nil, ErrNotNoOperands
 	}
-	return validatePredicateOps(n.Operations, ErrInvalidPredicateInNot)
+	if len(n.Operations) != 1 {
+		return nil, ErrInvalidPredicateInNot
+	}
+	predicateOp, ok := n.Operations[0].(internal.PredicateOp)
+	if !ok {
+		return nil, ErrInvalidPredicateInNot
+	}
+	return predicateOp, nil
 }

@@ -21,32 +21,32 @@ func TestBasicOperationsNumericCodes(t *testing.T) {
 		{
 			name:     "add operation",
 			op:       op.NewAdd([]string{"foo"}, "bar"),
-			expected: compact.Op{0, "/foo", "bar"},
+			expected: compact.Op{0, []string{"foo"}, "bar"},
 		},
 		{
 			name:     "remove operation",
 			op:       op.NewRemove([]string{"foo"}),
-			expected: compact.Op{1, "/foo"},
+			expected: compact.Op{1, []string{"foo"}},
 		},
 		{
 			name:     "replace operation",
 			op:       op.NewReplace([]string{"foo"}, "new_value"),
-			expected: compact.Op{2, "/foo", "new_value"},
+			expected: compact.Op{2, []string{"foo"}, "new_value"},
 		},
 		{
 			name:     "move operation",
 			op:       op.NewMove([]string{"foo"}, []string{"bar"}),
-			expected: compact.Op{4, "/foo", "/bar"},
+			expected: compact.Op{4, []string{"foo"}, []string{"bar"}},
 		},
 		{
 			name:     "copy operation",
 			op:       op.NewCopy([]string{"foo"}, []string{"bar"}),
-			expected: compact.Op{3, "/foo", "/bar"},
+			expected: compact.Op{3, []string{"foo"}, []string{"bar"}},
 		},
 		{
 			name:     "test operation",
 			op:       op.NewTest([]string{"foo"}, "expected"),
-			expected: compact.Op{5, "/foo", "expected"},
+			expected: compact.Op{5, []string{"foo"}, "expected"},
 		},
 	}
 
@@ -68,10 +68,7 @@ func TestBasicOperationsNumericCodes(t *testing.T) {
 				assert.Equal(t, want, got, "opcode")
 			}
 
-			// Check path
-			if got, want := encoded[1], tt.expected[1]; got != want {
-				assert.Equal(t, want, got, "path")
-			}
+			assert.Equal(t, tt.expected[1], encoded[1], "path")
 
 			// Test round-trip decoding
 			decoder := compact.NewDecoder()
@@ -135,7 +132,7 @@ func TestEncodeDoesNotMutateSourceCompactSlice(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, compact.Op{internal.OpAddCode, []string{"foo"}, "bar"}, source)
-	assert.Equal(t, compact.Op{"add", "/foo", "bar"}, encoded)
+	assert.Equal(t, compact.Op{"add", []string{"foo"}, "bar"}, encoded)
 }
 
 type staticCompactOp struct {

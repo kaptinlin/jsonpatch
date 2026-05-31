@@ -128,8 +128,7 @@ func TestMatches_InvalidPattern(t *testing.T) {
 	path := []string{"email"}
 	invalidPattern := `[invalid-regex`
 
-	// Invalid patterns create a matcher that always returns false
-	// (aligned with json-joy's behavior)
+	// Invalid patterns create a matcher that always returns false.
 	matchesOp := NewMatches(path, invalidPattern, false, nil)
 	if matchesOp == nil {
 		require.FailNow(t, "NewMatches() = nil, want non-nil")
@@ -182,6 +181,6 @@ func TestMatches_ToCompact_WithoutIgnoreCase(t *testing.T) {
 	if err != nil {
 		assert.Fail(t, fmt.Sprintf("ToCompact() failed: %v", err))
 	}
-	want := []any{internal.OpMatchesCode, []string{"name"}, "john", false}
+	want := []any{internal.OpMatchesCode, []string{"name"}, "john"}
 	assert.Equal(t, want, compact)
 }

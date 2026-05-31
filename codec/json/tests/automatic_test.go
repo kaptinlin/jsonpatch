@@ -10,13 +10,10 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
-// This test matches the TypeScript automatic.spec.ts
 func TestAutomaticCodec(t *testing.T) {
 	t.Parallel()
-	// Configure options for testing
 	options := json.PatchOptions{}
 
-	// Use all sample operations (equivalent to TypeScript's operations)
 	for name, operation := range SampleOperations {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
@@ -176,9 +173,7 @@ func mapToOperation(opMap map[string]any) internal.Operation {
 		op.OldValue = val
 	}
 
-	// Handle value and type fields with special logic for test_type operations
 	if op.Op == "test_type" {
-		// For test_type operations, type field logic takes precedence
 		if typeField, exists := opMap["type"]; exists {
 			if typeSlice, ok := typeField.([]any); ok {
 				typeStrings := make([]string, len(typeSlice))
@@ -187,26 +182,22 @@ func mapToOperation(opMap map[string]any) internal.Operation {
 						typeStrings[i] = typeStr
 					}
 				}
-				// Single type goes into Type field, multiple types go into Value field
 				if len(typeStrings) == 1 {
 					op.Type = typeStrings[0]
 				} else {
-					op.Value = typeStrings
+					op.Type = typeStrings
 				}
 			} else if typeStringSlice, ok := typeField.([]string); ok {
-				// Single type goes into Type field, multiple types go into Value field
 				if len(typeStringSlice) == 1 {
 					op.Type = typeStringSlice[0]
 				} else {
-					op.Value = typeStringSlice
+					op.Type = typeStringSlice
 				}
 			} else if typeStr, ok := typeField.(string); ok {
-				// Single type goes into the Type field
 				op.Type = typeStr
 			}
 		}
 	} else {
-		// For non-test_type operations, handle value and type normally
 		if val, exists := opMap["value"]; exists {
 			op.Value = val
 		}

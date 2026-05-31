@@ -1,0 +1,21 @@
+{
+  "missing_path": [
+    {"op": "add", "value": "x"}
+  ],
+  "root_path_null_value": [
+    {"op": "add", "path": "", "value": null}
+  ],
+  "missing_value": [
+    {"op": "add", "path": "/value"}
+  ],
+  "test_null_value": [
+    {"op": "test", "path": "/value", "value": null}
+  ],
+  "zero_values": [
+    {"op": "str_ins", "path": "/text", "pos": 0, "str": ""},
+    {"op": "str_del", "path": "/text", "pos": 0, "len": 0},
+    {"op": "test_string", "path": "/text", "str": "", "pos": 0},
+    {"op": "test_string_len", "path": "/text", "len": 0},
+    {"op": "inc", "path": "/count", "inc": 0}
+  ]
+}

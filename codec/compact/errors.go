@@ -5,7 +5,7 @@ import "errors"
 // Base errors for compact operation validation.
 var (
 	ErrMinLength     = errors.New("compact operation must have at least opcode and path")
-	ErrPathNotString = errors.New("compact operation path must be a string")
+	ErrPathNotString = errors.New("compact operation path must be a string array")
 )
 
 // Core operation (RFC 6902) errors.
@@ -49,6 +49,8 @@ var (
 	ErrTypeNotString           = errors.New("type operation type must be a string")
 	ErrTestTypeMissingTypes    = errors.New("test_type operation requires types")
 	ErrTestTypeTypesNotArray   = errors.New("test_type operation types must be an array")
+	ErrTestStringMissingPos    = errors.New("test_string operation requires pos")
+	ErrTestStringPosNotNumber  = errors.New("test_string operation pos must be a number")
 	ErrTestStringMissingStr    = errors.New("test_string operation requires str")
 	ErrTestStringNotString     = errors.New("test_string operation str must be a string")
 	ErrTestStringLenMissingLen = errors.New("test_string_len operation requires len")
@@ -71,6 +73,7 @@ var (
 	ErrPredicateNotArray  = errors.New("predicate ops must be an array")
 	ErrPredicateOpInvalid = errors.New("predicate op must be an array")
 	ErrNotPredicate       = errors.New("decoded operation is not a predicate")
+	ErrNotSinglePredicate = errors.New("not operation requires exactly one predicate")
 )
 
 // Resolution and conversion errors.

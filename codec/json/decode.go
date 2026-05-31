@@ -3,6 +3,7 @@
 package json
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/go-json-experiment/json"
@@ -19,7 +20,7 @@ func Decode(operations []map[string]any, opts internal.JSONPatchOptions) ([]inte
 	for i, m := range operations {
 		o, err := decodeOp(m, opts)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", decodeOperationContext(i, m), err)
 		}
 		ops[i] = o
 	}
@@ -42,6 +43,22 @@ func DecodeJSON(data []byte, opts internal.JSONPatchOptions) ([]internal.Op, err
 		return nil, err
 	}
 	return Decode(operations, opts)
+}
+
+func decodeOperationContext(index int, m map[string]any) string {
+	opType, hasOp := m["op"].(string)
+	path, hasPath := m["path"].(string)
+
+	switch {
+	case hasOp && hasPath:
+		return fmt.Sprintf("operation %d (%s %q)", index, opType, path)
+	case hasOp:
+		return fmt.Sprintf("operation %d (%s)", index, opType)
+	case hasPath:
+		return fmt.Sprintf("operation %d (%q)", index, path)
+	default:
+		return fmt.Sprintf("operation %d", index)
+	}
 }
 
 // parseOpHeader extracts and validates the "op" and "path" fields from m.
@@ -116,18 +133,18 @@ func decodeCoreOp(opType string, path []string, m map[string]any) (internal.Op, 
 		return op.NewReplace(path, m["value"]), nil
 
 	case "move":
-		from, ok := m["from"].(string)
-		if !ok {
-			return nil, ErrMoveOpMissingFrom
+		from, err := requiredPointer(m, "from", ErrMoveOpMissingFrom)
+		if err != nil {
+			return nil, err
 		}
-		return op.NewMove(path, jsonpointer.Parse(from)), nil
+		return op.NewMove(path, from), nil
 
 	case "copy":
-		from, ok := m["from"].(string)
-		if !ok {
-			return nil, ErrCopyOpMissingFrom
+		from, err := requiredPointer(m, "from", ErrCopyOpMissingFrom)
+		if err != nil {
+			return nil, err
 		}
-		return op.NewCopy(path, jsonpointer.Parse(from)), nil
+		return op.NewCopy(path, from), nil
 
 	default:
 		return nil, ErrCodecOpUnknown
@@ -183,13 +200,17 @@ func decodeExtendedOp(opType string, path []string, m map[string]any) (internal.
 		return op.NewSplit(path, pos, m["props"]), nil
 
 	case "merge":
-		var props map[string]any
-		if p, ok := m["props"].(map[string]any); ok {
-			props = p
+		pos, ok := requiredFloat64(m, "pos")
+		if !ok {
+			return nil, ErrMergeOpMissingPos
 		}
-		var pos float64
-		if v, ok := op.ToFloat64(m["pos"]); ok {
-			pos = v
+		var props map[string]any
+		if raw, ok := m["props"]; ok {
+			p, ok := raw.(map[string]any)
+			if !ok {
+				return nil, ErrValueNotObject
+			}
+			props = p
 		}
 		return op.NewMerge(path, pos, props), nil
 
@@ -198,7 +219,10 @@ func decodeExtendedOp(opType string, path []string, m map[string]any) (internal.
 		if !ok {
 			return nil, ErrValueNotObject
 		}
-		deleteNull, _ := m["deleteNull"].(bool)
+		deleteNull, err := optionalBool(m, "deleteNull")
+		if err != nil {
+			return nil, err
+		}
 		return op.NewExtend(path, props, deleteNull), nil
 
 	default:
@@ -216,7 +240,11 @@ func decodePredicateOp(opType string, path []string, m map[string]any, opts inte
 			return nil, ErrMissingValueField
 		}
 		t := op.NewTest(path, val)
-		if notVal, ok := m["not"].(bool); ok && notVal {
+		notVal, err := optionalBool(m, "not")
+		if err != nil {
+			return nil, err
+		}
+		if notVal {
 			t.NotFlag = true
 		}
 		return t, nil
@@ -248,35 +276,51 @@ func decodePredicateOp(opType string, path []string, m map[string]any, opts inte
 		if err != nil {
 			return nil, err
 		}
-		return op.NewContainsWithIgnoreCase(path, val, boolField(m, "ignore_case")), nil
+		ignoreCase, err := optionalBool(m, "ignore_case")
+		if err != nil {
+			return nil, err
+		}
+		return op.NewContainsWithIgnoreCase(path, val, ignoreCase), nil
 
 	case "ends":
 		val, err := requiredString(m, "value", ErrEndsOpMissingValue, ErrEndsOpMissingValue)
 		if err != nil {
 			return nil, err
 		}
-		return op.NewEndsWithIgnoreCase(path, val, boolField(m, "ignore_case")), nil
+		ignoreCase, err := optionalBool(m, "ignore_case")
+		if err != nil {
+			return nil, err
+		}
+		return op.NewEndsWithIgnoreCase(path, val, ignoreCase), nil
 
 	case "starts":
 		val, err := requiredString(m, "value", ErrStartsOpMissingValue, ErrStartsOpMissingValue)
 		if err != nil {
 			return nil, err
 		}
-		return op.NewStartsWithIgnoreCase(path, val, boolField(m, "ignore_case")), nil
+		ignoreCase, err := optionalBool(m, "ignore_case")
+		if err != nil {
+			return nil, err
+		}
+		return op.NewStartsWithIgnoreCase(path, val, ignoreCase), nil
 
 	case "matches":
 		val, err := requiredString(m, "value", ErrMatchesOpMissingValue, ErrMatchesOpMissingValue)
 		if err != nil {
 			return nil, err
 		}
-		return op.NewMatches(path, val, boolField(m, "ignore_case"), opts.CreateMatcher), nil
+		ignoreCase, err := optionalBool(m, "ignore_case")
+		if err != nil {
+			return nil, err
+		}
+		return op.NewMatches(path, val, ignoreCase, opts.CreateMatcher), nil
 
 	case "in":
-		val := m["value"]
-		if values, ok := val.([]any); ok {
-			return op.NewIn(path, values), nil
+		values, ok := m["value"].([]any)
+		if !ok {
+			return nil, ErrInOpValueMustBeArray
 		}
-		return op.NewIn(path, []any{val}), nil
+		return op.NewIn(path, values), nil
 
 	case "less":
 		val, ok := op.ToFloat64(m["value"])
@@ -314,13 +358,9 @@ func decodePredicateOp(opType string, path []string, m map[string]any, opts inte
 	}
 }
 
-// decodeTestType decodes a test_type operation supporting both single and multiple types.
+// decodeTestType decodes a test_type operation supporting one or more type names.
 func decodeTestType(path []string, m map[string]any) (internal.Op, error) {
-	// Check "type" field first (standard), then fall back to "value" (compatibility).
 	typeField := m["type"]
-	if typeField == nil {
-		typeField = m["value"]
-	}
 
 	switch v := typeField.(type) {
 	case string:
@@ -368,12 +408,18 @@ func decodeTestString(path []string, m map[string]any) (internal.Op, error) {
 	if !ok {
 		return nil, ErrTestStringOpMissingStr
 	}
-	var pos float64
-	if v, ok := op.ToFloat64(m["pos"]); ok {
-		pos = v
+	pos, ok := requiredFloat64(m, "pos")
+	if !ok {
+		return nil, ErrTestStringOpMissingPos
 	}
-	notFlag, _ := m["not"].(bool)
-	ignoreCase, _ := m["ignore_case"].(bool)
+	notFlag, err := optionalBool(m, "not")
+	if err != nil {
+		return nil, err
+	}
+	ignoreCase, err := optionalBool(m, "ignore_case")
+	if err != nil {
+		return nil, err
+	}
 
 	return op.NewTestString(path, str, pos, notFlag, ignoreCase), nil
 }
@@ -384,7 +430,10 @@ func decodeTestStringLen(path []string, m map[string]any) (internal.Op, error) {
 	if !ok {
 		return nil, ErrTestStringLenOpMissingLen
 	}
-	not, _ := m["not"].(bool)
+	not, err := optionalBool(m, "not")
+	if err != nil {
+		return nil, err
+	}
 	return op.NewTestStringLenWithNot(path, lenVal, not), nil
 }
 
@@ -415,11 +464,14 @@ func decodeNotOp(path []string, m map[string]any, opts internal.JSONPatchOptions
 	if err != nil {
 		return nil, err
 	}
-	preds, err := decodeSubPredicates(apply, path, opts)
+	if len(apply) != 1 {
+		return nil, ErrNotOpRequiresSingleOperand
+	}
+	pred, err := decodeSubPredicate(apply[0], path, opts)
 	if err != nil {
 		return nil, err
 	}
-	return op.NewNotMultiple(path, preds), nil
+	return op.NewNotMultiple(path, []any{pred}), nil
 }
 
 // decodePredicateNot decodes a not predicate with a single operand.
@@ -428,24 +480,14 @@ func decodePredicateNot(path []string, m map[string]any, opts internal.JSONPatch
 	if err != nil {
 		return nil, err
 	}
-	sub, ok := apply[0].(map[string]any)
-	if !ok {
-		return nil, ErrNotOpRequiresValidOperand
+	if len(apply) != 1 {
+		return nil, ErrNotOpRequiresSingleOperand
 	}
-
-	sp, _ := sub["path"].(string)
-	merged := mergePaths(path, jsonpointer.Parse(sp))
-	sub["path"] = jsonpointer.Format(merged...)
-
-	operand, err := decodePredicateOnly(sub, opts)
+	pred, err := decodeSubPredicate(apply[0], path, opts)
 	if err != nil {
 		return nil, err
 	}
-	pred, ok := operand.(internal.PredicateOp)
-	if !ok {
-		return nil, ErrNotOpRequiresValidOperand
-	}
-	return op.NewNot(pred), nil
+	return op.NewNotMultiple(path, []any{pred}), nil
 }
 
 // decodeSubPredicates decodes an array of sub-operations for and/or/not operations,
@@ -453,15 +495,7 @@ func decodePredicateNot(path []string, m map[string]any, opts internal.JSONPatch
 func decodeSubPredicates(apply []any, base jsonpointer.Path, opts internal.JSONPatchOptions) ([]any, error) {
 	preds := make([]any, 0, len(apply))
 	for _, raw := range apply {
-		sub, ok := raw.(map[string]any)
-		if !ok {
-			continue
-		}
-		sp, _ := sub["path"].(string)
-		merged := mergePaths(base, jsonpointer.Parse(sp))
-		sub["path"] = jsonpointer.Format(merged...)
-
-		pred, err := decodePredicateOnly(sub, opts)
+		pred, err := decodeSubPredicate(raw, base, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -470,10 +504,52 @@ func decodeSubPredicates(apply []any, base jsonpointer.Path, opts internal.JSONP
 	return preds, nil
 }
 
-// boolField extracts a boolean field from m, defaulting to false.
-func boolField(m map[string]any, field string) bool {
-	v, _ := m[field].(bool)
-	return v
+func decodeSubPredicate(raw any, base jsonpointer.Path, opts internal.JSONPatchOptions) (internal.PredicateOp, error) {
+	sub, ok := raw.(map[string]any)
+	if !ok {
+		return nil, ErrInvalidPredicateOperand
+	}
+
+	child := cloneOperationMap(sub)
+	pathStr, ok := child["path"].(string)
+	if !ok {
+		return nil, ErrOpMissingPathField
+	}
+	if err := jsonpointer.Validate(pathStr); err != nil {
+		return nil, ErrInvalidPointer
+	}
+	merged := mergePaths(base, jsonpointer.Parse(pathStr))
+	child["path"] = jsonpointer.Format(merged...)
+
+	decoded, err := decodePredicateOnly(child, opts)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrInvalidPredicateOperand, err)
+	}
+	pred, ok := decoded.(internal.PredicateOp)
+	if !ok {
+		return nil, ErrInvalidPredicateOperand
+	}
+	return pred, nil
+}
+
+func cloneOperationMap(m map[string]any) map[string]any {
+	clone := make(map[string]any, len(m))
+	for k, v := range m {
+		clone[k] = v
+	}
+	return clone
+}
+
+func optionalBool(m map[string]any, field string) (bool, error) {
+	raw, ok := m[field]
+	if !ok {
+		return false, nil
+	}
+	value, ok := raw.(bool)
+	if !ok {
+		return false, ErrInvalidBooleanField
+	}
+	return value, nil
 }
 
 func requiredFloat64(m map[string]any, field string) (float64, bool) {
@@ -494,6 +570,21 @@ func requiredString(m map[string]any, field string, missingErr, typeErr error) (
 		return "", typeErr
 	}
 	return value, nil
+}
+
+func requiredPointer(m map[string]any, field string, missingErr error) ([]string, error) {
+	raw, ok := m[field]
+	if !ok {
+		return nil, missingErr
+	}
+	value, ok := raw.(string)
+	if !ok {
+		return nil, missingErr
+	}
+	if err := jsonpointer.Validate(value); err != nil {
+		return nil, ErrInvalidPointer
+	}
+	return jsonpointer.Parse(value), nil
 }
 
 // mergePaths combines base and sub paths for composite operations.
@@ -517,7 +608,7 @@ func operationToMap(o *internal.Operation, nested bool) map[string]any {
 	m["path"] = o.Path
 
 	setValueField(m, o, nested)
-	if o.From != "" {
+	if o.Op == "move" || o.Op == "copy" || o.From != "" {
 		m["from"] = o.From
 	}
 	setNumericFields(m, o, nested)
@@ -528,6 +619,7 @@ func operationToMap(o *internal.Operation, nested bool) map[string]any {
 	if o.IgnoreCase {
 		m["ignore_case"] = true
 	}
+	setApplyField(m, o)
 	if !nested {
 		setTopLevelFields(m, o)
 	}
@@ -547,26 +639,24 @@ func setValueField(m map[string]any, o *internal.Operation, nested bool) {
 // setNumericFields sets inc, pos, str, and len fields for extended operations.
 // In nested mode, zero-value fields are omitted.
 func setNumericFields(m map[string]any, o *internal.Operation, nested bool) {
-	if o.Inc != 0 {
+	switch o.Op {
+	case "inc":
 		m["inc"] = o.Inc
-	}
-	if nested {
-		if o.Pos != 0 {
-			m["pos"] = float64(o.Pos)
-		}
+	case "str_ins", "test_string":
+		m["pos"] = float64(o.Pos)
+		m["str"] = o.Str
+	case "str_del":
+		m["pos"] = float64(o.Pos)
 		if o.Str != "" {
 			m["str"] = o.Str
-		}
-		if o.Len != 0 {
+		} else {
 			m["len"] = float64(o.Len)
 		}
-		return
+	case "split", "merge":
+		m["pos"] = float64(o.Pos)
+	case "test_string_len":
+		m["len"] = float64(o.Len)
 	}
-	m["pos"] = float64(o.Pos)
-	if o.Str != "" {
-		m["str"] = o.Str
-	}
-	m["len"] = float64(o.Len)
 }
 
 // setTypeField sets the "type" field based on operation type and nesting.
@@ -583,8 +673,7 @@ func setTypeField(m map[string]any, o *internal.Operation, nested bool) {
 	}
 }
 
-// setTopLevelFields sets fields only present at the top level (not nested).
-func setTopLevelFields(m map[string]any, o *internal.Operation) {
+func setApplyField(m map[string]any, o *internal.Operation) {
 	if len(o.Apply) > 0 {
 		subs := make([]any, len(o.Apply))
 		for i := range o.Apply {
@@ -592,7 +681,11 @@ func setTopLevelFields(m map[string]any, o *internal.Operation) {
 		}
 		m["apply"] = subs
 	}
-	if len(o.Props) > 0 {
+}
+
+// setTopLevelFields sets fields only present at the top level (not nested).
+func setTopLevelFields(m map[string]any, o *internal.Operation) {
+	if o.Props != nil {
 		m["props"] = o.Props
 	}
 	if o.DeleteNull {

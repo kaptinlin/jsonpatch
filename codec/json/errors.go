@@ -28,7 +28,9 @@ var (
 	ErrStrDelOpMissingPos    = errors.New("str_del operation missing 'pos' field")
 	ErrStrDelOpMissingFields = errors.New("str_del operation missing 'str' or 'len' field")
 	ErrSplitOpMissingPos     = errors.New("split operation missing 'pos' field")
+	ErrMergeOpMissingPos     = errors.New("merge operation missing 'pos' field")
 	ErrValueNotObject        = errors.New("value is not an object")
+	ErrInvalidBooleanField   = errors.New("boolean field has invalid type")
 )
 
 // Errors for predicate operation decoding.
@@ -41,17 +43,21 @@ var (
 	ErrEndsOpMissingValue        = errors.New("ends operation missing 'value' field")
 	ErrStartsOpMissingValue      = errors.New("starts operation missing 'value' field")
 	ErrMatchesOpMissingValue     = errors.New("matches operation missing 'value' field")
+	ErrInOpValueMustBeArray      = errors.New("in operation value must be an array")
 	ErrLessOpMissingValue        = errors.New("less operation missing 'value' field")
 	ErrMoreOpMissingValue        = errors.New("more operation missing 'value' field")
 	ErrInvalidType               = errors.New("invalid type")
 	ErrEmptyTypeList             = errors.New("empty type list")
+	ErrTestStringOpMissingPos    = errors.New("test_string operation missing 'pos' field")
 )
 
 // Errors for composite operation decoding.
 var (
-	ErrAndOpMissingApply         = errors.New("and operation missing 'apply' field")
-	ErrOrOpMissingApply          = errors.New("or operation missing 'apply' field")
-	ErrNotOpMissingApply         = errors.New("not operation missing 'apply' field")
-	ErrNotOpRequiresOperand      = errors.New("not operation requires at least one operand")
-	ErrNotOpRequiresValidOperand = errors.New("not operation requires a valid predicate operand")
+	ErrAndOpMissingApply          = errors.New("and operation missing 'apply' field")
+	ErrOrOpMissingApply           = errors.New("or operation missing 'apply' field")
+	ErrNotOpMissingApply          = errors.New("not operation missing 'apply' field")
+	ErrNotOpRequiresOperand       = errors.New("not operation requires at least one operand")
+	ErrNotOpRequiresSingleOperand = errors.New("not operation requires exactly one operand")
+	ErrNotOpRequiresValidOperand  = errors.New("not operation requires a valid predicate operand")
+	ErrInvalidPredicateOperand    = errors.New("composite predicate requires predicate operands")
 )

@@ -165,7 +165,7 @@ func TestTestStringLen_Contracts(t *testing.T) {
 
 	compactOp, err := op.ToCompact()
 	assert.NoError(t, err)
-	wantCompact := internal.CompactOperation{internal.OpTestStringLenCode, []string{"name"}, 3.0}
+	wantCompact := internal.CompactOperation{internal.OpTestStringLenCode, []string{"name"}, 3.0, true}
 	if diff := cmp.Diff(wantCompact, compactOp); diff != "" {
 		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
 	}

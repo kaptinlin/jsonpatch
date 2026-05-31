@@ -54,14 +54,11 @@ func (tt *TestTypeOperation) getValueAndCheckType(doc any) (any, string, bool, e
 	return val, actualType, typeMatches, nil
 }
 
-// checkTypeMatch checks if actualType matches any expected type.
-// Matches json-joy behavior: only "integer" as expected type gets special handling.
 func (tt *TestTypeOperation) checkTypeMatch(actualType string, val any) bool {
 	return slices.ContainsFunc(tt.Types, func(expectedType string) bool {
 		if actualType == expectedType {
 			return true
 		}
-		// Special case: "integer" matches whole numbers (json-joy behavior)
 		if expectedType == "integer" && isWholeNumber(val) {
 			return true
 		}
@@ -95,7 +92,7 @@ func (tt *TestTypeOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 // getTypeName returns the JSON type name of a value.
-// Uses typeof semantics: all numeric types return "number" (matching json-joy).
+// All numeric Go values map to the JSON "number" type.
 func getTypeName(val any) string {
 	if val == nil {
 		return "null"
@@ -119,8 +116,7 @@ func getTypeName(val any) string {
 	}
 }
 
-// isWholeNumber checks if a value is an integer or a whole-number float.
-// Matches json-joy: typeof val === 'number' && val === Math.round(val).
+// isWholeNumber reports whether val is an integer or whole-number float.
 func isWholeNumber(val any) bool {
 	switch v := val.(type) {
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
@@ -191,9 +187,9 @@ func (tt *TestTypeOperation) ToJSON() (internal.Operation, error) {
 		}, nil
 	}
 	return internal.Operation{
-		Op:    string(internal.OpTestTypeType),
-		Path:  formatPath(tt.Path()),
-		Value: tt.Types,
+		Op:   string(internal.OpTestTypeType),
+		Path: formatPath(tt.Path()),
+		Type: tt.Types,
 	}, nil
 }
 

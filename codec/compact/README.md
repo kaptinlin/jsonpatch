@@ -1,12 +1,12 @@
 # Compact Codec for JSON Patch Operations
 
-The `compact` codec provides a highly optimized **array-based encoding format** for JSON Patch operations, achieving **35.9% space savings** compared to standard JSON format while maintaining full compatibility with all operation types.
+The `compact` codec provides an array-based encoding format for JSON Patch operations. It uses numeric or string opcodes plus path segment arrays.
 
-**🎯 Key Benefits**: Space efficiency, performance optimization, flexible opcode formats, perfect round-trip compatibility.
+The compact wire contract is protected by golden tests for path arrays, optional fields, and parent-relative predicate paths.
 
-## Format Comparison & Space Savings
+## Format Comparison
 
-### Standard Struct API
+### JSON-Shaped Operation
 
 ```go
 {Op: "add", Path: "/foo/bar", Value: 123}
@@ -21,58 +21,55 @@ The `compact` codec provides a highly optimized **array-based encoding format** 
 ### Compact format (numeric opcodes)
 
 ```json
-[0, "/foo/bar", 123]
+[0, ["foo", "bar"], 123]
 ```
 
 ### Compact format (string opcodes)
 
 ```json
-["add", "/foo/bar", 123]
+["add", ["foo", "bar"], 123]
 ```
 
-**Space Savings**: 35.9% reduction in data size with numeric opcodes!
+Numeric opcodes avoid repeating operation names in every encoded operation.
 
 ## Usage
 
-### Basic Operations with Struct API
+### Basic Operations
 
 ```go
 package main
 
 import (
     "fmt"
+    "log"
+
     "github.com/kaptinlin/jsonpatch"
     "github.com/kaptinlin/jsonpatch/codec/compact"
+    "github.com/kaptinlin/jsonpatch/op"
 )
 
 func main() {
-    // Create operations using struct API
-    operations := []jsonpatch.Operation{
-        {Op: "add", Path: "/foo", Value: "bar"},
-        {Op: "replace", Path: "/baz", Value: 42},
-        {Op: "inc", Path: "/counter", Inc: 5},
-        {Op: "str_ins", Path: "/text", Pos: 0, Str: "Hello "},
+    ops := []jsonpatch.Op{
+        op.NewAdd([]string{"foo"}, "bar"),
+        op.NewReplace([]string{"baz"}, 42),
+        op.NewInc([]string{"counter"}, 5),
+        op.NewStrIns([]string{"text"}, 0, "Hello "),
     }
-    
-    // Encode to compact format (numeric opcodes for max space savings)
-    encoder := compact.NewEncoder(compact.WithStringOpcode(false))
-    encoded, err := encoder.EncodeJSON(operations)
+
+    encoded, err := compact.EncodeJSON(ops)
     if err != nil {
-        panic(err)
+        log.Fatal(err)
     }
-    
+
     fmt.Printf("Compact JSON: %s\n", encoded)
-    // Output: [[0,"/foo","bar"],[2,"/baz",42],[9,"/counter",5],[6,"/text",0,"Hello "]]
-    
-    // Decode back to operations
-    decoder := compact.NewDecoder()
-    decoded, err := decoder.DecodeJSON(encoded)
+    // Output: [[0,["foo"],"bar"],[2,["baz"],42],[9,["counter"],5],[6,["text"],0,"Hello "]]
+
+    decoded, err := compact.DecodeJSON(encoded)
     if err != nil {
-        panic(err)
+        log.Fatal(err)
     }
-    
+
     fmt.Printf("Decoded: %d operations\n", len(decoded))
-    // Space savings: ~35.9% compared to standard JSON format
 }
 ```
 
@@ -81,8 +78,8 @@ func main() {
 ```go
 // Use string opcodes instead of numeric ones
 encoder := compact.NewEncoder(compact.WithStringOpcode(true))
-encoded, err := encoder.Encode(ops)
-// Result: [["add" "/foo" "bar"] ["replace" "/baz" 42]]
+encoded, err := encoder.Encode(op.NewAdd([]string{"foo"}, "bar"))
+// Result: ["add", ["foo"], "bar"]
 ```
 
 ### JSON Marshaling
@@ -91,153 +88,129 @@ encoded, err := encoder.Encode(ops)
 // Encode to JSON bytes
 jsonData, err := compact.EncodeJSON(ops)
 if err != nil {
-    panic(err)
+    log.Fatal(err)
 }
 
 // Decode from JSON bytes
 decoded, err := compact.DecodeJSON(jsonData)
 if err != nil {
-    panic(err)
+    log.Fatal(err)
 }
 ```
 
-## Complete Operation Mapping (From Code Analysis)
+## Operation Mapping
 
-Based on `decode.go` implementation, here are all supported operations:
+Compact operations use path segment arrays for both encoding and decoding.
 
 ### Standard JSON Patch Operations (RFC 6902)
 
 | Operation | Numeric Code | String Code | Compact Format | Example |
 |-----------|--------------|-------------|----------------|---------|
-| add       | 0            | "add"       | `[0, path, value]` | `[0, "/foo", 123]` |
-| remove    | 1            | "remove"    | `[1, path]` | `[1, "/foo"]` |
-| replace   | 2            | "replace"   | `[2, path, value]` | `[2, "/foo", 456]` |
-| copy      | 3            | "copy"      | `[3, path, from]` | `[3, "/bar", "/foo"]` |
-| move      | 4            | "move"      | `[4, path, from]` | `[4, "/bar", "/foo"]` |
-| test      | 5            | "test"      | `[5, path, value]` | `[5, "/foo", 123]` |
+| add       | 0            | "add"       | `[0, path, value]` | `[0, ["foo"], 123]` |
+| remove    | 1            | "remove"    | `[1, path]` | `[1, ["foo"]]` |
+| replace   | 2            | "replace"   | `[2, path, value]` | `[2, ["foo"], 456]` |
+| copy      | 3            | "copy"      | `[3, path, from]` | `[3, ["bar"], ["foo"]]` |
+| move      | 4            | "move"      | `[4, path, from]` | `[4, ["bar"], ["foo"]]` |
+| test      | 5            | "test"      | `[5, path, value, not?]` | `[5, ["foo"], 123]` |
 
 ### String Operations  
 
 | Operation | Numeric Code | String Code | Compact Format | Example |
 |-----------|--------------|-------------|----------------|---------|
-| str_ins   | 6            | "str_ins"   | `[6, path, pos, str]` | `[6, "/text", 0, "Hi "]` |
-| str_del   | 7            | "str_del"   | `[7, path, pos, len]` | `[7, "/text", 5, 3]` |
+| str_ins   | 6            | "str_ins"   | `[6, path, pos, str]` | `[6, ["text"], 0, "Hi "]` |
+| str_del   | 7            | "str_del"   | `[7, path, pos, len]` | `[7, ["text"], 5, 3]` |
 
 ### Extended Operations
 
 | Operation | Numeric Code | String Code | Compact Format | Example |
 |-----------|--------------|-------------|----------------|---------|
-| flip      | 8            | "flip"      | `[8, path]` | `[8, "/active"]` |
-| inc       | 9            | "inc"       | `[9, path, delta]` | `[9, "/count", 5]` |
-| split     | 10           | "split"     | `[10, path, pos, props?]` | `[10, "/obj", 2]` |
-| merge     | 11           | "merge"     | `[11, path, pos, props?]` | `[11, "/obj", 0]` |
-| extend    | 12           | "extend"    | `[12, path, props, deleteNull?]` | `[12, "/config", {...}]` |
+| flip      | 8            | "flip"      | `[8, path]` | `[8, ["active"]]` |
+| inc       | 9            | "inc"       | `[9, path, delta]` | `[9, ["count"], 5]` |
+| split     | 10           | "split"     | `[10, path, pos, props?]` | `[10, ["obj"], 2]` |
+| merge     | 11           | "merge"     | `[11, path, pos, props?]` | `[11, ["obj"], 0]` |
+| extend    | 12           | "extend"    | `[12, path, props, deleteNull?]` | `[12, ["config"], {...}]` |
 
 ### JSON Predicate Operations
 
 | Operation | Numeric Code | String Code | Compact Format | Example |
 |-----------|--------------|-------------|----------------|---------|
-| contains  | 30           | "contains"  | `[30, path, value, ignoreCase?]` | `[30, "/text", "hello"]` |
-| defined   | 31           | "defined"   | `[31, path]` | `[31, "/field"]` |
-| ends      | 32           | "ends"      | `[32, path, value, ignoreCase?]` | `[32, "/text", ".com"]` |
-| in        | 33           | "in"        | `[33, path, values]` | `[33, "/role", ["admin","user"]]` |
-| less      | 34           | "less"      | `[34, path, value]` | `[34, "/age", 30]` |
-| matches   | 35           | "matches"   | `[35, path, pattern, ignoreCase?]` | `[35, "/email", ".*@.*"]` |
-| more      | 36           | "more"      | `[36, path, value]` | `[36, "/score", 100]` |
-| starts    | 37           | "starts"    | `[37, path, value, ignoreCase?]` | `[37, "/text", "Hello"]` |
-| undefined | 38           | "undefined" | `[38, path]` | `[38, "/optional"]` |
-| test_type | 39           | "test_type" | `[39, path, types]` | `[39, "/data", ["string","number"]]` |
-| test_string | 40         | "test_string" | `[40, path, pos, str, not?]` | `[40, "/text", 5, "test"]` |
-| test_string_len | 41     | "test_string_len" | `[41, path, len, not?]` | `[41, "/text", 10]` |
-| type      | 42           | "type"      | `[42, path, type]` | `[42, "/data", "string"]` |
+| contains  | 30           | "contains"  | `[30, path, value, ignoreCase?]` | `[30, ["text"], "hello"]` |
+| defined   | 31           | "defined"   | `[31, path]` | `[31, ["field"]]` |
+| ends      | 32           | "ends"      | `[32, path, value, ignoreCase?]` | `[32, ["text"], ".com"]` |
+| in        | 33           | "in"        | `[33, path, values]` | `[33, ["role"], ["admin","user"]]` |
+| less      | 34           | "less"      | `[34, path, value]` | `[34, ["age"], 30]` |
+| matches   | 35           | "matches"   | `[35, path, pattern, ignoreCase?]` | `[35, ["email"], ".*@.*"]` |
+| more      | 36           | "more"      | `[36, path, value]` | `[36, ["score"], 100]` |
+| starts    | 37           | "starts"    | `[37, path, value, ignoreCase?]` | `[37, ["text"], "Hello"]` |
+| undefined | 38           | "undefined" | `[38, path]` | `[38, ["optional"]]` |
+| test_type | 39           | "test_type" | `[39, path, types]` | `[39, ["data"], ["string","number"]]` |
+| test_string | 40         | "test_string" | `[40, path, pos, str, not?]` | `[40, ["text"], 5, "test"]` |
+| test_string_len | 41     | "test_string_len" | `[41, path, len, not?]` | `[41, ["text"], 10]` |
+| type      | 42           | "type"      | `[42, path, type]` | `[42, ["data"], "string"]` |
 
 ### Second-Order Predicates
 
 | Operation | Numeric Code | String Code | Compact Format | Example |
 |-----------|--------------|-------------|----------------|---------|
-| and       | 43           | "and"       | `[43, path, ops[]]` | `[43, "", [[31,"/a"],[42,"/b","string"]]]` |
-| not       | 44           | "not"       | `[44, path, ops[]]` | `[44, "", [[31,"/field"]]]` |
-| or        | 45           | "or"        | `[45, path, ops[]]` | `[45, "", [[31,"/a"],[31,"/b"]]]` |
+| and       | 43           | "and"       | `[43, path, ops[]]` | `[43, ["profile"], [[31, ["name"]]]]` |
+| not       | 44           | "not"       | `[44, path, ops[]]` | `[44, ["profile"], [[31, ["field"]]]]` |
+| or        | 45           | "or"        | `[45, path, ops[]]` | `[45, ["profile"], [[31, ["a"]], [31, ["b"]]]]` |
 
 ## API Reference
 
 ### Encoder
 
 ```go
-type Encoder struct { ... }
+type Encoder struct{ ... }
 
 // Create a new encoder
-func NewEncoder(opts ...EncoderOption) *Encoder
+func NewEncoder(opts ...Option) *Encoder
 
 // Encode a single operation
-func (e *Encoder) Encode(op internal.Op) (CompactOp, error)
+func (e *Encoder) Encode(op jsonpatch.Op) (Op, error)
 
 // Encode multiple operations
-func (e *Encoder) EncodeSlice(ops []internal.Op) ([]CompactOp, error)
+func (e *Encoder) EncodeSlice(ops []jsonpatch.Op) ([]Op, error)
 ```
 
 ### Decoder
 
 ```go
-type Decoder struct { ... }
+type Decoder struct{}
 
 // Create a new decoder
-func NewDecoder(opts ...DecoderOption) *Decoder
+func NewDecoder() *Decoder
 
 // Decode a single compact operation
-func (d *Decoder) Decode(compactOp CompactOp) (internal.Op, error)
+func (d *Decoder) Decode(compactOp Op) (jsonpatch.Op, error)
 
 // Decode multiple compact operations
-func (d *Decoder) DecodeSlice(compactOps []CompactOp) ([]internal.Op, error)
+func (d *Decoder) DecodeSlice(compactOps []Op) ([]jsonpatch.Op, error)
 ```
 
 ### Standalone Functions
 
 ```go
 // Encode operations using default options
-func Encode(ops []internal.Op, opts ...EncoderOption) ([]CompactOp, error)
+func Encode(ops []jsonpatch.Op, opts ...Option) ([]Op, error)
 
 // Encode operations to JSON bytes
-func EncodeJSON(ops []internal.Op, opts ...EncoderOption) ([]byte, error)
+func EncodeJSON(ops []jsonpatch.Op, opts ...Option) ([]byte, error)
 
 // Decode compact operations using default options
-func Decode(compactOps []CompactOp, opts ...DecoderOption) ([]internal.Op, error)
+func Decode(compactOps []Op) ([]jsonpatch.Op, error)
 
 // Decode compact operations from JSON bytes
-func DecodeJSON(data []byte, opts ...DecoderOption) ([]internal.Op, error)
+func DecodeJSON(data []byte) ([]jsonpatch.Op, error)
 ```
 
 ### Options
 
 ```go
 // Use string opcodes instead of numeric codes
-func WithStringOpcode(useString bool) EncoderOption
+func WithStringOpcode(useString bool) Option
 ```
 
-## Features
+## Testing Contract
 
-- **Space Efficient**: Significantly smaller than standard JSON format
-- **Fast**: Optimized encoding and decoding performance
-- **Flexible**: Supports both numeric and string opcodes
-- **Compatible**: Works with all existing operation types
-- **Type Safe**: Full Go type safety and error handling
-
-## Supported Operations
-
-The compact codec now supports **all** JSON Patch operations with full encoding and decoding:
-
-### Supported Standard JSON Patch (RFC 6902)
-
-✅ add, remove, replace, move, copy, test
-
-### Supported Extended Operations
-
-✅ flip, inc, str_ins, str_del, split, merge, extend
-
-### Supported JSON Predicate Operations
-
-✅ defined, undefined, contains, starts, ends, matches, type, test_type, test_string, test_string_len, in, less, more
-
-### Supported Second-Order Predicates (Composite Operations)
-
-✅ and, or, not
+The codec has golden coverage for compact arrays, optional-field omission, and parent-relative composite predicate paths.

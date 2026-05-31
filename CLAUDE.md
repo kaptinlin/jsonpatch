@@ -5,8 +5,8 @@ This file provides guidance to Claude Code when working with code in this reposi
 ## Project Overview
 
 - **Module:** `github.com/kaptinlin/jsonpatch`
-- **Go Version:** 1.26.2
-- Canonical technical contracts live in `SPECS/`.
+- **Go Version:** 1.26.3
+- Recorded technical contracts live in `SPECS/`.
 - Keep `README.md` user-facing and keep `CLAUDE.md` operational.
 - The library applies RFC 6902 operations, predicate operations, and extended operations while preserving the caller's document type whenever the result can be converted back safely.
 
@@ -16,10 +16,11 @@ This file provides guidance to Claude Code when working with code in this reposi
 # Run all tests with race detection
 task test
 
+# Run golangci-lint only
+task golangci-lint
+
 # Run golangci-lint and tidy checks
 task lint
-
-# Run markdownlint for docs and specs
 
 # Format Go code
 task fmt
@@ -43,23 +44,24 @@ task vet
 
 ## Agent Workflow
 
-### Design Phase — Read SPECS First
+### Design Phase — Read SPECS as Recorded Contracts
 
-Before designing or modifying behavior, read the relevant `SPECS/` documents first.
-SPECS define the current contracts for API behavior, compatibility, architecture, testing, and documentation ownership.
-Do not invent new behavior that contradicts `SPECS/`.
+Before designing or modifying behavior, read the relevant `SPECS/` documents to understand the current recorded contract.
+SPECS describe tested behavior, architecture, and documentation ownership; they do not replace implementation judgment.
+When the correct behavior differs from the current record, implement it with focused tests and then update the owning spec when the change becomes a lasting contract.
 
 **Workflow:**
 
 1. Identify the relevant specs from the index below.
-2. Read those specs completely before changing behavior.
-3. Update the owning spec in the same change when behavior changes.
-4. Ask the user before proceeding if the current specs do not cover the case.
+2. Read those specs before changing behavior.
+3. Implement the correct behavior with focused tests.
+4. Update the owning spec when the change creates a durable behavior or architecture rule.
+5. Ask the user only when the code, tests, and request still leave a risky product decision unresolved.
 
-### Implementation Phase — Check Compatibility References
+### Implementation Phase — Check Reference Evidence
 
-When behavior needs to match json-joy, inspect `.reference/README.md` and `.reference/json-joy/` before changing code.
-Use the current Go implementation as the source of truth when the reference submodule is not initialized.
+When investigating reference behavior, inspect `.reference/README.md` and `.reference/json-joy/` before changing code.
+Use the current Go implementation when the reference submodule is not initialized.
 
 ## SPECS Index
 
@@ -69,7 +71,17 @@ Use the current Go implementation as the source of truth when the reference subm
 - `SPECS/26-extended-operation-specs.md` — extended operation contracts
 - `SPECS/30-data-model-specs.md` — payload and result types
 - `SPECS/40-architecture-specs.md` — package boundaries and execution pipeline
-- `SPECS/50-coding-standards.md` — compatibility, errors, tests, and documentation rules
+- `SPECS/50-coding-standards.md` — implementation, errors, tests, and documentation rules
+
+## Agent Operating Rules
+
+- Read nearby code and relevant specs before editing.
+- Prefer one clear public story over ambiguous fallback paths.
+- Keep edits surgical; do not refactor unrelated files.
+- Prove behavior with tests, not spec-mirror tests or policy-only gates.
+- Fail loudly with sentinel errors and wrapped context.
+- Treat reference projects as evidence, not authority.
+- Preserve user changes already in the working tree.
 
 ## Design Philosophy
 
@@ -88,14 +100,14 @@ Use the current Go implementation as the source of truth when the reference subm
 
 ### Must Follow
 
-- Use Go 1.26.2 features when they simplify code.
+- Use Go 1.26.3 features when they simplify code.
 - Follow [Google Go Best Practices](https://google.github.io/go-style/best-practices).
 - Follow [Google Go Style Decisions](https://google.github.io/go-style/decisions).
 - Preserve the caller's document type whenever the result can be converted back safely.
 - Keep mutation opt-in. Require `WithMutate(true)` for in-place updates.
 - Keep the library pure: return errors and leave logging to callers.
 - Use sentinel errors for stable failure classes and match with `errors.Is`.
-- Keep technical behavior in `SPECS/`, not in `README.md` or `CLAUDE.md`.
+- Record technical behavior in `SPECS/`; keep `README.md` user-facing and `CLAUDE.md` operational.
 
 ### Domain Patterns
 
@@ -139,7 +151,7 @@ Use the matching local skill in `.agents/skills/` (mirrored in `.claude/skills/`
 - `agent-md-writing` — regenerate `CLAUDE.md` and refresh the `AGENTS.md` symlink
 - `readme-writing` — regenerate `README.md`
 - `library-docs-maintaining` — refresh top-level library docs together
-- `library-specs-maintaining` — update `SPECS/` contracts
+- `library-specs-maintaining` — consolidate scattered design docs into `SPECS/`
 - `library-test-covering` — add or expand test coverage
 - `golangci-linting` — configure or troubleshoot linting
 - `go-best-practices` — review Go API and implementation style
@@ -154,4 +166,4 @@ Use the matching local skill in `.agents/skills/` (mirrored in `.claude/skills/`
 - No assuming every `string` input is a JSON document; only strings starting with `{` or `[` are parsed as JSON.
 - No implicit mutation — use `WithMutate(true)` when mutation is required.
 - No `panic` or logging in library code.
-- No moving canonical behavior from `SPECS/` back into `README.md` or `CLAUDE.md`.
+- No untested behavior promises in `README.md` or `CLAUDE.md`; README teaches usage, and CLAUDE guides agents.

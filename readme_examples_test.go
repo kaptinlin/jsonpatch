@@ -1,7 +1,6 @@
 package jsonpatch_test
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -98,12 +97,19 @@ func TestREADMEExamples(t *testing.T) {
 		assert.Equal(t, jsonpatch.OpIncType, decoded[1].Op())
 	})
 
-	t.Run("binary codec rejects second-order predicates", func(t *testing.T) {
+	t.Run("binary codec round-trips second-order predicates", func(t *testing.T) {
 		t.Parallel()
 
 		codec := binary.New()
-		_, err := codec.Encode([]jsonpatch.Op{op.NewNot(op.NewTest([]string{"active"}, true))})
-		require.Error(t, err)
-		assert.True(t, errors.Is(err, binary.ErrUnsupportedOp))
+		ops := []jsonpatch.Op{
+			op.NewNot(op.NewTest([]string{"active"}, true)),
+		}
+		data, err := codec.Encode(ops)
+		require.NoError(t, err)
+
+		decoded, err := codec.Decode(data)
+		require.NoError(t, err)
+		require.Len(t, decoded, 1)
+		assert.Equal(t, jsonpatch.OpNotType, decoded[0].Op())
 	})
 }

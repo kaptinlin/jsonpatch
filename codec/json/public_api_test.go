@@ -22,8 +22,8 @@ func TestDecodeTestTypeStringArray(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "test_type", encoded[0].Op)
 	assert.Equal(t, "/value", encoded[0].Path)
-	assert.Nil(t, encoded[0].Type)
-	assert.Equal(t, []string{"string", "number"}, encoded[0].Value)
+	assert.Equal(t, []string{"string", "number"}, encoded[0].Type)
+	assert.Nil(t, encoded[0].Value)
 }
 
 func TestDecodeCompositeNotAndApplyValidation(t *testing.T) {

@@ -85,7 +85,7 @@ func (oo *OrOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (oo *OrOperation) ToCompact() (internal.CompactOperation, error) {
-	opsCompact, err := predicateOpsToCompact(oo.Operations, ErrInvalidPredicateInOr)
+	opsCompact, err := predicateOpsToCompact(oo.Operations, oo.Path(), ErrInvalidPredicateInOr)
 	if err != nil {
 		return nil, err
 	}

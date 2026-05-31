@@ -205,7 +205,7 @@ func TestSplit_ArrayElementCreatesNewSlice(t *testing.T) {
 	assert.NotEqual(t, originalPointer, fmt.Sprintf("%p", resultLines))
 }
 
-func TestSplit_TypeScript_Compatibility(t *testing.T) {
+func TestSplitReferenceBehavior(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name     string

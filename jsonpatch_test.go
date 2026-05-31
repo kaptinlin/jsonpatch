@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/kaptinlin/jsonpatch"
+	"github.com/kaptinlin/jsonpatch/codec/compact"
 	"github.com/kaptinlin/jsonpatch/op"
 )
 
@@ -108,14 +109,12 @@ func TestValidateOperation(t *testing.T) {
 			wantErr:   jsonpatch.ErrMissingOp,
 		},
 		{
-			name:      "missing path field",
+			name:      "root add operation",
 			operation: jsonpatch.Operation{Op: "add", Value: 1},
-			wantErr:   jsonpatch.ErrMissingPath,
 		},
 		{
-			name:      "missing value field for add",
+			name:      "nil value field for add",
 			operation: jsonpatch.Operation{Op: "add", Path: "/a"},
-			wantErr:   jsonpatch.ErrMissingValue,
 		},
 		{
 			name:      "invalid operation type",
@@ -155,7 +154,7 @@ func TestOperationInterfacesExposeCanonicalMethods(t *testing.T) {
 	add := op.NewAdd([]string{"items", "-"}, "x")
 	require.NoError(t, add.Validate())
 	assert.Equal(t, jsonpatch.OpAddType, add.Op())
-	assert.Equal(t, jsonpatch.OpAddCode, add.Code())
+	assert.Equal(t, int(compact.CodeAdd), add.Code())
 	assert.Equal(t, []string{"items", "-"}, add.Path())
 
 	applied, err := add.Apply(map[string]any{"items": []any{"a"}})
@@ -168,7 +167,7 @@ func TestOperationInterfacesExposeCanonicalMethods(t *testing.T) {
 
 	compactOp, err := add.ToCompact()
 	require.NoError(t, err)
-	assert.Equal(t, []any{jsonpatch.OpAddCode, []string{"items", "-"}, "x"}, []any(compactOp))
+	assert.Equal(t, []any{int(compact.CodeAdd), []string{"items", "-"}, "x"}, []any(compactOp))
 
 	predicate := op.NewTestWithNot([]string{"active"}, true, true)
 	ok, err := predicate.Test(map[string]any{"active": false})
@@ -1135,19 +1134,6 @@ func FuzzComplexDocuments(f *testing.F) {
 func TestPublicHelpersAndOps(t *testing.T) {
 	t.Parallel()
 
-	t.Run("default options are zero-valued and distinct", func(t *testing.T) {
-		t.Parallel()
-
-		first := jsonpatch.DefaultOptions()
-		second := jsonpatch.DefaultOptions()
-
-		require.NotNil(t, first)
-		require.NotNil(t, second)
-		assert.False(t, first.Mutate)
-		assert.Nil(t, first.CreateMatcher)
-		assert.NotSame(t, first, second)
-	})
-
 	t.Run("create matcher default honors ignore case and invalid patterns", func(t *testing.T) {
 		t.Parallel()
 
@@ -1181,9 +1167,8 @@ func TestPublicHelpersAndOps(t *testing.T) {
 				allowMatches: true,
 			},
 			{
-				name:    "copy missing from",
-				ops:     []jsonpatch.Operation{{Op: "copy", Path: "/name"}},
-				wantErr: jsonpatch.ErrMissingFrom,
+				name: "copy from root",
+				ops:  []jsonpatch.Operation{{Op: "copy", Path: "/name"}},
 			},
 			{
 				name:    "move into own children",

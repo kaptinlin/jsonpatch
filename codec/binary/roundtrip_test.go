@@ -75,6 +75,224 @@ func TestCodecRoundTripPreservesOperationJSON(t *testing.T) {
 	}
 }
 
+func TestCodecEncodeCanonicalOptionalFields(t *testing.T) {
+	t.Parallel()
+
+	encoded, err := New().Encode([]internal.Op{
+		op.NewTest([]string{"profile", "name"}, "Ada"),
+		op.NewTestWithNot([]string{"profile", "name"}, "Grace", true),
+		op.NewMatches([]string{"profile", "name"}, "^A", false, nil),
+		op.NewContainsWithIgnoreCase([]string{"profile", "name"}, "ada", true),
+		op.NewTestString([]string{"profile", "name"}, "da", 1, true, false),
+		op.NewTestStringLenWithNot([]string{"profile", "name"}, 3, false),
+		op.NewExtend([]string{"profile"}, map[string]any{"name": "Ada"}, true),
+	})
+	require.NoError(t, err)
+
+	reader := msgp.NewReader(bytes.NewReader(encoded))
+	count, err := reader.ReadArrayHeader()
+	require.NoError(t, err)
+	assert.Equal(t, uint32(7), count)
+
+	readBinaryOpHeader(t, reader, 3, internal.OpTestCode, []string{"profile", "name"})
+	value, err := reader.ReadString()
+	require.NoError(t, err)
+	assert.Equal(t, "Ada", value)
+
+	readBinaryOpHeader(t, reader, 4, internal.OpTestCode, []string{"profile", "name"})
+	value, err = reader.ReadString()
+	require.NoError(t, err)
+	assert.Equal(t, "Grace", value)
+	not, err := reader.ReadBool()
+	require.NoError(t, err)
+	assert.True(t, not)
+
+	readBinaryOpHeader(t, reader, 3, internal.OpMatchesCode, []string{"profile", "name"})
+	pattern, err := reader.ReadString()
+	require.NoError(t, err)
+	assert.Equal(t, "^A", pattern)
+
+	readBinaryOpHeader(t, reader, 4, internal.OpContainsCode, []string{"profile", "name"})
+	needle, err := reader.ReadString()
+	require.NoError(t, err)
+	assert.Equal(t, "ada", needle)
+	ignoreCase, err := reader.ReadBool()
+	require.NoError(t, err)
+	assert.True(t, ignoreCase)
+
+	readBinaryOpHeader(t, reader, 5, internal.OpTestStringCode, []string{"profile", "name"})
+	pos, err := reader.ReadFloat64()
+	require.NoError(t, err)
+	assert.Equal(t, 1.0, pos)
+	str, err := reader.ReadString()
+	require.NoError(t, err)
+	assert.Equal(t, "da", str)
+	not, err = reader.ReadBool()
+	require.NoError(t, err)
+	assert.True(t, not)
+
+	readBinaryOpHeader(t, reader, 3, internal.OpTestStringLenCode, []string{"profile", "name"})
+	length, err := reader.ReadFloat64()
+	require.NoError(t, err)
+	assert.Equal(t, 3.0, length)
+
+	readBinaryOpHeader(t, reader, 4, internal.OpExtendCode, []string{"profile"})
+	props, err := reader.ReadIntf()
+	require.NoError(t, err)
+	assert.Equal(t, map[string]any{"name": "Ada"}, normalizeMap(props))
+	deleteNull, err := reader.ReadBool()
+	require.NoError(t, err)
+	assert.True(t, deleteNull)
+}
+
+func TestCodecEncodeCanonicalWireBytesGolden(t *testing.T) {
+	t.Parallel()
+
+	encoded, err := New().Encode([]internal.Op{
+		op.NewTest([]string{"flag"}, true),
+		op.NewTestWithNot([]string{"flag"}, false, true),
+		op.NewContains([]string{"name"}, "Ada"),
+		op.NewContainsWithIgnoreCase([]string{"name"}, "ada", true),
+		op.NewStarts([]string{"name"}, "A"),
+		op.NewStartsWithIgnoreCase([]string{"name"}, "a", true),
+		op.NewEnds([]string{"name"}, "a"),
+		op.NewEndsWithIgnoreCase([]string{"name"}, "A", true),
+		op.NewMatches([]string{"name"}, "^A", false, nil),
+		op.NewMatches([]string{"name"}, "^a", true, nil),
+		op.NewTestString([]string{"name"}, "Ad", 0, false, false),
+		op.NewTestString([]string{"name"}, "ad", 0, true, false),
+		op.NewTestStringLen([]string{"name"}, 3),
+		op.NewTestStringLenWithNot([]string{"name"}, 4, true),
+		op.NewSplit([]string{"nodes", "0"}, 1, nil),
+		op.NewSplit([]string{"nodes", "0"}, 1, map[string]any{"kind": "paragraph"}),
+		op.NewMerge([]string{"nodes", "1"}, 1, nil),
+		op.NewMerge([]string{"nodes", "1"}, 1, map[string]any{"merged": true}),
+		op.NewExtend([]string{"profile"}, map[string]any{"name": "Ada"}, false),
+		op.NewExtend([]string{"profile"}, map[string]any{"name": "Ada"}, true),
+		op.NewAnd([]string{"profile"}, []any{
+			op.NewDefined([]string{"profile", "name"}),
+			op.NewOr([]string{"profile", "flags"}, []any{
+				op.NewUndefined([]string{"profile", "flags", "deleted"}),
+				op.NewContains([]string{"profile", "flags", "role"}, "admin"),
+			}),
+		}),
+	})
+	require.NoError(t, err)
+
+	want := binaryFixture(t, func(writer *msgp.Writer) {
+		require.NoError(t, writer.WriteArrayHeader(21))
+
+		writeBinaryHeader(t, writer, 3, internal.OpTestCode, "flag")
+		require.NoError(t, writer.WriteBool(true))
+		writeBinaryHeader(t, writer, 4, internal.OpTestCode, "flag")
+		require.NoError(t, writer.WriteBool(false))
+		require.NoError(t, writer.WriteBool(true))
+
+		writeBinaryHeader(t, writer, 3, internal.OpContainsCode, "name")
+		require.NoError(t, writer.WriteString("Ada"))
+		writeBinaryHeader(t, writer, 4, internal.OpContainsCode, "name")
+		require.NoError(t, writer.WriteString("ada"))
+		require.NoError(t, writer.WriteBool(true))
+
+		writeBinaryHeader(t, writer, 3, internal.OpStartsCode, "name")
+		require.NoError(t, writer.WriteString("A"))
+		writeBinaryHeader(t, writer, 4, internal.OpStartsCode, "name")
+		require.NoError(t, writer.WriteString("a"))
+		require.NoError(t, writer.WriteBool(true))
+
+		writeBinaryHeader(t, writer, 3, internal.OpEndsCode, "name")
+		require.NoError(t, writer.WriteString("a"))
+		writeBinaryHeader(t, writer, 4, internal.OpEndsCode, "name")
+		require.NoError(t, writer.WriteString("A"))
+		require.NoError(t, writer.WriteBool(true))
+
+		writeBinaryHeader(t, writer, 3, internal.OpMatchesCode, "name")
+		require.NoError(t, writer.WriteString("^A"))
+		writeBinaryHeader(t, writer, 4, internal.OpMatchesCode, "name")
+		require.NoError(t, writer.WriteString("^a"))
+		require.NoError(t, writer.WriteBool(true))
+
+		writeBinaryHeader(t, writer, 4, internal.OpTestStringCode, "name")
+		require.NoError(t, writer.WriteFloat64(0))
+		require.NoError(t, writer.WriteString("Ad"))
+		writeBinaryHeader(t, writer, 5, internal.OpTestStringCode, "name")
+		require.NoError(t, writer.WriteFloat64(0))
+		require.NoError(t, writer.WriteString("ad"))
+		require.NoError(t, writer.WriteBool(true))
+
+		writeBinaryHeader(t, writer, 3, internal.OpTestStringLenCode, "name")
+		require.NoError(t, writer.WriteFloat64(3))
+		writeBinaryHeader(t, writer, 4, internal.OpTestStringLenCode, "name")
+		require.NoError(t, writer.WriteFloat64(4))
+		require.NoError(t, writer.WriteBool(true))
+
+		writeBinaryHeader(t, writer, 3, internal.OpSplitCode, "nodes", "0")
+		require.NoError(t, writer.WriteFloat64(1))
+		writeBinaryHeader(t, writer, 4, internal.OpSplitCode, "nodes", "0")
+		require.NoError(t, writer.WriteFloat64(1))
+		writeBinaryStringMap(t, writer, "kind", "paragraph")
+
+		writeBinaryHeader(t, writer, 3, internal.OpMergeCode, "nodes", "1")
+		require.NoError(t, writer.WriteFloat64(1))
+		writeBinaryHeader(t, writer, 4, internal.OpMergeCode, "nodes", "1")
+		require.NoError(t, writer.WriteFloat64(1))
+		require.NoError(t, writer.WriteMapHeader(1))
+		require.NoError(t, writer.WriteString("merged"))
+		require.NoError(t, writer.WriteBool(true))
+
+		writeBinaryHeader(t, writer, 3, internal.OpExtendCode, "profile")
+		writeBinaryStringMap(t, writer, "name", "Ada")
+		writeBinaryHeader(t, writer, 4, internal.OpExtendCode, "profile")
+		writeBinaryStringMap(t, writer, "name", "Ada")
+		require.NoError(t, writer.WriteBool(true))
+
+		writeBinaryHeader(t, writer, 3, internal.OpAndCode, "profile")
+		require.NoError(t, writer.WriteArrayHeader(2))
+		writeBinaryHeader(t, writer, 2, internal.OpDefinedCode, "name")
+		writeBinaryHeader(t, writer, 3, internal.OpOrCode, "flags")
+		require.NoError(t, writer.WriteArrayHeader(2))
+		writeBinaryHeader(t, writer, 2, internal.OpUndefinedCode, "deleted")
+		writeBinaryHeader(t, writer, 3, internal.OpContainsCode, "role")
+		require.NoError(t, writer.WriteString("admin"))
+	})
+
+	if diff := cmp.Diff(want, encoded); diff != "" {
+		t.Errorf("canonical binary bytes mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestCodecEncodeCompositeUsesParentRelativePaths(t *testing.T) {
+	t.Parallel()
+
+	encoded, err := New().Encode([]internal.Op{
+		op.NewAnd([]string{"profile"}, []any{
+			op.NewDefined([]string{"profile", "name"}),
+			op.NewNotMultiple([]string{"profile", "meta"}, []any{
+				op.NewUndefined([]string{"profile", "meta", "deleted"}),
+			}),
+		}),
+	})
+	require.NoError(t, err)
+
+	reader := msgp.NewReader(bytes.NewReader(encoded))
+	count, err := reader.ReadArrayHeader()
+	require.NoError(t, err)
+	assert.Equal(t, uint32(1), count)
+
+	readBinaryOpHeader(t, reader, 3, internal.OpAndCode, []string{"profile"})
+	childCount, err := reader.ReadArrayHeader()
+	require.NoError(t, err)
+	assert.Equal(t, uint32(2), childCount)
+
+	readBinaryOpHeader(t, reader, 2, internal.OpDefinedCode, []string{"name"})
+
+	readBinaryOpHeader(t, reader, 3, internal.OpNotCode, []string{"meta"})
+	grandchildCount, err := reader.ReadArrayHeader()
+	require.NoError(t, err)
+	assert.Equal(t, uint32(1), grandchildCount)
+	readBinaryOpHeader(t, reader, 2, internal.OpUndefinedCode, []string{"deleted"})
+}
+
 func TestCodecDecodeRejectsMalformedOperations(t *testing.T) {
 	t.Parallel()
 
@@ -557,6 +775,51 @@ func writeBinaryPath(t *testing.T, writer *msgp.Writer, path ...string) {
 	for _, segment := range path {
 		require.NoError(t, writer.WriteString(segment))
 	}
+}
+
+func writeBinaryHeader(t *testing.T, writer *msgp.Writer, size uint32, code int, path ...string) {
+	t.Helper()
+
+	require.NoError(t, writer.WriteArrayHeader(size))
+	require.NoError(t, writer.WriteUint8(uint8(code)))
+	writeBinaryPath(t, writer, path...)
+}
+
+func writeBinaryStringMap(t *testing.T, writer *msgp.Writer, key, value string) {
+	t.Helper()
+
+	require.NoError(t, writer.WriteMapHeader(1))
+	require.NoError(t, writer.WriteString(key))
+	require.NoError(t, writer.WriteString(value))
+}
+
+func readBinaryOpHeader(t *testing.T, reader *msgp.Reader, wantSize uint32, wantCode int, wantPath []string) {
+	t.Helper()
+
+	size, err := reader.ReadArrayHeader()
+	require.NoError(t, err)
+	assert.Equal(t, wantSize, size)
+
+	code, err := reader.ReadUint8()
+	require.NoError(t, err)
+	assert.Equal(t, wantCode, int(code))
+
+	path := readBinaryPath(t, reader)
+	assert.Equal(t, wantPath, path)
+}
+
+func readBinaryPath(t *testing.T, reader *msgp.Reader) []string {
+	t.Helper()
+
+	size, err := reader.ReadArrayHeader()
+	require.NoError(t, err)
+	path := make([]string, int(size))
+	for i := range path {
+		segment, err := reader.ReadString()
+		require.NoError(t, err)
+		path[i] = segment
+	}
+	return path
 }
 
 func writeBinaryNumericOp(t *testing.T, writer *msgp.Writer, code uint8, value string) {

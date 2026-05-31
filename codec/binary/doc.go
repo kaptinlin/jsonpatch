@@ -1,7 +1,6 @@
 // Package binary implements a MessagePack-based binary codec for JSON Patch operations.
 //
-// Limitations:
-//   - Second-order predicates (and, or, not) are NOT supported in binary codec.
-//     These operations return an error during encoding.
-//     Use the JSON or compact codec if you need second-order predicate support.
+// The binary codec uses the same operation tree as the compact codec: paths are
+// encoded as segment arrays, optional false fields are omitted, and composite
+// predicate children use paths relative to the containing predicate path.
 package binary

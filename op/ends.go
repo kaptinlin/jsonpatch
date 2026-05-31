@@ -86,7 +86,11 @@ func (e *EndsOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (e *EndsOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpEndsCode, e.Path(), e.Value}, nil
+	compact := internal.CompactOperation{internal.OpEndsCode, e.Path(), e.Value}
+	if e.IgnoreCase {
+		compact = append(compact, true)
+	}
+	return compact, nil
 }
 
 // Validate validates the ends operation.

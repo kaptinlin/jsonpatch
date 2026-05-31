@@ -71,6 +71,33 @@ func TestExtendOp(t *testing.T) {
 			assert.Equal(t, expected, result)
 		})
 
+		t.Run("preserves proto key as ordinary Go data", func(t *testing.T) {
+			t.Parallel()
+			operations := []internal.Operation{
+				{
+					Op:   "extend",
+					Path: "/foo/lol",
+					Props: map[string]any{
+						"__proto__": "plain data",
+					},
+				},
+			}
+			doc := map[string]any{
+				"foo": map[string]any{
+					"lol": map[string]any{},
+				},
+			}
+			result := testutils.ApplyInternalOps(t, doc, operations)
+			expected := map[string]any{
+				"foo": map[string]any{
+					"lol": map[string]any{
+						"__proto__": "plain data",
+					},
+				},
+			}
+			assert.Equal(t, expected, result)
+		})
+
 		t.Run("can set null", func(t *testing.T) {
 			t.Parallel()
 			operations := []internal.Operation{

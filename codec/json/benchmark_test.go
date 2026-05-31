@@ -19,7 +19,7 @@ var testOperations = []internal.Operation{
 	{Op: "test", Path: "/active", Value: true},
 }
 
-// Legacy test data as maps for compatibility testing
+// Map-shaped test data for decode benchmarks.
 var testOperationMaps = []map[string]any{
 	{"op": "add", "path": "/name", "value": "John"},
 	{"op": "replace", "path": "/age", "value": 30},

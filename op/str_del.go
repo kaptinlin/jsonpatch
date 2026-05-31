@@ -125,7 +125,6 @@ func (sd *StrDelOperation) ToJSON() (internal.Operation, error) {
 }
 
 // ToCompact serializes the operation to compact format.
-// json-joy format: [opcode, path, pos, str] for str mode, [opcode, path, pos, 0, len] for len mode.
 func (sd *StrDelOperation) ToCompact() (internal.CompactOperation, error) {
 	if sd.HasStr {
 		return internal.CompactOperation{internal.OpStrDelCode, sd.Path(), sd.Pos, sd.Str}, nil

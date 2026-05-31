@@ -45,7 +45,6 @@ func (t *TestOperation) Test(doc any) (bool, error) {
 	// Get target value
 	target, err := value(doc, t.Path())
 	if err != nil {
-		// If path not found, return inverse of 'not' flag (matches json-joy behavior)
 		//nolint:nilerr // This is intentional JSON Patch behavior - path not found is not an error
 		return t.NotFlag, nil
 	}
@@ -64,7 +63,6 @@ func (t *TestOperation) Not() bool {
 func (t *TestOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, err := value(doc, t.path)
 	if err != nil {
-		// If path not found, determine test result based on 'not' flag (matches json-joy behavior)
 		shouldPass := t.NotFlag
 		if !shouldPass {
 			return internal.OpResult[any]{}, fmt.Errorf("%w: path not found", ErrTestOperationFailed)
@@ -119,6 +117,6 @@ func (t *TestOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the test operation.
 func (t *TestOperation) Validate() error {
-	// Empty path is valid (test root document) per RFC 6902 and json-joy.
+	// Empty path is valid root-document testing.
 	return nil
 }

@@ -31,16 +31,18 @@ The `test` operation is part of RFC 6902, but its behavioral contract lives in `
 
 | Operation | Required fields | Contract |
 |-----------|-----------------|----------|
-| `add` | `path`, `value` | Insert or replace at the target path. `/-` appends to arrays. |
-| `remove` | `path` | Remove an existing value at the target path. Missing targets fail. |
+| `add` | `path`, `value` | Insert or replace at the target path. Empty path replaces the entire document. `/-` appends to arrays. |
+| `remove` | `path` | Remove an existing value at the target path. Empty path removes the root and yields `nil`; missing targets fail. |
 | `replace` | `path`, `value` | Replace an existing value. Empty path replaces the entire document. |
-| `move` | `path`, `from` | Move a value from `from` to `path`. Validation rejects moving into a descendant of `from`. |
-| `copy` | `path`, `from` | Copy a value from `from` to `path`. |
+| `move` | `path`, `from` | Move a value from `from` to `path`. Empty `from` means the root document. Validation rejects moving into a descendant of `from`. |
+| `copy` | `path`, `from` | Copy a value from `from` to `path`. Empty `from` means the root document. |
 
 ## Validation Contract
 
-- `ValidateOperations` rejects `nil` patches, empty patches, missing required fields, invalid JSON Pointer values, and operation-specific shape errors.
+- `ValidateOperations` rejects `nil` patches, empty patches, invalid JSON Pointer values, and operation-specific shape errors observable from `Operation`.
 - Validation uses the `allowMatchesOp` flag to permit or reject the `matches` predicate when the caller needs a restricted feature set.
+- Empty `path` and `from` values are valid JSON Pointers that target the root document. Missing field presence is a raw JSON/map concern and is enforced by the JSON codec, not by zero-value `Operation` structs.
+- `nil` `value` in an `Operation` means JSON `null` for `add`, `replace`, and `test`; raw JSON decoding still rejects omitted required `value` fields.
 - `ApplyPatch` decodes and applies operations directly. Call `ValidateOperations` yourself when a preflight validation step is required before execution.
 
 ## Error Contract
@@ -53,7 +55,7 @@ The `test` operation is part of RFC 6902, but its behavioral contract lives in `
 
 - Do not assume `ApplyPatch` performs an explicit `ValidateOperations` pass before execution.
 - Do not use `ApplyPatch` when you already have `Op` instances and need to avoid JSON decode overhead; use `ApplyOp` or `ApplyOps`.
-- Do not redefine the `test` operation contract here; `SPECS/25-predicate-specs.md` is the single source of truth for predicate behavior.
+- Do not duplicate the `test` operation contract here; `SPECS/25-predicate-specs.md` records predicate behavior.
 - Do not model whole-object replacement with `extend`; use `replace` when the target value must be replaced atomically.
 
 ## Acceptance Criteria
@@ -62,5 +64,3 @@ The `test` operation is part of RFC 6902, but its behavioral contract lives in `
 - [ ] The RFC 6902 mutating operations are defined once and only once.
 - [ ] Validation behavior is explicit, including the `allowMatchesOp` gate.
 - [ ] Callers can tell when to use JSON-shaped operations versus executable `Op` instances.
-
-**Origin:** former docs file `json-patch.md`.

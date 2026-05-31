@@ -53,12 +53,12 @@ func TestExtend_Apply(t *testing.T) {
 			expected:   map[string]any{"user": map[string]any{"name": "John", "age": nil, "city": nil}},
 		},
 		{
-			name:       "skip __proto__ properties",
+			name:       "preserve proto key as ordinary data",
 			path:       []string{"user"},
 			doc:        map[string]any{"user": map[string]any{"name": "John"}},
 			props:      map[string]any{"__proto__": map[string]any{"polluted": true}, "age": 30},
 			deleteNull: false,
-			expected:   map[string]any{"user": map[string]any{"name": "John", "age": 30}},
+			expected:   map[string]any{"user": map[string]any{"name": "John", "age": 30, "__proto__": map[string]any{"polluted": true}}},
 		},
 		{
 			name:       "extend at root",

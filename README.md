@@ -4,18 +4,18 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/kaptinlin/jsonpatch)](https://goreportcard.com/report/github.com/kaptinlin/jsonpatch)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A Go library for RFC 6902 JSON Patch plus predicate and extended operations with type-preserving APIs
+A Go-native JSON Patch+ library with type-preserving results and immutable-by-default patch application
 
-> json-joy compatible: this package follows the JSON Patch, predicate, and extended-operation behavior used by [streamich/json-joy](https://github.com/streamich/json-joy/tree/master/src/json-patch).
+Requires Go 1.26+.
 
 ## Features
 
-- **Type-preserving results**: `ApplyPatch`, `ApplyOp`, and `ApplyOps` preserve the input document shape whenever the result can be converted back safely.
-- **Broad operation support**: Use RFC 6902 operations, predicate operations, and extended operations in one package.
+- **Type-preserving results**: `ApplyPatch`, `ApplyOp`, and `ApplyOps` preserve the input shape whenever the patched value can be converted back safely.
+- **Immutable by default**: Patch application clones first unless you pass `jsonpatch.WithMutate(true)`.
+- **Three entry points**: Use `ApplyPatch` for JSON-shaped operations, `ApplyOp` for one executable operation, and `ApplyOps` for executable operation slices.
+- **Patch vocabulary**: Use RFC 6902 operations, predicate operations, and extended operations in one package.
 - **Multiple document shapes**: Patch `map[string]any`, structs, `[]byte`, JSON strings, plain strings, primitives, and `[]any`.
-- **Executable operations**: Build operations with the `op` package when you want typed operation values instead of JSON-shaped payloads.
-- **Codec support**: Encode and decode operations through `codec/json`, `codec/compact`, and `codec/binary`.
-- **Predictable defaults**: Patch application is immutable unless you pass `jsonpatch.WithMutate(true)`.
+- **Codec control**: Use `codec/json`, `codec/compact`, and `codec/binary` when you need a specific wire format.
 
 ## Installation
 
@@ -65,7 +65,10 @@ func main() {
 | `ApplyPatch` | You already have JSON-shaped `[]Operation` values. |
 | `ApplyOp` | You want to execute one compiled operation from `op/`. |
 | `ApplyOps` | You want to execute compiled operations directly. |
-| `ValidateOperation` / `ValidateOperations` | You want to validate JSON-shaped operation payloads before applying them. |
+| `codec/json` | You need explicit JSON operation encoding or decoding. |
+| `codec/compact` | You need compact array-form operations with segment-array paths. |
+| `codec/binary` | You need MessagePack encoding for executable operations. |
+| `ValidateOperation` / `ValidateOperations` | You want to preflight Go-built `Operation` values before applying them. |
 
 ## Executable Operations
 
@@ -146,7 +149,7 @@ fmt.Println(len(decoded))
 ### Binary Codec
 
 Use `codec/binary` when you want MessagePack encoding for executable operations.
-Second-order predicates (`and`, `or`, `not`) are not supported by the binary codec.
+Binary supports the same operation tree as the compact codec, including second-order predicates (`and`, `or`, `not`).
 
 ```go
 codec := binary.New()
@@ -187,11 +190,12 @@ Explore the runnable examples in [`examples/`](examples/):
 
 ```bash
 task test
+task golangci-lint
 task lint
 ```
 
 For development guidelines, see [AGENTS.md](AGENTS.md).
-For technical contracts, see [SPECS/](SPECS/).
+For recorded behavior contracts, see [SPECS/](SPECS/).
 
 ## Contributing
 

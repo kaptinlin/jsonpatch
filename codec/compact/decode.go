@@ -2,10 +2,9 @@ package compact
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/go-json-experiment/json"
-
-	"github.com/kaptinlin/jsonpointer"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/op"
@@ -30,7 +29,7 @@ func (d *Decoder) DecodeSlice(ops []Op) ([]internal.Op, error) {
 	for i, raw := range ops {
 		parsed, err := parseOp(raw)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("compact operation %d: %w", i, err)
 		}
 		result[i] = parsed
 	}
@@ -57,9 +56,9 @@ func parseHeader(raw Op) (internal.OpType, []string, error) {
 		return "", nil, ErrMinLength
 	}
 
-	pathStr, ok := raw[1].(string)
-	if !ok {
-		return "", nil, ErrPathNotString
+	path, err := parsePathValue(raw[1], ErrPathNotString)
+	if err != nil {
+		return "", nil, err
 	}
 
 	opType, err := resolveOpType(raw[0])
@@ -67,7 +66,7 @@ func parseHeader(raw Op) (internal.OpType, []string, error) {
 		return "", nil, err
 	}
 
-	return opType, parsePath(pathStr), nil
+	return opType, path, nil
 }
 
 // parseOp converts a compact operation to an operation instance.
@@ -180,8 +179,6 @@ func parseExtendedOp(opType internal.OpType, path []string, raw Op) (internal.Op
 		if err != nil {
 			return nil, ErrStrDelPosNotNumber
 		}
-		// json-joy format: [opcode, path, pos, str] for str mode,
-		// [opcode, path, pos, 0, len] for len mode
 		if str, ok := raw[3].(string); ok {
 			return op.NewStrDelWithStr(path, pos, str), nil
 		}
@@ -296,15 +293,18 @@ func parsePredicateOp(opType internal.OpType, path []string, raw Op) (internal.O
 
 	case internal.OpTestStringType:
 		if len(raw) < 3 {
+			return nil, ErrTestStringMissingPos
+		}
+		pos, err := toFloat64(raw[2])
+		if err != nil {
+			return nil, ErrTestStringPosNotNumber
+		}
+		if len(raw) < 4 {
 			return nil, ErrTestStringMissingStr
 		}
-		str, ok := raw[2].(string)
+		str, ok := raw[3].(string)
 		if !ok {
 			return nil, ErrTestStringNotString
-		}
-		var pos float64
-		if len(raw) >= 4 {
-			pos, _ = toFloat64(raw[3])
 		}
 		not := boolAt(raw, 4)
 		return op.NewTestString(path, str, pos, not, false), nil
@@ -373,7 +373,7 @@ func parseCompositeOp(opType internal.OpType, path []string, raw Op) (internal.O
 		}
 	}
 
-	subOps, err := parsePredicateOps(raw[2])
+	subOps, err := parsePredicateOps(raw[2], path)
 	if err != nil {
 		return nil, err
 	}
@@ -384,6 +384,9 @@ func parseCompositeOp(opType internal.OpType, path []string, raw Op) (internal.O
 	case internal.OpOrType:
 		return op.NewOr(path, subOps), nil
 	default:
+		if len(subOps) != 1 {
+			return nil, ErrNotSinglePredicate
+		}
 		return op.NewNotMultiple(path, subOps), nil
 	}
 }
@@ -393,11 +396,7 @@ func requireFromPath(raw Op, errMissing, errNotString error) ([]string, error) {
 	if len(raw) < 3 {
 		return nil, errMissing
 	}
-	fromStr, ok := raw[2].(string)
-	if !ok {
-		return nil, errNotString
-	}
-	return parsePath(fromStr), nil
+	return parsePathValue(raw[2], errNotString)
 }
 
 // requireString extracts a required string value at the given index.
@@ -425,7 +424,7 @@ func requireFloat64(raw Op, index int, errMissing, errNotNumber error) (float64,
 }
 
 // parsePredicateOps decodes an array of compact operations into predicate ops.
-func parsePredicateOps(value any) ([]any, error) {
+func parsePredicateOps(value any, base []string) ([]any, error) {
 	arr, ok := value.([]any)
 	if !ok {
 		return nil, ErrPredicateNotArray
@@ -437,7 +436,11 @@ func parsePredicateOps(value any) ([]any, error) {
 		if !ok {
 			return nil, ErrPredicateOpInvalid
 		}
-		decoded, err := parseOp(raw)
+		merged, err := withMergedPredicatePath(Op(raw), base)
+		if err != nil {
+			return nil, err
+		}
+		decoded, err := parseOp(merged)
 		if err != nil {
 			return nil, err
 		}
@@ -449,10 +452,47 @@ func parsePredicateOps(value any) ([]any, error) {
 	return result, nil
 }
 
-// parsePath converts a JSON pointer string to a path slice.
-func parsePath(s string) []string {
-	if s == "" {
-		return []string{}
+func withMergedPredicatePath(raw Op, base []string) (Op, error) {
+	if len(raw) < 2 {
+		return nil, ErrMinLength
 	}
-	return []string(jsonpointer.Parse(s))
+
+	child, err := parsePathValue(raw[1], ErrPathNotString)
+	if err != nil {
+		return nil, err
+	}
+
+	clone := slices.Clone(raw)
+	clone[1] = mergePaths(base, child)
+	return clone, nil
+}
+
+func parsePathValue(value any, errInvalid error) ([]string, error) {
+	switch path := value.(type) {
+	case []string:
+		return slices.Clone(path), nil
+	case []any:
+		segments := make([]string, len(path))
+		for i, segment := range path {
+			value, ok := segment.(string)
+			if !ok {
+				return nil, errInvalid
+			}
+			segments[i] = value
+		}
+		return segments, nil
+	default:
+		return nil, errInvalid
+	}
+}
+
+// mergePaths combines parent and child predicate paths.
+func mergePaths(base, child []string) []string {
+	if len(child) == 0 {
+		return slices.Clone(base)
+	}
+	if slices.Equal(base, child) {
+		return slices.Clone(child)
+	}
+	return slices.Concat(base, child)
 }

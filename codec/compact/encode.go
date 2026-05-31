@@ -5,8 +5,6 @@ import (
 
 	"github.com/go-json-experiment/json"
 
-	"github.com/kaptinlin/jsonpointer"
-
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
@@ -63,22 +61,57 @@ func encodeOp(o internal.Op, opts Options) (Op, error) {
 		return nil, err
 	}
 
-	result := slices.Clone(raw)
+	result := cloneOp(raw)
 
 	if opts.StringOpcode {
-		result[0] = string(o.Op())
-	}
-
-	// Convert []string path fields to JSON Pointer strings.
-	for i := 1; i <= 2 && i < len(result); i++ {
-		if segments, ok := result[i].([]string); ok {
-			if len(segments) == 0 {
-				result[i] = ""
-				continue
-			}
-			result[i] = jsonpointer.Format(segments...)
-		}
+		stringifyOpcodes(result)
 	}
 
 	return result, nil
+}
+
+func cloneOp(raw Op) Op {
+	result := make(Op, len(raw))
+	for i, value := range raw {
+		result[i] = cloneValue(value)
+	}
+	return result
+}
+
+func cloneValue(value any) any {
+	switch typed := value.(type) {
+	case []any:
+		return cloneAnySlice(typed)
+	case []string:
+		return slices.Clone(typed)
+	default:
+		return value
+	}
+}
+
+func cloneAnySlice(raw []any) []any {
+	result := make([]any, len(raw))
+	for i, value := range raw {
+		result[i] = cloneValue(value)
+	}
+	return result
+}
+
+func stringifyOpcodes(raw Op) {
+	opType, err := resolveOpType(raw[0])
+	if err == nil {
+		raw[0] = string(opType)
+	}
+	for _, value := range raw {
+		children, ok := value.([]any)
+		if !ok {
+			continue
+		}
+		for _, child := range children {
+			childOp, ok := child.([]any)
+			if ok && len(childOp) > 0 {
+				stringifyOpcodes(childOp)
+			}
+		}
+	}
 }

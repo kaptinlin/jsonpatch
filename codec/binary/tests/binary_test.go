@@ -196,7 +196,7 @@ func areOperationsEqual(a, b *internal.Operation) bool {
 	if !areValuesEqual(a.Value, b.Value) {
 		return false
 	}
-	if a.From != b.From || a.Str != b.Str || a.Type != b.Type {
+	if a.From != b.From || a.Str != b.Str || !areValuesEqual(a.Type, b.Type) {
 		return false
 	}
 	if !areNumericEqual(a.Inc, b.Inc) {

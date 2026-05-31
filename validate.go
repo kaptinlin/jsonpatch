@@ -18,70 +18,32 @@ var (
 	ErrEmptyPatch = errors.New("empty operation patch")
 	// ErrInvalidOperation reports that an operation name is unknown.
 	ErrInvalidOperation = errors.New("invalid operation")
-	// ErrMissingPath reports that an operation is missing its path field.
-	ErrMissingPath = errors.New("missing required field 'path'")
 	// ErrMissingOp reports that an operation is missing its op field.
 	ErrMissingOp = errors.New("missing required field 'op'")
-	// ErrMissingValue reports that an operation is missing its value field.
-	ErrMissingValue = errors.New("missing required field 'value'")
-	// ErrMissingFrom reports that an operation is missing its from field.
-	ErrMissingFrom = errors.New("missing required field 'from'")
-	// ErrInvalidPath reports that path has the wrong JSON type.
-	ErrInvalidPath = errors.New("field 'path' must be a string")
-	// ErrInvalidOp reports that op has the wrong JSON type.
-	ErrInvalidOp = errors.New("field 'op' must be a string")
-	// ErrInvalidFrom reports that from has the wrong JSON type.
-	ErrInvalidFrom = errors.New("field 'from' must be a string")
 	// ErrInvalidJSONPointer reports that a path or from value is not a valid JSON Pointer.
 	ErrInvalidJSONPointer = errors.New("invalid JSON pointer")
-	// ErrInvalidOldValue reports that oldValue has an invalid shape.
-	ErrInvalidOldValue = errors.New("invalid oldValue")
 	// ErrCannotMoveToChildren reports that a move target is nested under its source.
 	ErrCannotMoveToChildren = errors.New("cannot move into own children")
-	// ErrInvalidIncValue reports that an inc operand has an invalid type.
-	ErrInvalidIncValue = errors.New("invalid inc value")
-	// ErrExpectedStringField reports that a field must contain a string.
-	ErrExpectedStringField = errors.New("expected string field")
-	// ErrExpectedBooleanField reports that a field must contain a boolean.
-	ErrExpectedBooleanField = errors.New("expected field to be boolean")
-	// ErrExpectedIntegerField reports that a field must contain an integer.
-	ErrExpectedIntegerField = errors.New("not an integer")
 	// ErrNegativeNumber reports that a numeric field is negative.
 	ErrNegativeNumber = errors.New("number is negative")
-	// ErrInvalidProps reports that props has an invalid shape.
-	ErrInvalidProps = errors.New("invalid props field")
 	// ErrInvalidTypeField reports that type has an invalid shape.
 	ErrInvalidTypeField = errors.New("invalid type field")
-	// ErrEmptyTypeList reports that a type list is empty.
-	ErrEmptyTypeList = errors.New("empty type list")
 	// ErrInvalidType reports that a JSON type name is unsupported.
 	ErrInvalidType = errors.New("invalid type")
-	// ErrValueMustBeString reports that value must be a string.
-	ErrValueMustBeString = errors.New("value must be a string")
 	// ErrValueMustBeNumber reports that value must be numeric.
 	ErrValueMustBeNumber = errors.New("value must be a number")
-	// ErrValueMustBeArray reports that value must be an array.
-	ErrValueMustBeArray = errors.New("value must be an array")
-	// ErrValueTooLong reports that a provided value exceeds the allowed length.
-	ErrValueTooLong = errors.New("value too long")
-	// ErrInvalidNotModifier reports that not was supplied where it is unsupported.
-	ErrInvalidNotModifier = errors.New("invalid not modifier")
 	// ErrMatchesNotAllowed reports that matches is disabled for this validation pass.
 	ErrMatchesNotAllowed = errors.New("matches operation not allowed")
-	// ErrMustBeArray reports that a value must decode to an array.
-	ErrMustBeArray = errors.New("must be an array")
 	// ErrEmptyPredicateList reports that a composite predicate has no operands.
 	ErrEmptyPredicateList = errors.New("predicate list is empty")
+	// ErrNotRequiresSinglePredicate reports that not received anything other than one operand.
+	ErrNotRequiresSinglePredicate = errors.New("not operation requires exactly one predicate")
 	// ErrPosGreaterThanZero reports that pos must be greater than zero.
 	ErrPosGreaterThanZero = errors.New("expected pos field to be greater than 0")
 	// ErrInOperationValueMustBeArray reports that in requires an array value.
 	ErrInOperationValueMustBeArray = errors.New("in operation value must be an array")
 	// ErrExpectedValueToBeString reports that value must decode as a string.
 	ErrExpectedValueToBeString = errors.New("expected value to be string")
-	// ErrExpectedIgnoreCaseBoolean reports that ignore_case must decode as a boolean.
-	ErrExpectedIgnoreCaseBoolean = errors.New("expected ignore_case to be boolean")
-	// ErrExpectedFieldString reports that a field must decode as a string.
-	ErrExpectedFieldString = errors.New("expected field to be string")
 )
 
 // ValidateOperations validates an array of JSON Patch operations.
@@ -113,9 +75,6 @@ func validateOperation(op *Operation, allowMatchesOp bool) error {
 		return ErrMissingOp
 	}
 
-	if op.Path == "" {
-		return ErrMissingPath
-	}
 	if err := jsonpointer.Validate(op.Path); err != nil {
 		return ErrInvalidJSONPointer
 	}
@@ -177,23 +136,17 @@ func validatePredicateOperation(op *Operation, opStr string, allowMatchesOp bool
 }
 
 func validateValueRequired(op *Operation) error {
-	if op.Value == nil {
-		return ErrMissingValue
-	}
+	// Operation is a Go builder shape, not a raw JSON object. It cannot
+	// distinguish an omitted value field from a deliberate JSON null, so
+	// wire-level value presence is validated by the JSON codec.
 	return nil
 }
 
 func validateOperationCopy(op *Operation) error {
-	if op.From == "" {
-		return ErrMissingFrom
-	}
 	return jsonpointer.Validate(op.From)
 }
 
 func validateOperationMove(op *Operation) error {
-	if op.From == "" {
-		return ErrMissingFrom
-	}
 	if err := jsonpointer.Validate(op.From); err != nil {
 		return err
 	}
@@ -253,6 +206,16 @@ func validateOperationTestType(op *Operation) error {
 			}
 		}
 		return nil
+	case []string:
+		if len(typeValue) == 0 {
+			return fmt.Errorf("%w: type array cannot be empty", ErrInvalidTypeField)
+		}
+		for i := range typeValue {
+			if err := validateTypeName(typeValue[i]); err != nil {
+				return err
+			}
+		}
+		return nil
 	default:
 		return fmt.Errorf("%w: type field must be string or array of strings", ErrInvalidType)
 	}
@@ -297,13 +260,30 @@ func validateCompositeOperation(op *internal.Operation, allowMatchesOp bool) err
 	if len(op.Apply) == 0 {
 		return ErrEmptyPredicateList
 	}
+	if op.Op == "not" && len(op.Apply) != 1 {
+		return ErrNotRequiresSinglePredicate
+	}
 
 	for i := range op.Apply {
+		if !isPredicateOperationName(op.Apply[i].Op) {
+			return ErrInvalidOperation
+		}
 		if err := validateOperation(&op.Apply[i], allowMatchesOp); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func isPredicateOperationName(name string) bool {
+	switch name {
+	case "test", "test_type", "test_string", "test_string_len",
+		"matches", "contains", "ends", "starts", "in", "more", "less",
+		"type", "defined", "undefined", "and", "or", "not":
+		return true
+	default:
+		return false
+	}
 }
 
 func validateTypeName(typeStr string) error {

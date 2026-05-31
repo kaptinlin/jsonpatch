@@ -8,6 +8,8 @@ This spec defines the data structures shared by the public API, codecs, and oper
 
 `Operation` is the JSON-shaped input format for `ApplyPatch`, validation, and codec conversion.
 
+Because `Operation` is a Go struct, it cannot represent raw JSON field presence. Empty `path` and `from` are valid root pointers, and `nil` `value` is a valid JSON `null` payload. Raw JSON/map decoding owns missing-field validation when presence matters.
+
 | Field | Used by | Contract |
 |-------|---------|----------|
 | `op` | all operations | Operation name. |
@@ -19,12 +21,24 @@ This spec defines the data structures shared by the public API, codecs, and oper
 | `str` | `str_ins`, `str_del`, `test_string` | String operand. Empty string is meaningful and therefore not omitted. |
 | `len` | `str_del`, `test_string_len` | Length operand. `0` is meaningful and therefore not omitted. |
 | `not` | `test`, `test_string`, `test_string_len` | Direct negation flag. |
-| `type` | `test_type` and nested encoded operations | One JSON type name or a list of type names. |
+| `type` | `test_type` | One JSON type name or a list of type names. |
 | `ignore_case` | string and regex predicates | Case-insensitive matching flag when supported. |
 | `apply` | `and`, `or`, `not` | Nested predicate operations. |
 | `props` | `extend`, `split`, `merge` | Object properties used by structural extended operations. |
 | `deleteNull` | `extend` | Delete keys whose incoming property value is `nil` instead of storing them. |
-| `oldValue` | `remove`, `replace`, encoded compatibility payloads | Optional prior value metadata. |
+| `oldValue` | `remove`, `replace`, encoded prior-value payloads | Optional prior value metadata. |
+
+## Compact Operation Payload
+
+`CompactOperation` is an array DTO for the compact and binary codecs, not a separate semantic model. It uses numeric operation codes, segment-array paths, and the minimal payload needed to reconstruct an executable operation.
+
+| Shape | Contract |
+|-------|----------|
+| `[code, path]` | Path-only operations. |
+| `[code, path, value]` | Value operations and required scalar payloads. |
+| `[code, path, from]` | `move` and `copy`, where both paths are segment arrays. |
+| `[code, path, pos, str, not?]` | `test_string`; `not` appears only when true. |
+| `[code, path, apply]` | `and`, `or`, and `not`; child paths inside `apply` are parent-relative. |
 
 ## Supported JSON Type Names
 
@@ -65,7 +79,7 @@ The generic API accepts values matching the `Document` constraint and dispatches
 ## Forbidden
 
 - Do not introduce a second JSON-shaped patch payload type outside `Operation`.
-- Do not use `value` as the canonical multi-type field for `test_type`; use `type`.
+- Do not use `value` as the encoded multi-type field for `test_type`; use `type`.
 - Do not treat `Old` as universally populated; only some operations return it.
 - Do not remove zero-value fields such as `inc`, `pos`, `str`, or `len` from the model contract; zero is meaningful for these fields.
 
@@ -75,5 +89,3 @@ The generic API accepts values matching the `Document` constraint and dispatches
 - [ ] The JSON type vocabulary is explicit.
 - [ ] Result shapes and ordering semantics are documented.
 - [ ] The difference between JSON-shaped `Operation` values and executable operations remains clear.
-
-**Origin:** `CLAUDE.md` (Key Types and Interfaces), `internal/types.go`, `internal/jsonpatch_type.go`.

@@ -120,9 +120,9 @@ func main() {
 
 func roundTripMessage(original, decoded []internal.Op) string {
 	if sameOperations(original, decoded) {
-		return "✅ All operations perfectly decoded!"
+		return "All operations decoded successfully"
 	}
-	return "❌ Some operations failed to decode correctly"
+	return "Some operations failed to decode correctly"
 }
 
 func sameOperations(original, decoded []internal.Op) bool {

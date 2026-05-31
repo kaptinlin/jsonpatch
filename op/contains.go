@@ -97,7 +97,11 @@ func (co *ContainsOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (co *ContainsOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpContainsCode, co.Path(), co.Value}, nil
+	compact := internal.CompactOperation{internal.OpContainsCode, co.Path(), co.Value}
+	if co.IgnoreCase {
+		compact = append(compact, true)
+	}
+	return compact, nil
 }
 
 // Validate validates the contains operation.

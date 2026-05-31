@@ -42,7 +42,7 @@ func (r *RemoveOperation) Code() int {
 // Apply applies the remove operation to the document.
 func (r *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if len(r.path) == 0 {
-		return internal.OpResult[any]{}, ErrPathEmpty
+		return internal.OpResult[any]{Doc: nil, Old: doc}, nil
 	}
 	if len(r.path) == 1 {
 		switch v := doc.(type) {
@@ -126,6 +126,6 @@ func (r *RemoveOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the remove operation.
 func (r *RemoveOperation) Validate() error {
-	// Empty path is valid per RFC 6902 and json-joy.
+	// Empty path is valid root removal.
 	return nil
 }

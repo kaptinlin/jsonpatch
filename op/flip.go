@@ -49,7 +49,6 @@ func (f *FlipOperation) Apply(doc any) (internal.OpResult[any], error) {
 	return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
 }
 
-// flipValue inverts a value using logical negation matching json-joy's !ref.val behavior.
 // Uses JavaScript truthiness rules for non-boolean types.
 func flipValue(value any) any {
 	switch v := value.(type) {
@@ -64,7 +63,6 @@ func flipValue(value any) any {
 	case string:
 		return v == ""
 	default:
-		// All other types (arrays, objects, etc.) are truthy in JS
 		return false
 	}
 }

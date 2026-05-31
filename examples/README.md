@@ -58,13 +58,13 @@ cd struct-patch && go run main.go
 
 ### 11. Compact Codec (`compact-codec/`)
 
-Demonstrates the compact array-based codec that provides significant space savings over standard JSON format.
+Demonstrates the compact array-based codec with path segment arrays and numeric or string opcodes.
 
 ```bash
 cd compact-codec && go run main.go
 ```
 
-Shows encoding with both numeric and string opcodes, space savings analysis, and round-trip compatibility testing.
+Shows encoding with both numeric and string opcodes plus round-trip decoding.
 
 ### 7. Map Patch (`map-patch/`)
 

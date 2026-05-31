@@ -1,4 +1,4 @@
-package compatibility
+package reference
 
 import (
 	"fmt"
@@ -12,17 +12,17 @@ import (
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
 )
 
-type TypeScriptTestCase struct {
+type ReferenceCase struct {
 	Name     string
 	Doc      any
 	Patch    []jsonpatch.Operation
 	Expected any
 	WantErr  bool
 	Comment  string
-	Source   string
+	Evidence string
 }
 
-func TestTypeScriptParity(t *testing.T) {
+func TestReferenceVocabulary(t *testing.T) {
 	t.Parallel()
 	testCases := getKnownWorkingTestCases()
 
@@ -39,9 +39,9 @@ func TestTypeScriptParity(t *testing.T) {
 	}
 }
 
-func TestBasicOperationParity(t *testing.T) {
+func TestBasicOperationReference(t *testing.T) {
 	t.Parallel()
-	testCases := []TypeScriptTestCase{
+	testCases := []ReferenceCase{
 		{
 			Name: "add_to_object",
 			Doc:  map[string]any{"foo": "bar"},
@@ -50,7 +50,7 @@ func TestBasicOperationParity(t *testing.T) {
 			},
 			Expected: map[string]any{"foo": "bar", "baz": "qux"},
 			Comment:  "Should add new property to object",
-			Source:   "typescript:basic.spec.ts",
+			Evidence: "reference:basic.spec.ts",
 		},
 		{
 			Name: "replace_value",
@@ -60,7 +60,7 @@ func TestBasicOperationParity(t *testing.T) {
 			},
 			Expected: map[string]any{"foo": "baz"},
 			Comment:  "Should replace existing value",
-			Source:   "typescript:basic.spec.ts",
+			Evidence: "reference:basic.spec.ts",
 		},
 		{
 			Name: "remove_property",
@@ -70,7 +70,7 @@ func TestBasicOperationParity(t *testing.T) {
 			},
 			Expected: map[string]any{"foo": "bar"},
 			Comment:  "Should remove property from object",
-			Source:   "typescript:basic.spec.ts",
+			Evidence: "reference:basic.spec.ts",
 		},
 		{
 			Name: "test_successful",
@@ -80,7 +80,7 @@ func TestBasicOperationParity(t *testing.T) {
 			},
 			Expected: map[string]any{"foo": "bar"},
 			Comment:  "Test should pass and leave document unchanged",
-			Source:   "typescript:test.spec.ts",
+			Evidence: "reference:test.spec.ts",
 		},
 		{
 			Name: "test_failure",
@@ -88,9 +88,9 @@ func TestBasicOperationParity(t *testing.T) {
 			Patch: []jsonpatch.Operation{
 				{Op: "test", Path: "/foo", Value: "baz"},
 			},
-			WantErr: true,
-			Comment: "Test should fail when values don't match",
-			Source:  "typescript:test.spec.ts",
+			WantErr:  true,
+			Comment:  "Test should fail when values don't match",
+			Evidence: "reference:test.spec.ts",
 		},
 		{
 			Name: "copy_operation",
@@ -100,7 +100,7 @@ func TestBasicOperationParity(t *testing.T) {
 			},
 			Expected: map[string]any{"foo": "bar", "baz": "bar"},
 			Comment:  "Should copy value to new location",
-			Source:   "typescript:copy.spec.ts",
+			Evidence: "reference:copy.spec.ts",
 		},
 		{
 			Name: "move_operation",
@@ -110,16 +110,16 @@ func TestBasicOperationParity(t *testing.T) {
 			},
 			Expected: map[string]any{"foo": "bar", "moved": "qux"},
 			Comment:  "Should move value to new location",
-			Source:   "typescript:move.spec.ts",
+			Evidence: "reference:move.spec.ts",
 		},
 	}
 
 	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
 }
 
-func TestArrayOperationParity(t *testing.T) {
+func TestArrayOperationReference(t *testing.T) {
 	t.Parallel()
-	testCases := []TypeScriptTestCase{
+	testCases := []ReferenceCase{
 		{
 			Name: "add_to_array_end",
 			Doc:  []any{"foo", "bar"},
@@ -128,7 +128,7 @@ func TestArrayOperationParity(t *testing.T) {
 			},
 			Expected: []any{"foo", "bar", "baz"},
 			Comment:  "Should add to end of array",
-			Source:   "typescript:array.spec.ts",
+			Evidence: "reference:array.spec.ts",
 		},
 		{
 			Name: "add_to_array_middle",
@@ -138,7 +138,7 @@ func TestArrayOperationParity(t *testing.T) {
 			},
 			Expected: []any{"foo", "baz", "bar"},
 			Comment:  "Should insert into array at index",
-			Source:   "typescript:array.spec.ts",
+			Evidence: "reference:array.spec.ts",
 		},
 		{
 			Name: "remove_from_array",
@@ -148,7 +148,7 @@ func TestArrayOperationParity(t *testing.T) {
 			},
 			Expected: []any{"foo", "baz"},
 			Comment:  "Should remove from array at index",
-			Source:   "typescript:array.spec.ts",
+			Evidence: "reference:array.spec.ts",
 		},
 		{
 			Name: "replace_array_element",
@@ -158,16 +158,16 @@ func TestArrayOperationParity(t *testing.T) {
 			},
 			Expected: []any{"baz", "bar"},
 			Comment:  "Should replace array element",
-			Source:   "typescript:array.spec.ts",
+			Evidence: "reference:array.spec.ts",
 		},
 	}
 
 	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
 }
 
-func TestPredicateOperationParity(t *testing.T) {
+func TestPredicateOperationReference(t *testing.T) {
 	t.Parallel()
-	testCases := []TypeScriptTestCase{
+	testCases := []ReferenceCase{
 		{
 			Name: "contains_successful",
 			Doc:  map[string]any{"text": "hello world"},
@@ -176,7 +176,7 @@ func TestPredicateOperationParity(t *testing.T) {
 			},
 			Expected: map[string]any{"text": "hello world"},
 			Comment:  "Contains should pass when substring exists",
-			Source:   "typescript:predicates.spec.ts",
+			Evidence: "reference:predicates.spec.ts",
 		},
 		{
 			Name: "contains_failure",
@@ -184,9 +184,9 @@ func TestPredicateOperationParity(t *testing.T) {
 			Patch: []jsonpatch.Operation{
 				{Op: "contains", Path: "/text", Value: "xyz"},
 			},
-			WantErr: true,
-			Comment: "Contains should fail when substring doesn't exist",
-			Source:  "typescript:predicates.spec.ts",
+			WantErr:  true,
+			Comment:  "Contains should fail when substring doesn't exist",
+			Evidence: "reference:predicates.spec.ts",
 		},
 		{
 			Name: "type_check_number",
@@ -196,7 +196,7 @@ func TestPredicateOperationParity(t *testing.T) {
 			},
 			Expected: map[string]any{"value": 42},
 			Comment:  "Type check should pass for correct type",
-			Source:   "typescript:type.spec.ts",
+			Evidence: "reference:type.spec.ts",
 		},
 		{
 			Name: "type_check_failure",
@@ -204,9 +204,9 @@ func TestPredicateOperationParity(t *testing.T) {
 			Patch: []jsonpatch.Operation{
 				{Op: "type", Path: "/value", Value: "number"},
 			},
-			WantErr: true,
-			Comment: "Type check should fail for incorrect type",
-			Source:  "typescript:type.spec.ts",
+			WantErr:  true,
+			Comment:  "Type check should fail for incorrect type",
+			Evidence: "reference:type.spec.ts",
 		},
 		{
 			Name: "less_than_check",
@@ -216,7 +216,7 @@ func TestPredicateOperationParity(t *testing.T) {
 			},
 			Expected: map[string]any{"value": 5},
 			Comment:  "Less than check should pass",
-			Source:   "typescript:comparison.spec.ts",
+			Evidence: "reference:comparison.spec.ts",
 		},
 		{
 			Name: "more_than_check",
@@ -226,16 +226,16 @@ func TestPredicateOperationParity(t *testing.T) {
 			},
 			Expected: map[string]any{"value": 15},
 			Comment:  "More than check should pass",
-			Source:   "typescript:comparison.spec.ts",
+			Evidence: "reference:comparison.spec.ts",
 		},
 	}
 
 	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
 }
 
-func TestExtendedOperationParity(t *testing.T) {
+func TestExtendedOperationReference(t *testing.T) {
 	t.Parallel()
-	testCases := []TypeScriptTestCase{
+	testCases := []ReferenceCase{
 		{
 			Name: "inc_operation",
 			Doc:  map[string]any{"counter": 5},
@@ -244,7 +244,7 @@ func TestExtendedOperationParity(t *testing.T) {
 			},
 			Expected: map[string]any{"counter": float64(8)}, // JSON unmarshaling converts to float64
 			Comment:  "Increment should add to numeric value",
-			Source:   "typescript:inc.spec.ts",
+			Evidence: "reference:inc.spec.ts",
 		},
 		{
 			Name: "flip_operation",
@@ -254,7 +254,7 @@ func TestExtendedOperationParity(t *testing.T) {
 			},
 			Expected: map[string]any{"enabled": false},
 			Comment:  "Flip should toggle boolean value",
-			Source:   "typescript:flip.spec.ts",
+			Evidence: "reference:flip.spec.ts",
 		},
 		{
 			Name: "str_ins_operation",
@@ -264,25 +264,25 @@ func TestExtendedOperationParity(t *testing.T) {
 			},
 			Expected: map[string]any{"text": "hello beautiful world"},
 			Comment:  "String insert should insert text at position",
-			Source:   "typescript:strins.spec.ts",
+			Evidence: "reference:strins.spec.ts",
 		},
 	}
 
 	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
 }
 
-func TestErrorHandlingParity(t *testing.T) {
+func TestErrorHandlingReference(t *testing.T) {
 	t.Parallel()
-	testCases := []TypeScriptTestCase{
+	testCases := []ReferenceCase{
 		{
 			Name: "path_not_found",
 			Doc:  map[string]any{"foo": "bar"},
 			Patch: []jsonpatch.Operation{
 				{Op: "remove", Path: "/nonexistent"},
 			},
-			WantErr: true,
-			Comment: "Should fail when path doesn't exist",
-			Source:  "typescript:errors.spec.ts",
+			WantErr:  true,
+			Comment:  "Should fail when path doesn't exist",
+			Evidence: "reference:errors.spec.ts",
 		},
 		{
 			Name: "invalid_array_index",
@@ -290,9 +290,9 @@ func TestErrorHandlingParity(t *testing.T) {
 			Patch: []jsonpatch.Operation{
 				{Op: "remove", Path: "/5"},
 			},
-			WantErr: true,
-			Comment: "Should fail for out-of-bounds array index",
-			Source:  "typescript:errors.spec.ts",
+			WantErr:  true,
+			Comment:  "Should fail for out-of-bounds array index",
+			Evidence: "reference:errors.spec.ts",
 		},
 		{
 			Name: "type_mismatch_operation",
@@ -300,18 +300,18 @@ func TestErrorHandlingParity(t *testing.T) {
 			Patch: []jsonpatch.Operation{
 				{Op: "inc", Path: "/value", Inc: 1},
 			},
-			WantErr: true,
-			Comment: "Should fail when operation type doesn't match value type",
-			Source:  "typescript:errors.spec.ts",
+			WantErr:  true,
+			Comment:  "Should fail when operation type doesn't match value type",
+			Evidence: "reference:errors.spec.ts",
 		},
 	}
 
 	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
 }
 
-func TestSecondOrderPredicateParity(t *testing.T) {
+func TestSecondOrderPredicateReference(t *testing.T) {
 	t.Parallel()
-	testCases := []TypeScriptTestCase{
+	testCases := []ReferenceCase{
 		{
 			Name: "not_predicate_success",
 			Doc:  map[string]any{"foo": 1, "bar": 2},
@@ -326,7 +326,7 @@ func TestSecondOrderPredicateParity(t *testing.T) {
 			},
 			Expected: map[string]any{"foo": 1, "bar": 2},
 			Comment:  "NOT should succeed when inner predicate fails",
-			Source:   "typescript:second-order-predicates.spec.ts",
+			Evidence: "reference:second-order-predicates.spec.ts",
 		},
 		{
 			Name: "not_predicate_failure",
@@ -340,16 +340,16 @@ func TestSecondOrderPredicateParity(t *testing.T) {
 					},
 				},
 			},
-			WantErr: true,
-			Comment: "NOT should fail when inner predicate succeeds",
-			Source:  "typescript:second-order-predicates.spec.ts",
+			WantErr:  true,
+			Comment:  "NOT should fail when inner predicate succeeds",
+			Evidence: "reference:second-order-predicates.spec.ts",
 		},
 	}
 
 	testutils.RunMultiOperationTestCases(t, convertToMultiOpTestCases(testCases))
 }
 
-func getKnownWorkingTestCases() []TypeScriptTestCase {
+func getKnownWorkingTestCases() []ReferenceCase {
 	return slices.Concat(
 		getBasicOperationTestCases(),
 		getArrayOperationTestCases(),
@@ -360,15 +360,15 @@ func getKnownWorkingTestCases() []TypeScriptTestCase {
 	)
 }
 
-func getBasicOperationTestCases() []TypeScriptTestCase {
-	return []TypeScriptTestCase{
+func getBasicOperationTestCases() []ReferenceCase {
+	return []ReferenceCase{
 		{
 			Name:     "basic_add",
 			Doc:      map[string]any{"a": 1},
 			Patch:    []jsonpatch.Operation{{Op: "add", Path: "/b", Value: 2}},
 			Expected: map[string]any{"a": 1, "b": 2},
 			Comment:  "Basic add operation",
-			Source:   "typescript:add.spec.ts",
+			Evidence: "reference:add.spec.ts",
 		},
 		{
 			Name:     "basic_remove",
@@ -376,65 +376,65 @@ func getBasicOperationTestCases() []TypeScriptTestCase {
 			Patch:    []jsonpatch.Operation{{Op: "remove", Path: "/b"}},
 			Expected: map[string]any{"a": 1},
 			Comment:  "Basic remove operation",
-			Source:   "typescript:remove.spec.ts",
+			Evidence: "reference:remove.spec.ts",
 		},
 	}
 }
 
-func getArrayOperationTestCases() []TypeScriptTestCase {
-	return []TypeScriptTestCase{
+func getArrayOperationTestCases() []ReferenceCase {
+	return []ReferenceCase{
 		{
 			Name:     "array_append",
 			Doc:      []any{1, 2},
 			Patch:    []jsonpatch.Operation{{Op: "add", Path: "/-", Value: 3}},
 			Expected: []any{1, 2, 3},
 			Comment:  "Array append operation",
-			Source:   "typescript:array.spec.ts",
+			Evidence: "reference:array.spec.ts",
 		},
 	}
 }
 
-func getPredicateOperationTestCases() []TypeScriptTestCase {
-	return []TypeScriptTestCase{
+func getPredicateOperationTestCases() []ReferenceCase {
+	return []ReferenceCase{
 		{
 			Name:     "predicate_contains",
 			Doc:      map[string]any{"text": "hello"},
 			Patch:    []jsonpatch.Operation{{Op: "contains", Path: "/text", Value: "ell"}},
 			Expected: map[string]any{"text": "hello"},
 			Comment:  "Predicate contains operation",
-			Source:   "typescript:contains.spec.ts",
+			Evidence: "reference:contains.spec.ts",
 		},
 	}
 }
 
-func getExtendedOperationTestCases() []TypeScriptTestCase {
-	return []TypeScriptTestCase{
+func getExtendedOperationTestCases() []ReferenceCase {
+	return []ReferenceCase{
 		{
 			Name:     "extended_inc",
 			Doc:      map[string]any{"num": 5},
 			Patch:    []jsonpatch.Operation{{Op: "inc", Path: "/num", Inc: 2}},
 			Expected: map[string]any{"num": float64(7)},
 			Comment:  "Extended inc operation",
-			Source:   "typescript:inc.spec.ts",
+			Evidence: "reference:inc.spec.ts",
 		},
 	}
 }
 
-func getErrorHandlingTestCases() []TypeScriptTestCase {
-	return []TypeScriptTestCase{
+func getErrorHandlingTestCases() []ReferenceCase {
+	return []ReferenceCase{
 		{
-			Name:    "error_path_not_found",
-			Doc:     map[string]any{"a": 1},
-			Patch:   []jsonpatch.Operation{{Op: "test", Path: "/b", Value: 1}},
-			WantErr: true,
-			Comment: "Path not found error",
-			Source:  "typescript:errors.spec.ts",
+			Name:     "error_path_not_found",
+			Doc:      map[string]any{"a": 1},
+			Patch:    []jsonpatch.Operation{{Op: "test", Path: "/b", Value: 1}},
+			WantErr:  true,
+			Comment:  "Path not found error",
+			Evidence: "reference:errors.spec.ts",
 		},
 	}
 }
 
-func getSecondOrderPredicateTestCases() []TypeScriptTestCase {
-	return []TypeScriptTestCase{
+func getSecondOrderPredicateTestCases() []ReferenceCase {
+	return []ReferenceCase{
 		{
 			Name: "second_order_not",
 			Doc:  map[string]any{"val": 1},
@@ -449,27 +449,27 @@ func getSecondOrderPredicateTestCases() []TypeScriptTestCase {
 			},
 			Expected: map[string]any{"val": 1},
 			Comment:  "Second-order NOT predicate",
-			Source:   "typescript:second-order-predicates.spec.ts",
+			Evidence: "reference:second-order-predicates.spec.ts",
 		},
 	}
 }
 
-func convertToMultiOpTestCases(tsCases []TypeScriptTestCase) []testutils.MultiOperationTestCase {
-	multiOpCases := make([]testutils.MultiOperationTestCase, 0, len(tsCases))
-	for _, tc := range tsCases {
+func convertToMultiOpTestCases(referenceCases []ReferenceCase) []testutils.MultiOperationTestCase {
+	multiOpCases := make([]testutils.MultiOperationTestCase, 0, len(referenceCases))
+	for _, tc := range referenceCases {
 		multiOpCases = append(multiOpCases, testutils.MultiOperationTestCase{
 			Name:       tc.Name,
 			Doc:        tc.Doc,
 			Operations: tc.Patch,
 			Expected:   tc.Expected,
 			WantErr:    tc.WantErr,
-			Comment:    fmt.Sprintf("%s (Source: %s)", tc.Comment, tc.Source),
+			Comment:    fmt.Sprintf("%s (Evidence: %s)", tc.Comment, tc.Evidence),
 		})
 	}
 	return multiOpCases
 }
 
-func BenchmarkTypeScriptParity(b *testing.B) {
+func BenchmarkReferenceVocabulary(b *testing.B) {
 	testCases := getKnownWorkingTestCases()
 
 	b.ResetTimer()

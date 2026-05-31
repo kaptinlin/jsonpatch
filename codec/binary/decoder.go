@@ -2,6 +2,7 @@ package binary
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/tinylib/msgp/msgp"
 
@@ -30,6 +31,10 @@ func decodeOps(r *msgp.Reader) ([]internal.Op, error) {
 // decodeOp reads the array header, operation code, and path,
 // then dispatches to the appropriate decoder.
 func decodeOp(r *msgp.Reader) (internal.Op, error) {
+	return decodeOpWithParent(r, nil)
+}
+
+func decodeOpWithParent(r *msgp.Reader, parent []string) (internal.Op, error) {
 	arrSize, err := r.ReadArrayHeader()
 	if err != nil {
 		return nil, err
@@ -41,6 +46,9 @@ func decodeOp(r *msgp.Reader) (internal.Op, error) {
 	path, err := decodePath(r)
 	if err != nil {
 		return nil, err
+	}
+	if parent != nil {
+		path = mergePaths(parent, path)
 	}
 
 	switch code {
@@ -83,7 +91,11 @@ func decodeOp(r *msgp.Reader) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
-		return op.NewTest(path, value), nil
+		not, err := decodeOptionalBool(r, arrSize, 4)
+		if err != nil {
+			return nil, err
+		}
+		return op.NewTestWithNot(path, value, not), nil
 
 	// Predicate operations
 	case internal.OpDefinedCode:
@@ -109,29 +121,47 @@ func decodeOp(r *msgp.Reader) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
-		return op.NewContains(path, v), nil
+		ignoreCase, err := decodeOptionalBool(r, arrSize, 4)
+		if err != nil {
+			return nil, err
+		}
+		return op.NewContainsWithIgnoreCase(path, v, ignoreCase), nil
 	case internal.OpStartsCode:
 		v, err := r.ReadString()
 		if err != nil {
 			return nil, err
 		}
-		return op.NewStarts(path, v), nil
+		ignoreCase, err := decodeOptionalBool(r, arrSize, 4)
+		if err != nil {
+			return nil, err
+		}
+		return op.NewStartsWithIgnoreCase(path, v, ignoreCase), nil
 	case internal.OpEndsCode:
 		v, err := r.ReadString()
 		if err != nil {
 			return nil, err
 		}
-		return op.NewEnds(path, v), nil
+		ignoreCase, err := decodeOptionalBool(r, arrSize, 4)
+		if err != nil {
+			return nil, err
+		}
+		return op.NewEndsWithIgnoreCase(path, v, ignoreCase), nil
 	case internal.OpInCode:
 		return decodeIn(r, path)
 	case internal.OpMatchesCode:
-		return decodeMatches(r, path)
+		return decodeMatches(r, path, arrSize)
 	case internal.OpTestStringCode:
-		return decodeTestString(r, path)
+		return decodeTestString(r, path, arrSize)
 	case internal.OpTestStringLenCode:
-		return decodeTestStringLen(r, path)
+		return decodeTestStringLen(r, path, arrSize)
 	case internal.OpTypeCode:
 		return decodeType(r, path)
+	case internal.OpAndCode:
+		return decodeComposite(r, path, internal.OpAndType)
+	case internal.OpOrCode:
+		return decodeComposite(r, path, internal.OpOrType)
+	case internal.OpNotCode:
+		return decodeComposite(r, path, internal.OpNotType)
 
 	// Extended operations
 	case internal.OpFlipCode:
@@ -149,7 +179,7 @@ func decodeOp(r *msgp.Reader) (internal.Op, error) {
 	case internal.OpSplitCode:
 		return decodeSplit(r, path, arrSize)
 	case internal.OpExtendCode:
-		return decodeExtend(r, path)
+		return decodeExtend(r, path, arrSize)
 	case internal.OpMergeCode:
 		return decodeMerge(r, path, arrSize)
 
@@ -194,12 +224,12 @@ func decodeIn(r *msgp.Reader, path []string) (internal.Op, error) {
 }
 
 // decodeMatches decodes a matches predicate operation.
-func decodeMatches(r *msgp.Reader, path []string) (internal.Op, error) {
+func decodeMatches(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, error) {
 	pattern, err := r.ReadString()
 	if err != nil {
 		return nil, err
 	}
-	ignoreCase, err := r.ReadBool()
+	ignoreCase, err := decodeOptionalBool(r, arrSize, 4)
 	if err != nil {
 		return nil, err
 	}
@@ -207,25 +237,29 @@ func decodeMatches(r *msgp.Reader, path []string) (internal.Op, error) {
 }
 
 // decodeTestString decodes a test_string operation.
-func decodeTestString(r *msgp.Reader, path []string) (internal.Op, error) {
-	str, err := r.ReadString()
-	if err != nil {
-		return nil, err
-	}
+func decodeTestString(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, error) {
 	pos, err := r.ReadFloat64()
 	if err != nil {
 		return nil, err
 	}
-	return op.NewTestString(path, str, pos, false, false), nil
+	str, err := r.ReadString()
+	if err != nil {
+		return nil, err
+	}
+	not, err := decodeOptionalBool(r, arrSize, 5)
+	if err != nil {
+		return nil, err
+	}
+	return op.NewTestString(path, str, pos, not, false), nil
 }
 
 // decodeTestStringLen decodes a test_string_len operation.
-func decodeTestStringLen(r *msgp.Reader, path []string) (internal.Op, error) {
+func decodeTestStringLen(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, error) {
 	length, err := r.ReadFloat64()
 	if err != nil {
 		return nil, err
 	}
-	not, err := r.ReadBool()
+	not, err := decodeOptionalBool(r, arrSize, 4)
 	if err != nil {
 		return nil, err
 	}
@@ -284,7 +318,7 @@ func decodeSplit(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, er
 }
 
 // decodeExtend decodes an extend operation.
-func decodeExtend(r *msgp.Reader, path []string) (internal.Op, error) {
+func decodeExtend(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, error) {
 	raw, err := decodeValue(r)
 	if err != nil {
 		return nil, err
@@ -293,11 +327,57 @@ func decodeExtend(r *msgp.Reader, path []string) (internal.Op, error) {
 	if !ok {
 		return nil, fmt.Errorf("extend properties must be an object, got %T: %w", raw, ErrInvalidValueType)
 	}
-	deleteNull, err := r.ReadBool()
+	deleteNull, err := decodeOptionalBool(r, arrSize, 4)
 	if err != nil {
 		return nil, err
 	}
 	return op.NewExtend(path, props, deleteNull), nil
+}
+
+func decodeComposite(r *msgp.Reader, path []string, opType internal.OpType) (internal.Op, error) {
+	ops, err := decodePredicateOps(r, path)
+	if err != nil {
+		return nil, err
+	}
+
+	switch opType {
+	case internal.OpAndType:
+		return op.NewAnd(path, ops), nil
+	case internal.OpOrType:
+		return op.NewOr(path, ops), nil
+	default:
+		if len(ops) != 1 {
+			return nil, ErrNotSinglePredicate
+		}
+		return op.NewNotMultiple(path, ops), nil
+	}
+}
+
+func decodePredicateOps(r *msgp.Reader, parent []string) ([]any, error) {
+	size, err := r.ReadArrayHeader()
+	if err != nil {
+		return nil, err
+	}
+	ops := make([]any, int(size))
+	for i := range ops {
+		decoded, err := decodeOpWithParent(r, parent)
+		if err != nil {
+			return nil, err
+		}
+		predicate, ok := decoded.(internal.PredicateOp)
+		if !ok {
+			return nil, ErrInvalidPredicate
+		}
+		ops[i] = predicate
+	}
+	return ops, nil
+}
+
+func decodeOptionalBool(r *msgp.Reader, arrSize, presentAt uint32) (bool, error) {
+	if arrSize < presentAt {
+		return false, nil
+	}
+	return r.ReadBool()
 }
 
 // decodeMerge decodes a merge operation.
@@ -336,6 +416,16 @@ func decodePath(r *msgp.Reader) ([]string, error) {
 		path[i] = seg
 	}
 	return path, nil
+}
+
+func mergePaths(base, child []string) []string {
+	if len(child) == 0 {
+		return slices.Clone(base)
+	}
+	if slices.Equal(base, child) {
+		return slices.Clone(child)
+	}
+	return slices.Concat(base, child)
 }
 
 // decodeValue reads an arbitrary msgp value and normalizes map types.

@@ -18,8 +18,14 @@ func TestNot(t *testing.T) {
 					Op:   "not",
 					Path: "",
 					Apply: []jsonpatch.Operation{
-						{Op: "test", Path: "/foo", Value: 1},
-						{Op: "test", Path: "/bar", Value: 3},
+						{
+							Op:   "or",
+							Path: "",
+							Apply: []jsonpatch.Operation{
+								{Op: "test", Path: "/foo", Value: 1},
+								{Op: "test", Path: "/bar", Value: 3},
+							},
+						},
 					},
 				},
 			},
@@ -34,8 +40,14 @@ func TestNot(t *testing.T) {
 					Op:   "not",
 					Path: "",
 					Apply: []jsonpatch.Operation{
-						{Op: "test", Path: "/foo", Value: 1},
-						{Op: "test", Path: "/bar", Value: 2},
+						{
+							Op:   "or",
+							Path: "",
+							Apply: []jsonpatch.Operation{
+								{Op: "test", Path: "/foo", Value: 1},
+								{Op: "test", Path: "/bar", Value: 2},
+							},
+						},
 					},
 				},
 			},
@@ -50,8 +62,14 @@ func TestNot(t *testing.T) {
 					Op:   "not",
 					Path: "",
 					Apply: []jsonpatch.Operation{
-						{Op: "test", Path: "/foo", Value: 1},
-						{Op: "test", Path: "/bar", Value: 2},
+						{
+							Op:   "or",
+							Path: "",
+							Apply: []jsonpatch.Operation{
+								{Op: "test", Path: "/foo", Value: 1},
+								{Op: "test", Path: "/bar", Value: 2},
+							},
+						},
 					},
 				},
 			},
