@@ -36,32 +36,9 @@ func extractPredicateOps(operations []any) []internal.PredicateOp {
 	return ops
 }
 
-// formatPath formats a path slice into a JSON Pointer string.
-// Optimized for common cases with pre-allocated buffer and single-pass construction.
+// formatPath formats path segments as a JSON Pointer string.
 func formatPath(path []string) string {
-	if len(path) == 0 {
-		return ""
-	}
-
-	// Fast path for single segment (very common)
-	if len(path) == 1 {
-		return "/" + path[0]
-	}
-
-	var builder strings.Builder
-	// More accurate size estimation based on actual segment lengths
-	totalLen := len(path) // One '/' per segment
-	for _, segment := range path {
-		totalLen += len(segment)
-	}
-	builder.Grow(totalLen)
-
-	for _, segment := range path {
-		builder.WriteByte('/')
-		builder.WriteString(segment)
-	}
-
-	return builder.String()
+	return jsonpointer.Format(path...)
 }
 
 // value retrieves a value from a document using a path.
