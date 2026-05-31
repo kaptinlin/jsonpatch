@@ -4,6 +4,8 @@ package op
 import (
 	"slices"
 
+	"github.com/kaptinlin/deepclone"
+
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
@@ -32,16 +34,16 @@ func (a *AddOperation) Code() int {
 }
 
 // Apply applies the add operation.
-// Note: Values are not cloned here; the caller (applyInternalOps) handles
-// document cloning once at entry.
 func (a *AddOperation) Apply(doc any) (internal.OpResult[any], error) {
+	newValue := deepclone.Clone(a.Value)
+
 	// Handle empty path (root replacement) - only for truly empty path, not empty string key
 	if len(a.path) == 0 {
 		// Replace entire document
-		return internal.OpResult[any]{Doc: a.Value, Old: doc}, nil
+		return internal.OpResult[any]{Doc: newValue, Old: doc}, nil
 	}
 
-	newDoc, oldValue, err := addAtPath(doc, a.path, a.Value)
+	newDoc, oldValue, err := addAtPath(doc, a.path, newValue)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}

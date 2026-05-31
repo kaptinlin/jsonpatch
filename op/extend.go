@@ -3,6 +3,8 @@ package op
 import (
 	"maps"
 
+	"github.com/kaptinlin/deepclone"
+
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
@@ -97,7 +99,7 @@ func extendObject(obj map[string]any, props map[string]any, deleteNull bool) map
 			continue
 		}
 
-		result[k] = v
+		result[k] = deepclone.Clone(v)
 	}
 
 	return result

@@ -105,6 +105,22 @@ func TestReplace_EmptyStringRootKey(t *testing.T) {
 	assert.Equal(t, "root-key", result.Old)
 }
 
+func TestReplaceClonesInsertedValue(t *testing.T) {
+	t.Parallel()
+
+	payload := map[string]any{"nested": map[string]any{"name": "Ada"}}
+	result, err := NewReplace([]string{"profile"}, payload).Apply(map[string]any{"profile": map[string]any{"name": "old"}})
+	require.NoError(t, err)
+
+	payload["nested"].(map[string]any)["name"] = "Grace"
+
+	want := map[string]any{"nested": map[string]any{"name": "Ada"}}
+	got := result.Doc.(map[string]any)["profile"]
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("Apply() replacement value mismatch after payload mutation (-want +got):\n%s", diff)
+	}
+}
+
 func TestReplace_WithOldValueSerializesOldValue(t *testing.T) {
 	t.Parallel()
 

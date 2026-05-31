@@ -626,13 +626,19 @@ func operationToMap(o *internal.Operation, nested bool) map[string]any {
 	return m
 }
 
-// setValueField sets the "value" field based on operation type and nesting.
-func setValueField(m map[string]any, o *internal.Operation, nested bool) {
-	if nested && o.Value == nil {
-		return
-	}
-	if nested || o.Value != nil || o.Op == "add" || o.Op == "replace" || o.Op == "test" {
+// setValueField sets the "value" field when present or when nil is a meaningful payload.
+func setValueField(m map[string]any, o *internal.Operation, _ bool) {
+	if o.Value != nil || operationAllowsNullValue(o.Op) {
 		m["value"] = o.Value
+	}
+}
+
+func operationAllowsNullValue(op string) bool {
+	switch op {
+	case "add", "replace", "test":
+		return true
+	default:
+		return false
 	}
 }
 

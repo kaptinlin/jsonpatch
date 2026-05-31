@@ -43,6 +43,7 @@ The `test` operation is part of RFC 6902, but its behavioral contract lives in `
 - Validation uses the `allowMatchesOp` flag to permit or reject the `matches` predicate when the caller needs a restricted feature set.
 - Empty `path` and `from` values are valid JSON Pointers that target the root document. Missing field presence is a raw JSON/map concern and is enforced by the JSON codec, not by zero-value `Operation` structs.
 - `nil` `value` in an `Operation` means JSON `null` for `add`, `replace`, and `test`; raw JSON decoding still rejects omitted required `value` fields.
+- Patch payloads that become document values are cloned before insertion so later mutation of `Operation` fields cannot mutate the result document.
 - `ApplyPatch` decodes and applies operations directly. Call `ValidateOperations` yourself when a preflight validation step is required before execution.
 
 ## Error Contract

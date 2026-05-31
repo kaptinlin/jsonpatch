@@ -113,6 +113,22 @@ func TestAdd_RootReplacement(t *testing.T) {
 	}
 }
 
+func TestAddClonesInsertedValue(t *testing.T) {
+	t.Parallel()
+
+	payload := map[string]any{"nested": map[string]any{"name": "Ada"}}
+	result, err := NewAdd([]string{"profile"}, payload).Apply(map[string]any{})
+	require.NoError(t, err)
+
+	payload["nested"].(map[string]any)["name"] = "Grace"
+
+	want := map[string]any{"nested": map[string]any{"name": "Ada"}}
+	got := result.Doc.(map[string]any)["profile"]
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("Apply() inserted value mismatch after payload mutation (-want +got):\n%s", diff)
+	}
+}
+
 func TestAdd_InterfaceMethods(t *testing.T) {
 	t.Parallel()
 	addOp := NewAdd([]string{"foo"}, "bar")

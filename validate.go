@@ -70,13 +70,20 @@ func ValidateOperation(op Operation, allowMatchesOp bool) error {
 	return validateOperation(&op, allowMatchesOp)
 }
 
+func invalidJSONPointerError(err error) error {
+	if err == nil {
+		return nil
+	}
+	return errors.Join(ErrInvalidJSONPointer, err)
+}
+
 func validateOperation(op *Operation, allowMatchesOp bool) error {
 	if op.Op == "" {
 		return ErrMissingOp
 	}
 
-	if err := jsonpointer.Validate(op.Path); err != nil {
-		return ErrInvalidJSONPointer
+	if err := invalidJSONPointerError(jsonpointer.Validate(op.Path)); err != nil {
+		return err
 	}
 
 	switch op.Op {
@@ -143,11 +150,11 @@ func validateValueRequired(op *Operation) error {
 }
 
 func validateOperationCopy(op *Operation) error {
-	return jsonpointer.Validate(op.From)
+	return invalidJSONPointerError(jsonpointer.Validate(op.From))
 }
 
 func validateOperationMove(op *Operation) error {
-	if err := jsonpointer.Validate(op.From); err != nil {
+	if err := invalidJSONPointerError(jsonpointer.Validate(op.From)); err != nil {
 		return err
 	}
 

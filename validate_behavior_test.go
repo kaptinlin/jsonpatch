@@ -18,10 +18,11 @@ func TestValidateOperationRejectsInvalidPayloads(t *testing.T) {
 		operation jsonpatch.Operation
 		allow     bool
 		wantErr   error
+		wantCause error
 	}{
-		{name: "invalid pointer", operation: jsonpatch.Operation{Op: "test", Path: "name", Value: "Ada"}, wantErr: jsonpatch.ErrInvalidJSONPointer},
-		{name: "copy invalid from", operation: jsonpatch.Operation{Op: "copy", Path: "/name", From: "name"}, wantErr: jsonpointer.ErrPointerInvalid},
-		{name: "move invalid from", operation: jsonpatch.Operation{Op: "move", Path: "/name", From: "name"}, wantErr: jsonpointer.ErrPointerInvalid},
+		{name: "invalid pointer", operation: jsonpatch.Operation{Op: "test", Path: "name", Value: "Ada"}, wantErr: jsonpatch.ErrInvalidJSONPointer, wantCause: jsonpointer.ErrPointerInvalid},
+		{name: "copy invalid from", operation: jsonpatch.Operation{Op: "copy", Path: "/name", From: "name"}, wantErr: jsonpatch.ErrInvalidJSONPointer, wantCause: jsonpointer.ErrPointerInvalid},
+		{name: "move invalid from", operation: jsonpatch.Operation{Op: "move", Path: "/name", From: "name"}, wantErr: jsonpatch.ErrInvalidJSONPointer, wantCause: jsonpointer.ErrPointerInvalid},
 		{name: "move into own child", operation: jsonpatch.Operation{Op: "move", Path: "/profile/name", From: "/profile"}, wantErr: jsonpatch.ErrCannotMoveToChildren},
 		{name: "str_ins negative position", operation: jsonpatch.Operation{Op: "str_ins", Path: "/name", Pos: -1}, wantErr: jsonpatch.ErrNegativeNumber},
 		{name: "str_del negative position", operation: jsonpatch.Operation{Op: "str_del", Path: "/name", Pos: -1}, wantErr: jsonpatch.ErrNegativeNumber},
@@ -60,6 +61,9 @@ func TestValidateOperationRejectsInvalidPayloads(t *testing.T) {
 			err := jsonpatch.ValidateOperation(tc.operation, tc.allow)
 			require.Error(t, err)
 			assert.ErrorIs(t, err, tc.wantErr)
+			if tc.wantCause != nil {
+				assert.ErrorIs(t, err, tc.wantCause)
+			}
 		})
 	}
 }

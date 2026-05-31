@@ -3,6 +3,7 @@ package op
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -130,6 +131,22 @@ func TestExtend_Apply(t *testing.T) {
 			assert.Equal(t, tt.expected, result.Doc)
 			assert.Nil(t, result.Old, "extend should not return Old value")
 		})
+	}
+}
+
+func TestExtendClonesPropertyValues(t *testing.T) {
+	t.Parallel()
+
+	props := map[string]any{"settings": map[string]any{"theme": "dark"}}
+	result, err := NewExtend([]string{"profile"}, props, false).Apply(map[string]any{"profile": map[string]any{}})
+	require.NoError(t, err)
+
+	props["settings"].(map[string]any)["theme"] = "light"
+
+	want := map[string]any{"settings": map[string]any{"theme": "dark"}}
+	got := result.Doc.(map[string]any)["profile"]
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("Apply() extended object mismatch after props mutation (-want +got):\n%s", diff)
 	}
 }
 

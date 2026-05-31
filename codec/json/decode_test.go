@@ -101,6 +101,28 @@ func TestDecodeOperationFamilies(t *testing.T) {
 	}
 }
 
+func TestDecodeOperationsPreservesNestedTestNull(t *testing.T) {
+	t.Parallel()
+
+	operations := []internal.Operation{{
+		Op:   "and",
+		Path: "",
+		Apply: []internal.Operation{{
+			Op:    "test",
+			Path:  "/nullable",
+			Value: nil,
+		}},
+	}}
+
+	decoded, err := DecodeOperations(operations, PatchOptions{})
+	require.NoError(t, err)
+
+	got := operationsToJSON(t, decoded)
+	if diff := cmp.Diff(operations, got); diff != "" {
+		t.Errorf("DecodeOperations() nested null test mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestDecodePresenceGolden(t *testing.T) {
 	t.Parallel()
 
