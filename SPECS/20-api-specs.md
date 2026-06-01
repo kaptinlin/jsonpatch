@@ -35,7 +35,7 @@ The `test` operation is part of RFC 6902, but its behavioral contract lives in `
 | `remove` | `path` | Remove an existing value at the target path. Empty path removes the root and yields `nil`; missing targets fail. |
 | `replace` | `path`, `value` | Replace an existing value. Empty path replaces the entire document. |
 | `move` | `path`, `from` | Move a value from `from` to `path`. Empty `from` means the root document. Validation rejects moving into a descendant of `from`. |
-| `copy` | `path`, `from` | Copy a value from `from` to `path`. Empty `from` means the root document. |
+| `copy` | `path`, `from` | Copy a value from `from` to `path` using `add` target semantics, including array insertion and `/-` append. Empty `from` means the root document. |
 
 ## Validation Contract
 

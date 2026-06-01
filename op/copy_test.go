@@ -59,6 +59,47 @@ func TestCopy_ArrayAppendCreatesNewSlice(t *testing.T) {
 	assert.Equal(t, nil, result.Old)
 }
 
+func TestCopy_ArrayAppendDashCreatesNewSlice(t *testing.T) {
+	t.Parallel()
+
+	doc := map[string]any{
+		"values": []any{"a", "b"},
+	}
+	originalValues := doc["values"].([]any)
+	originalPointer := fmt.Sprintf("%p", originalValues)
+
+	copyOp := NewCopy([]string{"values", "-"}, []string{"values", "0"})
+	result, err := copyOp.Apply(doc)
+	require.NoError(t, err)
+
+	resultValues := result.Doc.(map[string]any)["values"].([]any)
+	if diff := cmp.Diff([]any{"a", "b"}, originalValues); diff != "" {
+		t.Errorf("source array mutated (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([]any{"a", "b", "a"}, resultValues); diff != "" {
+		t.Errorf("result array mismatch (-want +got):\n%s", diff)
+	}
+	assert.NotEqual(t, originalPointer, fmt.Sprintf("%p", resultValues))
+	assert.Equal(t, nil, result.Old)
+}
+
+func TestCopy_RootArrayInsert(t *testing.T) {
+	t.Parallel()
+
+	doc := []any{"a", "b", "c"}
+	copyOp := NewCopy([]string{"0"}, []string{"2"})
+	result, err := copyOp.Apply(doc)
+	require.NoError(t, err)
+
+	if diff := cmp.Diff([]any{"a", "b", "c"}, doc); diff != "" {
+		t.Errorf("source array mutated (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([]any{"c", "a", "b", "c"}, result.Doc); diff != "" {
+		t.Errorf("result array mismatch (-want +got):\n%s", diff)
+	}
+	assert.Equal(t, "a", result.Old)
+}
+
 func TestCopy_RootReplacementDeepClonesSource(t *testing.T) {
 	t.Parallel()
 

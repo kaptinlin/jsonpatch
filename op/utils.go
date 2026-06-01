@@ -214,16 +214,6 @@ func valueFromParent(parent any, key any) any {
 
 // setValueAtPath sets a value at a specific path in the document
 func setValueAtPath(doc any, path []string, value any) error {
-	return setValueAtPathWithMode(doc, path, value, false)
-}
-
-// insertValueAtPath inserts a value at a specific path in the document (for arrays, it inserts rather than replaces)
-func insertValueAtPath(doc any, path []string, value any) error {
-	return setValueAtPathWithMode(doc, path, value, true)
-}
-
-// setValueAtPathWithMode sets or inserts a value at a specific path in the document
-func setValueAtPathWithMode(doc any, path []string, value any, insertMode bool) error {
 	if len(path) == 0 {
 		// Root level set - this should be handled by the caller
 		return ErrPathNotFound
@@ -237,14 +227,6 @@ func setValueAtPathWithMode(doc any, path []string, value any, insertMode bool) 
 	// Handle array operations specially
 	if slice, ok := parent.([]any); ok {
 		if index, ok := key.(int); ok && index >= 0 && index <= len(slice) {
-			if insertMode {
-				newSlice := slices.Insert(slices.Clone(slice), index, value)
-
-				if len(path) == 1 {
-					return ErrCannotModifyRootArray
-				}
-				return updateGrandparent(doc, path, newSlice)
-			}
 			if index < len(slice) {
 				return updateParent(parent, key, value)
 			}

@@ -45,17 +45,12 @@ func (c *CopyOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{Doc: clonedValue, Old: doc}, nil
 	}
 
-	var oldValue any
-	if old, err := value(doc, c.path); err == nil {
-		oldValue = old
-	}
-
-	err = insertValueAtPath(doc, c.path, clonedValue)
+	newDoc, oldValue, err := addAtPath(doc, c.path, clonedValue)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
 
-	return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
+	return internal.OpResult[any]{Doc: newDoc, Old: oldValue}, nil
 }
 
 // ToJSON serializes the operation to JSON format.
