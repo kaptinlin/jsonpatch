@@ -189,9 +189,16 @@ func parseStringDocument(docStr string) (any, bool) {
 func convertStringResult[T internal.Document](resultDoc any, originalWasJSON bool, doc T) (T, error) {
 	var zeroT T
 
-	// Handle nil result early
+	// A JSON string document can re-encode a root null result as "null".
+	// A plain string cannot represent JSON null without losing the operation result.
 	if resultDoc == nil {
-		return zeroT, nil
+		if originalWasJSON {
+			return marshalToStringType(resultDoc, doc)
+		}
+		if reflect.TypeFor[T]().Kind() == reflect.Interface {
+			return zeroT, nil
+		}
+		return zeroT, fmt.Errorf("%w: operation resulted in null value, but target type %T cannot be null", ErrConversionFailed, doc)
 	}
 
 	// Try direct conversion first (common case)

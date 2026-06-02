@@ -43,6 +43,16 @@ func TestApplyPatchPreservesAdditionalDocumentShapes(t *testing.T) {
 		assert.Equal(t, "Grace", result.Res[0].Doc)
 	})
 
+	t.Run("JSON string root null result stays JSON string", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := jsonpatch.ApplyPatch(`{"name":"Ada"}`, []jsonpatch.Operation{{Op: "replace", Path: "", Value: nil}})
+		require.NoError(t, err)
+		assert.Equal(t, "null", result.Doc)
+		require.Len(t, result.Res, 1)
+		assert.Equal(t, "null", result.Res[0].Doc)
+	})
+
 	t.Run("primitive root replacement stays primitive", func(t *testing.T) {
 		t.Parallel()
 
@@ -173,6 +183,15 @@ func TestApplyAPIsReportConversionFailures(t *testing.T) {
 		t.Parallel()
 
 		result, err := jsonpatch.ApplyOps(1, []jsonpatch.Op{op.NewReplace(nil, "one")})
+		require.Error(t, err)
+		assert.Nil(t, result)
+		assert.ErrorIs(t, err, jsonpatch.ErrConversionFailed)
+	})
+
+	t.Run("plain string null conversion failure is classified", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := jsonpatch.ApplyPatch("Ada", []jsonpatch.Operation{{Op: "replace", Path: "", Value: nil}})
 		require.Error(t, err)
 		assert.Nil(t, result)
 		assert.ErrorIs(t, err, jsonpatch.ErrConversionFailed)

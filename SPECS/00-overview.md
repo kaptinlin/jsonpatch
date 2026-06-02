@@ -29,6 +29,10 @@ Recorded technical contracts live in `SPECS/`. `README.md` is user-facing, and `
 | Structs and other concrete types | Marshaled to JSON, patched as untyped data, unmarshaled back | Original Go type |
 | Primitive values and `[]any` | Applied directly when the result remains assignable | Original Go type |
 
+JSON string documents re-encode root `null` results as the string `"null"`; plain
+scalar strings fail conversion when an operation yields JSON null because the result
+can no longer be represented as a string value.
+
 ## Spec Map
 
 - `SPECS/20-api-specs.md` — public entry points and RFC 6902 mutating operations
