@@ -44,18 +44,22 @@ func TestAutomated(t *testing.T) {
 					}
 				}
 
-				options := jsonpatch.WithMutate(false)
-
 				switch {
 				case test.Expected != nil:
 					t.Run(testName, func(t *testing.T) {
 						t.Parallel()
-						result, err := jsonpatch.ApplyPatch(test.Doc, test.Patch, options)
+						patchJSON, err := json.Marshal(test.RawPatch)
+						require.NoError(t, err)
+						patch, err := jsonpatch.CompileJSON(patchJSON)
 						if err != nil {
-							require.FailNow(t, fmt.Sprintf("ApplyPatch() unexpected error: %v", err))
+							require.FailNow(t, fmt.Sprintf("CompileJSON() unexpected error: %v", err))
+						}
+						result, err := jsonpatch.Apply(patch, test.Doc)
+						if err != nil {
+							require.FailNow(t, fmt.Sprintf("Apply() unexpected error: %v", err))
 						}
 
-						assert.Equal(t, test.Expected, result.Doc)
+						assertJSONEqual(t, test.Expected, result.Doc)
 					})
 				case test.Error != "":
 					t.Run(testName, func(t *testing.T) {
@@ -63,21 +67,14 @@ func TestAutomated(t *testing.T) {
 						if _, err := jsoncodec.Decode(test.RawPatch, jsoncodec.PatchOptions{}); err != nil {
 							return
 						}
-						// First validate operations
-						validationFailed := false
-						for _, op := range test.Patch {
-							if err := jsonpatch.ValidateOperation(op, false); err != nil {
-								validationFailed = true
-								break
-							}
+						patchJSON, err := json.Marshal(test.RawPatch)
+						require.NoError(t, err)
+						patch, err := jsonpatch.CompileJSON(patchJSON)
+						if err != nil {
+							return
 						}
-
-						// If validation passed, try applying patch
-						if !validationFailed {
-							_, err := jsonpatch.ApplyPatch(test.Doc, test.Patch, options)
-							if err == nil {
-								assert.Fail(t, "ApplyPatch() expected error, got nil")
-							}
+						if _, err := jsonpatch.Apply(patch, test.Doc); err == nil {
+							assert.Fail(t, "Apply() expected error, got nil")
 						}
 					})
 				default:
@@ -91,6 +88,15 @@ func TestAutomated(t *testing.T) {
 	}
 }
 
+func assertJSONEqual(t *testing.T, expected, actual any) {
+	t.Helper()
+	expectedJSON, err := json.Marshal(expected)
+	require.NoError(t, err)
+	actualJSON, err := json.Marshal(actual)
+	require.NoError(t, err)
+	assert.JSONEq(t, string(expectedJSON), string(actualJSON))
+}
+
 type AutomatedTestSuite struct {
 	Name  string
 	Tests []AutomatedTestCase
@@ -100,7 +106,7 @@ type AutomatedTestCase struct {
 	Comment  string
 	Doc      any
 	RawPatch []map[string]any
-	Patch    []jsonpatch.Operation
+	Patch    []jsoncodec.Operation
 	Expected any
 	Error    string
 	Disabled bool
@@ -138,10 +144,10 @@ func convertTestCases(testCases []data.TestCase) []AutomatedTestCase {
 	return result
 }
 
-func convertPatch(patch []map[string]any) []jsonpatch.Operation {
-	result := make([]jsonpatch.Operation, len(patch))
+func convertPatch(patch []map[string]any) []jsoncodec.Operation {
+	result := make([]jsoncodec.Operation, len(patch))
 	for i, op := range patch {
-		var operation jsonpatch.Operation
+		var operation jsoncodec.Operation
 		if v, ok := op["op"].(string); ok {
 			operation.Op = v
 		}
@@ -179,7 +185,7 @@ func convertPatch(patch []map[string]any) []jsonpatch.Operation {
 		if v, ok := op["ignore_case"].(bool); ok {
 			operation.IgnoreCase = v
 		}
-		if v, ok := op["apply"].([]jsonpatch.Operation); ok {
+		if v, ok := op["apply"].([]jsoncodec.Operation); ok {
 			operation.Apply = v
 		}
 		if v, ok := op["props"].(map[string]any); ok {

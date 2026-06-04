@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
@@ -27,7 +29,7 @@ func main() {
 	original, _ := json.Marshal(doc)
 	fmt.Println(string(original))
 
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		// Add to end of array using "-"
 		{
 			Op:    "add",
@@ -56,7 +58,11 @@ func main() {
 		},
 	}
 
-	result, err := jsonpatch.ApplyPatch(doc, patch)
+	compiled, err := jsonpatch.CompileOperations(patch)
+	if err != nil {
+		log.Fatalf("Failed: %v", err)
+	}
+	result, err := jsonpatch.Apply(compiled, doc)
 	if err != nil {
 		log.Fatalf("Failed: %v", err)
 	}

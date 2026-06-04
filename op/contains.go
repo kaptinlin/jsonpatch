@@ -106,8 +106,5 @@ func (co *ContainsOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the contains operation.
 func (co *ContainsOperation) Validate() error {
-	if len(co.Path()) == 0 {
-		return ErrPathEmpty
-	}
 	return nil
 }

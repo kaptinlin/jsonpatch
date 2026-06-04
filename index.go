@@ -2,9 +2,6 @@ package jsonpatch
 
 import "github.com/kaptinlin/jsonpatch/internal"
 
-// Operation aliases internal.Operation.
-type Operation = internal.Operation
-
 // OpType names a JSON Patch operation.
 type OpType = internal.OpType
 
@@ -13,24 +10,6 @@ type Op = internal.Op
 
 // Document is the set of document types supported by the generic API.
 type Document = internal.Document
-
-// Option applies one patch option.
-type Option = internal.Option
-
-// Options configures patch application.
-type Options = internal.Options
-
-// WithMutate enables or disables in-place mutation.
-var WithMutate = internal.WithMutate
-
-// WithMatcher sets the regex matcher factory used by pattern operations.
-var WithMatcher = internal.WithMatcher
-
-// OpResult is the result of applying one operation.
-type OpResult[T Document] = internal.OpResult[T]
-
-// PatchResult is the result of applying a sequence of operations.
-type PatchResult[T Document] = internal.PatchResult[T]
 
 // These constants name the supported operations.
 const (

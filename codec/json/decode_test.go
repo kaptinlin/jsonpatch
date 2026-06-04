@@ -92,8 +92,7 @@ func TestDecodeOperationFamilies(t *testing.T) {
 			require.NoError(t, err)
 			require.Len(t, decoded, 1)
 
-			got, err := decoded[0].ToJSON()
-			require.NoError(t, err)
+			got := operationToJSON(t, decoded[0])
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("decoded operation mismatch (-want +got):\n%s", diff)
 			}
@@ -295,9 +294,17 @@ func operationsToJSON(t *testing.T, ops []internal.Op) []internal.Operation {
 
 	result := make([]internal.Operation, len(ops))
 	for i, decoded := range ops {
-		jsonOp, err := decoded.ToJSON()
-		require.NoError(t, err)
-		result[i] = jsonOp
+		result[i] = operationToJSON(t, decoded)
 	}
+	return result
+}
+
+func operationToJSON(t *testing.T, operation internal.Op) internal.Operation {
+	t.Helper()
+
+	jsonOp, ok := operation.(internal.JSONOp)
+	require.True(t, ok, "operation %T should encode to JSON", operation)
+	result, err := jsonOp.ToJSON()
+	require.NoError(t, err)
 	return result
 }

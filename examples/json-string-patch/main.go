@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/go-json-experiment/json"
 	"github.com/go-json-experiment/json/jsontext"
 
@@ -36,21 +38,20 @@ func demoBasicJSONStringPatch() {
 	fmt.Printf("Before: %s\n", prettyJSONString(jsonStr))
 
 	// Define patch operations
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/name", Value: "Charles Brown"},
 		{Op: "add", Path: "/company", Value: "TechStart Inc"},
 		{Op: "add", Path: "/tags/-", Value: "entrepreneur"},
 		{Op: "replace", Path: "/age", Value: 41},
 	}
 
-	// Apply patch - returns string
-	result, err := jsonpatch.ApplyPatch(jsonStr, patch)
+	result, err := applyCompiled(jsonpatch.JSONText(jsonStr), patch)
 	if err != nil {
 		log.Fatal("Failed to patch JSON string:", err)
 	}
 
-	fmt.Printf("After:  %s\n", prettyJSONString(result.Doc))
-	fmt.Printf("✅ Operations applied: %d\n", len(result.Res))
+	fmt.Printf("After:  %s\n", prettyJSONString(string(result.Doc)))
+	fmt.Printf("✅ Operations applied: %d\n", len(result.Steps))
 }
 
 // demoAPIResponsePatch demonstrates patching API response data
@@ -76,7 +77,7 @@ func demoAPIResponsePatch() {
 	fmt.Printf("Before:\n%s\n", prettyJSONString(apiResponse))
 
 	// Update user preferences and permissions
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/data/user/email", Value: "john.doe@newcompany.com"},
 		{Op: "replace", Path: "/data/user/preferences/theme", Value: "light"},
 		{Op: "add", Path: "/data/user/preferences/notifications", Value: true},
@@ -84,13 +85,13 @@ func demoAPIResponsePatch() {
 		{Op: "replace", Path: "/timestamp", Value: "2024-01-15T11:00:00Z"},
 	}
 
-	result, err := jsonpatch.ApplyPatch(apiResponse, patch)
+	result, err := applyCompiled(jsonpatch.JSONText(apiResponse), patch)
 	if err != nil {
 		log.Fatal("Failed to patch API response:", err)
 	}
 
-	fmt.Printf("After:\n%s\n", prettyJSONString(result.Doc))
-	fmt.Printf("✅ API response updated: %d operations\n", len(result.Res))
+	fmt.Printf("After:\n%s\n", prettyJSONString(string(result.Doc)))
+	fmt.Printf("✅ API response updated: %d operations\n", len(result.Steps))
 }
 
 // demoConfigurationPatch demonstrates configuration file updates
@@ -117,7 +118,7 @@ func demoConfigurationPatch() {
 	fmt.Printf("Before:\n%s\n", prettyJSONString(configStr))
 
 	// Configuration updates
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/server/host", Value: "0.0.0.0"},
 		{Op: "replace", Path: "/server/ssl", Value: true},
 		{Op: "add", Path: "/server/ssl_cert", Value: "/etc/ssl/cert.pem"},
@@ -129,13 +130,21 @@ func demoConfigurationPatch() {
 		}},
 	}
 
-	result, err := jsonpatch.ApplyPatch(configStr, patch)
+	result, err := applyCompiled(jsonpatch.JSONText(configStr), patch)
 	if err != nil {
 		log.Fatal("Failed to patch configuration:", err)
 	}
 
-	fmt.Printf("After:\n%s\n", prettyJSONString(result.Doc))
-	fmt.Printf("✅ Configuration updated: %d changes\n", len(result.Res))
+	fmt.Printf("After:\n%s\n", prettyJSONString(string(result.Doc)))
+	fmt.Printf("✅ Configuration updated: %d changes\n", len(result.Steps))
+}
+
+func applyCompiled[T jsonpatch.Document](doc T, operations []jsoncodec.Operation) (*jsonpatch.Result[T], error) {
+	patch, err := jsonpatch.CompileOperations(operations)
+	if err != nil {
+		return nil, err
+	}
+	return jsonpatch.Apply(patch, doc)
 }
 
 // prettyJSONString formats a JSON string for better readability

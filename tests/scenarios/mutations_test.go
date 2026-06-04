@@ -7,15 +7,17 @@ import (
 	"testing"
 	"unsafe"
 
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/kaptinlin/jsonpatch"
 )
 
-func TestMutateOptionFunctionality(t *testing.T) {
+func TestApplyInPlaceFunctionality(t *testing.T) {
 	t.Parallel()
-	t.Run("Mutate False - Document Preservation", func(t *testing.T) {
+	t.Run("Apply - Document Preservation", func(t *testing.T) {
 		t.Parallel()
 		original := map[string]any{
 			"name": "John",
@@ -24,16 +26,15 @@ func TestMutateOptionFunctionality(t *testing.T) {
 		}
 		originalSnapshot := copyMap(original)
 
-		patch := []jsonpatch.Operation{
+		patch := []jsoncodec.Operation{
 			{Op: "replace", Path: "/name", Value: "Jane"},
 			{Op: "add", Path: "/email", Value: "jane@example.com"},
 			{Op: "remove", Path: "/city"},
 		}
 
-		options := jsonpatch.WithMutate(false)
-		result, err := jsonpatch.ApplyPatch(original, patch, options)
+		result, err := apply(t, original, patch)
 		if err != nil {
-			require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+			require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 		}
 
 		assert.Equal(t, originalSnapshot, original)
@@ -54,7 +55,7 @@ func TestMutateOptionFunctionality(t *testing.T) {
 		}
 	})
 
-	t.Run("Mutate True - In-Place Modification", func(t *testing.T) {
+	t.Run("ApplyInPlace - Modification", func(t *testing.T) {
 		t.Parallel()
 		original := map[string]any{
 			"name": "John",
@@ -62,16 +63,15 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			"city": "Boston",
 		}
 
-		patch := []jsonpatch.Operation{
+		patch := []jsoncodec.Operation{
 			{Op: "replace", Path: "/name", Value: "Jane"},
 			{Op: "add", Path: "/email", Value: "jane@example.com"},
 			{Op: "remove", Path: "/city"},
 		}
 
-		options := jsonpatch.WithMutate(true)
-		result, err := jsonpatch.ApplyPatch(original, patch, options)
+		result, err := applyInPlace(t, original, patch)
 		if err != nil {
-			require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+			require.FailNow(t, fmt.Sprintf("ApplyInPlace() error = %v, want nil", err))
 		}
 
 		if got := original["name"]; got != "Jane" {
@@ -92,23 +92,22 @@ func TestMutateOptionFunctionality(t *testing.T) {
 		assert.Equal(t, original, resultDoc)
 	})
 
-	t.Run("Array Operations with Mutate", func(t *testing.T) {
+	t.Run("Array Operations with ApplyInPlace", func(t *testing.T) {
 		t.Parallel()
-		t.Run("Mutate False - Array Preservation", func(t *testing.T) {
+		t.Run("Apply - Array Preservation", func(t *testing.T) {
 			t.Parallel()
 			original := []any{"apple", "banana", "cherry"}
 			originalSnapshot := make([]any, len(original))
 			copy(originalSnapshot, original)
 
-			patch := []jsonpatch.Operation{
+			patch := []jsoncodec.Operation{
 				{Op: "replace", Path: "/1", Value: "blueberry"},
 				{Op: "add", Path: "/-", Value: "date"},
 			}
 
-			options := jsonpatch.WithMutate(false)
-			result, err := jsonpatch.ApplyPatch(original, patch, options)
+			result, err := apply(t, original, patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 
 			assert.Equal(t, originalSnapshot, original)
@@ -122,18 +121,17 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			}
 		})
 
-		t.Run("Mutate True - Array Modification (Go Limitation)", func(t *testing.T) {
+		t.Run("ApplyInPlace - Array Modification", func(t *testing.T) {
 			t.Parallel()
 			original := []any{"apple", "banana", "cherry"}
 
-			patch := []jsonpatch.Operation{
+			patch := []jsoncodec.Operation{
 				{Op: "replace", Path: "/1", Value: "blueberry"},
 			}
 
-			options := jsonpatch.WithMutate(true)
-			result, err := jsonpatch.ApplyPatch(original, patch, options)
+			result, err := applyInPlace(t, original, patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("ApplyInPlace() error = %v, want nil", err))
 			}
 
 			if got := original[1]; got != "blueberry" {
@@ -150,14 +148,13 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			t.Parallel()
 			original := []any{"apple", "banana", "cherry"}
 
-			patch := []jsonpatch.Operation{
+			patch := []jsoncodec.Operation{
 				{Op: "add", Path: "/-", Value: "date"},
 			}
 
-			options := jsonpatch.WithMutate(true)
-			result, err := jsonpatch.ApplyPatch(original, patch, options)
+			result, err := applyInPlace(t, original, patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("ApplyInPlace() error = %v, want nil", err))
 			}
 
 			if got := len(original); got != 3 {
@@ -179,25 +176,25 @@ func TestMutateOptionFunctionality(t *testing.T) {
 		testCases := []struct {
 			name     string
 			value    any
-			patch    []jsonpatch.Operation
+			patch    []jsoncodec.Operation
 			expected any
 		}{
 			{
 				name:     "String Replacement",
 				value:    "hello",
-				patch:    []jsonpatch.Operation{{Op: "replace", Path: "", Value: "world"}},
+				patch:    []jsoncodec.Operation{{Op: "replace", Path: "", Value: "world"}},
 				expected: "world",
 			},
 			{
 				name:     "Integer Replacement",
 				value:    42,
-				patch:    []jsonpatch.Operation{{Op: "replace", Path: "", Value: 99}},
+				patch:    []jsoncodec.Operation{{Op: "replace", Path: "", Value: 99}},
 				expected: 99,
 			},
 			{
 				name:     "Boolean Replacement",
 				value:    true,
-				patch:    []jsonpatch.Operation{{Op: "replace", Path: "", Value: false}},
+				patch:    []jsoncodec.Operation{{Op: "replace", Path: "", Value: false}},
 				expected: false,
 			},
 		}
@@ -207,12 +204,19 @@ func TestMutateOptionFunctionality(t *testing.T) {
 				t.Parallel()
 				original := tc.value
 
-				for _, mutate := range []bool{false, true} {
-					t.Run(fmt.Sprintf("Mutate_%v", mutate), func(t *testing.T) {
-						options := jsonpatch.WithMutate(mutate)
-						result, err := jsonpatch.ApplyPatch(original, tc.patch, options)
+				for _, inPlace := range []bool{false, true} {
+					t.Run(fmt.Sprintf("InPlace_%v", inPlace), func(t *testing.T) {
+						var (
+							result *jsonpatch.Result[any]
+							err    error
+						)
+						if inPlace {
+							result, err = applyInPlace(t, original, tc.patch)
+						} else {
+							result, err = apply(t, original, tc.patch)
+						}
 						if err != nil {
-							require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+							require.FailNow(t, fmt.Sprintf("Apply error = %v, want nil", err))
 						}
 
 						if original != tc.value {
@@ -242,20 +246,19 @@ func TestMutateOptionFunctionality(t *testing.T) {
 			},
 		}
 
-		patch := []jsonpatch.Operation{
+		patch := []jsoncodec.Operation{
 			{Op: "replace", Path: "/user/name", Value: "Jane"},
 			{Op: "add", Path: "/user/email", Value: "jane@example.com"},
 			{Op: "replace", Path: "/items/0/name", Value: "updated_item1"},
 		}
 
-		t.Run("Mutate True - Deep Modification", func(t *testing.T) {
+		t.Run("ApplyInPlace - Deep Modification", func(t *testing.T) {
 			t.Parallel()
 			testDoc := deepCopyMap(original)
 
-			options := jsonpatch.WithMutate(true)
-			result, err := jsonpatch.ApplyPatch(testDoc, patch, options)
+			result, err := applyInPlace(t, testDoc, patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("ApplyInPlace() error = %v, want nil", err))
 			}
 
 			if got := testDoc["user"].(map[string]any)["name"]; got != "Jane" {
@@ -275,34 +278,53 @@ func TestMutateOptionFunctionality(t *testing.T) {
 	})
 }
 
-func TestMutatePerformanceCharacteristics(t *testing.T) {
+func TestApplyInPlacePerformanceCharacteristics(t *testing.T) {
 	t.Parallel()
 	if testing.Short() {
 		t.Skip("Skipping performance test in short mode")
 	}
 
 	largeDoc := createLargeDocument(1000)
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/field_500", Value: "modified"},
 		{Op: "add", Path: "/new_field", Value: "new_value"},
 	}
 
 	t.Run("Performance Validation", func(t *testing.T) {
 		t.Parallel()
-		optionsFalse := jsonpatch.WithMutate(false)
-		resultFalse, err := jsonpatch.ApplyPatch(deepCopyMap(largeDoc), patch, optionsFalse)
+		resultFalse, err := apply(t, deepCopyMap(largeDoc), patch)
 		if err != nil {
-			require.FailNow(t, fmt.Sprintf("ApplyPatch(mutate=false) error = %v, want nil", err))
+			require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 		}
 
-		optionsTrue := jsonpatch.WithMutate(true)
-		resultTrue, err := jsonpatch.ApplyPatch(deepCopyMap(largeDoc), patch, optionsTrue)
+		resultTrue, err := applyInPlace(t, deepCopyMap(largeDoc), patch)
 		if err != nil {
-			require.FailNow(t, fmt.Sprintf("ApplyPatch(mutate=true) error = %v, want nil", err))
+			require.FailNow(t, fmt.Sprintf("ApplyInPlace() error = %v, want nil", err))
 		}
 
 		assert.Equal(t, resultFalse.Doc, resultTrue.Doc)
 	})
+}
+
+func apply[T jsonpatch.Document](t testing.TB, doc T, operations []jsoncodec.Operation) (*jsonpatch.Result[T], error) {
+	t.Helper()
+	patch, err := jsonpatch.CompileOperations(operations, jsonpatch.WithCapabilities(jsonpatch.AllCapabilities))
+	if err != nil {
+		return nil, err
+	}
+	return jsonpatch.Apply(patch, doc)
+}
+
+func applyInPlace[T jsonpatch.Document](t testing.TB, doc T, operations []jsoncodec.Operation) (*jsonpatch.Result[T], error) {
+	t.Helper()
+	patch, err := jsonpatch.CompileOperations(operations, jsonpatch.WithCapabilities(jsonpatch.AllCapabilities))
+	if err != nil {
+		return nil, err
+	}
+	if err := jsonpatch.ApplyInPlace(patch, &doc); err != nil {
+		return nil, err
+	}
+	return &jsonpatch.Result[T]{Doc: doc}, nil
 }
 
 func copyMap(original map[string]any) map[string]any {
@@ -352,29 +374,27 @@ func createLargeDocument(size int) map[string]any {
 	return doc
 }
 
-func BenchmarkMutateVsClone(b *testing.B) {
-	patch := []jsonpatch.Operation{
+func BenchmarkApplyInPlaceVsApply(b *testing.B) {
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/field_500", Value: "modified"},
 	}
 
-	b.Run("Mutate=false", func(b *testing.B) {
-		options := jsonpatch.WithMutate(false)
+	b.Run("Apply", func(b *testing.B) {
 		b.ResetTimer()
 		for b.Loop() {
 			doc := createLargeDocument(1000)
-			_, err := jsonpatch.ApplyPatch(doc, patch, options)
+			_, err := apply(b, doc, patch)
 			if err != nil {
 				b.Fatal(err)
 			}
 		}
 	})
 
-	b.Run("Mutate=true", func(b *testing.B) {
-		options := jsonpatch.WithMutate(true)
+	b.Run("ApplyInPlace", func(b *testing.B) {
 		b.ResetTimer()
 		for b.Loop() {
 			doc := createLargeDocument(1000)
-			_, err := jsonpatch.ApplyPatch(doc, patch, options)
+			_, err := applyInPlace(b, doc, patch)
 			if err != nil {
 				b.Fatal(err)
 			}

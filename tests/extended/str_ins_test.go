@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
 )
@@ -66,10 +65,10 @@ func TestStrInsOp(t *testing.T) {
 			},
 		}
 		doc := "Hello world"
-		result1, err := jsonpatch.ApplyPatch(doc, []internal.Operation{operations[0]}, internal.WithMutate(true))
-		require.NoError(t, err, "ApplyPatch() first operation error")
-		result2, err := jsonpatch.ApplyPatch(result1.Doc, []internal.Operation{operations[1]}, internal.WithMutate(true))
-		require.NoError(t, err, "ApplyPatch() second operation error")
+		result1, err := applyPatch(t, doc, []internal.Operation{operations[0]})
+		require.NoError(t, err, "Apply() first operation error")
+		result2, err := applyPatch(t, result1.Doc, []internal.Operation{operations[1]})
+		require.NoError(t, err, "Apply() second operation error")
 		assert.Equal(t, "Hello beautiful world bright", result2.Doc, "result")
 	})
 

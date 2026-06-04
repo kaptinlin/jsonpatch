@@ -75,10 +75,8 @@ func TestCodecRoundTripPreservesOperationJSON(t *testing.T) {
 			require.NoError(t, err)
 			require.Len(t, decoded, 1)
 
-			want, err := tc.op.ToJSON()
-			require.NoError(t, err)
-			got, err := decoded[0].ToJSON()
-			require.NoError(t, err)
+			want := operationToJSON(t, tc.op)
+			got := operationToJSON(t, decoded[0])
 			if diff := cmp.Diff(want, got); diff != "" {
 				t.Errorf("round-tripped operation mismatch (-want +got):\n%s", diff)
 			}
@@ -361,8 +359,7 @@ func TestCodecDecodeCompositePredicates(t *testing.T) {
 			require.NoError(t, err)
 			require.Len(t, decoded, 1)
 
-			got, err := decoded[0].ToJSON()
-			require.NoError(t, err)
+			got := operationToJSON(t, decoded[0])
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("decoded operation mismatch (-want +got):\n%s", diff)
 			}
@@ -618,8 +615,7 @@ func TestCodecDecodeNormalizesNestedMessagePackMaps(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, decoded, 1)
 
-	got, err := decoded[0].ToJSON()
-	require.NoError(t, err)
+	got := operationToJSON(t, decoded[0])
 	want := internal.Operation{
 		Op:   "add",
 		Path: "/profile",
@@ -634,6 +630,16 @@ func TestCodecDecodeNormalizesNestedMessagePackMaps(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("decoded operation mismatch (-want +got):\n%s", diff)
 	}
+}
+
+func operationToJSON(t *testing.T, operation internal.Op) internal.Operation {
+	t.Helper()
+
+	jsonOp, ok := operation.(internal.JSONOp)
+	require.True(t, ok, "operation %T should encode to JSON", operation)
+	result, err := jsonOp.ToJSON()
+	require.NoError(t, err)
+	return result
 }
 
 func TestCodecDecodeRejectsMalformedValuePayloads(t *testing.T) {

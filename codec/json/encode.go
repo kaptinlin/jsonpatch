@@ -1,6 +1,8 @@
 package json
 
 import (
+	"fmt"
+
 	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch/internal"
@@ -10,7 +12,11 @@ import (
 func Encode(ops []internal.Op) ([]internal.Operation, error) {
 	result := make([]internal.Operation, len(ops))
 	for i, o := range ops {
-		encoded, err := o.ToJSON()
+		jsonOp, ok := o.(internal.JSONOp)
+		if !ok {
+			return nil, fmt.Errorf("operation %T cannot encode to JSON", o)
+		}
+		encoded, err := jsonOp.ToJSON()
 		if err != nil {
 			return nil, err
 		}

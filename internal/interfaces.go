@@ -1,21 +1,31 @@
 package internal
 
-// Op is the unified interface for all JSON Patch operations.
+// Op is the executable interface for JSON Patch operations.
 type Op interface {
 	// Op returns the operation type string (e.g. "add", "remove").
 	Op() OpType
-	// Code returns the numeric code for the operation.
-	Code() int
 	// Path returns the JSON Pointer path as a string slice.
 	Path() []string
 	// Apply applies the operation to the document, returning the result and any error.
 	Apply(doc any) (OpResult[any], error)
-	// ToJSON serializes the operation to standard JSON Patch format.
-	ToJSON() (Operation, error)
-	// ToCompact serializes the operation to compact array format.
-	ToCompact() (CompactOperation, error)
 	// Validate checks that the operation parameters are valid.
 	Validate() error
+}
+
+// JSONOp is an operation that can project itself to JSON operation form.
+type JSONOp interface {
+	Op
+	// ToJSON serializes the operation to standard JSON Patch format.
+	ToJSON() (Operation, error)
+}
+
+// CompactOp is an operation that can project itself to compact array form.
+type CompactOp interface {
+	Op
+	// Code returns the numeric code for the operation.
+	Code() int
+	// ToCompact serializes the operation to compact array format.
+	ToCompact() (CompactOperation, error)
 }
 
 // PredicateOp is the interface for predicate (test-type) operations.

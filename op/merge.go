@@ -177,6 +177,9 @@ func (mg *MergeOperation) Validate() error {
 	if mg.Pos < 0 {
 		return ErrPositionNegative
 	}
+	if mg.Pos == 0 {
+		return ErrPositionOutOfBounds
+	}
 	return nil
 }
 

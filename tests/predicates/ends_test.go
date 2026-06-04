@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
@@ -22,9 +21,9 @@ func TestEndsOp(t *testing.T) {
 				Value: "world",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch("Hello world", patch, internal.WithMutate(true))
+			_, err := applyPatch(t, "Hello world", patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 		})
 
@@ -36,9 +35,9 @@ func TestEndsOp(t *testing.T) {
 				Value: "Hello",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch("Hello world", patch, internal.WithMutate(true))
+			_, err := applyPatch(t, "Hello world", patch)
 			if err == nil {
-				require.FailNow(t, "ApplyPatch() error = nil, want error")
+				require.FailNow(t, "Apply() error = nil, want error")
 			}
 		})
 
@@ -51,9 +50,9 @@ func TestEndsOp(t *testing.T) {
 				IgnoreCase: true,
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch("Hello world", patch, internal.WithMutate(true))
+			_, err := applyPatch(t, "Hello world", patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 		})
 	})
@@ -68,9 +67,9 @@ func TestEndsOp(t *testing.T) {
 				Value: "world",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(map[string]any{"msg": "Hello world"}, patch, internal.WithMutate(true))
+			_, err := applyPatch(t, map[string]any{"msg": "Hello world"}, patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 		})
 
@@ -82,9 +81,9 @@ func TestEndsOp(t *testing.T) {
 				Value: "Hello",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(map[string]any{"msg": "Hello world"}, patch, internal.WithMutate(true))
+			_, err := applyPatch(t, map[string]any{"msg": "Hello world"}, patch)
 			if err == nil {
-				require.FailNow(t, "ApplyPatch() error = nil, want error")
+				require.FailNow(t, "Apply() error = nil, want error")
 			}
 		})
 	})
@@ -99,9 +98,9 @@ func TestEndsOp(t *testing.T) {
 				Value: "world",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch([]any{"Hello world"}, patch, internal.WithMutate(true))
+			_, err := applyPatch(t, []any{"Hello world"}, patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 		})
 
@@ -113,9 +112,9 @@ func TestEndsOp(t *testing.T) {
 				Value: "Hello",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch([]any{"Hello world"}, patch, internal.WithMutate(true))
+			_, err := applyPatch(t, []any{"Hello world"}, patch)
 			if err == nil {
-				require.FailNow(t, "ApplyPatch() error = nil, want error")
+				require.FailNow(t, "Apply() error = nil, want error")
 			}
 		})
 	})

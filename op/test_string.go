@@ -128,8 +128,5 @@ func (ts *TestStringOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the test string operation.
 func (ts *TestStringOperation) Validate() error {
-	if len(ts.Path()) == 0 {
-		return ErrPathEmpty
-	}
 	return nil
 }

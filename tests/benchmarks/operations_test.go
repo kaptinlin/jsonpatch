@@ -3,6 +3,8 @@ package jsonpatch_test
 import (
 	"testing"
 
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
@@ -12,47 +14,47 @@ func BenchmarkBasicOperations(b *testing.B) {
 	testCases := []struct {
 		name string
 		doc  any
-		ops  []jsonpatch.Operation
+		ops  []jsoncodec.Operation
 	}{
 		{
 			name: "add_simple_value",
 			doc:  map[string]any{"foo": "bar"},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "add", Path: "/baz", Value: "qux"},
 			},
 		},
 		{
 			name: "replace_value",
 			doc:  map[string]any{"foo": "bar", "baz": "qux"},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "replace", Path: "/foo", Value: "new_value"},
 			},
 		},
 		{
 			name: "remove_value",
 			doc:  map[string]any{"foo": "bar", "baz": "qux"},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "remove", Path: "/baz"},
 			},
 		},
 		{
 			name: "test_operation",
 			doc:  map[string]any{"foo": "bar"},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "test", Path: "/foo", Value: "bar"},
 			},
 		},
 		{
 			name: "copy_operation",
 			doc:  map[string]any{"foo": "bar", "baz": map[string]any{"deep": "value"}},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "copy", From: "/baz", Path: "/copied"},
 			},
 		},
 		{
 			name: "move_operation",
 			doc:  map[string]any{"foo": "bar", "baz": "qux"},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "move", From: "/baz", Path: "/moved"},
 			},
 		},
@@ -60,13 +62,11 @@ func BenchmarkBasicOperations(b *testing.B) {
 
 	for _, tc := range testCases {
 		b.Run(tc.name, func(b *testing.B) {
+			patch := compileBenchmarkPatch(b, tc.ops)
 			b.ResetTimer()
 			for b.Loop() {
 				docCopy := cloneDocument(tc.doc)
-				_, err := jsonpatch.ApplyPatch(docCopy, tc.ops, jsonpatch.WithMutate(true))
-				if err != nil {
-					b.Fatalf("Operation failed: %v", err)
-				}
+				applyBenchmarkPatch(b, patch, docCopy, true)
 			}
 		})
 	}
@@ -76,33 +76,33 @@ func BenchmarkExtendedOperations(b *testing.B) {
 	testCases := []struct {
 		name string
 		doc  any
-		ops  []jsonpatch.Operation
+		ops  []jsoncodec.Operation
 	}{
 		{
 			name: "inc_operation",
 			doc:  map[string]any{"counter": 42},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "inc", Path: "/counter", Inc: 1},
 			},
 		},
 		{
 			name: "flip_operation",
 			doc:  map[string]any{"enabled": true},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "flip", Path: "/enabled"},
 			},
 		},
 		{
 			name: "strins_operation",
 			doc:  map[string]any{"text": "hello world"},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "str_ins", Path: "/text", Pos: 5, Str: " beautiful"},
 			},
 		},
 		{
 			name: "split_operation",
 			doc:  map[string]any{"text": "hello,world,test"},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "split", Path: "/text", Pos: 5},
 			},
 		},
@@ -110,13 +110,11 @@ func BenchmarkExtendedOperations(b *testing.B) {
 
 	for _, tc := range testCases {
 		b.Run(tc.name, func(b *testing.B) {
+			patch := compileBenchmarkPatch(b, tc.ops)
 			b.ResetTimer()
 			for b.Loop() {
 				docCopy := cloneDocument(tc.doc)
-				_, err := jsonpatch.ApplyPatch(docCopy, tc.ops, jsonpatch.WithMutate(true))
-				if err != nil {
-					b.Fatalf("Operation failed: %v", err)
-				}
+				applyBenchmarkPatch(b, patch, docCopy, true)
 			}
 		})
 	}
@@ -126,47 +124,47 @@ func BenchmarkPredicateOperations(b *testing.B) {
 	testCases := []struct {
 		name string
 		doc  any
-		ops  []jsonpatch.Operation
+		ops  []jsoncodec.Operation
 	}{
 		{
 			name: "contains_predicate",
 			doc:  map[string]any{"text": "hello world"},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "contains", Path: "/text", Value: "world"},
 			},
 		},
 		{
 			name: "starts_predicate",
 			doc:  map[string]any{"text": "hello world"},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "starts", Path: "/text", Value: "hello"},
 			},
 		},
 		{
 			name: "ends_predicate",
 			doc:  map[string]any{"text": "hello world"},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "ends", Path: "/text", Value: "world"},
 			},
 		},
 		{
 			name: "type_predicate",
 			doc:  map[string]any{"value": 42},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "type", Path: "/value", Value: "number"},
 			},
 		},
 		{
 			name: "less_predicate",
 			doc:  map[string]any{"value": 42},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "less", Path: "/value", Value: 50},
 			},
 		},
 		{
 			name: "more_predicate",
 			doc:  map[string]any{"value": 42},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "more", Path: "/value", Value: 30},
 			},
 		},
@@ -174,13 +172,11 @@ func BenchmarkPredicateOperations(b *testing.B) {
 
 	for _, tc := range testCases {
 		b.Run(tc.name, func(b *testing.B) {
+			patch := compileBenchmarkPatch(b, tc.ops)
 			b.ResetTimer()
 			for b.Loop() {
 				docCopy := cloneDocument(tc.doc)
-				_, err := jsonpatch.ApplyPatch(docCopy, tc.ops, jsonpatch.WithMutate(true))
-				if err != nil {
-					b.Fatalf("Operation failed: %v", err)
-				}
+				applyBenchmarkPatch(b, patch, docCopy, true)
 			}
 		})
 	}
@@ -190,16 +186,16 @@ func BenchmarkSecondOrderPredicates(b *testing.B) {
 	testCases := []struct {
 		name string
 		doc  any
-		ops  []jsonpatch.Operation
+		ops  []jsoncodec.Operation
 	}{
 		{
 			name: "not_predicate",
 			doc:  map[string]any{"foo": 1, "bar": 2},
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{
 					Op:   "not",
 					Path: "",
-					Apply: []jsonpatch.Operation{
+					Apply: []jsoncodec.Operation{
 						{Op: "test", Path: "/foo", Value: 2},
 					},
 				},
@@ -209,13 +205,11 @@ func BenchmarkSecondOrderPredicates(b *testing.B) {
 
 	for _, tc := range testCases {
 		b.Run(tc.name, func(b *testing.B) {
+			patch := compileBenchmarkPatch(b, tc.ops)
 			b.ResetTimer()
 			for b.Loop() {
 				docCopy := cloneDocument(tc.doc)
-				_, err := jsonpatch.ApplyPatch(docCopy, tc.ops, jsonpatch.WithMutate(true))
-				if err != nil {
-					b.Fatalf("Operation failed: %v", err)
-				}
+				applyBenchmarkPatch(b, patch, docCopy, true)
 			}
 		})
 	}
@@ -262,11 +256,11 @@ func BenchmarkComplexDocument(b *testing.B) {
 
 	testCases := []struct {
 		name string
-		ops  []jsonpatch.Operation
+		ops  []jsoncodec.Operation
 	}{
 		{
 			name: "add_new_user",
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{
 					Op:   "add",
 					Path: "/users/-",
@@ -283,13 +277,13 @@ func BenchmarkComplexDocument(b *testing.B) {
 		},
 		{
 			name: "update_user_preference",
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "replace", Path: "/users/0/profile/preferences/theme", Value: "light"},
 			},
 		},
 		{
 			name: "increment_stats",
-			ops: []jsonpatch.Operation{
+			ops: []jsoncodec.Operation{
 				{Op: "inc", Path: "/metadata/stats/total_users", Inc: 1},
 				{Op: "inc", Path: "/metadata/stats/active_users", Inc: 1},
 			},
@@ -298,19 +292,17 @@ func BenchmarkComplexDocument(b *testing.B) {
 
 	for _, tc := range testCases {
 		b.Run(tc.name, func(b *testing.B) {
+			patch := compileBenchmarkPatch(b, tc.ops)
 			b.ResetTimer()
 			for b.Loop() {
 				docCopy := cloneDocument(complexDoc)
-				_, err := jsonpatch.ApplyPatch(docCopy, tc.ops, jsonpatch.WithMutate(true))
-				if err != nil {
-					b.Fatalf("Operation failed: %v", err)
-				}
+				applyBenchmarkPatch(b, patch, docCopy, true)
 			}
 		})
 	}
 }
 
-func BenchmarkMutateVsImmutable(b *testing.B) {
+func BenchmarkApplyInPlaceVsApply(b *testing.B) {
 	doc := map[string]any{
 		"data": make([]any, 1000),
 		"metadata": map[string]any{
@@ -326,19 +318,18 @@ func BenchmarkMutateVsImmutable(b *testing.B) {
 		}
 	}
 
-	ops := []jsonpatch.Operation{
+	ops := []jsoncodec.Operation{
 		{Op: "replace", Path: "/metadata/version", Value: 2},
 		{Op: "add", Path: "/metadata/updated", Value: true},
 	}
 
-	b.Run("mutable", func(b *testing.B) {
+	patch := compileBenchmarkPatch(b, ops)
+
+	b.Run("in_place", func(b *testing.B) {
 		b.ResetTimer()
 		for b.Loop() {
 			docCopy := cloneDocument(doc)
-			_, err := jsonpatch.ApplyPatch(docCopy, ops, jsonpatch.WithMutate(true))
-			if err != nil {
-				b.Fatalf("Operation failed: %v", err)
-			}
+			applyBenchmarkPatch(b, patch, docCopy, true)
 		}
 	})
 
@@ -346,12 +337,31 @@ func BenchmarkMutateVsImmutable(b *testing.B) {
 		b.ResetTimer()
 		for b.Loop() {
 			docCopy := cloneDocument(doc)
-			_, err := jsonpatch.ApplyPatch(docCopy, ops, jsonpatch.WithMutate(false))
-			if err != nil {
-				b.Fatalf("Operation failed: %v", err)
-			}
+			applyBenchmarkPatch(b, patch, docCopy, false)
 		}
 	})
+}
+
+func compileBenchmarkPatch(b testing.TB, operations []jsoncodec.Operation) *jsonpatch.Patch {
+	b.Helper()
+	patch, err := jsonpatch.CompileOperations(operations, jsonpatch.WithCapabilities(jsonpatch.AllCapabilities))
+	if err != nil {
+		b.Fatalf("CompileOperations failed: %v", err)
+	}
+	return patch
+}
+
+func applyBenchmarkPatch(b testing.TB, patch *jsonpatch.Patch, doc any, inPlace bool) {
+	b.Helper()
+	if inPlace {
+		if err := jsonpatch.ApplyInPlace(patch, &doc); err != nil {
+			b.Fatalf("ApplyInPlace failed: %v", err)
+		}
+		return
+	}
+	if _, err := jsonpatch.Apply(patch, doc); err != nil {
+		b.Fatalf("Apply failed: %v", err)
+	}
 }
 
 func cloneDocument(doc any) any {

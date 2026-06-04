@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/go-json-experiment/json"
 	"github.com/go-json-experiment/json/jsontext"
 
@@ -40,21 +42,20 @@ func demoBasicJSONBytesPatch() {
 	fmt.Printf("Before:\n%s\n", prettyJSON(jsonData))
 
 	// Define patch operations
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/name", Value: "Robert Johnson"},
 		{Op: "add", Path: "/email", Value: "bob.johnson@company.com"},
 		{Op: "replace", Path: "/age", Value: 36},
 		{Op: "add", Path: "/department", Value: "Engineering"},
 	}
 
-	// Apply patch - returns []byte
-	result, err := jsonpatch.ApplyPatch(jsonData, patch)
+	result, err := applyCompiled(jsonData, patch)
 	if err != nil {
 		log.Fatal("Failed to patch JSON:", err)
 	}
 
 	fmt.Printf("After:\n%s\n", prettyJSON(result.Doc))
-	fmt.Printf("✅ Operations applied: %d\n", len(result.Res))
+	fmt.Printf("✅ Operations applied: %d\n", len(result.Steps))
 }
 
 // demoComplexJSONBytesPatch demonstrates complex JSON document patching
@@ -77,7 +78,7 @@ func demoComplexJSONBytesPatch() {
 	fmt.Printf("Before:\n%s\n", prettyJSON(jsonData))
 
 	// Complex nested operations
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/user/name", Value: "Alice Johnson"},
 		{Op: "add", Path: "/user/profile/skills/-", Value: "Rust"},
 		{Op: "replace", Path: "/user/profile/bio", Value: "Senior Software Engineer"},
@@ -85,13 +86,13 @@ func demoComplexJSONBytesPatch() {
 		{Op: "replace", Path: "/settings/theme", Value: "light"},
 	}
 
-	result, err := jsonpatch.ApplyPatch(jsonData, patch)
+	result, err := applyCompiled(jsonData, patch)
 	if err != nil {
 		log.Fatal("Failed to patch complex JSON:", err)
 	}
 
 	fmt.Printf("After:\n%s\n", prettyJSON(result.Doc))
-	fmt.Printf("✅ Complex operations completed: %d\n", len(result.Res))
+	fmt.Printf("✅ Complex operations completed: %d\n", len(result.Steps))
 }
 
 // demoJSONBytesArrayOperations demonstrates array operations
@@ -110,7 +111,7 @@ func demoJSONBytesArrayOperations() {
 	fmt.Printf("Before:\n%s\n", prettyJSON(jsonData))
 
 	// Array-focused operations
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "add", Path: "/members/-", Value: map[string]string{"name": "Alice", "role": "DevOps"}},
 		{Op: "replace", Path: "/members/0/role", Value: "Tech Lead"},
 		{Op: "add", Path: "/technologies/-", Value: "Docker"},
@@ -118,13 +119,21 @@ func demoJSONBytesArrayOperations() {
 		{Op: "remove", Path: "/members/2"},
 	}
 
-	result, err := jsonpatch.ApplyPatch(jsonData, patch)
+	result, err := applyCompiled(jsonData, patch)
 	if err != nil {
 		log.Fatal("Failed to patch arrays:", err)
 	}
 
 	fmt.Printf("After:\n%s\n", prettyJSON(result.Doc))
-	fmt.Printf("✅ Array operations completed: %d\n", len(result.Res))
+	fmt.Printf("✅ Array operations completed: %d\n", len(result.Steps))
+}
+
+func applyCompiled[T jsonpatch.Document](doc T, operations []jsoncodec.Operation) (*jsonpatch.Result[T], error) {
+	patch, err := jsonpatch.CompileOperations(operations)
+	if err != nil {
+		return nil, err
+	}
+	return jsonpatch.Apply(patch, doc)
 }
 
 // prettyJSON formats JSON bytes for better readability

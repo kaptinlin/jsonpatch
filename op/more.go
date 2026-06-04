@@ -70,8 +70,5 @@ func (mo *MoreOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the more operation.
 func (mo *MoreOperation) Validate() error {
-	if len(mo.Path()) == 0 {
-		return ErrPathEmpty
-	}
 	return nil
 }

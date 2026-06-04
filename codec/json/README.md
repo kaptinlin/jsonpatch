@@ -2,7 +2,7 @@
 
 The `json` codec converts object-shaped JSON Patch operations to executable operations and back.
 
-Use this package when you need direct control over JSON operation decoding or encoding. Most callers should use `jsonpatch.ApplyPatch`, which uses this codec internally.
+Use this package when you need direct control over JSON operation decoding or encoding. Most callers should use `jsonpatch.CompileJSON` for raw JSON bytes or `jsonpatch.CompileOperations` for `Operation` values.
 
 ## Wire Shape
 
@@ -50,10 +50,10 @@ func main() {
 
 ```go
 func Decode(operations []map[string]any, opts PatchOptions) ([]jsonpatch.Op, error)
-func DecodeOperations(operations []jsonpatch.Operation, opts PatchOptions) ([]jsonpatch.Op, error)
+func DecodeOperations(operations []Operation, opts PatchOptions) ([]jsonpatch.Op, error)
 func DecodeJSON(data []byte, opts PatchOptions) ([]jsonpatch.Op, error)
 
-func Encode(ops []jsonpatch.Op) ([]jsonpatch.Operation, error)
+func Encode(ops []jsonpatch.Op) ([]Operation, error)
 func EncodeJSON(ops []jsonpatch.Op) ([]byte, error)
 ```
 

@@ -170,7 +170,7 @@ func TestTestStringLen_Contracts(t *testing.T) {
 		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
 	}
 	assert.NoError(t, op.Validate())
-	assert.ErrorIs(t, NewTestStringLen(nil, 3).Validate(), ErrPathEmpty)
+	assert.NoError(t, NewTestStringLen(nil, 3).Validate())
 	assert.ErrorIs(t, NewTestStringLen([]string{"name"}, -1).Validate(), ErrLengthNegative)
 	assert.ErrorIs(t, NewTestStringLen([]string{"name"}, 1.5).Validate(), ErrInvalidLength)
 }

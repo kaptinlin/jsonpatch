@@ -8,10 +8,10 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 
 | Package | Responsibility |
 |---------|----------------|
-| root package (`index.go`, `jsonpatch.go`, `validate.go`) | Public entry points, type aliases, dispatch by document shape, JSON-shaped validation helpers |
+| root package (`patch.go`, `errors.go`, `index.go`, `util.go`) | Compiled patch API, structured errors, operation constants, dispatch by document shape, and compile-time capability policy |
 | `op` | Executable operation implementations and shared apply helpers |
-| `internal` | Shared interfaces, constants, options, and payload/result types |
-| `codec/json` | Decode `Operation` payloads into executable operations and encode operations back to JSON form |
+| `internal` | Shared interfaces, constants, apply options, and codec payload types |
+| `codec/json` | Decode `codec/json.Operation` payloads into executable operations and encode operations back to JSON form |
 | `codec/compact` | Compact array codec |
 | `codec/binary` | Binary codec |
 
@@ -19,18 +19,22 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 
 | Interface | Contract |
 |-----------|----------|
-| `internal.Op` | Executable operation with `Op`, `Code`, `Path`, `Apply`, `ToJSON`, `ToCompact`, and `Validate`. |
+| `internal.Op` | Executable operation with `Op`, `Path`, `Apply`, and `Validate`. |
+| `internal.JSONOp` | `Op` plus `ToJSON` for JSON projection and compile-time freezing. |
+| `internal.CompactOp` | `Op` plus `Code` and `ToCompact` for compact-array projection. |
 | `internal.PredicateOp` | `Op` plus `Test` and `Not`. |
 | `internal.SecondOrderPredicateOp` | `PredicateOp` plus child predicate access through `Ops`. |
 | `internal.Codec` | Encode and decode operations between wire formats and executable operations. |
 
-## Execution Pipeline
+## Compiled Execution Pipeline
 
-1. `ApplyPatch` dispatches by runtime document shape.
-2. The JSON codec decodes `[]Operation` into executable operations, honoring `WithMatcher` when regex predicates are present.
-3. `applyInternalOps` clones the working document unless `WithMutate(true)` is set.
-4. Operations run sequentially, and each operation's output document becomes the next operation's input.
-5. The final document is converted back to the caller's original type.
+1. `Compile`, `CompileOps`, `CompileOperations`, or `CompileJSON` creates a `Patch`.
+2. JSON-shaped inputs decode through `codec/json` before compile policy is applied.
+3. Compile policy validates operation shape and rejects operation families outside enabled capabilities.
+4. `Apply` dispatches by runtime document shape and clones the working document.
+5. `ApplyInPlace` dispatches by runtime document shape with mutation enabled and writes the final result back to the caller's variable.
+6. Operations run sequentially, and each operation's output document becomes the next operation's input.
+7. The final document is converted back to the caller's original type, and successful operation facts become `Step` values.
 
 ## Document-Shape Dispatch
 
@@ -38,7 +42,8 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 |-------------|------|
 | `map[string]any` | Direct apply without JSON round-trip |
 | `[]byte` | JSON decode → apply → JSON encode |
-| `string` | JSON decode for object/array strings, otherwise scalar-string apply |
+| `JSONText` | JSON decode → apply → JSON encode |
+| `string` | Scalar-string apply |
 | Structs and other concrete types | JSON marshal → apply → JSON unmarshal |
 | Primitives and `[]any` | Direct apply |
 
@@ -61,6 +66,8 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 - The root package is the public entry point.
 - `op` depends on `internal` contracts and helpers, not on the root package.
 - Codec packages translate between wire formats and `internal.Op`; they do not own patch execution.
+- JSON and compact encode paths require the decoded operation value to implement the matching projection interface and fail when a custom executable operation cannot represent itself in that wire format.
+- Compile capability policy belongs to the root package, after codec decoding and before operation application.
 - `internal` defines contracts and shared constants only.
 
 ## Forbidden
@@ -69,10 +76,11 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 - Do not create package cycles between root, `op`, `codec/*`, and `internal`.
 - Do not put architectural promises in `CLAUDE.md`; keep CLAUDE operational and record tested architecture here.
 - Do not let format-specific codecs define behavioral semantics that conflict with executable operations.
+- Do not put codec names in capability policy; codecs are wire formats, not operation vocabularies.
 
 ## Acceptance Criteria
 
 - [ ] Each package has one documented responsibility.
-- [ ] The path from `ApplyPatch` to operation execution is explicit.
+- [ ] The path from compilation to operation execution is explicit.
 - [ ] Document-shape conversion rules are defined once.
 - [ ] Codec responsibilities stay separate from operation behavior.

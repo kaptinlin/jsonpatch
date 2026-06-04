@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
@@ -25,7 +27,7 @@ func main() {
 	fmt.Println(string(original))
 
 	// Safe withdrawal: only if conditions are met
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		// Test: verify account is active
 		{
 			Op:    "test",
@@ -53,7 +55,12 @@ func main() {
 	}
 
 	fmt.Println("\nAttempting safe withdrawal...")
-	result, err := jsonpatch.ApplyPatch(account, patch)
+	compiled, err := jsonpatch.CompileOperations(patch, jsonpatch.WithCapabilities(jsonpatch.AllCapabilities))
+	if err != nil {
+		log.Printf("Transaction failed: %v", err)
+		return
+	}
+	result, err := jsonpatch.Apply(compiled, account)
 	if err != nil {
 		log.Printf("Transaction failed: %v", err)
 		return
@@ -66,7 +73,7 @@ func main() {
 	// Demonstrate failed condition
 	fmt.Println("\n--- Failed Condition Example ---")
 
-	failPatch := []jsonpatch.Operation{
+	failPatch := []jsoncodec.Operation{
 		// This test will fail - wrong balance
 		{
 			Op:    "test",
@@ -80,7 +87,10 @@ func main() {
 		},
 	}
 
-	_, err = jsonpatch.ApplyPatch(account, failPatch)
+	compiled, err = jsonpatch.CompileOperations(failPatch)
+	if err == nil {
+		_, err = jsonpatch.Apply(compiled, account)
+	}
 	if err != nil {
 		fmt.Printf("Expected failure: %v\n", err)
 	}

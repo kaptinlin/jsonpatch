@@ -1,169 +1,179 @@
-# CLAUDE.md
+# jsonpatch Agent Guide
 
-This file provides guidance to Claude Code when working with code in this repository.
+This file provides operational guidance for agents working in `github.com/kaptinlin/jsonpatch`. Keep user-facing usage in `README.md`; keep technical contracts in `SPECS/`.
 
 ## Project Overview
 
 - **Module:** `github.com/kaptinlin/jsonpatch`
-- **Go Version:** 1.26.3
-- Recorded technical contracts live in `SPECS/`.
-- Keep `README.md` user-facing and keep `CLAUDE.md` operational.
-- The library applies RFC 6902 operations, predicate operations, and extended operations while preserving the caller's document type whenever the result can be converted back safely.
+- **Go version:** 1.26.3
+- **Contract source:** `SPECS/`
+- **Reference evidence:** `.reference/json-joy/`
+- **Core model:** compile operation vocabulary into a reusable `Patch`, then apply it immutably with `Apply` or explicitly in place with `ApplyInPlace`.
 
 ## Commands
 
 ```bash
-# Run all tests with race detection
-task test
-
-# Run golangci-lint only
-task golangci-lint
-
-# Run golangci-lint and tidy checks
-task lint
-
-# Format Go code
-task fmt
-
-# Run go vet
-task vet
+task test           # Run all tests with race detection
+task golangci-lint  # Run golangci-lint only
+task lint           # Run golangci-lint and tidy checks
+task fmt            # Format Go code
+task vet            # Run go vet
+task bench          # Run benchmarks
+task verify         # Run deps, fmt, vet, lint, test, vuln
 ```
 
 ## Architecture
 
 | Path | Responsibility |
 | --- | --- |
-| `jsonpatch.go`, `index.go`, `validate.go` | Public API, document-shape dispatch, validation |
-| `op/` | Executable operation implementations |
-| `internal/` | Shared contracts, options, payload and result types |
-| `codec/json/` | JSON operation encoding and decoding |
-| `codec/compact/` | Compact array codec |
-| `codec/binary/` | MessagePack codec |
-| `tests/` | Scenario and predicate coverage |
-| `examples/` | Runnable usage examples |
+| `patch.go`, `errors.go`, `index.go`, `util.go` | Compiled public API, structured errors, operation constants, document-shape dispatch, compile-time capability policy |
+| `op/` | Executable operation implementations and shared apply helpers |
+| `internal/` | Shared interfaces, constants, and codec payload types |
+| `codec/json/` | JSON-shaped operation encoding and decoding |
+| `codec/compact/` | Compact array codec with segment-array paths |
+| `codec/binary/` | MessagePack codec for executable operations |
+| `tests/` | Scenario, predicate, reference, benchmark, and test utility coverage |
+| `examples/` | Runnable user-facing examples |
 
 ## Agent Workflow
 
-### Design Phase — Read SPECS as Recorded Contracts
+### Design Phase - Read SPECS First
 
-Before designing or modifying behavior, read the relevant `SPECS/` documents to understand the current recorded contract.
-SPECS describe tested behavior, architecture, and documentation ownership; they do not replace implementation judgment.
-When the correct behavior differs from the current record, implement it with focused tests and then update the owning spec when the change becomes a lasting contract.
+Before designing or modifying behavior, read the relevant `SPECS/` documents. SPECS record tested contracts; source code and tests remain the executable truth.
 
-**Workflow:**
-
-1. Identify the relevant specs from the index below.
-2. Read those specs before changing behavior.
+1. Identify relevant specs from the SPECS Index.
+2. Read those specs before editing behavior.
 3. Implement the correct behavior with focused tests.
-4. Update the owning spec when the change creates a durable behavior or architecture rule.
-5. Ask the user only when the code, tests, and request still leave a risky product decision unresolved.
+4. Update the owning spec when the change becomes a lasting contract.
+5. Ask the user only when code, tests, specs, and request still leave a risky product decision unresolved.
 
-### Implementation Phase — Check Reference Evidence
+### Implementation Phase - Check Reference Evidence
 
-When investigating reference behavior, inspect `.reference/README.md` and `.reference/json-joy/` before changing code.
-Use the current Go implementation when the reference submodule is not initialized.
+When reference behavior matters, inspect `.reference/README.md` and `.reference/json-joy/` before changing code. Treat the TypeScript reference as evidence for vocabulary and edge cases, not as authority over Go API shape.
 
 ## SPECS Index
 
-- `SPECS/00-overview.md` — library scope, mutation default, supported document shapes
-- `SPECS/20-api-specs.md` — public entry points and RFC 6902 mutating operations
-- `SPECS/25-predicate-specs.md` — predicate and second-order predicate behavior
-- `SPECS/26-extended-operation-specs.md` — extended operation contracts
-- `SPECS/30-data-model-specs.md` — payload and result types
-- `SPECS/40-architecture-specs.md` — package boundaries and execution pipeline
-- `SPECS/50-coding-standards.md` — implementation, errors, tests, and documentation rules
+| Spec | Owns |
+| --- | --- |
+| `SPECS/00-overview.md` | Library scope, mutation default, supported document shapes |
+| `SPECS/20-api-specs.md` | Public entry points, compile options, capabilities, RFC 6902 mutating operations, error contract |
+| `SPECS/25-predicate-specs.md` | Predicate and second-order predicate behavior |
+| `SPECS/26-extended-operation-specs.md` | Extended operation contracts |
+| `SPECS/30-data-model-specs.md` | JSON payload, compact payload, type vocabulary, document/result/error types |
+| `SPECS/40-architecture-specs.md` | Package boundaries, execution pipeline, codec wire contract |
+| `SPECS/50-coding-standards.md` | Implementation, errors, tests, and documentation rules |
+
+## References Index
+
+| Reference | Use |
+| --- | --- |
+| `.reference/README.md` | Local reference index and maintenance scripts |
+| `.reference/json-joy/` | TypeScript JSON Patch+ vocabulary, predicates, extended operations, and codec evidence |
 
 ## Agent Operating Rules
 
 - Read nearby code and relevant specs before editing.
 - Prefer one clear public story over ambiguous fallback paths.
-- Keep edits surgical; do not refactor unrelated files.
-- Prove behavior with tests, not spec-mirror tests or policy-only gates.
+- Keep edits surgical and avoid unrelated refactors.
+- Preserve user changes already in the working tree.
+- Prove behavior with tests, not spec-mirror tests.
+- Do not add policy-only gates that restate docs or specs.
 - Fail loudly with sentinel errors and wrapped context.
 - Treat reference projects as evidence, not authority.
-- Preserve user changes already in the working tree.
+- Respect context budgets; summarize long docs instead of copying them into prompts.
 
 ## Design Philosophy
 
-- **KISS** — Keep one public story for each layer: JSON-shaped operations through `ApplyPatch`, executable operations through `ApplyOp` and `ApplyOps`, codec work through `codec/*`.
-- **SRP** — The root package owns type-preserving dispatch, `op/` owns operation behavior, and `codec/*` owns wire formats.
-- **Simplicity as art** — Mutation is opt-in through `WithMutate(true)`. The default path stays predictable and copy-safe.
-- **Errors as teachers** — Stable sentinel errors and wrapped context should tell callers whether they hit bad payloads, invalid pointers, or runtime document-state failures.
-- **APIs as language** — Prefer operation names and option names that read like patch vocabulary, not framework plumbing.
-- **Never:** accidental complexity, feature gravity, abstraction theater, configurability cope.
+- **KISS** - One lifecycle: compile a `Patch`, then `Apply` or `ApplyInPlace`.
+- **SRP** - Root owns type-preserving dispatch and compile policy; `op/` owns behavior; `codec/*` owns wire formats.
+- **DRY** - Operation vocabulary, codec shapes, and spec contracts should not drift into duplicate truths.
+- **YAGNI** - Do not add planners, managers, plugins, or codegen public API without real consumers.
+- **Simplicity as art** - Dangerous actions are verbs, not small options; default application stays copy-safe.
+- **Never:** accidental complexity, compatibility shims, abstraction theater, or configurability as a substitute for a clear API.
 
 ## API Design Principles
 
-- **Progressive Disclosure** — Use `ApplyPatch` for JSON-shaped operations, `ApplyOp` and `ApplyOps` for executable operations, and `codec/*` only when callers need wire-format control.
+- **Progressive disclosure:** use `Compile`/`CompileJSON`, then `Apply`; reach for `ApplyInPlace` only when mutation is intentional; use `codec/*` only for wire-format control.
+- **Capability honesty:** default compilation accepts RFC 6902 only; predicates, regex predicates, and extended operations require explicit capabilities.
+- **Explicit document shape:** plain `string` is scalar text; use `JSONText` or `[]byte` for JSON text.
+- **Structured failure:** callers match stable failure classes with `errors.Is` and inspect `*Error` for index, op, path, from, codec, and cause.
 
 ## Coding Rules
 
 ### Must Follow
 
 - Use Go 1.26.3 features when they simplify code.
-- Follow [Google Go Best Practices](https://google.github.io/go-style/best-practices).
-- Follow [Google Go Style Decisions](https://google.github.io/go-style/decisions).
-- Preserve the caller's document type whenever the result can be converted back safely.
-- Keep mutation opt-in. Require `WithMutate(true)` for in-place updates.
+- Follow Google Go Best Practices: https://google.github.io/go-style/best-practices
+- Follow Google Go Style Decisions: https://google.github.io/go-style/decisions
+- Preserve the caller's document type whenever conversion back is safe.
+- Keep mutation opt-in through `ApplyInPlace`.
 - Keep the library pure: return errors and leave logging to callers.
 - Use sentinel errors for stable failure classes and match with `errors.Is`.
-- Record technical behavior in `SPECS/`; keep `README.md` user-facing and `CLAUDE.md` operational.
+- Keep compile and execution errors separate: compile checks payload shape and capability policy; execution checks document state.
+- Record durable behavior in `SPECS/`; keep `README.md` user-facing and `CLAUDE.md` operational.
 
-### Domain Patterns
+### Go 1.26 Patterns In Use
 
-See `SPECS/` for detailed rules:
-
-- `SPECS/20-api-specs.md` — public API contracts
-- `SPECS/25-predicate-specs.md` — predicate and negation rules
-- `SPECS/26-extended-operation-specs.md` — extended operation contracts
-- `SPECS/40-architecture-specs.md` — package boundaries and execution pipeline
-- `SPECS/50-coding-standards.md` — testing, error, and documentation rules
+| Pattern | Where |
+| --- | --- |
+| Generics and type-preserving constraints | Root `Apply`, `Result`, `Document` |
+| `testing.B.Loop()` | Benchmarks |
+| `for range N` | Test and helper loops |
+| `maps.Clone` / `maps.Copy` | Examples and tests |
 
 ## Testing
 
 - Use table-driven tests for multi-case behavior.
 - Use `t.Parallel()` for top-level tests and independent subtests.
-- Add success and failure coverage for each new behavior.
-- Run `task test` and `task lint` after code or docs changes.
+- Add success and failure coverage for new behavior.
+- Protect codec wire contracts with focused golden tests.
+- Do not compare error strings; use `errors.Is` and `errors.As`.
 - Add example-oriented tests when `README.md` or public usage snippets change.
+- Run `task test` and `task lint` after code or docs changes; report tidy-only failures separately from lint failures.
 
 ## Dependencies
 
-- `github.com/go-json-experiment/json` — JSON parsing and marshaling
-- `github.com/kaptinlin/deepclone` — clone support for immutable application
-- `github.com/kaptinlin/jsonpointer` — JSON Pointer formatting and traversal
-- `github.com/tinylib/msgp` — MessagePack support for the binary codec
+- `github.com/go-json-experiment/json` - JSON parsing and marshaling
+- `github.com/kaptinlin/deepclone` - clone support for immutable application
+- `github.com/kaptinlin/jsonpointer` - JSON Pointer formatting and traversal
+- `github.com/tinylib/msgp` - MessagePack support for the binary codec
 
 ## Dependency Issue Reporting
 
 When you encounter a bug, limitation, or unexpected behavior in a dependency library:
 
-1. **Do NOT** work around it by reimplementing the dependency's functionality.
-2. **Do NOT** skip the dependency and silently replace it with project-local code.
-3. **Do** create a report file: `reports/<dependency-name>.md`.
-4. **Do** include the dependency version, trigger scenario, expected behavior, actual behavior, errors, and a non-implemented workaround idea.
-5. **Do** continue with tasks that are unaffected by the dependency issue.
+1. Do not work around it by reimplementing the dependency's functionality.
+2. Do not skip or silently replace the dependency with project-local code.
+3. Create `reports/<dependency-name>.md`.
+4. Include dependency version, trigger scenario, expected behavior, actual behavior, relevant errors, and a non-implemented workaround idea.
+5. Continue tasks that are unaffected by the dependency issue.
 
 ## Agent Skills
 
-Use the matching local skill in `.agents/skills/` (mirrored in `.claude/skills/`) when it fits the task:
+Use the matching local skill in `.agents/skills/` when it fits the task.
 
-- `agent-md-writing` — regenerate `CLAUDE.md` and refresh the `AGENTS.md` symlink
-- `readme-writing` — regenerate `README.md`
-- `library-docs-maintaining` — refresh top-level library docs together
-- `library-specs-maintaining` — consolidate scattered design docs into `SPECS/`
-- `library-test-covering` — add or expand test coverage
-- `golangci-linting` — configure or troubleshoot linting
-- `go-best-practices` — review Go API and implementation style
-- `dependency-selecting` — choose kaptinlin ecosystem dependencies
-- `committing` — prepare a conventional commit
-- `releasing` — guide release work
+| Skill | When to Use |
+| --- | --- |
+| `agent-md-writing` | Refresh `CLAUDE.md` and the `AGENTS.md` symlink |
+| `readme-writing` | Refresh user-facing README usage documentation |
+| `library-docs-maintaining` | Refresh top-level library docs together |
+| `library-specs-maintaining` | Consolidate or maintain SPECS documents |
+| `library-test-covering` | Add or expand behavior coverage |
+| `library-legacy-pruning` | Delete deprecated APIs, legacy shims, and old compatibility paths |
+| `golangci-linting` | Configure or troubleshoot golangci-lint v2 |
+| `go-best-practices` | Review Go API and implementation style |
+| `code-simplifying` | Simplify recently changed code without changing behavior |
+| `committing` | Prepare conventional commits |
+| `releasing` | Guide release work |
 
 ## Forbidden
 
-- No documentation masquerading as code — do not encode spec prose in values or helpers that no program reads at runtime.
-- No working around dependency bugs — report them in `reports/` instead.
-- No assuming every `string` input is a JSON document; only strings starting with `{` or `[` are parsed as JSON.
-- No implicit mutation — use `WithMutate(true)` when mutation is required.
+- No documentation masquerading as code; do not encode spec prose in values or helpers that no program consumes.
+- No policy-only gate scripts whose only job is to restate docs or specs.
+- No spec mirror tests when behavior is already covered by stronger tests.
+- No working around dependency bugs; report them in `reports/`.
+- No assuming `string` input is a JSON document; use `JSONText` or `[]byte`.
+- No implicit mutation; use `ApplyInPlace`.
+- No reintroducing legacy helper entry points or runtime mutation options.
 - No `panic` or logging in library code.
-- No untested behavior promises in `README.md` or `CLAUDE.md`; README teaches usage, and CLAUDE guides agents.
+- No untested API or architecture promises in `README.md` or `CLAUDE.md`.

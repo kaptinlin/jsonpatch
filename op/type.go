@@ -81,9 +81,6 @@ func (tp *TypeOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the type operation.
 func (tp *TypeOperation) Validate() error {
-	if len(tp.Path()) == 0 {
-		return ErrPathEmpty
-	}
 	if tp.TypeValue == "" {
 		return ErrInvalidType
 	}

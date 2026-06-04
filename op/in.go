@@ -85,9 +85,6 @@ func (in *InOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the in operation.
 func (in *InOperation) Validate() error {
-	if len(in.Path()) == 0 {
-		return ErrPathEmpty
-	}
 	if len(in.Value) == 0 {
 		return ErrValuesArrayEmpty
 	}

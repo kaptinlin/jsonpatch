@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
@@ -33,9 +32,9 @@ func TestSplitOp(t *testing.T) {
 					Pos:  1,
 				},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+			result, err := applyPatch(t, state, operations)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 			}
 			expected := []any{
 				map[string]any{
@@ -73,9 +72,9 @@ func TestSplitOp(t *testing.T) {
 					Pos:  1,
 				},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+			result, err := applyPatch(t, state, operations)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 			}
 			expected := []any{
 				map[string]any{
@@ -107,9 +106,9 @@ func TestSplitOp(t *testing.T) {
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 2},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+				result, err := applyPatch(t, state, operations)
 				if err != nil {
-					require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+					require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 				}
 				expected := []any{"12", "34"}
 				assert.Equal(t, expected, result.Doc)
@@ -121,9 +120,9 @@ func TestSplitOp(t *testing.T) {
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 1},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+				result, err := applyPatch(t, state, operations)
 				if err != nil {
-					require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+					require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 				}
 				expected := []any{"1", "234"}
 				assert.Equal(t, expected, result.Doc)
@@ -135,9 +134,9 @@ func TestSplitOp(t *testing.T) {
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 0},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+				result, err := applyPatch(t, state, operations)
 				if err != nil {
-					require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+					require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 				}
 				expected := []any{"", "1234"}
 				assert.Equal(t, expected, result.Doc)
@@ -149,9 +148,9 @@ func TestSplitOp(t *testing.T) {
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 4},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+				result, err := applyPatch(t, state, operations)
 				if err != nil {
-					require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+					require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 				}
 				expected := []any{"1234", ""}
 				assert.Equal(t, expected, result.Doc)
@@ -163,9 +162,9 @@ func TestSplitOp(t *testing.T) {
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 99999},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+				result, err := applyPatch(t, state, operations)
 				if err != nil {
-					require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+					require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 				}
 				expected := []any{"12345", ""}
 				assert.Equal(t, expected, result.Doc)
@@ -177,9 +176,9 @@ func TestSplitOp(t *testing.T) {
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: -1},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+				result, err := applyPatch(t, state, operations)
 				if err != nil {
-					require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+					require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 				}
 				expected := []any{"1234", "5"}
 				assert.Equal(t, expected, result.Doc)
@@ -191,9 +190,9 @@ func TestSplitOp(t *testing.T) {
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: -2},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+				result, err := applyPatch(t, state, operations)
 				if err != nil {
-					require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+					require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 				}
 				expected := []any{"123", "45"}
 				assert.Equal(t, expected, result.Doc)
@@ -205,9 +204,9 @@ func TestSplitOp(t *testing.T) {
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: -7},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+				result, err := applyPatch(t, state, operations)
 				if err != nil {
-					require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+					require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 				}
 				expected := []any{"", "12345"}
 				assert.Equal(t, expected, result.Doc)
@@ -224,9 +223,9 @@ func TestSplitOp(t *testing.T) {
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 3},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+				result, err := applyPatch(t, state, operations)
 				if err != nil {
-					require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+					require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 				}
 				expected := []any{
 					map[string]any{"text": "foo"},
@@ -244,9 +243,9 @@ func TestSplitOp(t *testing.T) {
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 3},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+				result, err := applyPatch(t, state, operations)
 				if err != nil {
-					require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+					require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 				}
 				expected := []any{
 					map[string]any{"text": "foo", "foo": "bar"},
@@ -264,9 +263,9 @@ func TestSplitOp(t *testing.T) {
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 3, Props: map[string]any{"baz": "qux"}},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+				result, err := applyPatch(t, state, operations)
 				if err != nil {
-					require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+					require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 				}
 				expected := []any{
 					map[string]any{"text": "foo", "foo": "bar", "baz": "qux"},
@@ -284,9 +283,9 @@ func TestSplitOp(t *testing.T) {
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 3, Props: map[string]any{"foo": "1"}},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+				result, err := applyPatch(t, state, operations)
 				if err != nil {
-					require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+					require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 				}
 				expected := []any{
 					map[string]any{"text": "foo", "foo": "1"},
@@ -310,9 +309,9 @@ func TestSplitOp(t *testing.T) {
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 1},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+				result, err := applyPatch(t, state, operations)
 				if err != nil {
-					require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+					require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 				}
 				expected := []any{
 					map[string]any{
@@ -342,9 +341,9 @@ func TestSplitOp(t *testing.T) {
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 2, Props: map[string]any{"f": 1}},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+				result, err := applyPatch(t, state, operations)
 				if err != nil {
-					require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+					require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 				}
 				expected := []any{
 					map[string]any{
@@ -377,9 +376,9 @@ func TestSplitOp(t *testing.T) {
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 2, Props: map[string]any{"f": 2}},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+				result, err := applyPatch(t, state, operations)
 				if err != nil {
-					require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+					require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 				}
 				expected := []any{
 					map[string]any{
@@ -415,9 +414,9 @@ func TestSplitOp(t *testing.T) {
 				operations := []internal.Operation{
 					{Op: "split", Path: "", Pos: 2, Props: map[string]any{"f": 2, "a": 2}},
 				}
-				result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+				result, err := applyPatch(t, state, operations)
 				if err != nil {
-					require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+					require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 				}
 				expected := []any{
 					map[string]any{
@@ -451,9 +450,9 @@ func TestSplitOp(t *testing.T) {
 			operations := []internal.Operation{
 				{Op: "split", Path: "/foo", Pos: 1},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+			result, err := applyPatch(t, state, operations)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 			}
 			expected := map[string]any{"foo": []any{"a", "b"}}
 			assert.Equal(t, expected, result.Doc)
@@ -465,9 +464,9 @@ func TestSplitOp(t *testing.T) {
 			operations := []internal.Operation{
 				{Op: "split", Path: "/foo", Pos: 1, Props: map[string]any{"z": "x"}},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+			result, err := applyPatch(t, state, operations)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 			}
 			expected := map[string]any{
 				"foo": []any{
@@ -484,9 +483,9 @@ func TestSplitOp(t *testing.T) {
 			operations := []internal.Operation{
 				{Op: "split", Path: "/foo", Pos: 1, Props: map[string]any{"z": "x"}},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+			result, err := applyPatch(t, state, operations)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 			}
 			expected := map[string]any{
 				"foo": []any{
@@ -503,9 +502,9 @@ func TestSplitOp(t *testing.T) {
 			operations := []internal.Operation{
 				{Op: "split", Path: "/foo", Pos: 1},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+			result, err := applyPatch(t, state, operations)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 			}
 			expected := map[string]any{"foo": []any{true, true}}
 			assert.Equal(t, expected, result.Doc)
@@ -517,9 +516,9 @@ func TestSplitOp(t *testing.T) {
 			operations := []internal.Operation{
 				{Op: "split", Path: "/foo", Pos: 9},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+			result, err := applyPatch(t, state, operations)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 			}
 			expected := map[string]any{"foo": []any{float64(9), float64(1)}}
 			assert.Equal(t, expected, result.Doc)
@@ -534,9 +533,9 @@ func TestSplitOp(t *testing.T) {
 			operations := []internal.Operation{
 				{Op: "split", Path: "/1", Pos: 0},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+			result, err := applyPatch(t, state, operations)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 			}
 			expected := []any{1, map[string]any{"children": []any{}}, map[string]any{"children": []any{map[string]any{"text": "a"}, map[string]any{"text": "b"}}}, 2}
 			assert.Equal(t, expected, result.Doc)
@@ -548,9 +547,9 @@ func TestSplitOp(t *testing.T) {
 			operations := []internal.Operation{
 				{Op: "split", Path: "/1", Pos: 0, Props: map[string]any{"a": "b"}},
 			}
-			result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+			result, err := applyPatch(t, state, operations)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 			}
 			expected := []any{
 				1,

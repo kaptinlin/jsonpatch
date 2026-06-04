@@ -3,7 +3,8 @@ package ops_test
 import (
 	"testing"
 
-	"github.com/kaptinlin/jsonpatch"
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
 )
 
@@ -13,11 +14,11 @@ func TestOr(t *testing.T) {
 		{
 			Name: "succeeds_when_one_predicate_passes",
 			Doc:  map[string]any{"foo": 2, "bar": 2},
-			Operations: []jsonpatch.Operation{
+			Operations: []jsoncodec.Operation{
 				{
 					Op:   "or",
 					Path: "",
-					Apply: []jsonpatch.Operation{
+					Apply: []jsoncodec.Operation{
 						{Op: "test", Path: "/foo", Value: 1},
 						{Op: "test", Path: "/bar", Value: 2},
 					},
@@ -29,11 +30,11 @@ func TestOr(t *testing.T) {
 		{
 			Name: "succeeds_when_both_predicates_pass",
 			Doc:  map[string]any{"foo": 1, "bar": 2},
-			Operations: []jsonpatch.Operation{
+			Operations: []jsoncodec.Operation{
 				{
 					Op:   "or",
 					Path: "",
-					Apply: []jsonpatch.Operation{
+					Apply: []jsoncodec.Operation{
 						{Op: "test", Path: "/foo", Value: 1},
 						{Op: "test", Path: "/bar", Value: 2},
 					},
@@ -45,11 +46,11 @@ func TestOr(t *testing.T) {
 		{
 			Name: "fails_when_all_predicates_fail",
 			Doc:  map[string]any{"foo": 3, "bar": 4},
-			Operations: []jsonpatch.Operation{
+			Operations: []jsoncodec.Operation{
 				{
 					Op:   "or",
 					Path: "",
-					Apply: []jsonpatch.Operation{
+					Apply: []jsoncodec.Operation{
 						{Op: "test", Path: "/foo", Value: 1},
 						{Op: "test", Path: "/bar", Value: 2},
 					},

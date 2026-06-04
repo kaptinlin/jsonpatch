@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
@@ -26,9 +25,9 @@ func TestMergeOp(t *testing.T) {
 				Pos:  1,
 			},
 		}
-		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+		result, err := applyPatch(t, state, operations)
 		if err != nil {
-			require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+			require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 		}
 		expected := []any{
 			map[string]any{"text": "foobar"},
@@ -49,9 +48,9 @@ func TestMergeOp(t *testing.T) {
 				Pos:  0,
 			},
 		}
-		_, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+		_, err := applyPatch(t, state, operations)
 		if err == nil {
-			require.FailNow(t, "ApplyPatch() error = nil, want error")
+			require.FailNow(t, "Apply() error = nil, want error")
 		}
 	})
 
@@ -71,9 +70,9 @@ func TestMergeOp(t *testing.T) {
 				Pos:  2,
 			},
 		}
-		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+		result, err := applyPatch(t, state, operations)
 		if err != nil {
-			require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+			require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 		}
 		expected := map[string]any{
 			"foo": []any{
@@ -93,9 +92,9 @@ func TestMergeOp(t *testing.T) {
 				Pos:  1,
 			},
 		}
-		_, err := jsonpatch.ApplyPatch(123, operations, internal.WithMutate(true))
+		_, err := applyPatch(t, 123, operations)
 		if err == nil {
-			require.FailNow(t, "ApplyPatch() error = nil, want error")
+			require.FailNow(t, "Apply() error = nil, want error")
 		}
 	})
 
@@ -109,9 +108,9 @@ func TestMergeOp(t *testing.T) {
 				Pos:  1,
 			},
 		}
-		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+		result, err := applyPatch(t, state, operations)
 		if err != nil {
-			require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+			require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 		}
 		expected := []any{"hello world"}
 		assert.Equal(t, expected, result.Doc)
@@ -127,9 +126,9 @@ func TestMergeOp(t *testing.T) {
 				Pos:  1,
 			},
 		}
-		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+		result, err := applyPatch(t, state, operations)
 		if err != nil {
-			require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+			require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 		}
 		expected := []any{float64(8)}
 		assert.Equal(t, expected, result.Doc)
@@ -145,9 +144,9 @@ func TestMergeOp(t *testing.T) {
 				Pos:  1,
 			},
 		}
-		result, err := jsonpatch.ApplyPatch(state, operations, internal.WithMutate(true))
+		result, err := applyPatch(t, state, operations)
 		if err != nil {
-			require.FailNow(t, fmt.Sprintf("ApplyPatch() error: %v", err))
+			require.FailNow(t, fmt.Sprintf("Apply() error: %v", err))
 		}
 		expected := []any{[]any{true, false}}
 		assert.Equal(t, expected, result.Doc)

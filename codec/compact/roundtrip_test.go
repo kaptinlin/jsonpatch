@@ -81,13 +81,22 @@ func TestDecodeOperationFamilies(t *testing.T) {
 			decoded, err := decoder.Decode(tc.raw)
 			require.NoError(t, err)
 
-			got, err := decoded.ToJSON()
-			require.NoError(t, err)
+			got := operationToJSON(t, decoded)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("decoded operation mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
+}
+
+func operationToJSON(t *testing.T, operation internal.Op) internal.Operation {
+	t.Helper()
+
+	jsonOp, ok := operation.(internal.JSONOp)
+	require.True(t, ok, "operation %T should encode to JSON", operation)
+	result, err := jsonOp.ToJSON()
+	require.NoError(t, err)
+	return result
 }
 
 func TestEncodeFormatsPathsAndOpcodes(t *testing.T) {

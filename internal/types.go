@@ -53,27 +53,8 @@ type OpResult[T Document] struct {
 	Old any `json:"old,omitempty"`
 }
 
-// PatchResult holds the result of applying a sequence of operations.
-type PatchResult[T Document] struct {
-	// Doc is the final patched document.
-	Doc T
-	// Res contains the per-operation results in application order.
-	Res []OpResult[T]
-}
-
 // RegexMatcher reports whether value matches a compiled pattern.
 type RegexMatcher func(value string) bool
 
 // CreateRegexMatcher builds a RegexMatcher from pattern and ignoreCase.
 type CreateRegexMatcher func(pattern string, ignoreCase bool) RegexMatcher
-
-// Options configures patch application.
-type Options struct {
-	// Mutate enables in-place updates instead of cloning the input first.
-	Mutate bool
-	// CreateMatcher overrides regex compilation for pattern operations.
-	CreateMatcher CreateRegexMatcher
-}
-
-// Option applies one patch option.
-type Option func(*Options)

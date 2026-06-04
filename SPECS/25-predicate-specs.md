@@ -34,7 +34,7 @@ Covered operations: `test`, `contains`, `defined`, `undefined`, `starts`, `ends`
 | `in` | `value` array | Check whether the target value is equal to one of the array entries. |
 | `less` | `value` number | Compare after coercing the target through JavaScript-like `Number()` semantics. |
 | `more` | `value` number | Compare after coercing the target through JavaScript-like `Number()` semantics. |
-| `matches` | `value` regex pattern, optional `ignore_case` | Match a string or `[]byte` target against a regex. The default matcher uses Go's `regexp` package; `WithMatcher` overrides it. |
+| `matches` | `value` regex pattern, optional `ignore_case` | Match a string or `[]byte` target against a regex. The default matcher uses Go's `regexp` package; `WithCompileMatcher` overrides it during compilation. |
 | `test_string` | `str`, `pos`, optional `not`, optional `ignore_case` | Compare the substring starting at `pos` against `str`. |
 | `test_string_len` | `len`, optional `not` | Check whether the target string length is at least `len`; `not` inverts that result. |
 
@@ -54,7 +54,7 @@ Covered operations: `test`, `contains`, `defined`, `undefined`, `starts`, `ends`
 
 - Use `contains` only for string containment.
 - Use `in` for membership in a provided array of acceptable values.
-- Use `WithMatcher` only when the default Go regex implementation is not sufficient.
+- Use `WithCompileMatcher` only when the default Go regex implementation is not sufficient.
 
 ## Forbidden
 

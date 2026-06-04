@@ -78,15 +78,6 @@ func (m *MoveOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the move operation.
 func (m *MoveOperation) Validate() error {
-	if len(m.path) == 0 {
-		return ErrPathEmpty
-	}
-	if len(m.from) == 0 {
-		return ErrFromPathEmpty
-	}
-	if slices.Equal(m.path, m.from) {
-		return ErrPathsIdentical
-	}
 	if isPrefix(m.from, m.path) {
 		return ErrCannotMoveIntoChildren
 	}

@@ -4,56 +4,65 @@ package testutils
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/kaptinlin/jsonpatch"
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
 	"github.com/kaptinlin/jsonpatch/internal"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // ApplyOperation applies a single operation to a document.
 //
 //nolint:gocritic // Tests pass operations by value for readability at call sites.
-func ApplyOperation(t *testing.T, doc any, operation jsonpatch.Operation) any {
+func ApplyOperation(t *testing.T, doc any, operation jsoncodec.Operation) any {
 	t.Helper()
-	patch := []jsonpatch.Operation{operation}
-	result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
+	result, err := compileAndApplyInPlace(t, doc, []jsoncodec.Operation{operation})
 	if err != nil {
-		t.Fatalf("ApplyPatch() error = %v, want nil", err)
+		t.Fatalf("ApplyInPlace() error = %v, want nil", err)
 	}
-	return result.Doc
+	return result
 }
 
 // ApplyOperationWithError applies an operation expecting it to fail.
 //
 //nolint:gocritic // Tests pass operations by value for readability at call sites.
-func ApplyOperationWithError(t *testing.T, doc any, operation jsonpatch.Operation) error {
+func ApplyOperationWithError(t *testing.T, doc any, operation jsoncodec.Operation) error {
 	t.Helper()
-	patch := []jsonpatch.Operation{operation}
-	_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
+	_, err := compileAndApplyInPlace(t, doc, []jsoncodec.Operation{operation})
 	if err == nil {
-		t.Fatalf("ApplyPatch() error = nil, want error")
+		t.Fatalf("Compile/ApplyInPlace error = nil, want error")
 	}
 	return err
 }
 
 // ApplyOperations applies multiple operations to a document.
-func ApplyOperations(t *testing.T, doc any, operations []jsonpatch.Operation) any {
+func ApplyOperations(t *testing.T, doc any, operations []jsoncodec.Operation) any {
 	t.Helper()
-	result, err := jsonpatch.ApplyPatch(doc, operations, jsonpatch.WithMutate(true))
+	result, err := compileAndApplyInPlace(t, doc, operations)
 	if err != nil {
-		t.Fatalf("ApplyPatch() error = %v, want nil", err)
+		t.Fatalf("ApplyInPlace() error = %v, want nil", err)
 	}
-	return result.Doc
+	return result
 }
 
 // ApplyOperationsWithError applies multiple operations expecting them to fail.
-func ApplyOperationsWithError(t *testing.T, doc any, operations []jsonpatch.Operation) error {
+func ApplyOperationsWithError(t *testing.T, doc any, operations []jsoncodec.Operation) error {
 	t.Helper()
-	_, err := jsonpatch.ApplyPatch(doc, operations, jsonpatch.WithMutate(true))
+	_, err := compileAndApplyInPlace(t, doc, operations)
 	if err == nil {
-		t.Fatalf("ApplyPatch() error = nil, want error")
+		t.Fatalf("Compile/ApplyInPlace error = nil, want error")
 	}
 	return err
+}
+
+// ApplyOperationsResult compiles and applies JSON-shaped operations.
+func ApplyOperationsResult[T jsonpatch.Document](t testing.TB, doc T, operations []jsoncodec.Operation) (*jsonpatch.Result[T], error) {
+	t.Helper()
+	patch, err := jsonpatch.CompileOperations(operations, jsonpatch.WithCapabilities(jsonpatch.AllCapabilities))
+	if err != nil {
+		return nil, err
+	}
+	return jsonpatch.Apply(patch, doc)
 }
 
 // ApplyInternalOp applies a single internal.Operation to a document.
@@ -61,12 +70,11 @@ func ApplyOperationsWithError(t *testing.T, doc any, operations []jsonpatch.Oper
 //nolint:gocritic // Tests pass operations by value for readability at call sites.
 func ApplyInternalOp(t *testing.T, doc any, op internal.Operation) any {
 	t.Helper()
-	patch := []internal.Operation{op}
-	result, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
+	result, err := compileAndApplyInPlace(t, doc, []jsoncodec.Operation{jsoncodec.Operation(op)})
 	if err != nil {
-		t.Fatalf("ApplyPatch() error = %v, want nil", err)
+		t.Fatalf("ApplyInPlace() error = %v, want nil", err)
 	}
-	return result.Doc
+	return result
 }
 
 // ApplyInternalOpWithError applies an internal.Operation expecting it to fail.
@@ -74,37 +82,66 @@ func ApplyInternalOp(t *testing.T, doc any, op internal.Operation) any {
 //nolint:gocritic // Tests pass operations by value for readability at call sites.
 func ApplyInternalOpWithError(t *testing.T, doc any, op internal.Operation) {
 	t.Helper()
-	patch := []internal.Operation{op}
-	_, err := jsonpatch.ApplyPatch(doc, patch, internal.WithMutate(true))
+	_, err := compileAndApplyInPlace(t, doc, []jsoncodec.Operation{jsoncodec.Operation(op)})
 	if err == nil {
-		t.Fatalf("ApplyPatch() error = nil, want error")
+		t.Fatalf("Compile/ApplyInPlace error = nil, want error")
 	}
 }
 
 // ApplyInternalOps applies multiple internal.Operations to a document.
 func ApplyInternalOps(t *testing.T, doc any, ops []internal.Operation) any {
 	t.Helper()
-	result, err := jsonpatch.ApplyPatch(doc, ops, internal.WithMutate(true))
-	if err != nil {
-		t.Fatalf("ApplyPatch() error = %v, want nil", err)
+	operations := make([]jsoncodec.Operation, len(ops))
+	for i := range ops {
+		operations[i] = jsoncodec.Operation(ops[i])
 	}
-	return result.Doc
+	result, err := compileAndApplyInPlace(t, doc, operations)
+	if err != nil {
+		t.Fatalf("ApplyInPlace() error = %v, want nil", err)
+	}
+	return result
 }
 
 // ApplyInternalOpsWithError applies multiple internal.Operations expecting them to fail.
 func ApplyInternalOpsWithError(t *testing.T, doc any, ops []internal.Operation) {
 	t.Helper()
-	_, err := jsonpatch.ApplyPatch(doc, ops, internal.WithMutate(true))
-	if err == nil {
-		t.Fatalf("ApplyPatch() error = nil, want error")
+	operations := make([]jsoncodec.Operation, len(ops))
+	for i := range ops {
+		operations[i] = jsoncodec.Operation(ops[i])
 	}
+	_, err := compileAndApplyInPlace(t, doc, operations)
+	if err == nil {
+		t.Fatalf("Compile/ApplyInPlace error = nil, want error")
+	}
+}
+
+// ApplyInternalOperationsResult compiles and applies internal.Operation test values.
+func ApplyInternalOperationsResult[T jsonpatch.Document](t testing.TB, doc T, ops []internal.Operation) (*jsonpatch.Result[T], error) {
+	t.Helper()
+	operations := make([]jsoncodec.Operation, len(ops))
+	for i := range ops {
+		operations[i] = jsoncodec.Operation(ops[i])
+	}
+	return ApplyOperationsResult(t, doc, operations)
+}
+
+func compileAndApplyInPlace(t *testing.T, doc any, operations []jsoncodec.Operation) (any, error) {
+	t.Helper()
+	patch, err := jsonpatch.CompileOperations(operations, jsonpatch.WithCapabilities(jsonpatch.AllCapabilities))
+	if err != nil {
+		return nil, err
+	}
+	if err := jsonpatch.ApplyInPlace(patch, &doc); err != nil {
+		return nil, err
+	}
+	return doc, nil
 }
 
 // TestCase represents a single operation test case.
 type TestCase struct {
 	Name      string
 	Doc       any
-	Operation jsonpatch.Operation
+	Operation jsoncodec.Operation
 	Expected  any
 	WantErr   bool
 	Comment   string
@@ -114,7 +151,7 @@ type TestCase struct {
 type MultiOperationTestCase struct {
 	Name       string
 	Doc        any
-	Operations []jsonpatch.Operation
+	Operations []jsoncodec.Operation
 	Expected   any
 	WantErr    bool
 	Comment    string
@@ -131,7 +168,7 @@ func RunTestCase(t *testing.T, tc TestCase) {
 			_ = ApplyOperationWithError(t, tc.Doc, tc.Operation)
 		} else {
 			result := ApplyOperation(t, tc.Doc, tc.Operation)
-			assert.Equal(t, tc.Expected, result, "ApplyPatch() result mismatch")
+			assert.Equal(t, tc.Expected, result, "ApplyInPlace() result mismatch")
 		}
 	})
 }
@@ -147,7 +184,7 @@ func RunMultiOperationTestCase(t *testing.T, tc MultiOperationTestCase) {
 			_ = ApplyOperationsWithError(t, tc.Doc, tc.Operations)
 		} else {
 			result := ApplyOperations(t, tc.Doc, tc.Operations)
-			assert.Equal(t, tc.Expected, result, "ApplyPatch() result mismatch")
+			assert.Equal(t, tc.Expected, result, "ApplyInPlace() result mismatch")
 		}
 	})
 }

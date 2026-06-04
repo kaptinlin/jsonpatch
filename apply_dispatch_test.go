@@ -20,151 +20,141 @@ type account struct {
 	Age  int    `json:"age"`
 }
 
-func TestApplyPatchPreservesAdditionalDocumentShapes(t *testing.T) {
+func TestApplyPreservesAdditionalDocumentShapes(t *testing.T) {
 	t.Parallel()
 
 	t.Run("named string remains named type", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyPatch(namedJSONString("Ada"), []jsonpatch.Operation{{Op: "replace", Path: "", Value: "Grace"}})
+		result, err := applyOperations(t, namedJSONString("Ada"), []jsoncodec.Operation{{Op: "replace", Path: "", Value: "Grace"}})
 		require.NoError(t, err)
 		assert.Equal(t, namedJSONString("Grace"), result.Doc)
-		require.Len(t, result.Res, 1)
-		assert.Equal(t, namedJSONString("Grace"), result.Res[0].Doc)
+		require.Len(t, result.Steps, 1)
+		assert.Equal(t, "", result.Steps[0].Path())
 	})
 
 	t.Run("plain string root replacement stays string", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyPatch("Ada", []jsonpatch.Operation{{Op: "replace", Path: "", Value: "Grace"}})
+		result, err := applyOperations(t, "Ada", []jsoncodec.Operation{{Op: "replace", Path: "", Value: "Grace"}})
 		require.NoError(t, err)
 		assert.Equal(t, "Grace", result.Doc)
-		require.Len(t, result.Res, 1)
-		assert.Equal(t, "Grace", result.Res[0].Doc)
+		require.Len(t, result.Steps, 1)
+		assert.Equal(t, "Ada", result.Steps[0].Old())
 	})
 
-	t.Run("JSON string root null result stays JSON string", func(t *testing.T) {
+	t.Run("explicit JSON text root null result stays JSON text", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyPatch(`{"name":"Ada"}`, []jsonpatch.Operation{{Op: "replace", Path: "", Value: nil}})
+		result, err := applyOperations(t, jsonpatch.JSONText(`{"name":"Ada"}`), []jsoncodec.Operation{{Op: "replace", Path: "", Value: nil}})
 		require.NoError(t, err)
-		assert.Equal(t, "null", result.Doc)
-		require.Len(t, result.Res, 1)
-		assert.Equal(t, "null", result.Res[0].Doc)
+		assert.Equal(t, jsonpatch.JSONText("null"), result.Doc)
+		require.Len(t, result.Steps, 1)
+		assert.Equal(t, map[string]any{"name": "Ada"}, result.Steps[0].Old())
 	})
 
 	t.Run("primitive root replacement stays primitive", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyPatch(1, []jsonpatch.Operation{{Op: "replace", Path: "", Value: 2}})
+		result, err := applyOperations(t, 1, []jsoncodec.Operation{{Op: "replace", Path: "", Value: 2}})
 		require.NoError(t, err)
 		assert.Equal(t, 2, result.Doc)
-		require.Len(t, result.Res, 1)
-		assert.Equal(t, 2, result.Res[0].Doc)
+		require.Len(t, result.Steps, 1)
+		assert.Equal(t, 1, result.Steps[0].Old())
 	})
 
 	t.Run("nil document becomes structured value", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyPatch(any(nil), []jsonpatch.Operation{{Op: "add", Path: "", Value: map[string]any{"name": "Ada"}}})
+		result, err := applyOperations(t, any(nil), []jsoncodec.Operation{{Op: "add", Path: "", Value: map[string]any{"name": "Ada"}}})
 		require.NoError(t, err)
 		want := map[string]any{"name": "Ada"}
 		if diff := cmp.Diff(want, result.Doc); diff != "" {
-			t.Errorf("ApplyPatch() document mismatch (-want +got):\n%s", diff)
+			t.Errorf("Apply() document mismatch (-want +got):\n%s", diff)
 		}
-		require.Len(t, result.Res, 1)
-		if diff := cmp.Diff(want, result.Res[0].Doc); diff != "" {
-			t.Errorf("ApplyPatch() operation result mismatch (-want +got):\n%s", diff)
-		}
+		require.Len(t, result.Steps, 1)
+		assert.True(t, result.Steps[0].Applied())
 	})
 
 	t.Run("interface slice is patched as primitive shape", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyPatch(any([]any{"Ada"}), []jsonpatch.Operation{{Op: "add", Path: "/-", Value: "Grace"}})
+		result, err := applyOperations(t, any([]any{"Ada"}), []jsoncodec.Operation{{Op: "add", Path: "/-", Value: "Grace"}})
 		require.NoError(t, err)
 		want := []any{"Ada", "Grace"}
 		if diff := cmp.Diff(want, result.Doc); diff != "" {
-			t.Errorf("ApplyPatch() document mismatch (-want +got):\n%s", diff)
+			t.Errorf("Apply() document mismatch (-want +got):\n%s", diff)
 		}
-		require.Len(t, result.Res, 1)
-		if diff := cmp.Diff(want, result.Res[0].Doc); diff != "" {
-			t.Errorf("ApplyPatch() operation result mismatch (-want +got):\n%s", diff)
-		}
+		require.Len(t, result.Steps, 1)
+		assert.Equal(t, "/-", result.Steps[0].Path())
 	})
 }
 
-func TestApplyOpsPreservesAdditionalDocumentShapes(t *testing.T) {
+func TestCompileOpsPreservesAdditionalDocumentShapes(t *testing.T) {
 	t.Parallel()
 
 	t.Run("JSON bytes remain bytes", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyOps([]byte(`{"name":"Ada"}`), []jsonpatch.Op{op.NewAdd([]string{"role"}, "admin")})
+		result, err := applyOps(t, []byte(`{"name":"Ada"}`), op.NewAdd([]string{"role"}, "admin"))
 		require.NoError(t, err)
 		assertJSONEqual(t, []byte(`{"name":"Ada","role":"admin"}`), result.Doc)
-		require.Len(t, result.Res, 1)
-		assertJSONEqual(t, []byte(`{"name":"Ada","role":"admin"}`), result.Res[0].Doc)
+		require.Len(t, result.Steps, 1)
+		assert.Equal(t, "/role", result.Steps[0].Path())
 	})
 
-	t.Run("JSON string remains string", func(t *testing.T) {
+	t.Run("explicit JSON text remains JSON text", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyOps(`{"name":"Ada"}`, []jsonpatch.Op{op.NewAdd([]string{"role"}, "admin")})
+		result, err := applyOps(t, jsonpatch.JSONText(`{"name":"Ada"}`), op.NewAdd([]string{"role"}, "admin"))
 		require.NoError(t, err)
-		assertJSONEqual(t, `{"name":"Ada","role":"admin"}`, result.Doc)
-		require.Len(t, result.Res, 1)
-		assertJSONEqual(t, `{"name":"Ada","role":"admin"}`, result.Res[0].Doc)
+		assertJSONEqual(t, `{"name":"Ada","role":"admin"}`, string(result.Doc))
+		require.Len(t, result.Steps, 1)
 	})
 
 	t.Run("primitive root replacement stays primitive", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyOps(true, []jsonpatch.Op{op.NewReplace(nil, false)})
+		result, err := applyOps(t, true, op.NewReplace(nil, false))
 		require.NoError(t, err)
 		assert.False(t, result.Doc)
-		require.Len(t, result.Res, 1)
-		assert.False(t, result.Res[0].Doc)
+		require.Len(t, result.Steps, 1)
+		assert.Equal(t, true, result.Steps[0].Old())
 	})
 
 	t.Run("struct remains struct", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyOps(account{Name: "Ada", Age: 36}, []jsonpatch.Op{op.NewReplace([]string{"name"}, "Grace")})
+		result, err := applyOps(t, account{Name: "Ada", Age: 36}, op.NewReplace([]string{"name"}, "Grace"))
 		require.NoError(t, err)
 		want := account{Name: "Grace", Age: 36}
 		if diff := cmp.Diff(want, result.Doc); diff != "" {
-			t.Errorf("ApplyOps() document mismatch (-want +got):\n%s", diff)
+			t.Errorf("Apply() document mismatch (-want +got):\n%s", diff)
 		}
-		require.Len(t, result.Res, 1)
-		if diff := cmp.Diff(want, result.Res[0].Doc); diff != "" {
-			t.Errorf("ApplyOps() operation result mismatch (-want +got):\n%s", diff)
-		}
+		require.Len(t, result.Steps, 1)
+		assert.Equal(t, "Ada", result.Steps[0].Old())
 	})
 
 	t.Run("interface slice remains slice value", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyOps(any([]any{"Ada"}), []jsonpatch.Op{op.NewAdd([]string{"-"}, "Grace")})
+		result, err := applyOps(t, any([]any{"Ada"}), op.NewAdd([]string{"-"}, "Grace"))
 		require.NoError(t, err)
 		want := []any{"Ada", "Grace"}
 		if diff := cmp.Diff(want, result.Doc); diff != "" {
-			t.Errorf("ApplyOps() document mismatch (-want +got):\n%s", diff)
+			t.Errorf("Apply() document mismatch (-want +got):\n%s", diff)
 		}
-		require.Len(t, result.Res, 1)
-		if diff := cmp.Diff(want, result.Res[0].Doc); diff != "" {
-			t.Errorf("ApplyOps() operation result mismatch (-want +got):\n%s", diff)
-		}
+		require.Len(t, result.Steps, 1)
 	})
 }
 
-func TestApplyAPIsReportConversionFailures(t *testing.T) {
+func TestApplyReportsConversionFailures(t *testing.T) {
 	t.Parallel()
 
-	t.Run("patch cannot convert null result to concrete map", func(t *testing.T) {
+	t.Run("operations cannot convert null result to concrete map", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyPatch(map[string]any{"name": "Ada"}, []jsonpatch.Operation{{Op: "replace", Path: "", Value: nil}})
+		result, err := applyOperations(t, map[string]any{"name": "Ada"}, []jsoncodec.Operation{{Op: "replace", Path: "", Value: nil}})
 		require.Error(t, err)
 		assert.Nil(t, result)
 		assert.ErrorIs(t, err, jsonpatch.ErrConversionFailed)
@@ -173,7 +163,7 @@ func TestApplyAPIsReportConversionFailures(t *testing.T) {
 	t.Run("ops cannot convert value result to concrete map", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyOps(map[string]any{"name": "Ada"}, []jsonpatch.Op{op.NewReplace(nil, "Ada")})
+		result, err := applyOps(t, map[string]any{"name": "Ada"}, op.NewReplace(nil, "Ada"))
 		require.Error(t, err)
 		assert.Nil(t, result)
 		assert.ErrorIs(t, err, jsonpatch.ErrConversionFailed)
@@ -182,7 +172,7 @@ func TestApplyAPIsReportConversionFailures(t *testing.T) {
 	t.Run("primitive conversion failure is classified", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyOps(1, []jsonpatch.Op{op.NewReplace(nil, "one")})
+		result, err := applyOps(t, 1, op.NewReplace(nil, "one"))
 		require.Error(t, err)
 		assert.Nil(t, result)
 		assert.ErrorIs(t, err, jsonpatch.ErrConversionFailed)
@@ -191,20 +181,20 @@ func TestApplyAPIsReportConversionFailures(t *testing.T) {
 	t.Run("plain string null conversion failure is classified", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyPatch("Ada", []jsonpatch.Operation{{Op: "replace", Path: "", Value: nil}})
+		result, err := applyOperations(t, "Ada", []jsoncodec.Operation{{Op: "replace", Path: "", Value: nil}})
 		require.Error(t, err)
 		assert.Nil(t, result)
 		assert.ErrorIs(t, err, jsonpatch.ErrConversionFailed)
 	})
 }
 
-func TestApplyPatchWrapsDecodeAndRuntimeErrors(t *testing.T) {
+func TestApplyWrapsDecodeAndRuntimeErrors(t *testing.T) {
 	t.Parallel()
 
-	t.Run("decode error keeps validation sentinel", func(t *testing.T) {
+	t.Run("decode error keeps codec sentinel", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyPatch(map[string]any{"name": "Ada"}, []jsonpatch.Operation{{Op: "unknown", Path: "/name"}})
+		result, err := applyOperations(t, map[string]any{"name": "Ada"}, []jsoncodec.Operation{{Op: "unknown", Path: "/name"}})
 		require.Error(t, err)
 		assert.Nil(t, result)
 		assert.ErrorIs(t, err, jsoncodec.ErrCodecOpUnknown)
@@ -213,11 +203,41 @@ func TestApplyPatchWrapsDecodeAndRuntimeErrors(t *testing.T) {
 	t.Run("runtime operation error keeps operation sentinel", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyOps(map[string]any{"name": "Ada"}, []jsonpatch.Op{op.NewRemove([]string{"missing"})})
+		result, err := applyOps(t, map[string]any{"name": "Ada"}, op.NewRemove([]string{"missing"}))
 		require.Error(t, err)
 		assert.Nil(t, result)
 		assert.ErrorIs(t, err, op.ErrPathNotFound)
 	})
+}
+
+func applyOperations[T jsonpatch.Document](t *testing.T, doc T, operations []jsoncodec.Operation) (*jsonpatch.Result[T], error) {
+	t.Helper()
+	patch, err := jsonpatch.CompileOperations(operations, jsonpatch.WithCapabilities(jsonpatch.AllCapabilities))
+	if err != nil {
+		return nil, err
+	}
+	return jsonpatch.Apply(patch, doc)
+}
+
+func applyOperationsInPlace[T jsonpatch.Document](t *testing.T, doc T, operations []jsoncodec.Operation) (*jsonpatch.Result[T], error) {
+	t.Helper()
+	patch, err := jsonpatch.CompileOperations(operations, jsonpatch.WithCapabilities(jsonpatch.AllCapabilities))
+	if err != nil {
+		return nil, err
+	}
+	if err := jsonpatch.ApplyInPlace(patch, &doc); err != nil {
+		return nil, err
+	}
+	return &jsonpatch.Result[T]{Doc: doc}, nil
+}
+
+func applyOps[T jsonpatch.Document](t *testing.T, doc T, operations ...jsonpatch.Op) (*jsonpatch.Result[T], error) {
+	t.Helper()
+	patch, err := jsonpatch.CompileOps(operations, jsonpatch.WithCapabilities(jsonpatch.AllCapabilities))
+	if err != nil {
+		return nil, err
+	}
+	return jsonpatch.Apply(patch, doc)
 }
 
 func assertJSONEqual(t *testing.T, want, got any) {

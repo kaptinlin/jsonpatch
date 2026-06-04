@@ -22,7 +22,7 @@ func IsFirstOrderPredicateOperation(op string) bool {
 	switch OpType(op) { //nolint:exhaustive // intentionally matches only first-order predicates
 	case OpTestType, OpDefinedType, OpUndefinedType,
 		OpTestTypeType, OpTestStringType, OpTestStringLenType,
-		OpContainsType, OpEndsType, OpStartsType,
+		OpContainsType, OpEndsType, OpStartsType, OpTypeType,
 		OpInType, OpLessType, OpMoreType, OpMatchesType:
 		return true
 	}

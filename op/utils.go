@@ -1,6 +1,7 @@
 package op
 
 import (
+	"fmt"
 	"reflect"
 	"slices"
 	"strconv"
@@ -100,6 +101,33 @@ func deepEqual(a, b any) bool {
 	}
 	if aIsNum {
 		return aFloat == bFloat
+	}
+
+	if aMap, ok := a.(map[string]any); ok {
+		bMap, ok := b.(map[string]any)
+		if !ok || len(aMap) != len(bMap) {
+			return false
+		}
+		for key, aValue := range aMap {
+			bValue, ok := bMap[key]
+			if !ok || !deepEqual(aValue, bValue) {
+				return false
+			}
+		}
+		return true
+	}
+
+	if aSlice, ok := a.([]any); ok {
+		bSlice, ok := b.([]any)
+		if !ok || len(aSlice) != len(bSlice) {
+			return false
+		}
+		for i := range aSlice {
+			if !deepEqual(aSlice[i], bSlice[i]) {
+				return false
+			}
+		}
+		return true
 	}
 
 	// Fast path: try direct comparison for comparable types
@@ -457,7 +485,11 @@ func predicateOpsToJSON(operations []any, errInvalid error) ([]internal.Operatio
 		if !ok {
 			return nil, errInvalid
 		}
-		jsonVal, err := predicateOp.ToJSON()
+		jsonOp, ok := predicateOp.(internal.JSONOp)
+		if !ok {
+			return nil, fmt.Errorf("%w: predicate %T cannot encode to JSON", errInvalid, op)
+		}
+		jsonVal, err := jsonOp.ToJSON()
 		if err != nil {
 			return nil, err
 		}
@@ -475,7 +507,11 @@ func predicateOpsToCompact(operations []any, base []string, errInvalid error) ([
 		if !ok {
 			return nil, errInvalid
 		}
-		compact, err := predicateOp.ToCompact()
+		compactOp, ok := predicateOp.(internal.CompactOp)
+		if !ok {
+			return nil, fmt.Errorf("%w: predicate %T cannot encode to compact", errInvalid, op)
+		}
+		compact, err := compactOp.ToCompact()
 		if err != nil {
 			return nil, err
 		}
@@ -502,6 +538,9 @@ func relativePredicatePath(base, path []string) ([]string, error) {
 // validatePredicateOps validates a slice of predicate operations.
 // Used by composite predicates (And, Or, Not) to validate their sub-operations.
 func validatePredicateOps(operations []any, errInvalid error) error {
+	if len(operations) == 0 {
+		return errInvalid
+	}
 	for _, op := range operations {
 		predicateOp, ok := op.(internal.PredicateOp)
 		if !ok {

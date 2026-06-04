@@ -200,9 +200,6 @@ func (tt *TestTypeOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the test type operation.
 func (tt *TestTypeOperation) Validate() error {
-	if len(tt.Path()) == 0 {
-		return ErrPathEmpty
-	}
 	if len(tt.Types) == 0 {
 		return ErrEmptyTypeList
 	}

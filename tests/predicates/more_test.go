@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
@@ -22,9 +21,9 @@ func TestMoreOp(t *testing.T) {
 				Value: 99,
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(123, patch, internal.WithMutate(true))
+			_, err := applyPatch(t, 123, patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 		})
 
@@ -36,9 +35,9 @@ func TestMoreOp(t *testing.T) {
 				Value: 123,
 			}
 			patch1 := []internal.Operation{op1}
-			_, err1 := jsonpatch.ApplyPatch(123, patch1, internal.WithMutate(true))
+			_, err1 := applyPatch(t, 123, patch1)
 			if err1 == nil {
-				require.FailNow(t, "ApplyPatch() error = nil, want error for equal value")
+				require.FailNow(t, "Apply() error = nil, want error for equal value")
 			}
 
 			op2 := internal.Operation{
@@ -47,9 +46,9 @@ func TestMoreOp(t *testing.T) {
 				Value: 124,
 			}
 			patch2 := []internal.Operation{op2}
-			_, err2 := jsonpatch.ApplyPatch(123, patch2, internal.WithMutate(true))
+			_, err2 := applyPatch(t, 123, patch2)
 			if err2 == nil {
-				require.FailNow(t, "ApplyPatch() error = nil, want error for higher value")
+				require.FailNow(t, "Apply() error = nil, want error for higher value")
 			}
 		})
 	})

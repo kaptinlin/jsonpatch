@@ -95,8 +95,5 @@ func (s *StartsOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the starts operation.
 func (s *StartsOperation) Validate() error {
-	if len(s.Path()) == 0 {
-		return ErrPathEmpty
-	}
 	return nil
 }

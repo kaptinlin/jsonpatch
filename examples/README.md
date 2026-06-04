@@ -108,12 +108,12 @@ Demonstrates error handling patterns, validation techniques, and recovery strate
 cd error-handling && go run main.go
 ```
 
-### 12. Mutate Option (`mutate-option/`)
+### 12. Apply In Place (`apply-in-place/`)
 
-Shows the Mutate option for performance optimization with in-place modifications.
+Shows explicit in-place application for performance-sensitive updates.
 
 ```bash
-cd mutate-option && go run main.go
+cd apply-in-place && go run main.go
 ```
 
 ## Example Categories
@@ -140,7 +140,7 @@ cd mutate-option && go run main.go
 
 - `batch-update/` - Bulk operations
 - `error-handling/` - Error management
-- `mutate-option/` - Performance optimization
+- `apply-in-place/` - Explicit in-place application
 
 ## Quick Start
 

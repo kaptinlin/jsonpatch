@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
@@ -21,9 +20,9 @@ func TestUndefinedOp(t *testing.T) {
 				Path: "",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch("hello", patch, internal.WithMutate(true))
+			_, err := applyPatch(t, "hello", patch)
 			if err == nil {
-				require.FailNow(t, "ApplyPatch() error = nil, want error")
+				require.FailNow(t, "Apply() error = nil, want error")
 			}
 		})
 
@@ -34,9 +33,9 @@ func TestUndefinedOp(t *testing.T) {
 				Path: "/missing",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(map[string]any{}, patch, internal.WithMutate(true))
+			_, err := applyPatch(t, map[string]any{}, patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 		})
 	})
@@ -50,9 +49,9 @@ func TestUndefinedOp(t *testing.T) {
 				Path: "/foo",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(map[string]any{"foo": "bar"}, patch, internal.WithMutate(true))
+			_, err := applyPatch(t, map[string]any{"foo": "bar"}, patch)
 			if err == nil {
-				require.FailNow(t, "ApplyPatch() error = nil, want error")
+				require.FailNow(t, "Apply() error = nil, want error")
 			}
 		})
 
@@ -63,9 +62,9 @@ func TestUndefinedOp(t *testing.T) {
 				Path: "/missing",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch(map[string]any{"foo": "bar"}, patch, internal.WithMutate(true))
+			_, err := applyPatch(t, map[string]any{"foo": "bar"}, patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 		})
 	})
@@ -79,9 +78,9 @@ func TestUndefinedOp(t *testing.T) {
 				Path: "/0",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch([]any{"hello"}, patch, internal.WithMutate(true))
+			_, err := applyPatch(t, []any{"hello"}, patch)
 			if err == nil {
-				require.FailNow(t, "ApplyPatch() error = nil, want error")
+				require.FailNow(t, "Apply() error = nil, want error")
 			}
 		})
 
@@ -92,9 +91,9 @@ func TestUndefinedOp(t *testing.T) {
 				Path: "/5",
 			}
 			patch := []internal.Operation{op}
-			_, err := jsonpatch.ApplyPatch([]any{"hello"}, patch, internal.WithMutate(true))
+			_, err := applyPatch(t, []any{"hello"}, patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 		})
 	})

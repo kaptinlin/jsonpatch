@@ -69,8 +69,5 @@ func (l *LessOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the less operation.
 func (l *LessOperation) Validate() error {
-	if len(l.Path()) == 0 {
-		return ErrPathEmpty
-	}
 	return nil
 }

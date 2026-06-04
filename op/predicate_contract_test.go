@@ -10,12 +10,23 @@ import (
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
+type codecOperation interface {
+	internal.JSONOp
+	internal.CompactOp
+}
+
+type predicateCodecOperation interface {
+	internal.PredicateOp
+	internal.JSONOp
+	internal.CompactOp
+}
+
 func TestOperationSerializationContracts(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name        string
-		op          internal.Op
+		op          codecOperation
 		wantType    internal.OpType
 		wantCode    int
 		wantJSON    internal.Operation
@@ -135,13 +146,11 @@ func TestOperationValidateRejectsInvalidOperands(t *testing.T) {
 		op      internal.Op
 		wantErr error
 	}{
-		{name: "copy empty from", op: NewCopy([]string{"name"}, nil), wantErr: ErrFromPathEmpty},
 		{name: "copy identical paths", op: NewCopy([]string{"name"}, []string{"name"}), wantErr: ErrPathsIdentical},
 		{name: "extend nil properties", op: NewExtend([]string{"profile"}, nil, false), wantErr: ErrPropertiesNil},
 		{name: "merge negative position", op: NewMerge([]string{"nodes"}, -1, nil), wantErr: ErrPositionNegative},
+		{name: "merge zero position", op: NewMerge([]string{"nodes"}, 0, nil), wantErr: ErrPositionOutOfBounds},
 		{name: "str_del missing length", op: NewStrDel([]string{"name"}, 1, 0), wantErr: ErrMissingStrOrLen},
-		{name: "test_string empty path", op: NewTestString(nil, "Ada", 0, false, false), wantErr: ErrPathEmpty},
-		{name: "test_string_len empty path", op: NewTestStringLen(nil, 3), wantErr: ErrPathEmpty},
 		{name: "test_string_len negative length", op: NewTestStringLen([]string{"name"}, -1), wantErr: ErrLengthNegative},
 		{name: "test_string_len fractional length", op: NewTestStringLen([]string{"name"}, 1.5), wantErr: ErrInvalidLength},
 	}
@@ -251,7 +260,7 @@ func TestPredicateOperationContracts(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		op          internal.PredicateOp
+		op          predicateCodecOperation
 		wantJSON    internal.Operation
 		wantCompact internal.CompactOperation
 	}{
@@ -393,18 +402,9 @@ func TestPredicateOperationValidateRejectsInvalidOperands(t *testing.T) {
 		op      internal.PredicateOp
 		wantErr error
 	}{
-		{name: "contains empty path", op: NewContains(nil, "a"), wantErr: ErrPathEmpty},
-		{name: "starts empty path", op: NewStarts(nil, "a"), wantErr: ErrPathEmpty},
-		{name: "ends empty path", op: NewEnds(nil, "a"), wantErr: ErrPathEmpty},
-		{name: "in empty path", op: NewIn(nil, []any{"a"}), wantErr: ErrPathEmpty},
 		{name: "in empty values", op: NewIn([]string{"role"}, nil), wantErr: ErrValuesArrayEmpty},
-		{name: "less empty path", op: NewLess(nil, 1), wantErr: ErrPathEmpty},
-		{name: "more empty path", op: NewMore(nil, 1), wantErr: ErrPathEmpty},
-		{name: "matches empty path", op: NewMatches(nil, `^Ada$`, false, nil), wantErr: ErrPathEmpty},
 		{name: "matches empty pattern", op: NewMatches([]string{"name"}, "", false, nil), wantErr: ErrPatternEmpty},
-		{name: "type empty path", op: NewType(nil, "string"), wantErr: ErrPathEmpty},
 		{name: "type invalid type", op: NewType([]string{"name"}, "invalid"), wantErr: ErrInvalidType},
-		{name: "test_type empty path", op: NewTestType(nil, "string"), wantErr: ErrPathEmpty},
 		{name: "test_type empty list", op: NewTestTypeMultiple([]string{"name"}, nil), wantErr: ErrEmptyTypeList},
 		{name: "test_type invalid type", op: NewTestType([]string{"name"}, "invalid"), wantErr: ErrInvalidType},
 	}

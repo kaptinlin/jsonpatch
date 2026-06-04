@@ -10,22 +10,31 @@ The `test` operation is part of RFC 6902, but its behavioral contract lives in `
 
 | API | Input model | Contract |
 |-----|-------------|----------|
-| `ApplyPatch[T Document](doc T, patch []Operation, opts ...Option)` | JSON-shaped `Operation` values | Decodes operations through the JSON codec, applies them in order, and returns `PatchResult[T]`. |
-| `ApplyOp[T Document](doc T, op Op, opts ...Option)` | One executable `Op` instance | Applies one already-decoded operation and returns `OpResult[T]`. |
-| `ApplyOps[T Document](doc T, ops []Op, opts ...Option)` | Executable `Op` instances | Applies decoded operations without a JSON decode round-trip. |
-| `ValidateOperations(ops []Operation, allowMatchesOp bool)` | JSON-shaped `Operation` values | Performs preflight validation and returns the first validation error with operation index context. |
-| `ValidateOperation(op Operation, allowMatchesOp bool)` | One JSON-shaped `Operation` value | Performs preflight validation for one operation. |
+| `Compile(ops ...Op)` | Go-built operation values | Compiles operations with the default RFC 6902 capability and returns a reusable `Patch`. Operations must be able to project to JSON so the compiled patch can freeze its payloads. |
+| `CompileOps(ops []Op, opts ...CompileOption)` | Go-built operation values | Compiles operations with explicit compile options such as capabilities. Operations must be able to project to JSON so the compiled patch can freeze its payloads. |
+| `CompileOperations(ops []codec/json.Operation, opts ...CompileOption)` | JSON-shaped `codec/json.Operation` values | Decodes through the JSON codec and compiles the resulting operations. This is a migration boundary for the field-bag shape. |
+| `CompileJSON(data []byte, opts ...CompileOption)` | JSON patch document bytes | Decodes a JSON patch document and compiles it with operation-family policy. |
+| `Apply[T Document](patch *Patch, doc T)` | Compiled patch and one document | Applies the patch immutably and returns `Result[T]`. |
+| `ApplyInPlace[T Document](patch *Patch, doc *T)` | Compiled patch and document pointer | Applies the patch with mutation enabled and writes the final result back to `doc`. |
 
-## Options
+## Compile Options
 
-| Option | Contract |
-|--------|----------|
-| `WithMutate(true)` | Apply changes to the original working document instead of cloning first. |
-| `WithMatcher(factory)` | Override the regex matcher factory used by the `matches` predicate. |
+| Compile option | Contract |
+|----------------|----------|
+| `WithCapabilities(caps...)` | Sets the allowed operation families. Default compilation accepts only RFC 6902 operations. |
+| `WithCompileMatcher(factory)` | Binds the regex matcher factory used when compiling `matches` operations from JSON-shaped input. |
 
-> **Why**: The library exposes both JSON-shaped and executable-operation entry points so callers can choose between ergonomic patch payloads and lower-level direct operation reuse without losing the same result model.
+> **Why**: The compiled patch path gives callers one stable lifecycle: compile operation vocabulary once, then apply it to documents. Mutation has its own entry point so destructive application is visible at the call site.
 >
-> **Rejected**: A single untyped entry point returning `any` would throw away the type-preserving API. Making validation implicit in `ApplyPatch` would prevent callers from using preflight validation as a separate step.
+> **Rejected**: A single untyped entry point returning `any` would throw away the type-preserving API. A runtime mutation option would make a destructive action look like ordinary configuration.
+
+## Capability Contract
+
+- Default compilation enables `RFC6902` only.
+- `Predicate` enables non-regex predicate operations.
+- `RegexPredicate` enables `matches`; it is separate because regex matching has its own safety and semantic boundary.
+- `Extended` enables JSON Patch Extended operations.
+- Codec choice is not a capability. JSON, compact, and binary codecs translate wire formats; compile policy decides whether decoded operations may run.
 
 ## RFC 6902 Mutating Operations
 
@@ -37,25 +46,27 @@ The `test` operation is part of RFC 6902, but its behavioral contract lives in `
 | `move` | `path`, `from` | Move a value from `from` to `path`. Empty `from` means the root document. Validation rejects moving into a descendant of `from`. |
 | `copy` | `path`, `from` | Copy a value from `from` to `path` using `add` target semantics, including array insertion and `/-` append. Empty `from` means the root document. |
 
-## Validation Contract
+## Compile Boundary Contract
 
-- `ValidateOperations` rejects `nil` patches, empty patches, invalid JSON Pointer values, and operation-specific shape errors observable from `Operation`.
-- Validation uses the `allowMatchesOp` flag to permit or reject the `matches` predicate when the caller needs a restricted feature set.
-- Empty `path` and `from` values are valid JSON Pointers that target the root document. Missing field presence is a raw JSON/map concern and is enforced by the JSON codec, not by zero-value `Operation` structs.
-- `nil` `value` in an `Operation` means JSON `null` for `add`, `replace`, and `test`; raw JSON decoding still rejects omitted required `value` fields.
-- Patch payloads that become document values are cloned before insertion so later mutation of `Operation` fields cannot mutate the result document.
-- `ApplyPatch` decodes and applies operations directly. Call `ValidateOperations` yourself when a preflight validation step is required before execution.
+- `Compile`, `CompileOps`, `CompileOperations`, and `CompileJSON` reject invalid operation shape before any document is touched.
+- Capability policy is enforced at compile time. `matches` requires `RegexPredicate`; non-regex predicates require `Predicate`; extended operations require `Extended`.
+- Empty `path` and `from` values are valid JSON Pointers that target the root document. Missing field presence is a raw JSON/map concern and is enforced by the JSON codec, not by zero-value `codec/json.Operation` structs.
+- `nil` `value` in a `codec/json.Operation` means JSON `null` for `add`, `replace`, and `test`; raw JSON decoding still rejects omitted required `value` fields.
+- Patch payloads that become document values are cloned during compilation and insertion so later mutation of caller-provided operation fields cannot mutate the compiled patch or result document.
 
 ## Error Contract
 
-- `ApplyPatch`, `ApplyOp`, and `ApplyOps` stop at the first decode or apply failure.
+- `Compile`, `CompileOps`, `CompileOperations`, and `CompileJSON` return structured `*Error` values for invalid payloads and unsupported capabilities.
+- `Compile` and `CompileOps` reject executable operations that cannot project to JSON, because compiled patches must be isolated from later caller mutation.
+- `Apply` and `ApplyInPlace` return structured `*Error` values for runtime conflicts, failed predicates, type mismatches, and conversion failures.
+- `*Error` supports `errors.Is` for stable failure classes and `errors.As` for operation index, op, path, from, codec, and cause context.
 - Execution errors are wrapped with operation index context when they happen during a sequence.
-- Validation and execution errors are intended to be matched with `errors.Is` against sentinel errors.
+- Compile and execution errors are intended to be matched with `errors.Is` against sentinel errors.
 
 ## Forbidden
 
-- Do not assume `ApplyPatch` performs an explicit `ValidateOperations` pass before execution.
-- Do not use `ApplyPatch` when you already have `Op` instances and need to avoid JSON decode overhead; use `ApplyOp` or `ApplyOps`.
+- Do not add a second validation path parallel to compilation.
+- Do not add runtime options for mutation; use `ApplyInPlace`.
 - Do not duplicate the `test` operation contract here; `SPECS/25-predicate-specs.md` records predicate behavior.
 - Do not model whole-object replacement with `extend`; use `replace` when the target value must be replaced atomically.
 
@@ -63,5 +74,5 @@ The `test` operation is part of RFC 6902, but its behavioral contract lives in `
 
 - [ ] Every public entry point has one documented contract.
 - [ ] The RFC 6902 mutating operations are defined once and only once.
-- [ ] Validation behavior is explicit, including the `allowMatchesOp` gate.
-- [ ] Callers can tell when to use JSON-shaped operations versus executable `Op` instances.
+- [ ] Compile-time validation and capability behavior are explicit.
+- [ ] Callers can tell when to compile, apply immutably, apply in place, and use a codec.

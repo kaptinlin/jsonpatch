@@ -12,7 +12,7 @@ func TestMainShowsExpectedOutput(t *testing.T) {
 	output := captureOutput(t, main)
 	assertOutputContains(t, output, "Same object: false")
 	assertOutputContains(t, output, "Same object: true")
-	assertOutputContains(t, output, "Primitive result:   \"world\"")
+	assertOutputContains(t, output, "Primitive result: \"world\"")
 }
 
 func captureOutput(t *testing.T, fn func()) string {

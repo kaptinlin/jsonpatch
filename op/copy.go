@@ -69,9 +69,6 @@ func (c *CopyOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the copy operation.
 func (c *CopyOperation) Validate() error {
-	if len(c.from) == 0 {
-		return ErrFromPathEmpty
-	}
 	if slices.Equal(c.path, c.from) {
 		return ErrPathsIdentical
 	}

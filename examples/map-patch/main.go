@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/go-json-experiment/json"
 	"github.com/go-json-experiment/json/jsontext"
 
@@ -41,7 +43,7 @@ func demoBasicMapPatch() {
 	fmt.Printf("Before: %s\n", prettyMap(doc))
 
 	// Define patch operations
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/name", Value: "Alice Johnson"},
 		{Op: "add", Path: "/email", Value: "alice@design.co"},
 		{Op: "add", Path: "/tags/-", Value: "ux"},
@@ -49,14 +51,13 @@ func demoBasicMapPatch() {
 		{Op: "add", Path: "/department", Value: "Product Design"},
 	}
 
-	// Apply patch - returns map[string]any
-	result, err := jsonpatch.ApplyPatch(doc, patch)
+	result, err := applyCompiled(doc, patch)
 	if err != nil {
 		log.Fatal("Failed to patch document:", err)
 	}
 
 	fmt.Printf("After:  %s\n", prettyMap(result.Doc))
-	fmt.Printf("✅ Operations applied: %d\n", len(result.Res))
+	fmt.Printf("✅ Operations applied: %d\n", len(result.Steps))
 }
 
 // demoNestedMapPatch demonstrates nested map operations
@@ -83,7 +84,7 @@ func demoNestedMapPatch() {
 	fmt.Printf("Before:\n%s\n", prettyMap(doc))
 
 	// Nested operations
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/user/name", Value: "Robert Smith"},
 		{Op: "add", Path: "/user/profile/skills/-", Value: "Docker"},
 		{Op: "replace", Path: "/user/profile/bio", Value: "Senior Full-stack Developer"},
@@ -92,13 +93,13 @@ func demoNestedMapPatch() {
 		{Op: "add", Path: "/metadata/updated", Value: "2024-01-15"},
 	}
 
-	result, err := jsonpatch.ApplyPatch(doc, patch)
+	result, err := applyCompiled(doc, patch)
 	if err != nil {
 		log.Fatal("Failed to patch nested document:", err)
 	}
 
 	fmt.Printf("After:\n%s\n", prettyMap(result.Doc))
-	fmt.Printf("✅ Nested operations completed: %d\n", len(result.Res))
+	fmt.Printf("✅ Nested operations completed: %d\n", len(result.Steps))
 }
 
 // demoDynamicMapPatch demonstrates dynamic data manipulation
@@ -124,7 +125,7 @@ func demoDynamicMapPatch() {
 	fmt.Printf("Before:\n%s\n", prettyMap(doc))
 
 	// Dynamic updates (price changes, stock updates, new products)
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		// Update product prices
 		{Op: "replace", Path: "/products/0/price", Value: 899.99},
 		{Op: "replace", Path: "/products/2/stock", Value: 30},
@@ -144,17 +145,25 @@ func demoDynamicMapPatch() {
 		{Op: "add", Path: "/stats/last_updated", Value: "2024-01-15T10:30:00Z"},
 	}
 
-	result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(false))
+	result, err := applyCompiled(doc, patch)
 	if err != nil {
 		log.Fatal("Failed to patch dynamic data:", err)
 	}
 
 	fmt.Printf("After:\n%s\n", prettyMap(result.Doc))
-	fmt.Printf("✅ Dynamic updates completed: %d operations\n", len(result.Res))
+	fmt.Printf("✅ Dynamic updates completed: %d operations\n", len(result.Steps))
 
 	// Show that original is unchanged
 	fmt.Printf("✅ Original unchanged: total_products = %v\n",
 		doc["stats"].(map[string]any)["total_products"])
+}
+
+func applyCompiled[T jsonpatch.Document](doc T, operations []jsoncodec.Operation) (*jsonpatch.Result[T], error) {
+	patch, err := jsonpatch.CompileOperations(operations)
+	if err != nil {
+		return nil, err
+	}
+	return jsonpatch.Apply(patch, doc)
 }
 
 // prettyMap formats a map for better readability

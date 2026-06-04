@@ -33,10 +33,8 @@ func TestCodec_RoundTripViaPublicAPI(t *testing.T) {
 	require.Len(t, decoded, len(ops))
 
 	for i := range ops {
-		got, err := decoded[i].ToJSON()
-		require.NoError(t, err)
-		want, err := ops[i].ToJSON()
-		require.NoError(t, err)
+		got := operationToJSON(t, decoded[i])
+		want := operationToJSON(t, ops[i])
 		assert.Equal(t, want, got)
 	}
 }

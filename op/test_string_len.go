@@ -117,9 +117,6 @@ func (tl *TestStringLenOperation) ToCompact() (internal.CompactOperation, error)
 
 // Validate validates the test string length operation.
 func (tl *TestStringLenOperation) Validate() error {
-	if len(tl.Path()) == 0 {
-		return ErrPathEmpty
-	}
 	if tl.Length < 0 {
 		return ErrLengthNegative
 	}

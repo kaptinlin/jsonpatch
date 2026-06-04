@@ -5,17 +5,18 @@ import (
 	"slices"
 	"testing"
 
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
 )
 
 type ReferenceCase struct {
 	Name     string
 	Doc      any
-	Patch    []jsonpatch.Operation
+	Patch    []jsoncodec.Operation
 	Expected any
 	WantErr  bool
 	Comment  string
@@ -45,7 +46,7 @@ func TestBasicOperationReference(t *testing.T) {
 		{
 			Name: "add_to_object",
 			Doc:  map[string]any{"foo": "bar"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "add", Path: "/baz", Value: "qux"},
 			},
 			Expected: map[string]any{"foo": "bar", "baz": "qux"},
@@ -55,7 +56,7 @@ func TestBasicOperationReference(t *testing.T) {
 		{
 			Name: "replace_value",
 			Doc:  map[string]any{"foo": "bar"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "replace", Path: "/foo", Value: "baz"},
 			},
 			Expected: map[string]any{"foo": "baz"},
@@ -65,7 +66,7 @@ func TestBasicOperationReference(t *testing.T) {
 		{
 			Name: "remove_property",
 			Doc:  map[string]any{"foo": "bar", "baz": "qux"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "remove", Path: "/baz"},
 			},
 			Expected: map[string]any{"foo": "bar"},
@@ -75,7 +76,7 @@ func TestBasicOperationReference(t *testing.T) {
 		{
 			Name: "test_successful",
 			Doc:  map[string]any{"foo": "bar"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "test", Path: "/foo", Value: "bar"},
 			},
 			Expected: map[string]any{"foo": "bar"},
@@ -85,7 +86,7 @@ func TestBasicOperationReference(t *testing.T) {
 		{
 			Name: "test_failure",
 			Doc:  map[string]any{"foo": "bar"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "test", Path: "/foo", Value: "baz"},
 			},
 			WantErr:  true,
@@ -95,7 +96,7 @@ func TestBasicOperationReference(t *testing.T) {
 		{
 			Name: "copy_operation",
 			Doc:  map[string]any{"foo": "bar"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "copy", From: "/foo", Path: "/baz"},
 			},
 			Expected: map[string]any{"foo": "bar", "baz": "bar"},
@@ -105,7 +106,7 @@ func TestBasicOperationReference(t *testing.T) {
 		{
 			Name: "move_operation",
 			Doc:  map[string]any{"foo": "bar", "baz": "qux"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "move", From: "/baz", Path: "/moved"},
 			},
 			Expected: map[string]any{"foo": "bar", "moved": "qux"},
@@ -123,7 +124,7 @@ func TestArrayOperationReference(t *testing.T) {
 		{
 			Name: "add_to_array_end",
 			Doc:  []any{"foo", "bar"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "add", Path: "/-", Value: "baz"},
 			},
 			Expected: []any{"foo", "bar", "baz"},
@@ -133,7 +134,7 @@ func TestArrayOperationReference(t *testing.T) {
 		{
 			Name: "add_to_array_middle",
 			Doc:  []any{"foo", "bar"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "add", Path: "/1", Value: "baz"},
 			},
 			Expected: []any{"foo", "baz", "bar"},
@@ -143,7 +144,7 @@ func TestArrayOperationReference(t *testing.T) {
 		{
 			Name: "remove_from_array",
 			Doc:  []any{"foo", "bar", "baz"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "remove", Path: "/1"},
 			},
 			Expected: []any{"foo", "baz"},
@@ -153,7 +154,7 @@ func TestArrayOperationReference(t *testing.T) {
 		{
 			Name: "replace_array_element",
 			Doc:  []any{"foo", "bar"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "replace", Path: "/0", Value: "baz"},
 			},
 			Expected: []any{"baz", "bar"},
@@ -171,7 +172,7 @@ func TestPredicateOperationReference(t *testing.T) {
 		{
 			Name: "contains_successful",
 			Doc:  map[string]any{"text": "hello world"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "contains", Path: "/text", Value: "world"},
 			},
 			Expected: map[string]any{"text": "hello world"},
@@ -181,7 +182,7 @@ func TestPredicateOperationReference(t *testing.T) {
 		{
 			Name: "contains_failure",
 			Doc:  map[string]any{"text": "hello world"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "contains", Path: "/text", Value: "xyz"},
 			},
 			WantErr:  true,
@@ -191,7 +192,7 @@ func TestPredicateOperationReference(t *testing.T) {
 		{
 			Name: "type_check_number",
 			Doc:  map[string]any{"value": 42},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "type", Path: "/value", Value: "number"},
 			},
 			Expected: map[string]any{"value": 42},
@@ -201,7 +202,7 @@ func TestPredicateOperationReference(t *testing.T) {
 		{
 			Name: "type_check_failure",
 			Doc:  map[string]any{"value": "string"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "type", Path: "/value", Value: "number"},
 			},
 			WantErr:  true,
@@ -211,7 +212,7 @@ func TestPredicateOperationReference(t *testing.T) {
 		{
 			Name: "less_than_check",
 			Doc:  map[string]any{"value": 5},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "less", Path: "/value", Value: 10},
 			},
 			Expected: map[string]any{"value": 5},
@@ -221,7 +222,7 @@ func TestPredicateOperationReference(t *testing.T) {
 		{
 			Name: "more_than_check",
 			Doc:  map[string]any{"value": 15},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "more", Path: "/value", Value: 10},
 			},
 			Expected: map[string]any{"value": 15},
@@ -239,7 +240,7 @@ func TestExtendedOperationReference(t *testing.T) {
 		{
 			Name: "inc_operation",
 			Doc:  map[string]any{"counter": 5},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "inc", Path: "/counter", Inc: 3},
 			},
 			Expected: map[string]any{"counter": float64(8)}, // JSON unmarshaling converts to float64
@@ -249,7 +250,7 @@ func TestExtendedOperationReference(t *testing.T) {
 		{
 			Name: "flip_operation",
 			Doc:  map[string]any{"enabled": true},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "flip", Path: "/enabled"},
 			},
 			Expected: map[string]any{"enabled": false},
@@ -259,7 +260,7 @@ func TestExtendedOperationReference(t *testing.T) {
 		{
 			Name: "str_ins_operation",
 			Doc:  map[string]any{"text": "hello world"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "str_ins", Path: "/text", Pos: 5, Str: " beautiful"},
 			},
 			Expected: map[string]any{"text": "hello beautiful world"},
@@ -277,7 +278,7 @@ func TestErrorHandlingReference(t *testing.T) {
 		{
 			Name: "path_not_found",
 			Doc:  map[string]any{"foo": "bar"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "remove", Path: "/nonexistent"},
 			},
 			WantErr:  true,
@@ -287,7 +288,7 @@ func TestErrorHandlingReference(t *testing.T) {
 		{
 			Name: "invalid_array_index",
 			Doc:  []any{"foo", "bar"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "remove", Path: "/5"},
 			},
 			WantErr:  true,
@@ -297,7 +298,7 @@ func TestErrorHandlingReference(t *testing.T) {
 		{
 			Name: "type_mismatch_operation",
 			Doc:  map[string]any{"value": "string"},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{Op: "inc", Path: "/value", Inc: 1},
 			},
 			WantErr:  true,
@@ -315,11 +316,11 @@ func TestSecondOrderPredicateReference(t *testing.T) {
 		{
 			Name: "not_predicate_success",
 			Doc:  map[string]any{"foo": 1, "bar": 2},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{
 					Op:   "not",
 					Path: "",
-					Apply: []jsonpatch.Operation{
+					Apply: []jsoncodec.Operation{
 						{Op: "test", Path: "/foo", Value: 2},
 					},
 				},
@@ -331,11 +332,11 @@ func TestSecondOrderPredicateReference(t *testing.T) {
 		{
 			Name: "not_predicate_failure",
 			Doc:  map[string]any{"foo": 1, "bar": 2},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{
 					Op:   "not",
 					Path: "",
-					Apply: []jsonpatch.Operation{
+					Apply: []jsoncodec.Operation{
 						{Op: "test", Path: "/foo", Value: 1},
 					},
 				},
@@ -365,7 +366,7 @@ func getBasicOperationTestCases() []ReferenceCase {
 		{
 			Name:     "basic_add",
 			Doc:      map[string]any{"a": 1},
-			Patch:    []jsonpatch.Operation{{Op: "add", Path: "/b", Value: 2}},
+			Patch:    []jsoncodec.Operation{{Op: "add", Path: "/b", Value: 2}},
 			Expected: map[string]any{"a": 1, "b": 2},
 			Comment:  "Basic add operation",
 			Evidence: "reference:add.spec.ts",
@@ -373,7 +374,7 @@ func getBasicOperationTestCases() []ReferenceCase {
 		{
 			Name:     "basic_remove",
 			Doc:      map[string]any{"a": 1, "b": 2},
-			Patch:    []jsonpatch.Operation{{Op: "remove", Path: "/b"}},
+			Patch:    []jsoncodec.Operation{{Op: "remove", Path: "/b"}},
 			Expected: map[string]any{"a": 1},
 			Comment:  "Basic remove operation",
 			Evidence: "reference:remove.spec.ts",
@@ -386,7 +387,7 @@ func getArrayOperationTestCases() []ReferenceCase {
 		{
 			Name:     "array_append",
 			Doc:      []any{1, 2},
-			Patch:    []jsonpatch.Operation{{Op: "add", Path: "/-", Value: 3}},
+			Patch:    []jsoncodec.Operation{{Op: "add", Path: "/-", Value: 3}},
 			Expected: []any{1, 2, 3},
 			Comment:  "Array append operation",
 			Evidence: "reference:array.spec.ts",
@@ -399,7 +400,7 @@ func getPredicateOperationTestCases() []ReferenceCase {
 		{
 			Name:     "predicate_contains",
 			Doc:      map[string]any{"text": "hello"},
-			Patch:    []jsonpatch.Operation{{Op: "contains", Path: "/text", Value: "ell"}},
+			Patch:    []jsoncodec.Operation{{Op: "contains", Path: "/text", Value: "ell"}},
 			Expected: map[string]any{"text": "hello"},
 			Comment:  "Predicate contains operation",
 			Evidence: "reference:contains.spec.ts",
@@ -412,7 +413,7 @@ func getExtendedOperationTestCases() []ReferenceCase {
 		{
 			Name:     "extended_inc",
 			Doc:      map[string]any{"num": 5},
-			Patch:    []jsonpatch.Operation{{Op: "inc", Path: "/num", Inc: 2}},
+			Patch:    []jsoncodec.Operation{{Op: "inc", Path: "/num", Inc: 2}},
 			Expected: map[string]any{"num": float64(7)},
 			Comment:  "Extended inc operation",
 			Evidence: "reference:inc.spec.ts",
@@ -425,7 +426,7 @@ func getErrorHandlingTestCases() []ReferenceCase {
 		{
 			Name:     "error_path_not_found",
 			Doc:      map[string]any{"a": 1},
-			Patch:    []jsonpatch.Operation{{Op: "test", Path: "/b", Value: 1}},
+			Patch:    []jsoncodec.Operation{{Op: "test", Path: "/b", Value: 1}},
 			WantErr:  true,
 			Comment:  "Path not found error",
 			Evidence: "reference:errors.spec.ts",
@@ -438,11 +439,11 @@ func getSecondOrderPredicateTestCases() []ReferenceCase {
 		{
 			Name: "second_order_not",
 			Doc:  map[string]any{"val": 1},
-			Patch: []jsonpatch.Operation{
+			Patch: []jsoncodec.Operation{
 				{
 					Op:   "not",
 					Path: "",
-					Apply: []jsonpatch.Operation{
+					Apply: []jsoncodec.Operation{
 						{Op: "test", Path: "/val", Value: 2},
 					},
 				},
@@ -476,7 +477,7 @@ func BenchmarkReferenceVocabulary(b *testing.B) {
 	for b.Loop() {
 		for _, tc := range testCases {
 			if !tc.WantErr {
-				_, err := jsonpatch.ApplyPatch(tc.Doc, tc.Patch, jsonpatch.WithMutate(true))
+				_, err := applyPatch(b, tc.Doc, tc.Patch)
 				if err != nil {
 					b.Errorf("Operation %s failed: %v", tc.Name, err)
 				}

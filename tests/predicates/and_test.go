@@ -3,7 +3,8 @@ package ops_test
 import (
 	"testing"
 
-	"github.com/kaptinlin/jsonpatch"
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/kaptinlin/jsonpatch/tests/testutils"
 )
 
@@ -13,11 +14,11 @@ func TestAnd(t *testing.T) {
 		{
 			Name: "succeeds_when_both_predicates_pass",
 			Doc:  map[string]any{"foo": 1, "bar": 2},
-			Operations: []jsonpatch.Operation{
+			Operations: []jsoncodec.Operation{
 				{
 					Op:   "and",
 					Path: "",
-					Apply: []jsonpatch.Operation{
+					Apply: []jsoncodec.Operation{
 						{Op: "test", Path: "/foo", Value: 1},
 						{Op: "test", Path: "/bar", Value: 2},
 					},
@@ -29,11 +30,11 @@ func TestAnd(t *testing.T) {
 		{
 			Name: "fails_when_one_predicate_fails",
 			Doc:  map[string]any{"foo": 2, "bar": 2},
-			Operations: []jsonpatch.Operation{
+			Operations: []jsoncodec.Operation{
 				{
 					Op:   "and",
 					Path: "",
-					Apply: []jsonpatch.Operation{
+					Apply: []jsoncodec.Operation{
 						{Op: "test", Path: "/foo", Value: 1},
 						{Op: "test", Path: "/bar", Value: 2},
 					},

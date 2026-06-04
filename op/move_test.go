@@ -122,25 +122,13 @@ func TestMove_RootArray(t *testing.T) {
 func TestMove_EmptyPath(t *testing.T) {
 	t.Parallel()
 	moveOp := NewMove([]string{}, []string{"foo"})
-	err := moveOp.Validate()
-	if err == nil {
-		assert.Fail(t, "Validate() expected error for empty path")
-	}
-	if !errors.Is(err, ErrPathEmpty) {
-		assert.Equal(t, ErrPathEmpty, err, "Validate() error")
-	}
+	assert.NoError(t, moveOp.Validate())
 }
 
 func TestMove_EmptyFrom(t *testing.T) {
 	t.Parallel()
 	moveOp := NewMove([]string{"target"}, []string{})
-	err := moveOp.Validate()
-	if err == nil {
-		assert.Fail(t, "Validate() expected error for empty from path")
-	}
-	if !errors.Is(err, ErrFromPathEmpty) {
-		assert.Equal(t, ErrFromPathEmpty, err, "Validate() error")
-	}
+	assert.ErrorIs(t, moveOp.Validate(), ErrCannotMoveIntoChildren)
 }
 
 func TestMove_InterfaceMethods(t *testing.T) {
@@ -199,30 +187,15 @@ func TestMove_Validate(t *testing.T) {
 
 	moveOp = NewMove([]string{}, []string{"source"})
 	err := moveOp.Validate()
-	if err == nil {
-		assert.Fail(t, "Validate() expected error for empty path")
-	}
-	if !errors.Is(err, ErrPathEmpty) {
-		assert.Equal(t, ErrPathEmpty, err, "Validate() error")
-	}
+	assert.NoError(t, err)
 
 	moveOp = NewMove([]string{"target"}, []string{})
 	err = moveOp.Validate()
-	if err == nil {
-		assert.Fail(t, "Validate() expected error for empty from path")
-	}
-	if !errors.Is(err, ErrFromPathEmpty) {
-		assert.Equal(t, ErrFromPathEmpty, err, "Validate() error")
-	}
+	assert.ErrorIs(t, err, ErrCannotMoveIntoChildren)
 
 	moveOp = NewMove([]string{"same"}, []string{"same"})
 	err = moveOp.Validate()
-	if err == nil {
-		assert.Fail(t, "Validate() expected error for identical paths")
-	}
-	if !errors.Is(err, ErrPathsIdentical) {
-		assert.Equal(t, ErrPathsIdentical, err, "Validate() error")
-	}
+	assert.NoError(t, err)
 }
 
 func TestMove_RFC6902_RemoveAddPattern(t *testing.T) {

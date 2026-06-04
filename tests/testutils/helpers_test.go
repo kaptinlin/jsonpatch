@@ -3,10 +3,11 @@ package testutils
 import (
 	"testing"
 
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/kaptinlin/jsonpatch"
 	"github.com/kaptinlin/jsonpatch/internal"
 )
 
@@ -17,24 +18,24 @@ func TestHelperFunctions(t *testing.T) {
 		t.Parallel()
 
 		doc := map[string]any{"name": "Ada"}
-		operation := jsonpatch.Operation{Op: "replace", Path: "/name", Value: "Grace"}
+		operation := jsoncodec.Operation{Op: "replace", Path: "/name", Value: "Grace"}
 		result := ApplyOperation(t, doc, operation)
 		assert.Equal(t, map[string]any{"name": "Grace"}, result)
 
-		err := ApplyOperationWithError(t, map[string]any{"name": "Ada"}, jsonpatch.Operation{Op: "remove", Path: "/missing"})
+		err := ApplyOperationWithError(t, map[string]any{"name": "Ada"}, jsoncodec.Operation{Op: "remove", Path: "/missing"})
 		require.Error(t, err)
 	})
 
 	t.Run("apply operations helpers", func(t *testing.T) {
 		t.Parallel()
 
-		result := ApplyOperations(t, map[string]any{"name": "Ada"}, []jsonpatch.Operation{
+		result := ApplyOperations(t, map[string]any{"name": "Ada"}, []jsoncodec.Operation{
 			{Op: "replace", Path: "/name", Value: "Grace"},
 			{Op: "add", Path: "/role", Value: "admin"},
 		})
 		assert.Equal(t, map[string]any{"name": "Grace", "role": "admin"}, result)
 
-		err := ApplyOperationsWithError(t, map[string]any{"name": "Ada"}, []jsonpatch.Operation{{Op: "remove", Path: "/missing"}})
+		err := ApplyOperationsWithError(t, map[string]any{"name": "Ada"}, []jsoncodec.Operation{{Op: "remove", Path: "/missing"}})
 		require.Error(t, err)
 	})
 
@@ -59,14 +60,14 @@ func TestRunCaseHelpers(t *testing.T) {
 	RunTestCase(t, TestCase{
 		Name:      "single success",
 		Doc:       map[string]any{"name": "Ada"},
-		Operation: jsonpatch.Operation{Op: "replace", Path: "/name", Value: "Grace"},
+		Operation: jsoncodec.Operation{Op: "replace", Path: "/name", Value: "Grace"},
 		Expected:  map[string]any{"name": "Grace"},
 	})
 
 	RunMultiOperationTestCase(t, MultiOperationTestCase{
 		Name: "multi success",
 		Doc:  map[string]any{"name": "Ada"},
-		Operations: []jsonpatch.Operation{
+		Operations: []jsoncodec.Operation{
 			{Op: "replace", Path: "/name", Value: "Grace"},
 			{Op: "add", Path: "/role", Value: "admin"},
 		},
@@ -76,28 +77,28 @@ func TestRunCaseHelpers(t *testing.T) {
 	RunTestCase(t, TestCase{
 		Name:      "single error",
 		Doc:       map[string]any{"name": "Ada"},
-		Operation: jsonpatch.Operation{Op: "remove", Path: "/missing"},
+		Operation: jsoncodec.Operation{Op: "remove", Path: "/missing"},
 		WantErr:   true,
 	})
 
 	RunMultiOperationTestCase(t, MultiOperationTestCase{
 		Name:       "multi error",
 		Doc:        map[string]any{"name": "Ada"},
-		Operations: []jsonpatch.Operation{{Op: "remove", Path: "/missing"}},
+		Operations: []jsoncodec.Operation{{Op: "remove", Path: "/missing"}},
 		WantErr:    true,
 	})
 
 	RunTestCases(t, []TestCase{{
 		Name:      "run test cases",
 		Doc:       map[string]any{"name": "Ada"},
-		Operation: jsonpatch.Operation{Op: "replace", Path: "/name", Value: "Grace"},
+		Operation: jsoncodec.Operation{Op: "replace", Path: "/name", Value: "Grace"},
 		Expected:  map[string]any{"name": "Grace"},
 	}})
 
 	RunMultiOperationTestCases(t, []MultiOperationTestCase{{
 		Name:       "run multi test cases",
 		Doc:        map[string]any{"name": "Ada"},
-		Operations: []jsonpatch.Operation{{Op: "add", Path: "/role", Value: "admin"}},
+		Operations: []jsoncodec.Operation{{Op: "add", Path: "/role", Value: "admin"}},
 		Expected:   map[string]any{"name": "Ada", "role": "admin"},
 	}})
 }

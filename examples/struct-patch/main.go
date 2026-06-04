@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/go-json-experiment/json"
 	"github.com/go-json-experiment/json/jsontext"
 
@@ -58,14 +60,13 @@ func demoBasicStructPatch() {
 	fmt.Printf("Before: %+v\n", user)
 
 	// Define patch operations
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/name", Value: "Jane Smith"},
 		{Op: "replace", Path: "/age", Value: 28},
 		{Op: "replace", Path: "/email", Value: "jane.smith@example.com"},
 	}
 
-	// Apply patch - preserves struct type
-	result, err := jsonpatch.ApplyPatch(user, patch)
+	result, err := applyCompiled(user, patch)
 	if err != nil {
 		log.Fatal("Failed to patch user:", err)
 	}
@@ -94,14 +95,13 @@ func demoComplexStructPatch() {
 	fmt.Printf("Before:\n%s\n", string(originalJSON))
 
 	// Complex patch operations including nested paths
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/name", Value: "Wonder Woman"},
 		{Op: "replace", Path: "/profile/bio", Value: "DC Comics superhero and Amazon warrior"},
 		{Op: "add", Path: "/headquarters", Value: "Hall of Justice"},
 	}
 
-	// Apply patch with immutable option (default)
-	result, err := jsonpatch.ApplyPatch(user, patch, jsonpatch.WithMutate(false))
+	result, err := applyCompiled(user, patch)
 	if err != nil {
 		log.Fatal("Failed to patch complex user:", err)
 	}
@@ -109,7 +109,7 @@ func demoComplexStructPatch() {
 	// Print result (pretty formatted)
 	patchedJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
 	fmt.Printf("After:\n%s\n", string(patchedJSON))
-	fmt.Printf("✅ Operations applied: %d\n", len(result.Res))
+	fmt.Printf("✅ Operations applied: %d\n", len(result.Steps))
 }
 
 // demoArrayFieldOperations demonstrates operations on array fields
@@ -123,17 +123,25 @@ func demoArrayFieldOperations() {
 	fmt.Printf("Before: Tags = %v\n", user.Tags)
 
 	// Array operations on Tags field
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "add", Path: "/tags/-", Value: "ux"},          // Append
 		{Op: "add", Path: "/tags/0", Value: "senior"},      // Insert at beginning
 		{Op: "replace", Path: "/tags/2", Value: "product"}, // Replace middle
 	}
 
-	result, err := jsonpatch.ApplyPatch(user, patch)
+	result, err := applyCompiled(user, patch)
 	if err != nil {
 		log.Fatal("Failed to patch tags:", err)
 	}
 
 	fmt.Printf("After:  Tags = %v\n", result.Doc.Tags)
 	fmt.Printf("✅ Tag operations completed successfully\n")
+}
+
+func applyCompiled[T jsonpatch.Document](doc T, operations []jsoncodec.Operation) (*jsonpatch.Result[T], error) {
+	patch, err := jsonpatch.CompileOperations(operations)
+	if err != nil {
+		return nil, err
+	}
+	return jsonpatch.Apply(patch, doc)
 }

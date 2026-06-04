@@ -8,7 +8,7 @@ This spec defines the implementation, error-handling, testing, and documentation
 
 - Prefer type-preserving APIs over `any`-only convenience layers.
 - Use reference implementations as evidence when they clarify the patch vocabulary; prefer the Go implementation's tested behavior when a reference shape conflicts with this library's model.
-- Default to immutable application; require `WithMutate(true)` for in-place updates.
+- Default to immutable application; require `ApplyInPlace` for in-place updates.
 - Keep the library pure: return errors and leave logging to callers.
 
 > **Why**: The library is valuable because it combines Go's type system with a precise patch vocabulary. Every rule here protects one of those two properties.
@@ -30,7 +30,7 @@ This spec defines the implementation, error-handling, testing, and documentation
 - Use sentinel errors for stable failure classes.
 - Add dynamic context with `fmt.Errorf("%w: ...", err)`.
 - Match failures with `errors.Is`; do not inspect error message text.
-- Validation and execution errors are separate concerns: validation checks payload shape, execution checks runtime document state.
+- Compile and execution errors are separate concerns: compilation checks payload shape and capability policy, execution checks runtime document state.
 
 ## Testing Rules
 

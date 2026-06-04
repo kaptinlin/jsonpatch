@@ -193,9 +193,6 @@ func TestOr_Validate(t *testing.T) {
 		assert.Fail(t, fmt.Sprintf("Validate() = %v, want nil for valid operation", err))
 	}
 
-	// Empty OR is valid, just returns false
 	orOp = NewOr([]string{"test"}, []any{})
-	if err := orOp.Validate(); err != nil {
-		assert.Fail(t, fmt.Sprintf("Validate() = %v, want nil for empty operations", err))
-	}
+	assert.ErrorIs(t, orOp.Validate(), ErrInvalidPredicateInOr)
 }

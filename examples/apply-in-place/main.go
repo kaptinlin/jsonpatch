@@ -1,4 +1,4 @@
-// Package main demonstrates mutate option usage with JSON Patch.
+// Package main demonstrates explicit in-place JSON Patch application.
 package main
 
 import (
@@ -6,14 +6,16 @@ import (
 	"maps"
 	"reflect"
 
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
 )
 
 func main() {
-	fmt.Println("🚀 JSON Patch Mutate Option Usage")
-	fmt.Println("==================================")
+	fmt.Println("🚀 JSON Patch In-Place Usage")
+	fmt.Println("============================")
 
 	// Sample document and patch
 	document := map[string]any{
@@ -22,16 +24,20 @@ func main() {
 		"email": "john@example.com",
 	}
 
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/name", Value: "Jane"},
 		{Op: "add", Path: "/city", Value: "New York"},
 	}
+	compiled, err := jsonpatch.CompileOperations(patch)
+	if err != nil {
+		panic(err)
+	}
 
-	// Example 1: Safe mode (default) - preserves original
-	fmt.Println("\n📋 Mutate: false (Safe Mode)")
+	// Example 1: Immutable apply preserves original
+	fmt.Println("\n📋 Apply (immutable)")
 	doc1 := copyDocument(document)
 
-	result1, err := jsonpatch.ApplyPatch(doc1, patch, jsonpatch.WithMutate(false))
+	result1, err := jsonpatch.Apply(compiled, doc1)
 	if err != nil {
 		panic(err)
 	}
@@ -40,29 +46,32 @@ func main() {
 	fmt.Printf("Result:   %s\n", toJSON(result1.Doc))
 	fmt.Printf("Same object: %v\n", isSameObject(doc1, result1.Doc))
 
-	// Example 2: Performance mode - modifies original
-	fmt.Println("\n⚡ Mutate: true (Performance Mode)")
+	// Example 2: ApplyInPlace modifies the provided variable
+	fmt.Println("\n⚡ ApplyInPlace")
 	doc2 := copyDocument(document)
+	beforeInPlace := doc2
 
-	result2, err := jsonpatch.ApplyPatch(doc2, patch, jsonpatch.WithMutate(true))
-	if err != nil {
+	if err := jsonpatch.ApplyInPlace(compiled, &doc2); err != nil {
 		panic(err)
 	}
 
 	fmt.Printf("Original: %s\n", toJSON(doc2))
-	fmt.Printf("Result:   %s\n", toJSON(result2.Doc))
-	fmt.Printf("Same object: %v\n", isSameObject(doc2, result2.Doc))
+	fmt.Printf("Same object: %v\n", isSameObject(beforeInPlace, doc2))
 
-	// Go language limitation example
-	fmt.Println("\n⚠️  Go Language Limitation")
+	// Primitive values are updated through the pointer.
+	fmt.Println("\n⚙️  Primitive Value")
 	primitiveDoc := "hello"
-	primitiveResult, _ := jsonpatch.ApplyPatch(primitiveDoc, []jsonpatch.Operation{
+	primitivePatch, err := jsonpatch.CompileOperations([]jsoncodec.Operation{
 		{Op: "replace", Path: "", Value: "world"},
-	}, jsonpatch.WithMutate(true))
+	})
+	if err != nil {
+		panic(err)
+	}
+	if err := jsonpatch.ApplyInPlace(primitivePatch, &primitiveDoc); err != nil {
+		panic(err)
+	}
 
-	fmt.Printf("Primitive original: %q (unchanged)\n", primitiveDoc)
-	fmt.Printf("Primitive result:   %q\n", primitiveResult.Doc)
-	fmt.Println("Note: Primitive types cannot be mutated in-place in Go")
+	fmt.Printf("Primitive result: %q\n", primitiveDoc)
 }
 
 // Helper functions

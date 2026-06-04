@@ -7,7 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kaptinlin/jsonpatch"
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/kaptinlin/jsonpatch/op"
 )
 
@@ -20,7 +21,7 @@ func TestMainShowsExpectedOutput(t *testing.T) {
 
 func TestRunReportsPatchErrors(t *testing.T) {
 	// This test writes to process-wide stdout.
-	err := run([]jsonpatch.Operation{{Op: "replace", Path: "/missing", Value: "value"}})
+	err := run([]jsoncodec.Operation{{Op: "replace", Path: "/missing", Value: "value"}})
 	if !errors.Is(err, op.ErrPathNotFound) {
 		t.Fatalf("run() error = %v, want ErrPathNotFound", err)
 	}

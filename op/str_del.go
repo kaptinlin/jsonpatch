@@ -135,6 +135,9 @@ func (sd *StrDelOperation) ToCompact() (internal.CompactOperation, error) {
 // Validate validates the string delete operation.
 // Negative positions are valid (JS slice semantics: count from end).
 func (sd *StrDelOperation) Validate() error {
+	if sd.Len < 0 {
+		return ErrLengthNegative
+	}
 	if !sd.HasStr && sd.Len <= 0 {
 		return ErrMissingStrOrLen
 	}

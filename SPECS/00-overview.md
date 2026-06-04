@@ -11,7 +11,8 @@ Recorded technical contracts live in `SPECS/`. `README.md` is user-facing, and `
 - The public module is `github.com/kaptinlin/jsonpatch`.
 - The library targets Go 1.26.
 - The operation vocabulary follows JSON Patch, predicate, and extended patch behavior proven by the Go implementation and tests.
-- Mutation is opt-in. `ApplyPatch`, `ApplyOp`, and `ApplyOps` clone the input unless `WithMutate(true)` is supplied.
+- Mutation is opt-in. Use `Apply` for immutable application and `ApplyInPlace` for explicit mutation.
+- The compiled path defaults to the RFC 6902 operation vocabulary. Predicate, regex predicate, and extended operations require compile-time capabilities.
 - The library stays pure: operations return errors and never log.
 
 > **Why**: The library exists to give Go callers a rich JSON Patch+ vocabulary without giving up static typing or forcing every caller into `map[string]any`.
@@ -24,14 +25,14 @@ Recorded technical contracts live in `SPECS/`. `README.md` is user-facing, and `
 |-------------|------------------|--------------|
 | `map[string]any` | Applied directly | `map[string]any` |
 | `[]byte` | Decoded as JSON, patched, re-encoded | `[]byte` |
-| `string` starting with `{` or `[` | Parsed as JSON, patched, re-encoded | `string` |
-| Other `string` | Treated as a plain scalar string | `string` |
+| `JSONText` | Parsed as JSON, patched, re-encoded | `JSONText` |
+| `string` | Treated as a plain scalar string | `string` |
 | Structs and other concrete types | Marshaled to JSON, patched as untyped data, unmarshaled back | Original Go type |
 | Primitive values and `[]any` | Applied directly when the result remains assignable | Original Go type |
 
-JSON string documents re-encode root `null` results as the string `"null"`; plain
-scalar strings fail conversion when an operation yields JSON null because the result
-can no longer be represented as a string value.
+`JSONText` and `[]byte` documents re-encode root `null` results as JSON `null`;
+plain scalar strings fail conversion when an operation yields JSON null because the
+result can no longer be represented as a string value.
 
 ## Spec Map
 
@@ -45,8 +46,8 @@ can no longer be represented as a string value.
 ## Forbidden
 
 - Do not treat `README.md` examples as technical contracts; use code, tests, and `SPECS/` for behavior.
-- Do not assume string inputs are always JSON documents; only strings beginning with `{` or `[` are parsed as JSON.
-- Do not depend on implicit mutation; use `WithMutate(true)` when in-place updates are required.
+- Do not assume string inputs are JSON documents in the compiled path; use `JSONText` or `[]byte` when JSON text is intended.
+- Do not depend on implicit mutation; use `ApplyInPlace` when in-place updates are required.
 - Do not add new technical design rules to `CLAUDE.md`; add or update a spec in `SPECS/` instead.
 
 ## Acceptance Criteria

@@ -1,6 +1,7 @@
 package compact
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/go-json-experiment/json"
@@ -56,7 +57,11 @@ func EncodeJSON(ops []internal.Op, opts ...Option) ([]byte, error) {
 
 // encodeOp converts a single operation to compact format.
 func encodeOp(o internal.Op, opts Options) (Op, error) {
-	raw, err := o.ToCompact()
+	compactOp, ok := o.(internal.CompactOp)
+	if !ok {
+		return nil, fmt.Errorf("operation %T cannot encode to compact", o)
+	}
+	raw, err := compactOp.ToCompact()
 	if err != nil {
 		return nil, err
 	}

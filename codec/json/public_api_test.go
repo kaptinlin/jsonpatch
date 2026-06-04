@@ -5,6 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kaptinlin/jsonpatch/internal"
 )
 
 func TestDecodeTestTypeStringArray(t *testing.T) {
@@ -60,4 +62,31 @@ func TestDecodeJSONRejectsInvalidPayload(t *testing.T) {
 	ops, err := DecodeJSON([]byte(`{"op":"add"}`), PatchOptions{})
 	require.Error(t, err)
 	assert.Nil(t, ops)
+}
+
+func TestEncodeRejectsOperationWithoutJSONProjection(t *testing.T) {
+	t.Parallel()
+
+	encoded, err := Encode([]internal.Op{applyOnlyOp{}})
+	require.Error(t, err)
+	assert.Nil(t, encoded)
+	assert.Contains(t, err.Error(), "cannot encode to JSON")
+}
+
+type applyOnlyOp struct{}
+
+func (applyOnlyOp) Op() internal.OpType {
+	return internal.OpAddType
+}
+
+func (applyOnlyOp) Path() []string {
+	return []string{"name"}
+}
+
+func (applyOnlyOp) Apply(doc any) (internal.OpResult[any], error) {
+	return internal.OpResult[any]{Doc: doc}, nil
+}
+
+func (applyOnlyOp) Validate() error {
+	return nil
 }

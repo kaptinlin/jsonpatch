@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
@@ -27,7 +29,7 @@ func main() {
 	// Example 1: Successful validation
 	fmt.Println("\n--- Successful Validation ---")
 
-	successPatch := []jsonpatch.Operation{
+	successPatch := []jsoncodec.Operation{
 		// Test current values
 		{
 			Op:    "test",
@@ -52,19 +54,23 @@ func main() {
 		},
 	}
 
-	result, err := jsonpatch.ApplyPatch(doc, successPatch)
+	compiled, err := jsonpatch.CompileOperations(successPatch, jsonpatch.WithCapabilities(jsonpatch.AllCapabilities))
+	if err == nil {
+		result, err := jsonpatch.Apply(compiled, doc)
+		if err == nil {
+			fmt.Println("Success:")
+			updated, _ := json.Marshal(result.Doc)
+			fmt.Println(string(updated))
+		}
+	}
 	if err != nil {
 		log.Printf("Patch failed: %v", err)
-	} else {
-		fmt.Println("Success:")
-		updated, _ := json.Marshal(result.Doc)
-		fmt.Println(string(updated))
 	}
 
 	// Example 2: Failed test condition
 	fmt.Println("\n--- Failed Test Condition ---")
 
-	failPatch := []jsonpatch.Operation{
+	failPatch := []jsoncodec.Operation{
 		{
 			Op:    "test",
 			Path:  "/balance",
@@ -77,7 +83,10 @@ func main() {
 		},
 	}
 
-	_, err = jsonpatch.ApplyPatch(doc, failPatch)
+	compiled, err = jsonpatch.CompileOperations(failPatch)
+	if err == nil {
+		_, err = jsonpatch.Apply(compiled, doc)
+	}
 	if err != nil {
 		fmt.Printf("Expected failure: %v\n", err)
 	}
@@ -85,7 +94,7 @@ func main() {
 	// Example 3: Invalid path
 	fmt.Println("\n--- Invalid Path ---")
 
-	invalidPatch := []jsonpatch.Operation{
+	invalidPatch := []jsoncodec.Operation{
 		{
 			Op:    "replace",
 			Path:  "/nonexistent",
@@ -93,7 +102,10 @@ func main() {
 		},
 	}
 
-	_, err = jsonpatch.ApplyPatch(doc, invalidPatch)
+	compiled, err = jsonpatch.CompileOperations(invalidPatch)
+	if err == nil {
+		_, err = jsonpatch.Apply(compiled, doc)
+	}
 	if err != nil {
 		fmt.Printf("Path error: %v\n", err)
 	}

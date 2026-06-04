@@ -187,9 +187,6 @@ func TestAnd_Validate(t *testing.T) {
 		assert.Fail(t, fmt.Sprintf("Validate() = %v, want nil for valid operation", err))
 	}
 
-	// Vacuous truth allows empty operations
 	andOp = NewAnd([]string{"test"}, []any{})
-	if err := andOp.Validate(); err != nil {
-		assert.Fail(t, fmt.Sprintf("Validate() = %v, want nil for empty operations (vacuous truth)", err))
-	}
+	assert.ErrorIs(t, andOp.Validate(), ErrInvalidPredicateInAnd)
 }

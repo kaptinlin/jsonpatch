@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"testing"
 
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/kaptinlin/jsonpatch"
 	operrors "github.com/kaptinlin/jsonpatch/op"
 )
 
@@ -18,68 +19,68 @@ func TestMatchesOp(t *testing.T) {
 		t.Parallel()
 		t.Run("succeeds when matches correctly a substring", func(t *testing.T) {
 			t.Parallel()
-			op := jsonpatch.Operation{
+			op := jsoncodec.Operation{
 				Op:    "matches",
 				Path:  "",
 				Value: "\\d+",
 			}
-			patch := []jsonpatch.Operation{op}
-			result, err := jsonpatch.ApplyPatch("123", patch, jsonpatch.WithMutate(true))
+			patch := []jsoncodec.Operation{op}
+			result, err := applyPatch(t, "123", patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 			if got := result.Doc; got != "123" {
-				assert.Equal(t, "123", got, "ApplyPatch() doc")
+				assert.Equal(t, "123", got, "Apply() doc")
 			}
 		})
 
 		t.Run("fails when does not match the string", func(t *testing.T) {
 			t.Parallel()
-			op := jsonpatch.Operation{
+			op := jsoncodec.Operation{
 				Op:    "matches",
 				Path:  "",
 				Value: "\\d+",
 			}
-			patch := []jsonpatch.Operation{op}
-			_, err := jsonpatch.ApplyPatch("asdf", patch, jsonpatch.WithMutate(true))
+			patch := []jsoncodec.Operation{op}
+			_, err := applyPatch(t, "asdf", patch)
 			if err == nil {
-				require.FailNow(t, "ApplyPatch() error = nil, want error")
+				require.FailNow(t, "Apply() error = nil, want error")
 			}
 			if !errors.Is(err, operrors.ErrStringMismatch) {
-				assert.Equal(t, operrors.ErrStringMismatch, err, "ApplyPatch() error")
+				assert.Equal(t, operrors.ErrStringMismatch, err, "Apply() error")
 			}
 		})
 
 		t.Run("succeeds with case insensitive matching", func(t *testing.T) {
 			t.Parallel()
-			op := jsonpatch.Operation{
+			op := jsoncodec.Operation{
 				Op:         "matches",
 				Path:       "",
 				Value:      "HELLO",
 				IgnoreCase: true,
 			}
-			patch := []jsonpatch.Operation{op}
-			result, err := jsonpatch.ApplyPatch("hello world", patch, jsonpatch.WithMutate(true))
+			patch := []jsoncodec.Operation{op}
+			result, err := applyPatch(t, "hello world", patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 			if got := result.Doc; got != "hello world" {
-				assert.Equal(t, "hello world", got, "ApplyPatch() doc")
+				assert.Equal(t, "hello world", got, "Apply() doc")
 			}
 		})
 
 		t.Run("fails with case sensitive matching", func(t *testing.T) {
 			t.Parallel()
-			op := jsonpatch.Operation{
+			op := jsoncodec.Operation{
 				Op:         "matches",
 				Path:       "",
 				Value:      "HELLO",
 				IgnoreCase: false,
 			}
-			patch := []jsonpatch.Operation{op}
-			_, err := jsonpatch.ApplyPatch("hello world", patch, jsonpatch.WithMutate(true))
+			patch := []jsoncodec.Operation{op}
+			_, err := applyPatch(t, "hello world", patch)
 			if err == nil {
-				require.FailNow(t, "ApplyPatch() error = nil, want error")
+				require.FailNow(t, "Apply() error = nil, want error")
 			}
 		})
 	})
@@ -91,15 +92,15 @@ func TestMatchesOp(t *testing.T) {
 			doc := map[string]any{
 				"email": "user@example.com",
 			}
-			op := jsonpatch.Operation{
+			op := jsoncodec.Operation{
 				Op:    "matches",
 				Path:  "/email",
 				Value: "[a-z]+@[a-z]+\\.[a-z]+",
 			}
-			patch := []jsonpatch.Operation{op}
-			result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
+			patch := []jsoncodec.Operation{op}
+			result, err := applyPatch(t, doc, patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 			if got := result.Doc["email"]; got != "user@example.com" {
 				assert.Equal(t, "user@example.com", got, "result.Doc[email]")
@@ -111,15 +112,15 @@ func TestMatchesOp(t *testing.T) {
 			doc := map[string]any{
 				"email": "invalid-email",
 			}
-			op := jsonpatch.Operation{
+			op := jsoncodec.Operation{
 				Op:    "matches",
 				Path:  "/email",
 				Value: "^[a-z]+@[a-z]+\\.[a-z]+$",
 			}
-			patch := []jsonpatch.Operation{op}
-			_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
+			patch := []jsoncodec.Operation{op}
+			_, err := applyPatch(t, doc, patch)
 			if err == nil {
-				require.FailNow(t, "ApplyPatch() error = nil, want error")
+				require.FailNow(t, "Apply() error = nil, want error")
 			}
 		})
 
@@ -128,15 +129,15 @@ func TestMatchesOp(t *testing.T) {
 			doc := map[string]any{
 				"phone": "123-456-7890",
 			}
-			op := jsonpatch.Operation{
+			op := jsoncodec.Operation{
 				Op:    "matches",
 				Path:  "/phone",
 				Value: "\\d{3}-\\d{3}-\\d{4}",
 			}
-			patch := []jsonpatch.Operation{op}
-			result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
+			patch := []jsoncodec.Operation{op}
+			result, err := applyPatch(t, doc, patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 			if got := result.Doc["phone"]; got != "123-456-7890" {
 				assert.Equal(t, "123-456-7890", got, "result.Doc[phone]")
@@ -151,15 +152,15 @@ func TestMatchesOp(t *testing.T) {
 			doc := map[string]any{
 				"items": []any{"apple", "banana", "cherry"},
 			}
-			op := jsonpatch.Operation{
+			op := jsoncodec.Operation{
 				Op:    "matches",
 				Path:  "/items/1",
 				Value: "^b.*a$",
 			}
-			patch := []jsonpatch.Operation{op}
-			result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
+			patch := []jsoncodec.Operation{op}
+			result, err := applyPatch(t, doc, patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 			items := result.Doc["items"].([]any)
 			if got := items[1]; got != "banana" {
@@ -175,15 +176,15 @@ func TestMatchesOp(t *testing.T) {
 			doc := map[string]any{
 				"website": "https://example.com",
 			}
-			op := jsonpatch.Operation{
+			op := jsoncodec.Operation{
 				Op:    "matches",
 				Path:  "/website",
 				Value: "^https?://",
 			}
-			patch := []jsonpatch.Operation{op}
-			result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
+			patch := []jsoncodec.Operation{op}
+			result, err := applyPatch(t, doc, patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 			if got := result.Doc["website"]; got != "https://example.com" {
 				assert.Equal(t, "https://example.com", got, "result.Doc[website]")
@@ -195,15 +196,15 @@ func TestMatchesOp(t *testing.T) {
 			doc := map[string]any{
 				"id": "123e4567-e89b-12d3-a456-426614174000",
 			}
-			op := jsonpatch.Operation{
+			op := jsoncodec.Operation{
 				Op:    "matches",
 				Path:  "/id",
 				Value: "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
 			}
-			patch := []jsonpatch.Operation{op}
-			result, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
+			patch := []jsoncodec.Operation{op}
+			result, err := applyPatch(t, doc, patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 			if got := result.Doc["id"]; got != "123e4567-e89b-12d3-a456-426614174000" {
 				assert.Equal(t, "123e4567-e89b-12d3-a456-426614174000", got, "result.Doc[id]")
@@ -213,37 +214,33 @@ func TestMatchesOp(t *testing.T) {
 
 	t.Run("edge cases", func(t *testing.T) {
 		t.Parallel()
-		t.Run("empty pattern matches empty string", func(t *testing.T) {
+		t.Run("empty pattern is rejected at compile", func(t *testing.T) {
 			t.Parallel()
-			op := jsonpatch.Operation{
+			op := jsoncodec.Operation{
 				Op:    "matches",
 				Path:  "",
 				Value: "",
 			}
-			patch := []jsonpatch.Operation{op}
-			result, err := jsonpatch.ApplyPatch("", patch, jsonpatch.WithMutate(true))
-			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
-			}
-			if got := result.Doc; got != "" {
-				assert.Equal(t, "", got, "ApplyPatch() doc")
+			patch := []jsoncodec.Operation{op}
+			if _, err := applyPatch(t, "", patch); err == nil {
+				require.FailNow(t, "Apply() error = nil, want error")
 			}
 		})
 
 		t.Run("dot matches any character", func(t *testing.T) {
 			t.Parallel()
-			op := jsonpatch.Operation{
+			op := jsoncodec.Operation{
 				Op:    "matches",
 				Path:  "",
 				Value: ".",
 			}
-			patch := []jsonpatch.Operation{op}
-			result, err := jsonpatch.ApplyPatch("x", patch, jsonpatch.WithMutate(true))
+			patch := []jsoncodec.Operation{op}
+			result, err := applyPatch(t, "x", patch)
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 			if got := result.Doc; got != "x" {
-				assert.Equal(t, "x", got, "ApplyPatch() doc")
+				assert.Equal(t, "x", got, "Apply() doc")
 			}
 		})
 
@@ -252,18 +249,18 @@ func TestMatchesOp(t *testing.T) {
 			doc := map[string]any{
 				"number": 123,
 			}
-			op := jsonpatch.Operation{
+			op := jsoncodec.Operation{
 				Op:    "matches",
 				Path:  "/number",
 				Value: "\\d+",
 			}
-			patch := []jsonpatch.Operation{op}
-			_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
+			patch := []jsoncodec.Operation{op}
+			_, err := applyPatch(t, doc, patch)
 			if err == nil {
-				require.FailNow(t, "ApplyPatch() error = nil, want error")
+				require.FailNow(t, "Apply() error = nil, want error")
 			}
 			if !errors.Is(err, operrors.ErrNotString) {
-				assert.Equal(t, operrors.ErrNotString, err, "ApplyPatch() error")
+				assert.Equal(t, operrors.ErrNotString, err, "Apply() error")
 			}
 		})
 
@@ -272,18 +269,18 @@ func TestMatchesOp(t *testing.T) {
 			doc := map[string]any{
 				"field": "value",
 			}
-			op := jsonpatch.Operation{
+			op := jsoncodec.Operation{
 				Op:    "matches",
 				Path:  "/missing",
 				Value: ".*",
 			}
-			patch := []jsonpatch.Operation{op}
-			_, err := jsonpatch.ApplyPatch(doc, patch, jsonpatch.WithMutate(true))
+			patch := []jsoncodec.Operation{op}
+			_, err := applyPatch(t, doc, patch)
 			if err == nil {
-				require.FailNow(t, "ApplyPatch() error = nil, want error")
+				require.FailNow(t, "Apply() error = nil, want error")
 			}
 			if !errors.Is(err, operrors.ErrPathNotFound) {
-				assert.Equal(t, operrors.ErrPathNotFound, err, "ApplyPatch() error")
+				assert.Equal(t, operrors.ErrPathNotFound, err, "Apply() error")
 			}
 		})
 	})

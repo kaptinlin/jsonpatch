@@ -4,11 +4,11 @@
 
 This spec defines the data structures shared by the public API, codecs, and operation implementations.
 
-## `Operation` Payload
+## `codec/json.Operation` Payload
 
-`Operation` is the JSON-shaped input format for `ApplyPatch`, validation, and codec conversion.
+`codec/json.Operation` is the JSON-shaped input format for `CompileOperations` and JSON codec conversion.
 
-Because `Operation` is a Go struct, it cannot represent raw JSON field presence. Empty `path` and `from` are valid root pointers, and `nil` `value` is a valid JSON `null` payload. Raw JSON/map decoding owns missing-field validation when presence matters.
+Because `codec/json.Operation` is a Go struct, it cannot represent raw JSON field presence. Empty `path` and `from` are valid root pointers, and `nil` `value` is a valid JSON `null` payload. Raw JSON/map decoding owns missing-field validation when presence matters.
 
 | Field | Used by | Contract |
 |-------|---------|----------|
@@ -58,29 +58,53 @@ Because `Operation` is a Go struct, it cannot represent raw JSON field presence.
 
 The generic API accepts values matching the `Document` constraint and dispatches by runtime shape so the result can be converted back to the caller's type.
 
-### `OpResult[T]`
+### `JSONText`
+
+`JSONText` is a string wrapper that marks a document as JSON text for the compiled patch path. Plain `string` values are scalar string documents; `JSONText` values are decoded as JSON, patched, and encoded back to `JSONText`.
+
+### `Patch`
+
+`Patch` is a compiled operation sequence. It stores operations accepted by compile-time capability policy and can be reused with `Apply` or `ApplyInPlace`.
+
+Compiled operations are reconstructed from their JSON operation projection during `Compile`/`CompileOps`, so later mutation of the caller-provided operation value or payload does not change the compiled patch. Custom executable operations that cannot project to JSON are rejected at compile time. Regex matcher behavior for reconstructed `matches` operations is bound through `WithCompileMatcher` when callers need a custom matcher.
+
+### `Capability`
+
+| Capability | Contract |
+|------------|----------|
+| `RFC6902` | Core JSON Patch operations. |
+| `Predicate` | Non-regex predicate operations. |
+| `RegexPredicate` | `matches` predicate operations. |
+| `Extended` | JSON Patch Extended operations. |
+| `AllCapabilities` | All operation vocabularies implemented by the package. |
+
+Capabilities describe operation vocabulary only; codecs remain wire-format translators.
+
+### `Result[T]`
 
 | Field | Contract |
 |-------|----------|
-| `Doc` | The document after one operation completes. |
-| `Old` | The previous value when the operation reports one. |
+| `Doc` | The final patched document converted back to `T`. |
+| `Steps` | Per-operation facts for successfully applied operations. |
 
-### `PatchResult[T]`
+### `Step`
 
-| Field | Contract |
-|-------|----------|
-| `Doc` | The final patched document. |
-| `Res` | Per-operation results in application order. |
+`Step` exposes accessor methods for operation facts: `Index`, `Op`, `Path`, `From`, `Old`, and `Applied`. It does not expose a typed per-step document.
 
-> **Why**: One shared payload type keeps JSON decoding, validation, examples, and public API usage aligned while a separate executable `Op` layer keeps runtime behavior explicit.
+### `Error`
+
+`Error` carries a stable failure kind plus optional operation index, op, path, from, codec, and cause context. It supports `errors.Is` through its kind and cause, and supports `errors.As` for callers that need structured context.
+
+> **Why**: One shared payload type keeps JSON decoding, examples, and public API usage aligned while a separate executable `Op` layer keeps runtime behavior explicit.
 >
 > **Rejected**: A different payload struct per operation would make JSON patch assembly much harder for callers. Returning only the final document would remove per-operation `Old` values that callers sometimes need for auditing or post-processing.
 
 ## Forbidden
 
-- Do not introduce a second JSON-shaped patch payload type outside `Operation`.
+- Do not introduce a second JSON-shaped patch payload type outside `codec/json.Operation`.
 - Do not use `value` as the encoded multi-type field for `test_type`; use `type`.
 - Do not treat `Old` as universally populated; only some operations return it.
+- Do not treat `Step` as a typed document history; it records operation facts only.
 - Do not remove zero-value fields such as `inc`, `pos`, `str`, or `len` from the model contract; zero is meaningful for these fields.
 
 ## Acceptance Criteria
@@ -88,4 +112,4 @@ The generic API accepts values matching the `Document` constraint and dispatches
 - [ ] The payload fields used by every operation family are documented once.
 - [ ] The JSON type vocabulary is explicit.
 - [ ] Result shapes and ordering semantics are documented.
-- [ ] The difference between JSON-shaped `Operation` values and executable operations remains clear.
+- [ ] The difference between JSON-shaped `codec/json.Operation` values and executable operations remains clear.

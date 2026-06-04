@@ -1,6 +1,7 @@
 package binarytests
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -178,8 +179,8 @@ func isOpEqual(a, b internal.Op) bool {
 	}
 
 	// For other operations, convert to standard JSON map format and compare deeply.
-	jsonA, errA := a.ToJSON()
-	jsonB, errB := b.ToJSON()
+	jsonA, errA := operationToJSON(a)
+	jsonB, errB := operationToJSON(b)
 
 	if errA != nil || errB != nil {
 		// If conversion fails, they are not equal.
@@ -187,6 +188,14 @@ func isOpEqual(a, b internal.Op) bool {
 	}
 
 	return areOperationsEqual(&jsonA, &jsonB)
+}
+
+func operationToJSON(operation internal.Op) (internal.Operation, error) {
+	jsonOp, ok := operation.(internal.JSONOp)
+	if !ok {
+		return internal.Operation{}, fmt.Errorf("operation %T cannot encode to JSON", operation)
+	}
+	return jsonOp.ToJSON()
 }
 
 func areOperationsEqual(a, b *internal.Operation) bool {

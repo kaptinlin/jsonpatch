@@ -1,10 +1,11 @@
 package jsonpatch_test
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"testing"
+
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
 
 	"github.com/go-json-experiment/json"
 	"github.com/go-json-experiment/json/jsontext"
@@ -23,26 +24,26 @@ type profile struct {
 	Tags  []string `json:"tags"`
 }
 
-func TestApplyPatchBasic(t *testing.T) {
+func TestApplyBasic(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name     string
 		doc      any
-		patch    []jsonpatch.Operation
+		patch    []jsoncodec.Operation
 		expected any
 		wantErr  bool
 	}{
 		{
 			name:     "empty patch",
 			doc:      map[string]any{"a": 1},
-			patch:    []jsonpatch.Operation{},
+			patch:    []jsoncodec.Operation{},
 			expected: map[string]any{"a": 1},
 			wantErr:  false,
 		},
 		{
 			name: "single operation",
 			doc:  map[string]any{"a": 1},
-			patch: []jsonpatch.Operation{
+			patch: []jsoncodec.Operation{
 				{Op: "add", Path: "/b", Value: 2},
 			},
 			expected: map[string]any{"a": 1, "b": 2},
@@ -54,77 +55,75 @@ func TestApplyPatchBasic(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := jsonpatch.ApplyPatch(tt.doc, tt.patch, jsonpatch.WithMutate(false))
+			result, err := applyOperations(t, tt.doc, tt.patch)
 
 			if tt.wantErr {
 				if err == nil {
-					require.FailNow(t, "ApplyPatch() error = nil, want error")
+					require.FailNow(t, "Apply() error = nil, want error")
 				}
 				return
 			}
 
 			if err != nil {
-				require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+				require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 			}
 
 			assert.Equal(t, tt.expected, result.Doc)
-			if result.Res == nil {
-				assert.Fail(t, "ApplyPatch() Res = nil, want non-nil")
-			}
-			assert.Equal(t, len(tt.patch), len(result.Res), "ApplyPatch() len(Res)")
+			assert.Equal(t, len(tt.patch), len(result.Steps), "Apply() len(Steps)")
 		})
 	}
 }
 
-func TestValidateOperation(t *testing.T) {
+func TestCompileOperationsBasic(t *testing.T) {
 	t.Parallel()
+
 	tests := []struct {
 		name      string
-		operation jsonpatch.Operation
-		wantErr   error // nil means no error expected
+		operation []jsoncodec.Operation
+		wantErr   error
 	}{
 		{
 			name:      "valid add operation",
-			operation: jsonpatch.Operation{Op: "add", Path: "/a", Value: 1},
+			operation: []jsoncodec.Operation{{Op: "add", Path: "/a", Value: 1}},
 		},
 		{
 			name:      "valid remove operation",
-			operation: jsonpatch.Operation{Op: "remove", Path: "/a"},
+			operation: []jsoncodec.Operation{{Op: "remove", Path: "/a"}},
 		},
 		{
 			name:      "valid inc operation",
-			operation: jsonpatch.Operation{Op: "inc", Path: "/a"},
+			operation: []jsoncodec.Operation{{Op: "inc", Path: "/a", Inc: 1}},
 		},
 		{
 			name:      "valid extend operation",
-			operation: jsonpatch.Operation{Op: "extend", Path: "/a"},
+			operation: []jsoncodec.Operation{{Op: "extend", Path: "/a", Props: map[string]any{"ok": true}}},
 		},
 		{
 			name:      "valid split operation",
-			operation: jsonpatch.Operation{Op: "split", Path: "/a"},
+			operation: []jsoncodec.Operation{{Op: "split", Path: "/a", Pos: 1}},
 		},
 		{
 			name:      "missing op field",
-			operation: jsonpatch.Operation{Path: "/a", Value: 1},
-			wantErr:   jsonpatch.ErrMissingOp,
+			operation: []jsoncodec.Operation{{Path: "/a", Value: 1}},
+			wantErr:   jsonpatch.ErrPayloadInvalid,
 		},
 		{
 			name:      "root add operation",
-			operation: jsonpatch.Operation{Op: "add", Value: 1},
+			operation: []jsoncodec.Operation{{Op: "add", Path: "", Value: 1}},
 		},
 		{
 			name:      "nil value field for add",
-			operation: jsonpatch.Operation{Op: "add", Path: "/a"},
+			operation: []jsoncodec.Operation{{Op: "add", Path: "/a", Value: nil}},
 		},
 		{
 			name:      "invalid operation type",
-			operation: jsonpatch.Operation{Op: "invalid", Path: "/a"},
-			wantErr:   jsonpatch.ErrInvalidOperation,
+			operation: []jsoncodec.Operation{{Op: "invalid", Path: "/a"}},
+			wantErr:   jsonpatch.ErrPayloadInvalid,
 		},
 		{
 			name:      "empty operation",
-			operation: jsonpatch.Operation{Op: "", Path: ""},
-			wantErr:   jsonpatch.ErrMissingOp,
+			operation: []jsoncodec.Operation{{Op: "", Path: ""}},
+			wantErr:   jsonpatch.ErrPayloadInvalid,
 		},
 	}
 
@@ -132,17 +131,15 @@ func TestValidateOperation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := jsonpatch.ValidateOperation(tt.operation, false)
+			_, err := jsonpatch.CompileOperations(tt.operation, jsonpatch.WithCapabilities(jsonpatch.AllCapabilities))
 
 			if tt.wantErr != nil {
 				if err == nil {
-					require.FailNow(t, "ValidateOperation() error = nil, want error")
+					require.FailNow(t, "CompileOperations() error = nil, want error")
 				}
-				if !errors.Is(err, tt.wantErr) {
-					assert.Equal(t, tt.wantErr, err, "ValidateOperation() error")
-				}
+				assert.ErrorIs(t, err, tt.wantErr)
 			} else if err != nil {
-				assert.Fail(t, fmt.Sprintf("ValidateOperation() error = %v, want nil", err))
+				assert.Fail(t, fmt.Sprintf("CompileOperations() error = %v, want nil", err))
 			}
 		})
 	}
@@ -163,7 +160,7 @@ func TestOperationInterfacesExposeCanonicalMethods(t *testing.T) {
 
 	jsonOp, err := add.ToJSON()
 	require.NoError(t, err)
-	assert.Equal(t, jsonpatch.Operation{Op: "add", Path: "/items/-", Value: "x"}, jsonOp)
+	assert.Equal(t, jsoncodec.Operation{Op: "add", Path: "/items/-", Value: "x"}, jsonOp)
 
 	compactOp, err := add.ToCompact()
 	require.NoError(t, err)
@@ -181,7 +178,7 @@ func TestOperationInterfacesExposeCanonicalMethods(t *testing.T) {
 	assert.Equal(t, []string{"active"}, secondOrder.Ops()[0].Path())
 }
 
-func TestApplyPatch_Struct(t *testing.T) {
+func TestApply_Struct(t *testing.T) {
 	t.Parallel()
 	// Test data
 	before := profile{
@@ -189,28 +186,28 @@ func TestApplyPatch_Struct(t *testing.T) {
 		Tags: []string{"dev"},
 	}
 
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/name", Value: "Jane"},
 		{Op: "add", Path: "/tags/-", Value: "golang"},
 		{Op: "add", Path: "/email", Value: "jane@example.com"},
 	}
 
 	// Apply patch
-	result, err := jsonpatch.ApplyPatch(before, patch)
+	result, err := applyOperations(t, before, patch)
 	if err != nil {
-		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v, want nil", err))
+		require.FailNow(t, fmt.Sprintf("Apply() error = %v, want nil", err))
 	}
 
 	// Verify results
 	if result.Doc.Name != "Jane" {
-		assert.Fail(t, fmt.Sprintf("ApplyPatch() Name = %v, want Jane", result.Doc.Name))
+		assert.Fail(t, fmt.Sprintf("Apply() Name = %v, want Jane", result.Doc.Name))
 	}
 	if result.Doc.Email != "jane@example.com" {
-		assert.Fail(t, fmt.Sprintf("ApplyPatch() Email = %v, want jane@example.com", result.Doc.Email))
+		assert.Fail(t, fmt.Sprintf("Apply() Email = %v, want jane@example.com", result.Doc.Email))
 	}
 	assert.Equal(t, []string{"dev", "golang"}, result.Doc.Tags)
-	if len(result.Res) != 3 {
-		assert.Fail(t, fmt.Sprintf("ApplyPatch() len(Res) = %d, want 3", len(result.Res)))
+	if len(result.Steps) != 3 {
+		assert.Fail(t, fmt.Sprintf("Apply() len(Steps) = %d, want 3", len(result.Steps)))
 	}
 
 	// Verify original is unchanged (immutable by default)
@@ -223,7 +220,7 @@ func TestApplyPatch_Struct(t *testing.T) {
 	assert.Equal(t, []string{"dev"}, before.Tags)
 }
 
-func TestApplyPatch_Map(t *testing.T) {
+func TestApply_Map(t *testing.T) {
 	t.Parallel()
 	// Test data
 	before := map[string]any{
@@ -231,16 +228,16 @@ func TestApplyPatch_Map(t *testing.T) {
 		"tags": []any{"dev"},
 	}
 
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/name", Value: "Jane"},
 		{Op: "add", Path: "/tags/-", Value: "golang"},
 		{Op: "add", Path: "/email", Value: "jane@example.com"},
 	}
 
 	// Apply patch
-	result, err := jsonpatch.ApplyPatch(before, patch)
+	result, err := applyOperations(t, before, patch)
 	if err != nil {
-		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v", err))
+		require.FailNow(t, fmt.Sprintf("Apply() error = %v", err))
 	}
 
 	// Verify results
@@ -251,7 +248,7 @@ func TestApplyPatch_Map(t *testing.T) {
 		assert.Equal(t, "jane@example.com", got, "result.Doc[email]")
 	}
 	assert.Equal(t, []any{"dev", "golang"}, result.Doc["tags"])
-	assert.Equal(t, 3, len(result.Res), "len(result.Res)")
+	assert.Equal(t, 3, len(result.Steps), "len(result.Steps)")
 
 	// Verify original is unchanged (immutable by default)
 	if got := before["name"]; got != "John" {
@@ -263,21 +260,21 @@ func TestApplyPatch_Map(t *testing.T) {
 	}
 }
 
-func TestApplyPatch_JSONBytes(t *testing.T) {
+func TestApply_JSONBytes(t *testing.T) {
 	t.Parallel()
 	// Test data
 	before := []byte(`{"name":"John","tags":["dev"]}`)
 
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/name", Value: "Jane"},
 		{Op: "add", Path: "/tags/-", Value: "golang"},
 		{Op: "add", Path: "/email", Value: "jane@example.com"},
 	}
 
 	// Apply patch
-	result, err := jsonpatch.ApplyPatch(before, patch)
+	result, err := applyOperations(t, before, patch)
 	if err != nil {
-		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v", err))
+		require.FailNow(t, fmt.Sprintf("Apply() error = %v", err))
 	}
 
 	// Parse result to verify
@@ -295,7 +292,7 @@ func TestApplyPatch_JSONBytes(t *testing.T) {
 		assert.Equal(t, "jane@example.com", got, "resultMap[email]")
 	}
 	assert.Equal(t, []any{"dev", "golang"}, resultMap["tags"])
-	assert.Equal(t, 3, len(result.Res), "len(result.Res)")
+	assert.Equal(t, 3, len(result.Steps), "len(result.Steps)")
 
 	// Verify original is unchanged
 	var original map[string]any
@@ -312,21 +309,21 @@ func TestApplyPatch_JSONBytes(t *testing.T) {
 	}
 }
 
-func TestApplyPatch_JSONString(t *testing.T) {
+func TestApply_JSONString(t *testing.T) {
 	t.Parallel()
 	// Test data
 	before := `{"name":"John","tags":["dev"]}`
 
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/name", Value: "Jane"},
 		{Op: "add", Path: "/tags/-", Value: "golang"},
 		{Op: "add", Path: "/email", Value: "jane@example.com"},
 	}
 
 	// Apply patch
-	result, err := jsonpatch.ApplyPatch(before, patch)
+	result, err := applyOperations(t, jsonpatch.JSONText(before), patch)
 	if err != nil {
-		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v", err))
+		require.FailNow(t, fmt.Sprintf("Apply() error = %v", err))
 	}
 
 	// Parse result to verify
@@ -344,7 +341,7 @@ func TestApplyPatch_JSONString(t *testing.T) {
 		assert.Equal(t, "jane@example.com", got, "resultMap[email]")
 	}
 	assert.Equal(t, []any{"dev", "golang"}, resultMap["tags"])
-	assert.Equal(t, 3, len(result.Res), "len(result.Res)")
+	assert.Equal(t, 3, len(result.Steps), "len(result.Steps)")
 }
 
 func TestArrayOperations(t *testing.T) {
@@ -359,7 +356,7 @@ func TestArrayOperations(t *testing.T) {
 	}
 
 	// Array operations
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		// Insert at beginning
 		{
 			Op:    "add",
@@ -381,9 +378,9 @@ func TestArrayOperations(t *testing.T) {
 	}
 
 	// Apply patch
-	result, err := jsonpatch.ApplyPatch(doc, patch)
+	result, err := applyOperations(t, doc, patch)
 	if err != nil {
-		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v", err))
+		require.FailNow(t, fmt.Sprintf("Apply() error = %v", err))
 	}
 
 	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
@@ -403,7 +400,7 @@ func TestMultipleOperations(t *testing.T) {
 		},
 	}
 
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{
 			Op:    "replace",
 			Path:  "/counters/a",
@@ -417,9 +414,9 @@ func TestMultipleOperations(t *testing.T) {
 	}
 
 	// Apply patch
-	result, err := jsonpatch.ApplyPatch(doc, patch)
+	result, err := applyOperations(t, doc, patch)
 	if err != nil {
-		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v", err))
+		require.FailNow(t, fmt.Sprintf("Apply() error = %v", err))
 	}
 
 	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
@@ -435,7 +432,7 @@ func TestMultipleOperations(t *testing.T) {
 	}
 }
 
-func TestApplyPatch_WithMutate(t *testing.T) {
+func TestApplyInPlace(t *testing.T) {
 	t.Parallel()
 	// Test data - using map for easier mutation testing
 	original := map[string]any{
@@ -443,21 +440,21 @@ func TestApplyPatch_WithMutate(t *testing.T) {
 		"tags": []any{"dev"},
 	}
 
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{Op: "replace", Path: "/name", Value: "Jane"},
 	}
 
-	// Apply patch with mutate=true
-	result, err := jsonpatch.ApplyPatch(original, patch, jsonpatch.WithMutate(true))
+	// Apply patch in place.
+	result, err := applyOperationsInPlace(t, original, patch)
 	if err != nil {
-		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v", err))
+		require.FailNow(t, fmt.Sprintf("ApplyInPlace() error = %v", err))
 	}
 
 	// Verify results
 	if got := result.Doc["name"]; got != "Jane" {
 		assert.Equal(t, "Jane", got, "result.Doc[name]")
 	}
-	assert.Equal(t, 1, len(result.Res), "len(result.Res)")
+	assert.Equal(t, "Jane", original["name"], "original[name]")
 }
 
 func TestComplexDocument(t *testing.T) {
@@ -482,7 +479,7 @@ func TestComplexDocument(t *testing.T) {
 	}
 
 	// Complex operations
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		// Add new employee to Engineering
 		{
 			Op:   "add",
@@ -508,9 +505,9 @@ func TestComplexDocument(t *testing.T) {
 	}
 
 	// Apply patch
-	result, err := jsonpatch.ApplyPatch(doc, patch)
+	result, err := applyOperations(t, doc, patch)
 	if err != nil {
-		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v", err))
+		require.FailNow(t, fmt.Sprintf("Apply() error = %v", err))
 	}
 
 	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
@@ -541,7 +538,7 @@ func TestSpecialCharacters(t *testing.T) {
 	}
 
 	// Operations with escaped paths
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		// Access key with tilde (~ becomes ~0)
 		{
 			Op:    "replace",
@@ -563,9 +560,9 @@ func TestSpecialCharacters(t *testing.T) {
 	}
 
 	// Apply patch
-	result, err := jsonpatch.ApplyPatch(doc, patch)
+	result, err := applyOperations(t, doc, patch)
 	if err != nil {
-		require.FailNow(t, fmt.Sprintf("ApplyPatch() error = %v", err))
+		require.FailNow(t, fmt.Sprintf("Apply() error = %v", err))
 	}
 
 	resultJSON, _ := json.Marshal(result.Doc, jsontext.Multiline(true))
@@ -593,7 +590,7 @@ func TestErrorHandling(t *testing.T) {
 	}
 
 	// Patch with intentional error
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		{
 			Op:   "remove",
 			Path: "/user/nonexistent", // This will fail
@@ -601,7 +598,7 @@ func TestErrorHandling(t *testing.T) {
 	}
 
 	// Apply patch
-	result, err := jsonpatch.ApplyPatch(doc, patch)
+	result, err := applyOperations(t, doc, patch)
 
 	assert.NotNil(t, err, "Expected error for nonexistent path")
 	if result != nil {
@@ -610,41 +607,38 @@ func TestErrorHandling(t *testing.T) {
 	t.Logf("Expected error: %v", err)
 }
 
-func TestApplyPatch_Errors(t *testing.T) {
+func TestApply_Errors(t *testing.T) {
 	t.Parallel()
 	t.Run("invalid JSON bytes", func(t *testing.T) {
 		t.Parallel()
 		invalidJSON := []byte(`{invalid json}`)
-		patch := []jsonpatch.Operation{
+		patch := []jsoncodec.Operation{
 			{Op: "replace", Path: "/name", Value: "Jane"},
 		}
 
-		_, err := jsonpatch.ApplyPatch(invalidJSON, patch)
+		_, err := applyOperations(t, invalidJSON, patch)
 		assert.NotNil(t, err, "expected error for invalid JSON bytes")
 	})
 
-	t.Run("invalid JSON string", func(t *testing.T) {
+	t.Run("invalid JSON text", func(t *testing.T) {
 		t.Parallel()
-		invalidJSON := `{invalid json}`
-		patch := []jsonpatch.Operation{
+		invalidJSON := jsonpatch.JSONText(`{invalid json}`)
+		patch := []jsoncodec.Operation{
 			{Op: "replace", Path: "/name", Value: "Jane"},
 		}
 
-		_, err := jsonpatch.ApplyPatch(invalidJSON, patch)
-		assert.NotNil(t, err, "expected error for invalid JSON string")
-		// Note: Invalid JSON strings are now treated as primitive strings,
-		// so the error comes from trying to apply path operations to a string
-		// We only check that an error occurred, not the specific message
+		_, err := applyOperations(t, invalidJSON, patch)
+		assert.NotNil(t, err, "expected error for invalid JSON text")
 	})
 
 	t.Run("invalid patch operation", func(t *testing.T) {
 		t.Parallel()
 		doc := map[string]any{"name": "John"}
-		patch := []jsonpatch.Operation{
+		patch := []jsoncodec.Operation{
 			{Op: "invalid", Path: "/name", Value: "Jane"},
 		}
 
-		_, err := jsonpatch.ApplyPatch(doc, patch)
+		_, err := applyOperations(t, doc, patch)
 		assert.NotNil(t, err, "expected error for invalid patch operation")
 	})
 }
@@ -663,7 +657,7 @@ func Example() {
 	}
 
 	// Create patch operations
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		// Add a new field
 		{
 			Op:    "add",
@@ -684,8 +678,13 @@ func Example() {
 		},
 	}
 
-	// Apply patch
-	result, err := jsonpatch.ApplyPatch(doc, patch)
+	compiled, err := jsonpatch.CompileOperations(patch)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
+	result, err := jsonpatch.Apply(compiled, doc)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return
@@ -747,7 +746,7 @@ func FuzzOperationSequence(f *testing.F) {
 		}
 
 		// Parse patch operations
-		var operations []jsonpatch.Operation
+		var operations []jsoncodec.Operation
 		if err := json.Unmarshal([]byte(patchJSON), &operations); err != nil {
 			t.Skip("Cannot unmarshal operations")
 		}
@@ -770,8 +769,13 @@ func FuzzOperationSequence(f *testing.F) {
 			"test": "value",
 		}
 
+		patch, err := jsonpatch.CompileOperations(operations, jsonpatch.WithCapabilities(jsonpatch.AllCapabilities))
+		if err != nil {
+			return
+		}
+
 		// Apply patch - should not panic
-		result, err := jsonpatch.ApplyPatch(doc, operations)
+		result, err := jsonpatch.Apply(patch, doc)
 
 		// If successful, verify result is valid JSON
 		if err == nil && result != nil {
@@ -857,7 +861,7 @@ func FuzzJSONPointerPaths(f *testing.F) {
 			"":            "empty",
 		}
 
-		operations := []jsonpatch.Operation{
+		operations := []jsoncodec.Operation{
 			{
 				Op:    "test",
 				Path:  path,
@@ -865,8 +869,13 @@ func FuzzJSONPointerPaths(f *testing.F) {
 			},
 		}
 
+		patch, err := jsonpatch.CompileOperations(operations, jsonpatch.WithCapabilities(jsonpatch.AllCapabilities))
+		if err != nil {
+			return
+		}
+
 		// Apply patch - should not panic
-		_, err := jsonpatch.ApplyPatch(doc, operations)
+		_, err = jsonpatch.Apply(patch, doc)
 
 		// We don't care about the result, just that it doesn't panic
 		// and errors are properly structured
@@ -927,7 +936,7 @@ func FuzzOperationValues(f *testing.F) {
 		}
 
 		// Test add operation
-		operations := []jsonpatch.Operation{
+		operations := []jsoncodec.Operation{
 			{
 				Op:    "add",
 				Path:  "/fuzzed",
@@ -936,7 +945,7 @@ func FuzzOperationValues(f *testing.F) {
 		}
 
 		// Apply patch - should not panic
-		result, err := jsonpatch.ApplyPatch(doc, operations)
+		result, err := applyOperations(t, doc, operations)
 
 		if err == nil && result != nil {
 			// Verify the added value can be serialized back to JSON
@@ -958,7 +967,7 @@ func FuzzOperationValues(f *testing.F) {
 		}
 
 		// Test replace operation
-		operations = []jsonpatch.Operation{
+		operations = []jsoncodec.Operation{
 			{
 				Op:    "replace",
 				Path:  "/test",
@@ -967,7 +976,7 @@ func FuzzOperationValues(f *testing.F) {
 		}
 
 		// Apply patch - should not panic
-		result, err = jsonpatch.ApplyPatch(doc, operations)
+		result, err = applyOperations(t, doc, operations)
 
 		if err == nil && result != nil {
 			// Verify result is valid JSON
@@ -996,7 +1005,7 @@ func FuzzArrayIndices(f *testing.F) {
 		}
 
 		// Test various operations with the fuzzed index
-		operations := [][]jsonpatch.Operation{
+		operations := [][]jsoncodec.Operation{
 			// Add operation
 			{
 				{
@@ -1032,7 +1041,7 @@ func FuzzArrayIndices(f *testing.F) {
 
 		for _, ops := range operations {
 			// Apply patch - should not panic
-			_, err := jsonpatch.ApplyPatch(doc, ops)
+			_, err := applyOperations(t, doc, ops)
 
 			// We expect many of these to fail (invalid indices), but they shouldn't panic
 			if err != nil {
@@ -1082,7 +1091,7 @@ func FuzzComplexDocuments(f *testing.F) {
 		}
 
 		// Test basic operations on the fuzzed document
-		operations := [][]jsonpatch.Operation{
+		operations := [][]jsoncodec.Operation{
 			// Test root
 			{
 				{
@@ -1111,7 +1120,7 @@ func FuzzComplexDocuments(f *testing.F) {
 
 		for _, ops := range operations {
 			// Apply patch - should not panic
-			result, err := jsonpatch.ApplyPatch(doc, ops)
+			result, err := applyOperations(t, doc, ops)
 
 			if err == nil && result != nil {
 				// Verify result is valid JSON
@@ -1145,59 +1154,66 @@ func TestPublicHelpersAndOps(t *testing.T) {
 		assert.False(t, invalid("anything"))
 	})
 
-	t.Run("validate operations covers public error paths", func(t *testing.T) {
+	t.Run("compile operations covers public error paths", func(t *testing.T) {
 		t.Parallel()
 
 		tests := []struct {
-			name         string
-			ops          []jsonpatch.Operation
-			allowMatches bool
-			wantErr      error
+			name    string
+			ops     []jsoncodec.Operation
+			opts    []jsonpatch.CompileOption
+			wantErr error
 		}{
-			{name: "nil patch", ops: nil, wantErr: jsonpatch.ErrNotArray},
-			{name: "empty patch", ops: []jsonpatch.Operation{}, wantErr: jsonpatch.ErrEmptyPatch},
+			{name: "nil patch", ops: nil, opts: allCapabilities()},
+			{name: "empty patch", ops: []jsoncodec.Operation{}, opts: allCapabilities()},
 			{
 				name:    "matches disabled",
-				ops:     []jsonpatch.Operation{{Op: "matches", Path: "/name", Value: "^a"}},
-				wantErr: jsonpatch.ErrMatchesNotAllowed,
+				ops:     []jsoncodec.Operation{{Op: "matches", Path: "/name", Value: "^a"}},
+				wantErr: jsonpatch.ErrUnsupportedCapability,
 			},
 			{
-				name:         "matches allowed",
-				ops:          []jsonpatch.Operation{{Op: "matches", Path: "/name", Value: "^a"}},
-				allowMatches: true,
+				name: "matches allowed",
+				ops:  []jsoncodec.Operation{{Op: "matches", Path: "/name", Value: "^a"}},
+				opts: allCapabilities(),
 			},
 			{
 				name: "copy from root",
-				ops:  []jsonpatch.Operation{{Op: "copy", Path: "/name"}},
+				ops:  []jsoncodec.Operation{{Op: "copy", Path: "/name", From: ""}},
+				opts: allCapabilities(),
 			},
 			{
 				name:    "move into own children",
-				ops:     []jsonpatch.Operation{{Op: "move", Path: "/a/b", From: "/a"}},
-				wantErr: jsonpatch.ErrCannotMoveToChildren,
+				ops:     []jsoncodec.Operation{{Op: "move", Path: "/a/b", From: "/a"}},
+				opts:    allCapabilities(),
+				wantErr: jsonpatch.ErrPayloadInvalid,
 			},
 			{
 				name: "test type list validates",
-				ops:  []jsonpatch.Operation{{Op: "test_type", Path: "/kind", Type: []any{"string", "number"}}},
+				ops:  []jsoncodec.Operation{{Op: "test_type", Path: "/kind", Type: []any{"string", "number"}}},
+				opts: allCapabilities(),
 			},
 			{
 				name:    "test type invalid member",
-				ops:     []jsonpatch.Operation{{Op: "test_type", Path: "/kind", Type: []any{"string", 1}}},
-				wantErr: jsonpatch.ErrInvalidType,
+				ops:     []jsoncodec.Operation{{Op: "test_type", Path: "/kind", Type: []any{"string", 1}}},
+				opts:    allCapabilities(),
+				wantErr: jsonpatch.ErrPayloadInvalid,
 			},
 			{
 				name:    "in requires array",
-				ops:     []jsonpatch.Operation{{Op: "in", Path: "/kind", Value: "admin"}},
-				wantErr: jsonpatch.ErrInOperationValueMustBeArray,
+				ops:     []jsoncodec.Operation{{Op: "in", Path: "/kind", Value: "admin"}},
+				opts:    allCapabilities(),
+				wantErr: jsonpatch.ErrPayloadInvalid,
 			},
 			{
 				name:    "merge position must be positive",
-				ops:     []jsonpatch.Operation{{Op: "merge", Path: "/items/1", Pos: 0}},
-				wantErr: jsonpatch.ErrPosGreaterThanZero,
+				ops:     []jsoncodec.Operation{{Op: "merge", Path: "/items/1"}},
+				opts:    allCapabilities(),
+				wantErr: jsonpatch.ErrPayloadInvalid,
 			},
 			{
 				name:    "composite requires operands",
-				ops:     []jsonpatch.Operation{{Op: "and", Path: "/user", Apply: []jsonpatch.Operation{}}},
-				wantErr: jsonpatch.ErrEmptyPredicateList,
+				ops:     []jsoncodec.Operation{{Op: "and", Path: "/user", Apply: []jsoncodec.Operation{}}},
+				opts:    allCapabilities(),
+				wantErr: jsonpatch.ErrPayloadInvalid,
 			},
 		}
 
@@ -1205,7 +1221,7 @@ func TestPublicHelpersAndOps(t *testing.T) {
 			t.Run(tt.name, func(t *testing.T) {
 				t.Parallel()
 
-				err := jsonpatch.ValidateOperations(tt.ops, tt.allowMatches)
+				_, err := jsonpatch.CompileOperations(tt.ops, tt.opts...)
 				if tt.wantErr == nil {
 					require.NoError(t, err)
 					return
@@ -1223,16 +1239,17 @@ func TestPublicHelpersAndOps(t *testing.T) {
 			t.Parallel()
 
 			doc := map[string]any{"name": "Ada"}
-			result, err := jsonpatch.ApplyOp(doc, op.NewReplace([]string{"name"}, "Grace"))
+			result, err := applyOps(t, doc, op.NewReplace([]string{"name"}, "Grace"))
 			require.NoError(t, err)
 			assert.Equal(t, map[string]any{"name": "Grace"}, result.Doc)
-			assert.Equal(t, "Ada", result.Old)
+			require.Len(t, result.Steps, 1)
+			assert.Equal(t, "Ada", result.Steps[0].Old())
 		})
 
 		t.Run("json bytes document", func(t *testing.T) {
 			t.Parallel()
 
-			result, err := jsonpatch.ApplyOp([]byte(`{"name":"Ada"}`), op.NewAdd([]string{"role"}, "admin"))
+			result, err := applyOps(t, []byte(`{"name":"Ada"}`), op.NewAdd([]string{"role"}, "admin"))
 			require.NoError(t, err)
 			assert.JSONEq(t, `{"name":"Ada","role":"admin"}`, string(result.Doc))
 		})
@@ -1240,40 +1257,39 @@ func TestPublicHelpersAndOps(t *testing.T) {
 		t.Run("json string document", func(t *testing.T) {
 			t.Parallel()
 
-			result, err := jsonpatch.ApplyOp(`{"name":"Ada"}`, op.NewAdd([]string{"role"}, "admin"))
+			result, err := applyOps(t, jsonpatch.JSONText(`{"name":"Ada"}`), op.NewAdd([]string{"role"}, "admin"))
 			require.NoError(t, err)
-			assert.JSONEq(t, `{"name":"Ada","role":"admin"}`, result.Doc)
+			assert.JSONEq(t, `{"name":"Ada","role":"admin"}`, string(result.Doc))
 		})
 
-		t.Run("primitive document conversion failure is reported", func(t *testing.T) {
+		t.Run("primitive document preserves convertible result", func(t *testing.T) {
 			t.Parallel()
 
-			result, err := jsonpatch.ApplyOp(10, op.NewInc(nil, 5))
-			require.Error(t, err)
-			assert.Nil(t, result)
-			assert.ErrorIs(t, err, jsonpatch.ErrConversionFailed)
+			result, err := applyOps(t, 10, op.NewInc(nil, 5))
+			require.NoError(t, err)
+			assert.Equal(t, 15, result.Doc)
 		})
 
 		t.Run("struct document", func(t *testing.T) {
 			t.Parallel()
 
 			before := profile{Name: "Ada", Tags: []string{"go"}}
-			result, err := jsonpatch.ApplyOp(before, op.NewReplace([]string{"name"}, "Grace"))
+			result, err := applyOps(t, before, op.NewReplace([]string{"name"}, "Grace"))
 			require.NoError(t, err)
 			assert.Equal(t, profile{Name: "Grace", Tags: []string{"go"}}, result.Doc)
-			assert.Equal(t, "Ada", result.Old)
+			require.Len(t, result.Steps, 1)
+			assert.Equal(t, "Ada", result.Steps[0].Old())
 		})
 	})
 
 	t.Run("apply ops preserves nil interface results", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := jsonpatch.ApplyOps[any](map[string]any{"name": "Ada"}, []jsonpatch.Op{op.NewReplace(nil, nil)})
+		result, err := applyOps[any](t, map[string]any{"name": "Ada"}, op.NewReplace(nil, nil))
 		require.NoError(t, err)
 		assert.Nil(t, result.Doc)
-		require.Len(t, result.Res, 1)
-		assert.Nil(t, result.Res[0].Doc)
-		assert.Equal(t, map[string]any{"name": "Ada"}, result.Res[0].Old)
+		require.Len(t, result.Steps, 1)
+		assert.Equal(t, map[string]any{"name": "Ada"}, result.Steps[0].Old())
 	})
 }
 
@@ -1323,7 +1339,7 @@ func FuzzEdgeCases(f *testing.F) {
 
 		// Parse document and patch
 		var doc any
-		var operations []jsonpatch.Operation
+		var operations []jsoncodec.Operation
 
 		if err := json.Unmarshal([]byte(docJSON), &doc); err != nil {
 			t.Skip("Cannot unmarshal document")
@@ -1343,7 +1359,7 @@ func FuzzEdgeCases(f *testing.F) {
 		}
 
 		// Apply patch - should not panic
-		result, err := jsonpatch.ApplyPatch(doc, operations)
+		result, err := applyOperations(t, doc, operations)
 
 		// Verify no panics occurred and results are consistent
 		if err == nil && result != nil {

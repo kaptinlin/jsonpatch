@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
@@ -29,19 +31,19 @@ func main() {
 
 	// Build batch update patch
 	// 3 servers * 2 operations (status + version) + 1 counter update = 7 operations
-	patch := make([]jsonpatch.Operation, 0, 7)
+	patch := make([]jsoncodec.Operation, 0, 7)
 
 	// Update all servers in batch
 	for i := range 3 {
 		serverPath := fmt.Sprintf("/servers/%d", i)
 
 		patch = append(patch,
-			jsonpatch.Operation{
+			jsoncodec.Operation{
 				Op:    "replace",
 				Path:  serverPath + "/status",
 				Value: "updated",
 			},
-			jsonpatch.Operation{
+			jsoncodec.Operation{
 				Op:    "replace",
 				Path:  serverPath + "/version",
 				Value: "2.0",
@@ -50,7 +52,7 @@ func main() {
 	}
 
 	// Update counter
-	patch = append(patch, jsonpatch.Operation{
+	patch = append(patch, jsoncodec.Operation{
 		Op:    "replace",
 		Path:  "/updated",
 		Value: 3,
@@ -58,7 +60,11 @@ func main() {
 
 	fmt.Printf("\nApplying %d operations in batch...\n", len(patch))
 
-	result, err := jsonpatch.ApplyPatch(system, patch)
+	compiled, err := jsonpatch.CompileOperations(patch)
+	if err != nil {
+		log.Fatalf("Failed: %v", err)
+	}
+	result, err := jsonpatch.Apply(compiled, system)
 	if err != nil {
 		log.Fatalf("Failed: %v", err)
 	}

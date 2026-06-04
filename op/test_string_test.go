@@ -174,7 +174,7 @@ func TestTestString_Contracts(t *testing.T) {
 		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
 	}
 	assert.NoError(t, op.Validate())
-	assert.ErrorIs(t, NewTestString(nil, "Ada", 0, false, false).Validate(), ErrPathEmpty)
+	assert.NoError(t, NewTestString(nil, "Ada", 0, false, false).Validate())
 }
 
 func TestToString(t *testing.T) {

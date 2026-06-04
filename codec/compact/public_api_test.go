@@ -55,6 +55,15 @@ func TestPublicSliceAndJSONHelpers(t *testing.T) {
 	assert.Equal(t, ops[1].Op(), decodedFromJSON[1].Op())
 }
 
+func TestEncodeRejectsOperationWithoutCompactProjection(t *testing.T) {
+	t.Parallel()
+
+	encoded, err := Encode([]internal.Op{applyOnlyOp{}})
+	require.Error(t, err)
+	assert.Nil(t, encoded)
+	assert.Contains(t, err.Error(), "cannot encode to compact")
+}
+
 func TestDecodeErrorsAndOptions(t *testing.T) {
 	t.Parallel()
 
@@ -78,4 +87,22 @@ func TestDecodeErrorsAndOptions(t *testing.T) {
 	_, err = Decode([]Op{{CodeAdd, 1, "x"}})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, ErrPathNotString)
+}
+
+type applyOnlyOp struct{}
+
+func (applyOnlyOp) Op() internal.OpType {
+	return internal.OpAddType
+}
+
+func (applyOnlyOp) Path() []string {
+	return []string{"name"}
+}
+
+func (applyOnlyOp) Apply(doc any) (internal.OpResult[any], error) {
+	return internal.OpResult[any]{Doc: doc}, nil
+}
+
+func (applyOnlyOp) Validate() error {
+	return nil
 }

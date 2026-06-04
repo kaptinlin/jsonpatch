@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	jsoncodec "github.com/kaptinlin/jsonpatch/codec/json"
+
 	"github.com/go-json-experiment/json"
 
 	"github.com/kaptinlin/jsonpatch"
@@ -25,7 +27,7 @@ func main() {
 	fmt.Println(string(original))
 
 	// Extended operations patch
-	patch := []jsonpatch.Operation{
+	patch := []jsoncodec.Operation{
 		// Inc: increment counter by 15
 		{
 			Op:   "inc",
@@ -45,7 +47,11 @@ func main() {
 		},
 	}
 
-	result, err := jsonpatch.ApplyPatch(doc, patch)
+	compiled, err := jsonpatch.CompileOperations(patch, jsonpatch.WithCapabilities(jsonpatch.AllCapabilities))
+	if err != nil {
+		log.Fatalf("Failed: %v", err)
+	}
+	result, err := jsonpatch.Apply(compiled, doc)
 	if err != nil {
 		log.Fatalf("Failed: %v", err)
 	}
@@ -59,7 +65,7 @@ func main() {
 
 	// Test inc operation on root value
 	numberDoc := 42.0
-	incPatch := []jsonpatch.Operation{
+	incPatch := []jsoncodec.Operation{
 		{
 			Op:   "inc",
 			Path: "", // Root path for primitive value
@@ -67,7 +73,11 @@ func main() {
 		},
 	}
 
-	incResult, err := jsonpatch.ApplyPatch(numberDoc, incPatch)
+	compiled, err = jsonpatch.CompileOperations(incPatch, jsonpatch.WithCapabilities(jsonpatch.AllCapabilities))
+	if err != nil {
+		log.Fatalf("Inc operation failed: %v", err)
+	}
+	incResult, err := jsonpatch.Apply(compiled, numberDoc)
 	if err != nil {
 		log.Fatalf("Inc operation failed: %v", err)
 	}
@@ -75,14 +85,18 @@ func main() {
 
 	// Test flip operation on root boolean
 	boolDoc := true
-	flipPatch := []jsonpatch.Operation{
+	flipPatch := []jsoncodec.Operation{
 		{
 			Op:   "flip",
 			Path: "", // Root path for primitive value
 		},
 	}
 
-	flipResult, err := jsonpatch.ApplyPatch(boolDoc, flipPatch)
+	compiled, err = jsonpatch.CompileOperations(flipPatch, jsonpatch.WithCapabilities(jsonpatch.AllCapabilities))
+	if err != nil {
+		log.Fatalf("Flip operation failed: %v", err)
+	}
+	flipResult, err := jsonpatch.Apply(compiled, boolDoc)
 	if err != nil {
 		log.Fatalf("Flip operation failed: %v", err)
 	}

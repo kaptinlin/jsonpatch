@@ -102,9 +102,6 @@ func (ma *MatchesOperation) ToCompact() (internal.CompactOperation, error) {
 
 // Validate validates the matches operation.
 func (ma *MatchesOperation) Validate() error {
-	if len(ma.Path()) == 0 {
-		return ErrPathEmpty
-	}
 	if ma.Pattern == "" {
 		return ErrPatternEmpty
 	}
