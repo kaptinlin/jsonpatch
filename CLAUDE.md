@@ -5,7 +5,7 @@ This file provides operational guidance for agents working in `github.com/kaptin
 ## Project Overview
 
 - **Module:** `github.com/kaptinlin/jsonpatch`
-- **Go version:** 1.26.3
+- **Go version:** see `go.mod`
 - **Contract source:** `SPECS/`
 - **Reference evidence:** `.reference/json-joy/`
 - **Core model:** compile operation vocabulary into a reusable `Patch`, then apply it immutably with `Apply` or explicitly in place with `ApplyInPlace`.
@@ -102,7 +102,7 @@ When reference behavior matters, inspect `.reference/README.md` and `.reference/
 
 ### Must Follow
 
-- Use Go 1.26.3 features when they simplify code.
+- Use the Go version declared in `go.mod`; reach for newer features only when they simplify code.
 - Follow Google Go Best Practices: https://google.github.io/go-style/best-practices
 - Follow Google Go Style Decisions: https://google.github.io/go-style/decisions
 - Preserve the caller's document type whenever conversion back is safe.

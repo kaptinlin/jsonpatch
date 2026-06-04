@@ -1,9 +1,9 @@
 version: "2"
 
 run:
-  timeout: 5m
-  go: "1.26.2"
-  tests: true
+  timeout: 30m
+  concurrency: 1
+  go: "1.26.3"
 
 linters:
   default: standard
@@ -66,9 +66,6 @@ linters:
           - noctx
           - bodyclose
           - errname
-          - revive
-      - text: "var-naming.*avoid package names"
-        linters:
           - revive
 
 formatters:
