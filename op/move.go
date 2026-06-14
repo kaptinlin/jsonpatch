@@ -23,11 +23,6 @@ func (m *MoveOperation) Op() internal.OpType {
 	return internal.OpMoveType
 }
 
-// Code returns the operation code.
-func (m *MoveOperation) Code() int {
-	return internal.OpMoveCode
-}
-
 // Apply applies the move operation following RFC 6902: remove then add.
 func (m *MoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if slices.Equal(m.path, m.from) {
@@ -60,20 +55,6 @@ func isPrefix(prefix, path []string) bool {
 		}
 	}
 	return true
-}
-
-// ToJSON serializes the operation to JSON format.
-func (m *MoveOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:   string(internal.OpMoveType),
-		Path: formatPath(m.path),
-		From: formatPath(m.from),
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (m *MoveOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpMoveCode, m.path, m.from}, nil
 }
 
 // Validate validates the move operation.

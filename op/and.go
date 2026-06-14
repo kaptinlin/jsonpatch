@@ -21,11 +21,6 @@ func (ao *AndOperation) Op() internal.OpType {
 	return internal.OpAndType
 }
 
-// Code returns the operation code.
-func (ao *AndOperation) Code() int {
-	return internal.OpAndCode
-}
-
 // Ops returns the predicate operations.
 func (ao *AndOperation) Ops() []internal.PredicateOp {
 	return extractPredicateOps(ao.Operations)
@@ -65,28 +60,6 @@ func (ao *AndOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, ErrAndTestFailed
 	}
 	return internal.OpResult[any]{Doc: doc}, nil
-}
-
-// ToJSON serializes the operation to JSON format.
-func (ao *AndOperation) ToJSON() (internal.Operation, error) {
-	operations, err := predicateOpsToJSON(ao.Operations, ErrInvalidPredicateInAnd)
-	if err != nil {
-		return internal.Operation{}, err
-	}
-	return internal.Operation{
-		Op:    string(internal.OpAndType),
-		Path:  formatPath(ao.path),
-		Apply: operations,
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (ao *AndOperation) ToCompact() (internal.CompactOperation, error) {
-	opsCompact, err := predicateOpsToCompact(ao.Operations, ao.Path(), ErrInvalidPredicateInAnd)
-	if err != nil {
-		return nil, err
-	}
-	return internal.CompactOperation{internal.OpAndCode, ao.path, opsCompact}, nil
 }
 
 // Validate validates the AND operation.

@@ -59,7 +59,7 @@ func EncodeJSON(ops []internal.Op, opts ...Option) ([]byte, error) {
 func encodeOp(o internal.Op, opts Options) (Op, error) {
 	compactOp, ok := o.(internal.CompactOp)
 	if !ok {
-		return nil, fmt.Errorf("operation %T cannot encode to compact", o)
+		return nil, fmt.Errorf("operation %T: %w", o, ErrUnsupportedOp)
 	}
 	raw, err := compactOp.ToCompact()
 	if err != nil {

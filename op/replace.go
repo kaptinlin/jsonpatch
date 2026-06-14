@@ -35,11 +35,6 @@ func (rp *ReplaceOperation) Op() internal.OpType {
 	return internal.OpReplaceType
 }
 
-// Code returns the operation code.
-func (rp *ReplaceOperation) Code() int {
-	return internal.OpReplaceCode
-}
-
 // Apply applies the replace operation to the document.
 func (rp *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 	newValue := deepclone.Clone(rp.Value)
@@ -93,26 +88,6 @@ func (rp *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 	default:
 		return internal.OpResult[any]{}, ErrUnsupportedParentType
 	}
-}
-
-// ToJSON serializes the operation to JSON format.
-func (rp *ReplaceOperation) ToJSON() (internal.Operation, error) {
-	result := internal.Operation{
-		Op:    string(internal.OpReplaceType),
-		Path:  formatPath(rp.path),
-		Value: rp.Value,
-	}
-
-	if rp.OldValue != nil {
-		result.OldValue = rp.OldValue
-	}
-
-	return result, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (rp *ReplaceOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpReplaceCode, rp.path, rp.Value}, nil
 }
 
 // Validate validates the replace operation.

@@ -19,11 +19,6 @@ func (d *DefinedOperation) Op() internal.OpType {
 	return internal.OpDefinedType
 }
 
-// Code returns the operation code.
-func (d *DefinedOperation) Code() int {
-	return internal.OpDefinedCode
-}
-
 // Test performs the defined operation.
 func (d *DefinedOperation) Test(doc any) (bool, error) {
 	return pathExists(doc, d.path), nil
@@ -35,19 +30,6 @@ func (d *DefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, ErrDefinedTestFailed
 	}
 	return internal.OpResult[any]{Doc: doc}, nil
-}
-
-// ToJSON serializes the operation to JSON format.
-func (d *DefinedOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:   string(internal.OpDefinedType),
-		Path: formatPath(d.Path()),
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (d *DefinedOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpDefinedCode, d.Path()}, nil
 }
 
 // Validate validates the defined operation.

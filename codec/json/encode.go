@@ -14,7 +14,7 @@ func Encode(ops []internal.Op) ([]internal.Operation, error) {
 	for i, o := range ops {
 		jsonOp, ok := o.(internal.JSONOp)
 		if !ok {
-			return nil, fmt.Errorf("operation %T cannot encode to JSON", o)
+			return nil, fmt.Errorf("operation %T: %w", o, ErrUnsupportedOp)
 		}
 		encoded, err := jsonOp.ToJSON()
 		if err != nil {

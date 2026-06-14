@@ -12,6 +12,13 @@ type Op interface {
 	Validate() error
 }
 
+// CloneOp is an operation that can freeze itself for compiled patch storage.
+type CloneOp interface {
+	Op
+	// Clone returns an independent executable copy of the operation.
+	Clone() (Op, error)
+}
+
 // JSONOp is an operation that can project itself to JSON operation form.
 type JSONOp interface {
 	Op

@@ -52,11 +52,6 @@ func (ma *MatchesOperation) Op() internal.OpType {
 	return internal.OpMatchesType
 }
 
-// Code returns the operation code.
-func (ma *MatchesOperation) Code() int {
-	return internal.OpMatchesCode
-}
-
 // Test evaluates the matches predicate condition.
 func (ma *MatchesOperation) Test(doc any) (bool, error) {
 	_, str, err := validateString(doc, ma.Path())
@@ -79,25 +74,6 @@ func (ma *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: val}, nil
-}
-
-// ToJSON converts the operation to JSON representation.
-func (ma *MatchesOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:         string(internal.OpMatchesType),
-		Path:       formatPath(ma.Path()),
-		Value:      ma.Pattern,
-		IgnoreCase: ma.IgnoreCase,
-	}, nil
-}
-
-// ToCompact converts the operation to compact array representation.
-func (ma *MatchesOperation) ToCompact() (internal.CompactOperation, error) {
-	compact := internal.CompactOperation{internal.OpMatchesCode, ma.Path(), ma.Pattern}
-	if ma.IgnoreCase {
-		compact = append(compact, true)
-	}
-	return compact, nil
 }
 
 // Validate validates the matches operation.

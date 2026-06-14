@@ -87,6 +87,20 @@ type applyOptions struct {
 	mutate bool
 }
 
+type documentKind uint8
+
+const (
+	documentJSONText documentKind = iota
+	documentJSONBytes
+	documentDirect
+	documentStructLike
+)
+
+type documentClass struct {
+	kind    documentKind
+	working any
+}
+
 // Compile compiles Go-built operations with the default RFC 6902 capability.
 func Compile(ops ...Op) (*Patch, error) {
 	return CompileOps(ops)
@@ -172,7 +186,7 @@ func compileOps(ops []Op, options compileOptions) (*Patch, error) {
 		if !operationAllowed(operation, options.capabilities) {
 			return nil, newError(ErrUnsupportedCapability, i, operation, options.codec, nil)
 		}
-		cloned, err := cloneCompiledOperation(operation, options)
+		cloned, err := cloneCompiledOperation(operation)
 		if err != nil {
 			return nil, newError(ErrPayloadInvalid, i, operation, options.codec, err)
 		}
@@ -181,35 +195,27 @@ func compileOps(ops []Op, options compileOptions) (*Patch, error) {
 	return &Patch{ops: compiled}, nil
 }
 
-func cloneCompiledOperation(operation Op, options compileOptions) (Op, error) {
-	jsonOp, ok := operation.(internal.JSONOp)
+func cloneCompiledOperation(operation Op) (Op, error) {
+	cloneOp, ok := operation.(internal.CloneOp)
 	if !ok {
-		return nil, fmt.Errorf("operation %T cannot encode to JSON", operation)
+		return nil, fmt.Errorf("operation %T cannot be cloned for compilation", operation)
 	}
-	jsonOperation, err := jsonOp.ToJSON()
-	if err != nil {
-		return nil, err
-	}
-
-	decoded, err := jsoncodec.DecodeOperations(
-		[]internal.Operation{deepclone.Clone(jsonOperation)},
-		internal.JSONPatchOptions{CreateMatcher: options.createMatcher},
-	)
-	if err != nil {
-		return nil, err
-	}
-	return decoded[0], nil
+	return cloneOp.Clone()
 }
 
 func operationAllowed(operation Op, capabilities Capability) bool {
-	switch name := string(operation.Op()); {
-	case name == string(internal.OpMatchesType):
-		return capabilities&RegexPredicate != 0
-	case internal.IsJSONPatchOperation(name):
+	spec, ok := internal.LookupOperation(operation.Op())
+	if !ok {
+		return false
+	}
+	switch spec.Capability {
+	case internal.CapabilityJSONPatch:
 		return capabilities&RFC6902 != 0
-	case internal.IsPredicateOperation(name):
+	case internal.CapabilityPredicate:
 		return capabilities&Predicate != 0
-	case internal.IsJSONPatchExtendedOperation(name):
+	case internal.CapabilityRegexPredicate:
+		return capabilities&RegexPredicate != 0
+	case internal.CapabilityExtended:
 		return capabilities&Extended != 0
 	default:
 		return false
@@ -295,48 +301,65 @@ func ApplyInPlace[T internal.Document](patch *Patch, doc *T) error {
 }
 
 func applyCompiledByDocumentType[T internal.Document](patch *Patch, doc T, options *applyOptions) (*Result[T], error) {
-	switch value := any(doc).(type) {
-	case JSONText:
-		return applyJSONTextDocument(patch, value, doc, options)
-	case []byte:
-		return applyJSONBytesDocument(patch, value, doc, options)
-	case string:
-		return applyDirectDocument(patch, value, doc, options)
-	case map[string]any:
-		return applyDirectDocument(patch, value, doc, options)
-	case nil:
-		return applyStructLikeDocument(patch, doc, options)
-	case bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
-		return applyDirectDocument(patch, value, doc, options)
-	case []any:
-		return applyDirectDocument(patch, value, doc, options)
+	class := classifyDocument(doc)
+	switch class.kind {
+	case documentJSONText:
+		return applyJSONTextDocument(patch, class.working.(JSONText), doc, options)
+	case documentJSONBytes:
+		return applyJSONBytesDocument(patch, class.working.([]byte), doc, options)
+	case documentDirect:
+		return applyDirectDocument(patch, class.working, doc, options)
 	default:
-		return applyCompiledByReflection(patch, doc, options)
+		return applyStructLikeDocument(patch, doc, options)
 	}
 }
 
-func applyCompiledByReflection[T internal.Document](patch *Patch, doc T, options *applyOptions) (*Result[T], error) {
+func classifyDocument[T internal.Document](doc T) documentClass {
+	switch value := any(doc).(type) {
+	case JSONText:
+		return documentClass{kind: documentJSONText, working: value}
+	case []byte:
+		return documentClass{kind: documentJSONBytes, working: value}
+	case string:
+		return documentClass{kind: documentDirect, working: value}
+	case map[string]any:
+		return documentClass{kind: documentDirect, working: value}
+	case nil:
+		return documentClass{kind: documentStructLike}
+	case bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+		return documentClass{kind: documentDirect, working: value}
+	case []any:
+		return documentClass{kind: documentDirect, working: value}
+	default:
+		return classifyDocumentByReflection(doc)
+	}
+}
+
+func classifyDocumentByReflection[T internal.Document](doc T) documentClass {
 	docValue := reflect.ValueOf(any(doc))
 	if !docValue.IsValid() || (docValue.Kind() == reflect.Pointer && docValue.IsNil()) {
-		return applyStructLikeDocument(patch, doc, options)
+		return documentClass{kind: documentStructLike}
 	}
 
 	switch docValue.Type().Kind() {
 	case reflect.String:
-		return applyDirectDocument(patch, any(doc), doc, options)
+		return documentClass{kind: documentDirect, working: any(doc)}
 	case reflect.Slice:
 		if docValue.Type().Elem().Kind() == reflect.Uint8 {
+			if !docValue.Type().ConvertibleTo(reflect.TypeFor[[]byte]()) {
+				return documentClass{kind: documentStructLike}
+			}
 			bytes, ok := docValue.Convert(reflect.TypeFor[[]byte]()).Interface().([]byte)
 			if !ok {
-				return nil, conversionError(doc, nil)
+				return documentClass{kind: documentStructLike}
 			}
-			return applyJSONBytesDocument(patch, bytes, doc, options)
+			return documentClass{kind: documentJSONBytes, working: bytes}
 		}
-		return applyDirectDocument(patch, any(doc), doc, options)
+		return documentClass{kind: documentDirect, working: any(doc)}
 	case reflect.Interface:
-		return applyDirectDocument(patch, any(doc), doc, options)
+		return documentClass{kind: documentDirect, working: any(doc)}
 	default:
-		return applyStructLikeDocument(patch, doc, options)
+		return documentClass{kind: documentStructLike}
 	}
 }
 

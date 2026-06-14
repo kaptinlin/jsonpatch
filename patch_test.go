@@ -101,6 +101,47 @@ func TestCompileClonesOperationPayloads(t *testing.T) {
 	}
 }
 
+func TestCompileClonesCompositePredicateOperands(t *testing.T) {
+	t.Parallel()
+
+	operand := op.NewContains([]string{"name"}, "Ada")
+	operands := []any{operand}
+	operation := op.NewAnd(nil, operands)
+
+	patch, err := jsonpatch.CompileOps([]jsonpatch.Op{operation}, jsonpatch.WithCapabilities(jsonpatch.Predicate))
+	require.NoError(t, err)
+
+	operand.Value = "Grace"
+	operands[0] = op.NewContains([]string{"name"}, "Grace")
+	operation.Operations = nil
+
+	_, err = jsonpatch.Apply(patch, map[string]any{"name": "Ada Lovelace"})
+	require.NoError(t, err)
+}
+
+func TestCompilePreservesCustomRegexMatcher(t *testing.T) {
+	t.Parallel()
+
+	matcherUsed := false
+	operation := op.NewMatches([]string{"name"}, "not-a-real-pattern-contract", false,
+		func(_ string, _ bool) internal.RegexMatcher {
+			return func(value string) bool {
+				matcherUsed = true
+				return value == "custom"
+			}
+		},
+	)
+
+	patch, err := jsonpatch.CompileOps([]jsonpatch.Op{operation}, jsonpatch.WithCapabilities(jsonpatch.RegexPredicate))
+	require.NoError(t, err)
+
+	operation.Pattern = "mutated-after-compile"
+	result, err := jsonpatch.Apply(patch, map[string]any{"name": "custom"})
+	require.NoError(t, err)
+	assert.Equal(t, map[string]any{"name": "custom"}, result.Doc)
+	assert.True(t, matcherUsed)
+}
+
 func TestPatchApplyInPlaceIsExplicit(t *testing.T) {
 	t.Parallel()
 
@@ -132,6 +173,32 @@ func TestPatchApplyDistinguishesJSONTextFromScalarString(t *testing.T) {
 	assert.ErrorIs(t, err, jsonpatch.ErrPayloadInvalid)
 }
 
+func TestPatchApplyClassifiesStringAliasAsScalar(t *testing.T) {
+	t.Parallel()
+
+	type scalarString string
+
+	patch, err := jsonpatch.Compile(op.NewAdd([]string{"role"}, "admin"))
+	require.NoError(t, err)
+
+	_, err = jsonpatch.Apply(patch, scalarString(`{"name":"Ada"}`))
+	require.Error(t, err)
+	assert.ErrorIs(t, err, jsonpatch.ErrRuntimeConflict)
+}
+
+func TestPatchApplyClassifiesByteAliasAsJSONText(t *testing.T) {
+	t.Parallel()
+
+	type jsonBytes []byte
+
+	patch, err := jsonpatch.Compile(op.NewAdd([]string{"role"}, "admin"))
+	require.NoError(t, err)
+
+	result, err := jsonpatch.Apply(patch, jsonBytes(`{"name":"Ada"}`))
+	require.NoError(t, err)
+	assert.JSONEq(t, `{"name":"Ada","role":"admin"}`, string(result.Doc))
+}
+
 func TestPatchApplyStructuredErrors(t *testing.T) {
 	t.Parallel()
 
@@ -151,7 +218,7 @@ func TestPatchApplyStructuredErrors(t *testing.T) {
 	assert.Empty(t, cmp.Diff(jsonpatch.ErrTestFailed, patchErr.Kind(), cmp.Comparer(errors.Is)))
 }
 
-func TestCompileRejectsOperationWithoutJSONProjection(t *testing.T) {
+func TestCompileRejectsOperationWithoutClone(t *testing.T) {
 	t.Parallel()
 
 	patch, err := jsonpatch.Compile(applyOnlyOp{})
@@ -164,8 +231,7 @@ func TestCompileRejectsOperationWithoutJSONProjection(t *testing.T) {
 	assert.Equal(t, 0, patchErr.Index())
 	assert.Equal(t, "add", patchErr.Op())
 	assert.Equal(t, "/name", patchErr.Path())
-	require.Error(t, patchErr.Cause())
-	assert.Contains(t, patchErr.Cause().Error(), "cannot encode to JSON")
+	assert.Error(t, patchErr.Cause())
 }
 
 type applyOnlyOp struct{}

@@ -33,11 +33,6 @@ func (ex *ExtendOperation) Op() internal.OpType {
 	return internal.OpExtendType
 }
 
-// Code returns the operation code.
-func (ex *ExtendOperation) Code() int {
-	return internal.OpExtendCode
-}
-
 // Apply applies the object extend operation.
 func (ex *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 	path := ex.Path()
@@ -61,25 +56,6 @@ func (ex *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	return internal.OpResult[any]{Doc: doc}, nil
-}
-
-// ToJSON serializes the operation to JSON format.
-func (ex *ExtendOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:         string(internal.OpExtendType),
-		Path:       formatPath(ex.Path()),
-		Props:      ex.Properties,
-		DeleteNull: ex.DeleteNull,
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (ex *ExtendOperation) ToCompact() (internal.CompactOperation, error) {
-	compact := internal.CompactOperation{internal.OpExtendCode, ex.Path(), ex.Properties}
-	if ex.DeleteNull {
-		compact = append(compact, true)
-	}
-	return compact, nil
 }
 
 // Validate validates the extend operation.

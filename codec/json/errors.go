@@ -8,6 +8,7 @@ var (
 	ErrOpMissingPathField = errors.New("operation missing 'path' field")
 	ErrInvalidPointer     = errors.New("invalid pointer")
 	ErrCodecOpUnknown     = errors.New("unknown operation")
+	ErrUnsupportedOp      = errors.New("unsupported operation type")
 )
 
 // Errors for core operation (RFC 6902) decoding.

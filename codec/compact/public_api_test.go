@@ -61,7 +61,7 @@ func TestEncodeRejectsOperationWithoutCompactProjection(t *testing.T) {
 	encoded, err := Encode([]internal.Op{applyOnlyOp{}})
 	require.Error(t, err)
 	assert.Nil(t, encoded)
-	assert.Contains(t, err.Error(), "cannot encode to compact")
+	assert.ErrorIs(t, err, ErrUnsupportedOp)
 }
 
 func TestDecodeErrorsAndOptions(t *testing.T) {

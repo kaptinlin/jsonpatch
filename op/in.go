@@ -26,11 +26,6 @@ func (in *InOperation) Op() internal.OpType {
 	return internal.OpInType
 }
 
-// Code returns the operation code.
-func (in *InOperation) Code() int {
-	return internal.OpInCode
-}
-
 // Test evaluates the in predicate condition.
 func (in *InOperation) Test(doc any) (bool, error) {
 	_, found, err := in.getValueAndCheckInArray(doc)
@@ -67,20 +62,6 @@ func (in *InOperation) getValueAndCheckInArray(doc any) (any, bool, error) {
 		return deepEqual(val, v)
 	})
 	return val, found, nil
-}
-
-// ToJSON serializes the operation to JSON format.
-func (in *InOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:    string(internal.OpInType),
-		Path:  formatPath(in.Path()),
-		Value: in.Value,
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (in *InOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpInCode, in.Path(), in.Value}, nil
 }
 
 // Validate validates the in operation.

@@ -25,11 +25,6 @@ func (c *CopyOperation) Op() internal.OpType {
 	return internal.OpCopyType
 }
 
-// Code returns the operation code.
-func (c *CopyOperation) Code() int {
-	return internal.OpCopyCode
-}
-
 // Apply applies the copy operation.
 func (c *CopyOperation) Apply(doc any) (internal.OpResult[any], error) {
 	val, err := value(doc, c.from)
@@ -51,20 +46,6 @@ func (c *CopyOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	return internal.OpResult[any]{Doc: newDoc, Old: oldValue}, nil
-}
-
-// ToJSON serializes the operation to JSON format.
-func (c *CopyOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:   string(internal.OpCopyType),
-		Path: formatPath(c.path),
-		From: formatPath(c.from),
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (c *CopyOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpCopyCode, c.path, c.from}, nil
 }
 
 // Validate validates the copy operation.

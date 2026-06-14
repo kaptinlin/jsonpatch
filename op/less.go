@@ -25,11 +25,6 @@ func (l *LessOperation) Op() internal.OpType {
 	return internal.OpLessType
 }
 
-// Code returns the operation code.
-func (l *LessOperation) Code() int {
-	return internal.OpLessCode
-}
-
 // Test evaluates the less predicate condition.
 func (l *LessOperation) Test(doc any) (bool, error) {
 	_, actualValue, err := numericValue(doc, l.Path())
@@ -51,20 +46,6 @@ func (l *LessOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, fmt.Errorf("%w: value %f is not less than %f", ErrComparisonFailed, actualValue, l.Value)
 	}
 	return internal.OpResult[any]{Doc: doc, Old: value}, nil
-}
-
-// ToJSON serializes the operation to JSON format.
-func (l *LessOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:    string(internal.OpLessType),
-		Path:  formatPath(l.Path()),
-		Value: floatToJSONValue(l.Value),
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (l *LessOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpLessCode, l.Path(), l.Value}, nil
 }
 
 // Validate validates the less operation.

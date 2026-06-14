@@ -32,11 +32,6 @@ func (ts *TestStringOperation) Op() internal.OpType {
 	return internal.OpTestStringType
 }
 
-// Code returns the operation code.
-func (ts *TestStringOperation) Code() int {
-	return internal.OpTestStringCode
-}
-
 // Not returns whether this operation is a negation predicate.
 func (ts *TestStringOperation) Not() bool {
 	return ts.NotFlag
@@ -103,27 +98,6 @@ func (ts *TestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	return internal.OpResult[any]{Doc: doc}, nil
-}
-
-// ToJSON serializes the operation to JSON format.
-func (ts *TestStringOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:         string(internal.OpTestStringType),
-		Path:       formatPath(ts.Path()),
-		Str:        ts.Str,
-		Pos:        ts.Pos,
-		Not:        ts.NotFlag,
-		IgnoreCase: ts.IgnoreCase,
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (ts *TestStringOperation) ToCompact() (internal.CompactOperation, error) {
-	compact := internal.CompactOperation{internal.OpTestStringCode, ts.Path(), ts.Pos, ts.Str}
-	if ts.NotFlag {
-		compact = append(compact, true)
-	}
-	return compact, nil
 }
 
 // Validate validates the test string operation.

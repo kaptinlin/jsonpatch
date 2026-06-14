@@ -28,11 +28,6 @@ func (a *AddOperation) Op() internal.OpType {
 	return internal.OpAddType
 }
 
-// Code returns the operation code.
-func (a *AddOperation) Code() int {
-	return internal.OpAddCode
-}
-
 // Apply applies the add operation.
 func (a *AddOperation) Apply(doc any) (internal.OpResult[any], error) {
 	newValue := deepclone.Clone(a.Value)
@@ -126,20 +121,6 @@ func addToSlice(doc []any, path []string, value any) (any, any, error) {
 	}
 	doc[index] = newChild
 	return doc, oldValue, nil
-}
-
-// ToJSON serializes the operation to JSON format.
-func (a *AddOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:    string(internal.OpAddType),
-		Path:  formatPath(a.path),
-		Value: a.Value,
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (a *AddOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpAddCode, a.path, a.Value}, nil
 }
 
 // Validate validates the add operation.

@@ -21,11 +21,6 @@ func (oo *OrOperation) Op() internal.OpType {
 	return internal.OpOrType
 }
 
-// Code returns the operation code.
-func (oo *OrOperation) Code() int {
-	return internal.OpOrCode
-}
-
 // Ops returns the predicate operations.
 func (oo *OrOperation) Ops() []internal.PredicateOp {
 	return extractPredicateOps(oo.Operations)
@@ -68,28 +63,6 @@ func (oo *OrOperation) Apply(doc any) (internal.OpResult[any], error) {
 		}
 	}
 	return internal.OpResult[any]{}, ErrOrTestFailed
-}
-
-// ToJSON serializes the operation to JSON format.
-func (oo *OrOperation) ToJSON() (internal.Operation, error) {
-	opsJSON, err := predicateOpsToJSON(oo.Operations, ErrInvalidPredicateInOr)
-	if err != nil {
-		return internal.Operation{}, err
-	}
-	return internal.Operation{
-		Op:    string(internal.OpOrType),
-		Path:  formatPath(oo.Path()),
-		Apply: opsJSON,
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (oo *OrOperation) ToCompact() (internal.CompactOperation, error) {
-	opsCompact, err := predicateOpsToCompact(oo.Operations, oo.Path(), ErrInvalidPredicateInOr)
-	if err != nil {
-		return nil, err
-	}
-	return internal.CompactOperation{internal.OpOrCode, oo.Path(), opsCompact}, nil
 }
 
 // Validate validates the OR operation.

@@ -36,11 +36,6 @@ func (s *StartsOperation) Op() internal.OpType {
 	return internal.OpStartsType
 }
 
-// Code returns the operation code.
-func (s *StartsOperation) Code() int {
-	return internal.OpStartsCode
-}
-
 // hasPrefix checks whether str starts with the expected prefix,
 // respecting the IgnoreCase flag.
 func (s *StartsOperation) hasPrefix(str string) bool {
@@ -72,25 +67,6 @@ func (s *StartsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: value}, nil
-}
-
-// ToJSON serializes the operation to JSON format.
-func (s *StartsOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:         string(internal.OpStartsType),
-		Path:       formatPath(s.Path()),
-		Value:      s.Value,
-		IgnoreCase: s.IgnoreCase,
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (s *StartsOperation) ToCompact() (internal.CompactOperation, error) {
-	compact := internal.CompactOperation{internal.OpStartsCode, s.Path(), s.Value}
-	if s.IgnoreCase {
-		compact = append(compact, true)
-	}
-	return compact, nil
 }
 
 // Validate validates the starts operation.

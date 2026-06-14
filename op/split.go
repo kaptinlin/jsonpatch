@@ -32,11 +32,6 @@ func (sp *SplitOperation) Op() internal.OpType {
 	return internal.OpSplitType
 }
 
-// Code returns the operation code.
-func (sp *SplitOperation) Code() int {
-	return internal.OpSplitCode
-}
-
 // Apply applies the split operation to the document.
 func (sp *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 	var target any
@@ -145,30 +140,6 @@ func (sp *SplitOperation) splitString(s string) []any {
 	}
 
 	return []any{before, after}
-}
-
-// ToJSON serializes the operation to JSON format.
-func (sp *SplitOperation) ToJSON() (internal.Operation, error) {
-	result := internal.Operation{
-		Op:   string(internal.OpSplitType),
-		Path: formatPath(sp.Path()),
-		Pos:  int(sp.Pos),
-	}
-	if sp.Props != nil {
-		if props, ok := sp.Props.(map[string]any); ok {
-			result.Props = props
-		}
-	}
-	return result, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (sp *SplitOperation) ToCompact() (internal.CompactOperation, error) {
-	compact := internal.CompactOperation{internal.OpSplitCode, sp.Path(), sp.Pos}
-	if sp.Props != nil {
-		compact = append(compact, sp.Props)
-	}
-	return compact, nil
 }
 
 // Validate validates the split operation.

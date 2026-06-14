@@ -36,11 +36,6 @@ func (tt *TestTypeOperation) Op() internal.OpType {
 	return internal.OpTestTypeType
 }
 
-// Code returns the operation code.
-func (tt *TestTypeOperation) Code() int {
-	return internal.OpTestTypeCode
-}
-
 // getValueAndCheckType retrieves the value and checks if it matches any expected type.
 func (tt *TestTypeOperation) getValueAndCheckType(doc any) (any, string, bool, error) {
 	val, err := value(doc, tt.Path())
@@ -175,27 +170,6 @@ func getTypeNameViaReflection(v any) string {
 	default:
 		return "object"
 	}
-}
-
-// ToJSON serializes the operation to JSON format.
-func (tt *TestTypeOperation) ToJSON() (internal.Operation, error) {
-	if len(tt.Types) == 1 {
-		return internal.Operation{
-			Op:   string(internal.OpTestTypeType),
-			Path: formatPath(tt.Path()),
-			Type: tt.Types[0],
-		}, nil
-	}
-	return internal.Operation{
-		Op:   string(internal.OpTestTypeType),
-		Path: formatPath(tt.Path()),
-		Type: tt.Types,
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (tt *TestTypeOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpTestTypeCode, tt.Path(), tt.Types}, nil
 }
 
 // Validate validates the test type operation.

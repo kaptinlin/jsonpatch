@@ -32,11 +32,6 @@ func (mg *MergeOperation) Op() internal.OpType {
 	return internal.OpMergeType
 }
 
-// Code returns the operation code.
-func (mg *MergeOperation) Code() int {
-	return internal.OpMergeCode
-}
-
 // Apply applies the merge operation to the document.
 func (mg *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	var targetArray []any
@@ -148,28 +143,6 @@ func (mg *MergeOperation) mergeSlateNodes(one, two any, merge func(map[string]an
 	merged := merge(one.(map[string]any), two.(map[string]any))
 	maps.Copy(merged, mg.Props)
 	return merged
-}
-
-// ToJSON serializes the operation to JSON format.
-func (mg *MergeOperation) ToJSON() (internal.Operation, error) {
-	result := internal.Operation{
-		Op:   string(internal.OpMergeType),
-		Path: formatPath(mg.Path()),
-		Pos:  int(mg.Pos),
-	}
-	if len(mg.Props) > 0 {
-		result.Props = mg.Props
-	}
-	return result, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (mg *MergeOperation) ToCompact() (internal.CompactOperation, error) {
-	compact := internal.CompactOperation{internal.OpMergeCode, mg.Path(), mg.Pos}
-	if mg.Props != nil {
-		compact = append(compact, mg.Props)
-	}
-	return compact, nil
 }
 
 // Validate validates the merge operation.

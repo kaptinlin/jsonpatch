@@ -80,30 +80,6 @@ func (co *ContainsOperation) Op() internal.OpType {
 	return internal.OpContainsType
 }
 
-// Code returns the operation code.
-func (co *ContainsOperation) Code() int {
-	return internal.OpContainsCode
-}
-
-// ToJSON serializes the operation to JSON format.
-func (co *ContainsOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:         string(internal.OpContainsType),
-		Path:       formatPath(co.Path()),
-		Value:      co.Value,
-		IgnoreCase: co.IgnoreCase,
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (co *ContainsOperation) ToCompact() (internal.CompactOperation, error) {
-	compact := internal.CompactOperation{internal.OpContainsCode, co.Path(), co.Value}
-	if co.IgnoreCase {
-		compact = append(compact, true)
-	}
-	return compact, nil
-}
-
 // Validate validates the contains operation.
 func (co *ContainsOperation) Validate() error {
 	return nil

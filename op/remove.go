@@ -34,11 +34,6 @@ func (r *RemoveOperation) Op() internal.OpType {
 	return internal.OpRemoveType
 }
 
-// Code returns the operation code.
-func (r *RemoveOperation) Code() int {
-	return internal.OpRemoveCode
-}
-
 // Apply applies the remove operation to the document.
 func (r *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if len(r.path) == 0 {
@@ -103,25 +98,6 @@ func (r *RemoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 	default:
 		return internal.OpResult[any]{}, ErrUnsupportedParentType
 	}
-}
-
-// ToJSON serializes the operation to JSON format.
-func (r *RemoveOperation) ToJSON() (internal.Operation, error) {
-	result := internal.Operation{
-		Op:   string(internal.OpRemoveType),
-		Path: formatPath(r.path),
-	}
-
-	if r.HasOldValue {
-		result.OldValue = r.OldValue
-	}
-
-	return result, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (r *RemoveOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpRemoveCode, r.path}, nil
 }
 
 // Validate validates the remove operation.

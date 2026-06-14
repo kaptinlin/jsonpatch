@@ -36,11 +36,6 @@ func (e *EndsOperation) Op() internal.OpType {
 	return internal.OpEndsType
 }
 
-// Code returns the operation code.
-func (e *EndsOperation) Code() int {
-	return internal.OpEndsCode
-}
-
 // hasSuffix checks whether str ends with the expected suffix,
 // respecting the IgnoreCase flag.
 func (e *EndsOperation) hasSuffix(str string) bool {
@@ -72,25 +67,6 @@ func (e *EndsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: value}, nil
-}
-
-// ToJSON serializes the operation to JSON format.
-func (e *EndsOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:         string(internal.OpEndsType),
-		Path:       formatPath(e.Path()),
-		Value:      e.Value,
-		IgnoreCase: e.IgnoreCase,
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (e *EndsOperation) ToCompact() (internal.CompactOperation, error) {
-	compact := internal.CompactOperation{internal.OpEndsCode, e.Path(), e.Value}
-	if e.IgnoreCase {
-		compact = append(compact, true)
-	}
-	return compact, nil
 }
 
 // Validate validates the ends operation.

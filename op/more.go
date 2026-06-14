@@ -25,11 +25,6 @@ func (mo *MoreOperation) Op() internal.OpType {
 	return internal.OpMoreType
 }
 
-// Code returns the operation code.
-func (mo *MoreOperation) Code() int {
-	return internal.OpMoreCode
-}
-
 // Test evaluates the more predicate condition.
 func (mo *MoreOperation) Test(doc any) (bool, error) {
 	_, num, err := numericValue(doc, mo.Path())
@@ -52,20 +47,6 @@ func (mo *MoreOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: val}, nil
-}
-
-// ToJSON converts the operation to JSON representation.
-func (mo *MoreOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:    string(internal.OpMoreType),
-		Path:  formatPath(mo.Path()),
-		Value: floatToJSONValue(mo.Value),
-	}, nil
-}
-
-// ToCompact converts the operation to compact array representation.
-func (mo *MoreOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpMoreCode, mo.Path(), mo.Value}, nil
 }
 
 // Validate validates the more operation.

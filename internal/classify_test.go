@@ -7,6 +7,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestOperationVocabularyRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	seenTypes := map[OpType]bool{}
+	seenCodes := map[int]bool{}
+
+	for _, spec := range OperationSpecs() {
+		assert.False(t, seenTypes[spec.Type], "duplicate operation type %q", spec.Type)
+		assert.False(t, seenCodes[spec.Code], "duplicate operation code %d", spec.Code)
+		seenTypes[spec.Type] = true
+		seenCodes[spec.Code] = true
+
+		byType, ok := LookupOperation(spec.Type)
+		assert.True(t, ok, "operation type %q is not lookupable", spec.Type)
+		assert.Equal(t, spec, byType)
+
+		byCode, ok := LookupOperationCode(spec.Code)
+		assert.True(t, ok, "operation code %d is not lookupable", spec.Code)
+		assert.Equal(t, spec, byCode)
+	}
+}
+
 func TestIsJSONPatchOperation(t *testing.T) {
 	t.Parallel()
 	valid := []string{"add", "remove", "replace", "move", "copy", "test"}

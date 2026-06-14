@@ -31,11 +31,6 @@ func (si *StrInsOperation) Op() internal.OpType {
 	return internal.OpStrInsType
 }
 
-// Code returns the operation code.
-func (si *StrInsOperation) Code() int {
-	return internal.OpStrInsCode
-}
-
 // Apply applies the string insert operation.
 func (si *StrInsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	path := si.Path()
@@ -89,21 +84,6 @@ func (si *StrInsOperation) applyStrIns(str string) string {
 	}
 
 	return builder.String()
-}
-
-// ToJSON serializes the operation to JSON format.
-func (si *StrInsOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:   string(internal.OpStrInsType),
-		Path: formatPath(si.Path()),
-		Pos:  si.Pos,
-		Str:  si.Str,
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (si *StrInsOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpStrInsCode, si.Path(), si.Pos, si.Str}, nil
 }
 
 // Validate validates the string insert operation.

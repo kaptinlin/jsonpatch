@@ -35,11 +35,6 @@ func (tl *TestStringLenOperation) Op() internal.OpType {
 	return internal.OpTestStringLenType
 }
 
-// Code returns the operation code.
-func (tl *TestStringLenOperation) Code() int {
-	return internal.OpTestStringLenCode
-}
-
 // Not returns whether this is a negation predicate.
 func (tl *TestStringLenOperation) Not() bool {
 	return tl.NotFlag
@@ -94,25 +89,6 @@ func (tl *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error)
 		Doc: doc,
 		Old: value,
 	}, nil
-}
-
-// ToJSON serializes the operation to JSON format.
-func (tl *TestStringLenOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:   string(internal.OpTestStringLenType),
-		Path: formatPath(tl.Path()),
-		Len:  int(tl.Length),
-		Not:  tl.NotFlag,
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (tl *TestStringLenOperation) ToCompact() (internal.CompactOperation, error) {
-	compact := internal.CompactOperation{internal.OpTestStringLenCode, tl.Path(), tl.Length}
-	if tl.NotFlag {
-		compact = append(compact, true)
-	}
-	return compact, nil
 }
 
 // Validate validates the test string length operation.

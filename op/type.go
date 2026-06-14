@@ -25,11 +25,6 @@ func (tp *TypeOperation) Op() internal.OpType {
 	return internal.OpTypeType
 }
 
-// Code returns the operation code.
-func (tp *TypeOperation) Code() int {
-	return internal.OpTypeCode
-}
-
 // Test evaluates the type predicate condition.
 func (tp *TypeOperation) Test(doc any) (bool, error) {
 	val, err := value(doc, tp.Path())
@@ -63,20 +58,6 @@ func (tp *TypeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	return internal.OpResult[any]{Doc: doc}, nil
-}
-
-// ToJSON serializes the operation to JSON format.
-func (tp *TypeOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:    string(internal.OpTypeType),
-		Path:  formatPath(tp.Path()),
-		Value: tp.TypeValue,
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (tp *TypeOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpTypeCode, tp.Path(), tp.TypeValue}, nil
 }
 
 // Validate validates the type operation.

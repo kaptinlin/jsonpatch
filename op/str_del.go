@@ -46,11 +46,6 @@ func (sd *StrDelOperation) Op() internal.OpType {
 	return internal.OpStrDelType
 }
 
-// Code returns the operation code.
-func (sd *StrDelOperation) Code() int {
-	return internal.OpStrDelCode
-}
-
 // Apply applies the string delete operation.
 func (sd *StrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
 	path := sd.Path()
@@ -105,31 +100,6 @@ func (sd *StrDelOperation) applyStrDel(val string) string {
 	}
 
 	return builder.String()
-}
-
-// ToJSON serializes the operation to JSON format.
-func (sd *StrDelOperation) ToJSON() (internal.Operation, error) {
-	result := internal.Operation{
-		Op:   string(internal.OpStrDelType),
-		Path: formatPath(sd.Path()),
-		Pos:  sd.Pos,
-		Len:  sd.Len,
-	}
-
-	if sd.HasStr {
-		result.Str = sd.Str
-		result.Len = 0
-	}
-
-	return result, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (sd *StrDelOperation) ToCompact() (internal.CompactOperation, error) {
-	if sd.HasStr {
-		return internal.CompactOperation{internal.OpStrDelCode, sd.Path(), sd.Pos, sd.Str}, nil
-	}
-	return internal.CompactOperation{internal.OpStrDelCode, sd.Path(), sd.Pos, 0, sd.Len}, nil
 }
 
 // Validate validates the string delete operation.

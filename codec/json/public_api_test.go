@@ -70,7 +70,7 @@ func TestEncodeRejectsOperationWithoutJSONProjection(t *testing.T) {
 	encoded, err := Encode([]internal.Op{applyOnlyOp{}})
 	require.Error(t, err)
 	assert.Nil(t, encoded)
-	assert.Contains(t, err.Error(), "cannot encode to JSON")
+	assert.ErrorIs(t, err, ErrUnsupportedOp)
 }
 
 type applyOnlyOp struct{}

@@ -33,11 +33,6 @@ func (n *NotOperation) Op() internal.OpType {
 	return internal.OpNotType
 }
 
-// Code returns the operation code.
-func (n *NotOperation) Code() int {
-	return internal.OpNotCode
-}
-
 // Test evaluates the NOT predicate condition.
 func (n *NotOperation) Test(doc any) (bool, error) {
 	predicateOp, err := n.operand()
@@ -66,36 +61,6 @@ func (n *NotOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, ErrNotTestFailed
 	}
 	return internal.OpResult[any]{Doc: doc}, nil
-}
-
-// ToJSON serializes the operation to JSON format.
-func (n *NotOperation) ToJSON() (internal.Operation, error) {
-	if _, err := n.operand(); err != nil {
-		return internal.Operation{}, err
-	}
-	opsJSON, err := predicateOpsToJSON(n.Operations, ErrInvalidPredicateInNot)
-	if err != nil {
-		return internal.Operation{}, err
-	}
-
-	return internal.Operation{
-		Op:    string(internal.OpNotType),
-		Path:  formatPath(n.Path()),
-		Apply: opsJSON,
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (n *NotOperation) ToCompact() (internal.CompactOperation, error) {
-	if _, err := n.operand(); err != nil {
-		return nil, err
-	}
-	opsCompact, err := predicateOpsToCompact(n.Operations, n.Path(), ErrInvalidPredicateInNot)
-	if err != nil {
-		return nil, err
-	}
-
-	return internal.CompactOperation{internal.OpNotCode, n.Path(), opsCompact}, nil
 }
 
 // Ops returns the operand operations.

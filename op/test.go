@@ -35,11 +35,6 @@ func (t *TestOperation) Op() internal.OpType {
 	return internal.OpTestType
 }
 
-// Code returns the operation code.
-func (t *TestOperation) Code() int {
-	return internal.OpTestCode
-}
-
 // Test performs the test operation.
 func (t *TestOperation) Test(doc any) (bool, error) {
 	// Get target value
@@ -92,27 +87,6 @@ func (t *TestOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 	// Test operations don't modify the document and return nil for old value
 	return internal.OpResult[any]{Doc: doc, Old: nil}, nil
-}
-
-// ToJSON serializes the operation to JSON format.
-func (t *TestOperation) ToJSON() (internal.Operation, error) {
-	op := internal.Operation{
-		Op:    string(internal.OpTestType),
-		Path:  formatPath(t.path),
-		Value: t.Value,
-	}
-	if t.NotFlag {
-		op.Not = true
-	}
-	return op, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (t *TestOperation) ToCompact() (internal.CompactOperation, error) {
-	if t.NotFlag {
-		return internal.CompactOperation{internal.OpTestCode, t.path, t.Value, 1}, nil
-	}
-	return internal.CompactOperation{internal.OpTestCode, t.path, t.Value}, nil
 }
 
 // Validate validates the test operation.

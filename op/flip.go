@@ -22,11 +22,6 @@ func (f *FlipOperation) Op() internal.OpType {
 	return internal.OpFlipType
 }
 
-// Code returns the operation code.
-func (f *FlipOperation) Code() int {
-	return internal.OpFlipCode
-}
-
 // Apply applies the flip operation to the document.
 func (f *FlipOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if len(f.Path()) == 0 {
@@ -65,19 +60,6 @@ func flipValue(value any) any {
 	default:
 		return false
 	}
-}
-
-// ToJSON serializes the operation to JSON format.
-func (f *FlipOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:   string(internal.OpFlipType),
-		Path: formatPath(f.Path()),
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (f *FlipOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpFlipCode, f.Path()}, nil
 }
 
 // Validate validates the flip operation.

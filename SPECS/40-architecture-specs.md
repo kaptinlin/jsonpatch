@@ -8,9 +8,9 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 
 | Package | Responsibility |
 |---------|----------------|
-| root package (`patch.go`, `errors.go`, `index.go`, `util.go`) | Compiled patch API, structured errors, operation constants, dispatch by document shape, and compile-time capability policy |
-| `op` | Executable operation implementations and shared apply helpers |
-| `internal` | Shared interfaces, constants, apply options, and codec payload types |
+| root package (`patch.go`, `errors.go`, `index.go`, `util.go`) | Compiled patch API, structured errors, operation constants, closed document-shape classifier, and compile-time capability policy |
+| `op` | Executable operation implementations, operation cloning, wire projection adapters, and shared apply helpers |
+| `internal` | Shared interfaces, constants, operation vocabulary spine, apply options, and codec payload types |
 | `codec/json` | Decode `codec/json.Operation` payloads into executable operations and encode operations back to JSON form |
 | `codec/compact` | Compact array codec |
 | `codec/binary` | Binary codec |
@@ -20,7 +20,8 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 | Interface | Contract |
 |-----------|----------|
 | `internal.Op` | Executable operation with `Op`, `Path`, `Apply`, and `Validate`. |
-| `internal.JSONOp` | `Op` plus `ToJSON` for JSON projection and compile-time freezing. |
+| `internal.CloneOp` | `Op` plus `Clone` for compile-time freezing into a reusable `Patch`. |
+| `internal.JSONOp` | `Op` plus `ToJSON` for JSON projection. |
 | `internal.CompactOp` | `Op` plus `Code` and `ToCompact` for compact-array projection. |
 | `internal.PredicateOp` | `Op` plus `Test` and `Not`. |
 | `internal.SecondOrderPredicateOp` | `PredicateOp` plus child predicate access through `Ops`. |
@@ -31,19 +32,20 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 1. `Compile`, `CompileOps`, `CompileOperations`, or `CompileJSON` creates a `Patch`.
 2. JSON-shaped inputs decode through `codec/json` before compile policy is applied.
 3. Compile policy validates operation shape and rejects operation families outside enabled capabilities.
-4. `Apply` dispatches by runtime document shape and clones the working document.
-5. `ApplyInPlace` dispatches by runtime document shape with mutation enabled and writes the final result back to the caller's variable.
-6. Operations run sequentially, and each operation's output document becomes the next operation's input.
-7. The final document is converted back to the caller's original type, and successful operation facts become `Step` values.
+4. Go-built executable operations are cloned through the operation layer; core compilation does not freeze operations through JSON projection.
+5. `Apply` dispatches by runtime document shape and clones the working document.
+6. `ApplyInPlace` dispatches by runtime document shape with mutation enabled and writes the final result back to the caller's variable.
+7. Operations run sequentially, and each operation's output document becomes the next operation's input.
+8. The final document is converted back to the caller's original type, and successful operation facts become `Step` values.
 
 ## Document-Shape Dispatch
 
 | Input shape | Path |
 |-------------|------|
 | `map[string]any` | Direct apply without JSON round-trip |
-| `[]byte` | JSON decode → apply → JSON encode |
+| `[]byte` and byte-slice aliases | JSON decode → apply → JSON encode |
 | `JSONText` | JSON decode → apply → JSON encode |
-| `string` | Scalar-string apply |
+| `string` and string aliases | Scalar-string apply |
 | Structs and other concrete types | JSON marshal → apply → JSON unmarshal |
 | Primitives and `[]any` | Direct apply |
 
@@ -65,10 +67,12 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 
 - The root package is the public entry point.
 - `op` depends on `internal` contracts and helpers, not on the root package.
+- Operation behavior files stay behavior-first; `op/projection.go` owns JSON and compact projection methods, and `op/clone.go` owns operation clone methods.
 - Codec packages translate between wire formats and `internal.Op`; they do not own patch execution.
 - JSON and compact encode paths require the decoded operation value to implement the matching projection interface and fail when a custom executable operation cannot represent itself in that wire format.
+- Operation family, required capability, and compact/binary numeric code come from the internal operation vocabulary spine.
 - Compile capability policy belongs to the root package, after codec decoding and before operation application.
-- `internal` defines contracts and shared constants only.
+- `internal` defines contracts, shared constants, vocabulary, and codec payload DTOs only.
 
 ## Forbidden
 

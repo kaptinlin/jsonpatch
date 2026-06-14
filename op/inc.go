@@ -21,11 +21,6 @@ func (ic *IncOperation) Op() internal.OpType {
 	return internal.OpIncType
 }
 
-// Code returns the operation code.
-func (ic *IncOperation) Code() int {
-	return internal.OpIncCode
-}
-
 // Apply applies the increment operation to the document.
 func (ic *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if len(ic.path) == 0 {
@@ -61,20 +56,6 @@ func (ic *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: currentValue}, nil
-}
-
-// ToJSON serializes the operation to JSON format.
-func (ic *IncOperation) ToJSON() (internal.Operation, error) {
-	return internal.Operation{
-		Op:   string(internal.OpIncType),
-		Path: formatPath(ic.path),
-		Inc:  ic.Inc,
-	}, nil
-}
-
-// ToCompact serializes the operation to compact format.
-func (ic *IncOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{internal.OpIncCode, ic.path, ic.Inc}, nil
 }
 
 // Validate validates the increment operation.

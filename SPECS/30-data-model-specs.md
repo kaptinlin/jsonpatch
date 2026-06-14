@@ -58,6 +58,13 @@ Because `codec/json.Operation` is a Go struct, it cannot represent raw JSON fiel
 
 The generic API accepts values matching the `Document` constraint and dispatches by runtime shape so the result can be converted back to the caller's type.
 
+Document dispatch is a closed classifier:
+
+- `JSONText`, `[]byte`, and byte-slice aliases are JSON text and must parse as JSON.
+- Plain `string` and string aliases are scalar string documents.
+- `map[string]any`, `[]any`, interface values, numbers, and booleans apply directly.
+- Struct-like values are marshaled to JSON-shaped data, patched, and unmarshaled back to the original type.
+
 ### `JSONText`
 
 `JSONText` is a string wrapper that marks a document as JSON text for the compiled patch path. Plain `string` values are scalar string documents; `JSONText` values are decoded as JSON, patched, and encoded back to `JSONText`.
@@ -66,7 +73,7 @@ The generic API accepts values matching the `Document` constraint and dispatches
 
 `Patch` is a compiled operation sequence. It stores operations accepted by compile-time capability policy and can be reused with `Apply` or `ApplyInPlace`.
 
-Compiled operations are reconstructed from their JSON operation projection during `Compile`/`CompileOps`, so later mutation of the caller-provided operation value or payload does not change the compiled patch. Custom executable operations that cannot project to JSON are rejected at compile time. Regex matcher behavior for reconstructed `matches` operations is bound through `WithCompileMatcher` when callers need a custom matcher.
+Compiled operations are independent executable clones, so later mutation of the caller-provided operation value or payload does not change the compiled patch. `Compile` and `CompileOps` freeze Go-built operations without JSON projection. Executable operations that cannot freeze themselves for compiled storage are rejected at compile time. Regex matcher behavior for `matches` operations decoded from JSON-shaped input is bound through `WithCompileMatcher` when callers need a custom matcher.
 
 ### `Capability`
 
@@ -79,6 +86,8 @@ Compiled operations are reconstructed from their JSON operation projection durin
 | `AllCapabilities` | All operation vocabularies implemented by the package. |
 
 Capabilities describe operation vocabulary only; codecs remain wire-format translators.
+
+Operation family, capability, and compact/binary code share one internal vocabulary spine. Payload field presence, nullability, and constructor rules stay with the JSON codec and executable operations instead of moving into a global manifest.
 
 ### `Result[T]`
 
