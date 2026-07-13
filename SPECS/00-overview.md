@@ -9,7 +9,7 @@ Recorded technical contracts live in `SPECS/`. `README.md` is user-facing, and `
 ## Library Contract
 
 - The public module is `github.com/kaptinlin/jsonpatch`.
-- The library targets Go 1.26.3.
+- The library targets Go 1.26.5.
 - The operation vocabulary follows JSON Patch, predicate, and extended patch behavior proven by the Go implementation and tests.
 - Mutation is opt-in. Use `Apply` for immutable application and `ApplyInPlace` for explicit mutation.
 - The compiled path defaults to the RFC 6902 operation vocabulary. Predicate, regex predicate, and extended operations require compile-time capabilities.

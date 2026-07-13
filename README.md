@@ -22,7 +22,7 @@ A Go-native JSON Patch+ library with compiled patches, type-preserving results, 
 go get github.com/kaptinlin/jsonpatch
 ```
 
-Requires **Go 1.26.3+**.
+Requires **Go 1.26.5+**.
 
 ## Quick Start
 
