@@ -9,7 +9,7 @@ Recorded technical contracts live in `SPECS/`. `README.md` is user-facing, and `
 ## Library Contract
 
 - The public module is `github.com/kaptinlin/jsonpatch`.
-- The library targets Go 1.26.
+- The library targets Go 1.26.3.
 - The operation vocabulary follows JSON Patch, predicate, and extended patch behavior proven by the Go implementation and tests.
 - Mutation is opt-in. Use `Apply` for immutable application and `ApplyInPlace` for explicit mutation.
 - The compiled path defaults to the RFC 6902 operation vocabulary. Predicate, regex predicate, and extended operations require compile-time capabilities.
@@ -52,7 +52,6 @@ result can no longer be represented as a string value.
 
 ## Acceptance Criteria
 
-- [ ] `SPECS/` records behavior protected by code and tests.
-- [ ] Each supported document shape has a documented processing rule.
-- [ ] Mutation and typing defaults are explicit.
-- [ ] `README.md` and `CLAUDE.md` stay concise because this file records the overview contract.
+- Every supported document shape follows the processing and result rules in this spec. Verification: `apply_dispatch_test.go`, `patch_test.go`, and `task test`.
+- Immutable application and explicit mutation remain separate public paths. Verification: `TestPatchApplyReportsStepFactsAndPreservesInput`, `TestPatchApplyInPlaceIsExplicit`, and `readme_examples_test.go`.
+- README usage, agent workflow, and durable contracts remain owned by `README.md`, `CLAUDE.md`, and `SPECS/` respectively. Verification: documentation review during `task verify` close-out.

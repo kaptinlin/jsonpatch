@@ -12,7 +12,7 @@ The `test` operation is part of RFC 6902, but its behavioral contract lives in `
 |-----|-------------|----------|
 | `Compile(ops ...Op)` | Go-built operation values | Compiles operations with the default RFC 6902 capability and returns a reusable `Patch`. Operations must be able to freeze themselves for compiled patch storage. |
 | `CompileOps(ops []Op, opts ...CompileOption)` | Go-built operation values | Compiles operations with explicit compile options such as capabilities. Operations must be able to freeze themselves for compiled patch storage. |
-| `CompileOperations(ops []codec/json.Operation, opts ...CompileOption)` | JSON-shaped `codec/json.Operation` values | Decodes through the JSON codec and compiles the resulting operations. This is a migration boundary for the field-bag shape. |
+| `CompileOperations(ops []codec/json.Operation, opts ...CompileOption)` | JSON-shaped `codec/json.Operation` values | Decodes the structured field-bag shape through the JSON codec and compiles the resulting operations. |
 | `CompileJSON(data []byte, opts ...CompileOption)` | JSON patch document bytes | Decodes a JSON patch document and compiles it with operation-family policy. |
 | `Apply[T Document](patch *Patch, doc T)` | Compiled patch and one document | Applies the patch immutably and returns `Result[T]`. |
 | `ApplyInPlace[T Document](patch *Patch, doc *T)` | Compiled patch and document pointer | Applies the patch with mutation enabled and writes the final result back to `doc`. |
@@ -22,7 +22,7 @@ The `test` operation is part of RFC 6902, but its behavioral contract lives in `
 | Compile option | Contract |
 |----------------|----------|
 | `WithCapabilities(caps...)` | Sets the allowed operation families. Default compilation accepts only RFC 6902 operations. |
-| `WithCompileMatcher(factory)` | Binds the regex matcher factory used when compiling `matches` operations from JSON-shaped input. |
+| `WithCompileMatcher(factory)` | Binds the regex matcher factory used when compiling `matches` operations from JSON-shaped input. The factory returns `(RegexMatcher, error)` so invalid patterns fail compilation. |
 
 > **Why**: The compiled patch path gives callers one stable lifecycle: compile operation vocabulary once, then apply it to documents. Mutation has its own entry point so destructive application is visible at the call site.
 >
@@ -50,6 +50,7 @@ The `test` operation is part of RFC 6902, but its behavioral contract lives in `
 
 - `Compile`, `CompileOps`, `CompileOperations`, and `CompileJSON` reject invalid operation shape before any document is touched.
 - Capability policy is enforced at compile time. `matches` requires `RegexPredicate`; non-regex predicates require `Predicate`; extended operations require `Extended`.
+- Invalid default regex patterns and custom matcher factory rejections are payload errors. The structured root error preserves the matcher construction cause.
 - Operation family, required capability, and compact/binary code come from the internal operation vocabulary spine. Codec payload fields and operation constructors remain owned by the codec and operation packages.
 - Empty `path` and `from` values are valid JSON Pointers that target the root document. Missing field presence is a raw JSON/map concern and is enforced by the JSON codec, not by zero-value `codec/json.Operation` structs.
 - `nil` `value` in a `codec/json.Operation` means JSON `null` for `add`, `replace`, and `test`; raw JSON decoding still rejects omitted required `value` fields.
@@ -59,8 +60,9 @@ The `test` operation is part of RFC 6902, but its behavioral contract lives in `
 ## Error Contract
 
 - `Compile`, `CompileOps`, `CompileOperations`, and `CompileJSON` return structured `*Error` values for invalid payloads and unsupported capabilities.
-- `Compile` and `CompileOps` reject executable operations that cannot be cloned for compilation, because compiled patches must be isolated from later caller mutation. The package does not promise a public plugin runtime for arbitrary external operation implementations.
+- The public `Op` method set includes `Clone`, so every operation accepted by `Compile` and `CompileOps` can freeze itself for compiled storage. Clone failures are structured payload errors. The package does not promise a plugin runtime for arbitrary external operation implementations.
 - `Apply` and `ApplyInPlace` return structured `*Error` values for runtime conflicts, failed predicates, type mismatches, and conversion failures.
+- `Apply` returns no partial `Result` when an operation fails; the structured error index identifies the first failed operation.
 - `*Error` supports `errors.Is` for stable failure classes and `errors.As` for operation index, op, path, from, codec, and cause context.
 - Execution errors are wrapped with operation index context when they happen during a sequence.
 - Compile and execution errors are intended to be matched with `errors.Is` against sentinel errors.
@@ -75,7 +77,6 @@ The `test` operation is part of RFC 6902, but its behavioral contract lives in `
 
 ## Acceptance Criteria
 
-- [ ] Every public entry point has one documented contract.
-- [ ] The RFC 6902 mutating operations are defined once and only once.
-- [ ] Compile-time validation and capability behavior are explicit.
-- [ ] Callers can tell when to compile, apply immutably, apply in place, and use a codec.
+- Public entry points compile and apply through the single lifecycle documented above. Verification: `patch_test.go`, `readme_examples_test.go`, and `go test ./...`.
+- Compile-time validation, clone isolation, matcher construction, and capability failures preserve structured error context. Verification: `compile_clone_test.go`, `patch_test.go`, and `codec_presence_test.go`.
+- RFC 6902 mutation semantics are verified through root, operation, and scenario tests; predicate behavior remains owned by `SPECS/25-predicate-specs.md`. Verification: `op/*_test.go`, `tests/basic/`, and `tests/scenarios/`.

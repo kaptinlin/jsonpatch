@@ -17,16 +17,18 @@ Because `codec/json.Operation` is a Go struct, it cannot represent raw JSON fiel
 | `value` | `add`, `replace`, `test`, `type`, `contains`, `starts`, `ends`, `in`, `less`, `more`, `matches` | Primary payload field for operations that consume one value. |
 | `from` | `move`, `copy` | Source JSON Pointer. |
 | `inc` | `inc` | Numeric delta. `0` is meaningful and therefore not omitted. |
-| `pos` | `str_ins`, `str_del`, `split`, `merge`, `test_string` | Position field. `0` is meaningful and therefore not omitted. |
+| `pos` | `str_ins`, `str_del`, `split`, `merge`, `test_string` | Position field. For string operations it counts Unicode code points; for `merge` it is reverse-split metadata. `0` is meaningful and therefore not omitted. |
 | `str` | `str_ins`, `str_del`, `test_string` | String operand. Empty string is meaningful and therefore not omitted. |
-| `len` | `str_del`, `test_string_len` | Length operand. `0` is meaningful and therefore not omitted. |
+| `len` | `str_del`, `test_string_len` | Unicode code-point length for string operations. `0` is meaningful and therefore not omitted. |
 | `not` | `test`, `test_string`, `test_string_len` | Direct negation flag. |
 | `type` | `test_type` | One JSON type name or a list of type names. |
 | `ignore_case` | string and regex predicates | Case-insensitive matching flag when supported. |
 | `apply` | `and`, `or`, `not` | Nested predicate operations. |
 | `props` | `extend`, `split`, `merge` | Object properties used by structural extended operations. |
 | `deleteNull` | `extend` | Delete keys whose incoming property value is `nil` instead of storing them. |
-| `oldValue` | `remove`, `replace`, encoded prior-value payloads | Optional prior value metadata. |
+| `oldValue` | `remove`, `replace`, encoded prior-value payloads | Optional prior value metadata. `HasOldValue` records field presence so explicit `null` remains distinct from absence. |
+
+`EncodeJSON` emits an operation-specific object rather than marshaling every field in the shared Go struct. `HasStr` records `str_del` string-mode presence so an empty string is not rewritten as length mode.
 
 ## Compact Operation Payload
 
@@ -36,9 +38,15 @@ Because `codec/json.Operation` is a Go struct, it cannot represent raw JSON fiel
 |-------|----------|
 | `[code, path]` | Path-only operations. |
 | `[code, path, value]` | Value operations and required scalar payloads. |
+| `[remove, path, oldValue?]` | Remove with optional prior-value metadata; present `null` is retained. |
+| `[replace, path, value, oldValue?]` | Replace with optional prior-value metadata; present `null` is retained. |
+| `[str_del, path, pos, str]` | String-bound deletion, including an explicitly empty string. |
+| `[str_del, path, pos, 0, len]` | Length-bound deletion; the zero slot distinguishes it from string mode. |
 | `[code, path, from]` | `move` and `copy`, where both paths are segment arrays. |
 | `[code, path, pos, str, not?]` | `test_string`; `not` appears only when true. |
 | `[code, path, apply]` | `and`, `or`, and `not`; child paths inside `apply` are parent-relative. |
+
+Optional compact booleans have one canonical true marker: integer `1`. False values are omitted; Go booleans, zero, other numbers, and strings are invalid marker values.
 
 ## Supported JSON Type Names
 
@@ -73,7 +81,7 @@ Document dispatch is a closed classifier:
 
 `Patch` is a compiled operation sequence. It stores operations accepted by compile-time capability policy and can be reused with `Apply` or `ApplyInPlace`.
 
-Compiled operations are independent executable clones, so later mutation of the caller-provided operation value or payload does not change the compiled patch. `Compile` and `CompileOps` freeze Go-built operations without JSON projection. Executable operations that cannot freeze themselves for compiled storage are rejected at compile time. Regex matcher behavior for `matches` operations decoded from JSON-shaped input is bound through `WithCompileMatcher` when callers need a custom matcher.
+Compiled operations are independent executable clones, so later mutation of the caller-provided operation value or payload does not change the compiled patch. `Compile` and `CompileOps` freeze Go-built operations without JSON projection. The `Op` method set requires `Clone`; clone failures remain inspectable through the structured compile error. Regex matcher behavior for `matches` operations decoded from JSON-shaped input is bound through `WithCompileMatcher` when callers need a custom matcher. Matcher factories return `(RegexMatcher, error)`; construction errors remain inspectable through the structured compile error.
 
 ### `Capability`
 
@@ -96,9 +104,11 @@ Operation family, capability, and compact/binary code share one internal vocabul
 | `Doc` | The final patched document converted back to `T`. |
 | `Steps` | Per-operation facts for successfully applied operations. |
 
+`Result[T]` is returned only after every operation succeeds. The first failure returns a nil result and a structured `Error`; partial steps are not exposed.
+
 ### `Step`
 
-`Step` exposes accessor methods for operation facts: `Index`, `Op`, `Path`, `From`, `Old`, and `Applied`. It does not expose a typed per-step document.
+`Step` exposes accessor methods for operation facts: `Index`, `Op`, `Path`, `From`, and `Old`. It does not expose a typed per-step document or a redundant success flag; failed application returns no `Result`.
 
 ### `Error`
 
@@ -114,11 +124,11 @@ Operation family, capability, and compact/binary code share one internal vocabul
 - Do not use `value` as the encoded multi-type field for `test_type`; use `type`.
 - Do not treat `Old` as universally populated; only some operations return it.
 - Do not treat `Step` as a typed document history; it records operation facts only.
+- Do not add success flags or partial-result states to `Step`; a returned step already represents a successful operation.
 - Do not remove zero-value fields such as `inc`, `pos`, `str`, or `len` from the model contract; zero is meaningful for these fields.
 
 ## Acceptance Criteria
 
-- [ ] The payload fields used by every operation family are documented once.
-- [ ] The JSON type vocabulary is explicit.
-- [ ] Result shapes and ordering semantics are documented.
-- [ ] The difference between JSON-shaped `codec/json.Operation` values and executable operations remains clear.
+- JSON-shaped payloads preserve required null, empty-string, zero, and optional presence semantics. Verification: `codec_presence_test.go`, `codec/json/decode_test.go`, and codec round-trip tests.
+- Compact payloads use segment-array paths, canonical integer `1` true markers, and the documented operation variants. Verification: `codec/compact/strict_decode_test.go` and `codec/compact/roundtrip_test.go`.
+- Compiled patches are isolated from caller mutation, and successful results expose ordered operation facts without partial failure results. Verification: `compile_clone_test.go`, `op/clone_test.go`, and `patch_test.go`.

@@ -2,7 +2,7 @@
 
 The `compact` codec provides an array-based encoding format for JSON Patch operations. It uses numeric or string opcodes plus path segment arrays.
 
-The compact wire contract is protected by golden tests for path arrays, optional fields, and parent-relative predicate paths.
+The compact wire contract is protected by golden tests for path arrays, optional fields, canonical true markers, and parent-relative predicate paths.
 
 ## Format Comparison
 
@@ -31,6 +31,8 @@ The compact wire contract is protected by golden tests for path arrays, optional
 ```
 
 Numeric opcodes avoid repeating operation names in every encoded operation.
+
+Optional boolean fields are omitted when false and encoded as integer `1` when true. The decoder rejects Go booleans and every other truthy representation.
 
 ## Usage
 
@@ -107,18 +109,18 @@ Compact operations use path segment arrays for both encoding and decoding.
 | Operation | Numeric Code | String Code | Compact Format | Example |
 |-----------|--------------|-------------|----------------|---------|
 | add       | 0            | "add"       | `[0, path, value]` | `[0, ["foo"], 123]` |
-| remove    | 1            | "remove"    | `[1, path]` | `[1, ["foo"]]` |
-| replace   | 2            | "replace"   | `[2, path, value]` | `[2, ["foo"], 456]` |
+| remove    | 1            | "remove"    | `[1, path, oldValue?]` | `[1, ["foo"], "old"]` |
+| replace   | 2            | "replace"   | `[2, path, value, oldValue?]` | `[2, ["foo"], 456, 123]` |
 | copy      | 3            | "copy"      | `[3, path, from]` | `[3, ["bar"], ["foo"]]` |
 | move      | 4            | "move"      | `[4, path, from]` | `[4, ["bar"], ["foo"]]` |
 | test      | 5            | "test"      | `[5, path, value, not?]` | `[5, ["foo"], 123]` |
 
-### String Operations  
+### String Operations
 
 | Operation | Numeric Code | String Code | Compact Format | Example |
 |-----------|--------------|-------------|----------------|---------|
 | str_ins   | 6            | "str_ins"   | `[6, path, pos, str]` | `[6, ["text"], 0, "Hi "]` |
-| str_del   | 7            | "str_del"   | `[7, path, pos, len]` | `[7, ["text"], 5, 3]` |
+| str_del   | 7            | "str_del"   | `[7, path, pos, str]` or `[7, path, pos, 0, len]` | `[7, ["text"], 5, 0, 3]` |
 
 ### Extended Operations
 
@@ -127,7 +129,7 @@ Compact operations use path segment arrays for both encoding and decoding.
 | flip      | 8            | "flip"      | `[8, path]` | `[8, ["active"]]` |
 | inc       | 9            | "inc"       | `[9, path, delta]` | `[9, ["count"], 5]` |
 | split     | 10           | "split"     | `[10, path, pos, props?]` | `[10, ["obj"], 2]` |
-| merge     | 11           | "merge"     | `[11, path, pos, props?]` | `[11, ["obj"], 0]` |
+| merge     | 11           | "merge"     | `[11, path, pos, props?]` | `[11, ["obj", "1"], 0]` |
 | extend    | 12           | "extend"    | `[12, path, props, deleteNull?]` | `[12, ["config"], {...}]` |
 
 ### JSON Predicate Operations
@@ -213,4 +215,4 @@ func WithStringOpcode(useString bool) Option
 
 ## Testing Contract
 
-The codec has golden coverage for compact arrays, optional-field omission, and parent-relative composite predicate paths.
+The codec has golden coverage for compact arrays, optional-field omission, integer `1` true markers, strict arity, and parent-relative composite predicate paths.

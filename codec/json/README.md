@@ -57,7 +57,9 @@ func Encode(ops []jsonpatch.Op) ([]Operation, error)
 func EncodeJSON(ops []jsonpatch.Op) ([]byte, error)
 ```
 
-`PatchOptions` configures JSON decoding. Its main use is providing the matcher factory for `matches` predicates.
+`PatchOptions` configures JSON decoding. Its main use is providing the matcher factory for `matches` predicates. Matcher factories return `(RegexMatcher, error)` so invalid or unsupported patterns can be rejected during compilation.
+
+`EncodeJSON` emits the minimal object for each operation. Required null, empty-string, and zero-valued fields are preserved; unrelated fields from the shared Go DTO are not emitted.
 
 ## Operation Families
 

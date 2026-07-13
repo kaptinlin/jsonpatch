@@ -72,6 +72,10 @@ When reference behavior matters, inspect `.reference/README.md` and `.reference/
 
 ## Agent Operating Rules
 
+- Prefer the standard library, platform behavior, and existing project utilities before adding custom code or dependencies.
+- Do not trade away architecture or maintainability solely to reduce estimated implementation time.
+- Reproduce bugs through the closest user-facing path, then keep the narrowest test that proves the contract.
+- Start new behavior as the thinnest working end-to-end slice before expanding edge cases.
 - Read nearby code and relevant specs before editing.
 - Prefer one clear public story over ambiguous fallback paths.
 - Keep edits surgical and avoid unrelated refactors.
@@ -95,6 +99,7 @@ When reference behavior matters, inspect `.reference/README.md` and `.reference/
 
 - **Progressive disclosure:** use `Compile`/`CompileJSON`, then `Apply`; reach for `ApplyInPlace` only when mutation is intentional; use `codec/*` only for wire-format control.
 - **Capability honesty:** default compilation accepts RFC 6902 only; predicates, regex predicates, and extended operations require explicit capabilities.
+- **Compiled isolation:** every executable `Op` clones itself; compilation stores independent operations without a JSON round trip.
 - **Explicit document shape:** plain `string` is scalar text; use `JSONText` or `[]byte` for JSON text.
 - **Structured failure:** callers match stable failure classes with `errors.Is` and inspect `*Error` for index, op, path, from, codec, and cause.
 
@@ -110,6 +115,7 @@ When reference behavior matters, inspect `.reference/README.md` and `.reference/
 - Keep the library pure: return errors and leave logging to callers.
 - Use sentinel errors for stable failure classes and match with `errors.Is`.
 - Keep compile and execution errors separate: compile checks payload shape and capability policy; execution checks document state.
+- Preserve one canonical wire grammar: compact true markers are integer `1`, and binary decoding requires exact frame arity and complete input consumption.
 - Record durable behavior in `SPECS/`; keep `README.md` user-facing and `CLAUDE.md` operational.
 
 ### Go 1.26 Patterns In Use
@@ -126,7 +132,7 @@ When reference behavior matters, inspect `.reference/README.md` and `.reference/
 - Use table-driven tests for multi-case behavior.
 - Use `t.Parallel()` for top-level tests and independent subtests.
 - Add success and failure coverage for new behavior.
-- Protect codec wire contracts with focused golden tests.
+- Protect codec wire contracts with focused golden and malformed-input tests.
 - Do not compare error strings; use `errors.Is` and `errors.As`.
 - Add example-oriented tests when `README.md` or public usage snippets change.
 - Run `task test` and `task lint` after code or docs changes; report tidy-only failures separately from lint failures.
@@ -162,7 +168,9 @@ Use the matching local skill in `.agents/skills/` when it fits the task.
 | `library-legacy-pruning` | Delete deprecated APIs, legacy shims, and old compatibility paths |
 | `golangci-linting` | Configure or troubleshoot golangci-lint v2 |
 | `go-best-practices` | Review Go API and implementation style |
+| `code-design-guide` | Design or review Go module boundaries, interfaces, and caller-facing usage |
 | `code-simplifying` | Simplify recently changed code without changing behavior |
+| `spec-writing` | Write or update durable contracts in `SPECS/` |
 | `committing` | Prepare conventional commits |
 | `releasing` | Guide release work |
 

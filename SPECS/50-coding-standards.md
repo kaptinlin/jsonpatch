@@ -20,7 +20,9 @@ This spec defines the implementation, error-handling, testing, and documentation
 - Only `test`, `test_string`, and `test_string_len` support direct `not`.
 - Composite predicates merge child paths with their own `path`; use `path: ""` for root-scoped children.
 - `not` has exactly one direct child predicate; use explicit `and` or `or` to negate a sequence.
-- Compact and binary encoders emit only one wire shape: segment-array paths, parent-relative composite children, and no false optional booleans.
+- Compact and binary encoders emit only one wire shape: segment-array paths, parent-relative composite children, and omitted false optional booleans.
+- Compact encodes present optional true flags as integer `1`; do not accept alternate truthy values.
+- Binary decoders require exact operation frame arity and reject every byte after the single top-level patch value.
 - Numeric operations use shared JavaScript-like `Number()` coercion for target values.
 - `test_type` uses `type` for one-or-many JSON type names.
 - When a reference implementation cannot be represented cleanly in Go, document the Go behavior in the spec that owns it.
@@ -58,7 +60,7 @@ This spec defines the implementation, error-handling, testing, and documentation
 
 ## Acceptance Criteria
 
-- [ ] Behavior-sensitive rules are explicit.
-- [ ] Error matching rules use sentinels and wrapping.
-- [ ] New tests follow the repo's table-driven and parallel-safe style.
-- [ ] Documentation ownership between `SPECS/`, `README.md`, and `CLAUDE.md` is clear.
+- Stable failures remain matchable with `errors.Is`, with structured context available through `errors.As`. Verification: root, operation, and codec error tests.
+- Behavior tests cover success, failure, and malformed wire boundaries without mirroring prose. Verification: test review plus `task test`.
+- Formatting, vet, lint, race tests, dependency tidiness, and vulnerability checks all pass. Verification: `task verify`.
+- README, CLAUDE/AGENTS, and SPECS retain their usage, operational, and contract ownership boundaries. Verification: close-out documentation review.

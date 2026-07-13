@@ -12,13 +12,15 @@ These operations keep the extended patch vocabulary useful in Go while fitting t
 |-----------|---------|----------|
 | `flip` | `path` | Toggle a boolean target value. |
 | `inc` | `path`, `inc` | Increment a numeric target after JavaScript-like `Number()` coercion. A missing final path is treated as `0` and the target is created with the incremented value. |
-| `str_ins` | `path`, `pos`, `str` | Insert `str` into a string target at rune position `pos`. Negative positions count from the end. |
-| `str_del` | `path`, `pos`, and either `len` or `str` | Delete runes starting at `pos`. When `str` is supplied it takes precedence over `len`. Negative positions count from the end. |
-| `split` | `path`, `pos`, optional `props` | Split a target value. Strings split by rune index, numbers split into `[pos, original-pos]`, Slate-like nodes split into two nodes, and array-element splits replace one element with two. |
-| `merge` | `path`, `pos`, optional `props` | Merge array elements at `pos-1` and `pos`. Strings concatenate, numbers add, Slate-like nodes merge structurally, and unsupported pairs fall back to `[one, two]`. |
+| `str_ins` | `path`, `pos`, `str` | Insert `str` into a string target at Unicode code-point position `pos`. Negative positions count from the end. |
+| `str_del` | `path`, `pos`, and either `len` or `str` | Delete Unicode code points starting at `pos`. When `str` is supplied it takes precedence over `len`. Negative positions count from the end. |
+| `split` | `path`, `pos`, optional `props` | Split a target value. Strings split by Unicode code-point index, numbers split into `[pos, original-pos]`, Slate-like nodes split into two nodes, and array-element splits replace one element with two. |
+| `merge` | `path`, `pos`, optional `props` | Merge the array element at `path` with its immediately preceding sibling. `pos` and `props` are reverse-split metadata and do not select the target. Strings concatenate, numbers add, Slate-like nodes merge structurally, and unsupported pairs fall back to `[one, two]`. |
 | `extend` | `path`, `props`, optional `deleteNull` | Shallow-extend an object target. When `deleteNull` is true, incoming `nil` values delete keys instead of storing `null`. |
 
 ## Behavioral Notes
+
+String positions and lengths count Unicode code points. They are not UTF-8 byte offsets, JavaScript UTF-16 code-unit offsets, or grapheme-cluster offsets; combining marks count separately.
 
 ### `inc`
 
@@ -31,12 +33,14 @@ These operations keep the extended patch vocabulary useful in Go while fitting t
 - Empty path splits the root document and returns the split result as the new document.
 - When splitting a string with `props`, the result is wrapped into text-node-like maps so both halves receive the supplied properties.
 - Slate-like text and element nodes are handled specially; other unsupported values split into a two-element tuple of the same value.
+- `props` may override ordinary node metadata, but the computed `text` or `children` field is always written last.
 
 ### `merge`
 
-- `merge` operates on arrays and interprets `pos` as the index of the second element in the pair.
-- `pos <= 0` is invalid.
-- `props` are applied only to merged Slate-like node results.
+- `path` identifies the second element of an adjacent pair; `/1` targets the second element of a root array and `/nodes/1` targets the second element of a nested array.
+- The target index must be canonical, present, and greater than zero. The containing value must be an array.
+- `pos` does not participate in target resolution or bounds checks; it preserves reverse-split metadata only.
+- `props` are reverse-split metadata and do not modify the merged value.
 
 ### `extend`
 
@@ -52,13 +56,13 @@ These operations keep the extended patch vocabulary useful in Go while fitting t
 
 - Do not use `inc` as a generic conversion operator for non-numeric targets.
 - Do not describe `str_del` length mode as substring verification; only `str` mode binds deletion to specific text.
-- Do not use `merge` on non-array targets.
+- Do not point `merge.path` at the containing array; point it at the second element of the adjacent pair.
+- Do not let split or merge metadata override computed `text` or `children` fields.
 - Do not rely on `extend` to preserve `nil` properties when `deleteNull` is true.
 - Do not document `split` as string-only; numbers and Slate-like nodes are part of the contract.
 
 ## Acceptance Criteria
 
-- [ ] Each extended operation has one payload definition.
-- [ ] Numeric coercion and missing-path behavior for `inc` are explicit.
-- [ ] `split`, `merge`, and `extend` document their non-obvious structural behavior.
-- [ ] Go-specific `extend` behavior for ordinary string keys, including `__proto__`, is preserved in the spec.
+- Extended operations follow the payload and Unicode-coordinate rules in this spec. Verification: `op/*_test.go` and `tests/extended/`.
+- `inc` preserves numeric coercion and missing-final-target behavior. Verification: `op/inc_test.go` and extended scenario tests.
+- `split`, `merge`, and `extend` preserve their structural, metadata, and ordinary-map-key semantics. Verification: `op/split_test.go`, `op/merge_test.go`, `op/extend_test.go`, and `tests/extended/merge_test.go`.

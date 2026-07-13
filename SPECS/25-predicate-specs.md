@@ -34,9 +34,9 @@ Covered operations: `test`, `contains`, `defined`, `undefined`, `starts`, `ends`
 | `in` | `value` array | Check whether the target value is equal to one of the array entries. |
 | `less` | `value` number | Compare after coercing the target through JavaScript-like `Number()` semantics. |
 | `more` | `value` number | Compare after coercing the target through JavaScript-like `Number()` semantics. |
-| `matches` | `value` regex pattern, optional `ignore_case` | Match a string or `[]byte` target against a regex. The default matcher uses Go's `regexp` package; `WithCompileMatcher` overrides it during compilation. |
-| `test_string` | `str`, `pos`, optional `not`, optional `ignore_case` | Compare the substring starting at `pos` against `str`. |
-| `test_string_len` | `len`, optional `not` | Check whether the target string length is at least `len`; `not` inverts that result. |
+| `matches` | `value` regex pattern, optional `ignore_case` | Match a string or `[]byte` target against a regex. The default matcher uses Go's `regexp` package; `WithCompileMatcher` overrides it during compilation. Invalid patterns and factory rejections fail compilation instead of becoming a false predicate. |
+| `test_string` | `str`, `pos`, optional `not`, optional `ignore_case` | Compare the substring starting at Unicode code-point position `pos` against `str`. |
+| `test_string_len` | `len`, optional `not` | Check whether the target string has at least `len` Unicode code points; `not` inverts that result. |
 
 ## Second-Order Predicates
 
@@ -55,6 +55,7 @@ Covered operations: `test`, `contains`, `defined`, `undefined`, `starts`, `ends`
 - Use `contains` only for string containment.
 - Use `in` for membership in a provided array of acceptable values.
 - Use `WithCompileMatcher` only when the default Go regex implementation is not sufficient.
+- Positional string fields count Unicode code points. They do not count UTF-8 bytes, UTF-16 code units, or grapheme clusters; a combining sequence therefore occupies multiple positions.
 
 ## Forbidden
 
@@ -67,7 +68,6 @@ Covered operations: `test`, `contains`, `defined`, `undefined`, `starts`, `ends`
 
 ## Acceptance Criteria
 
-- [ ] Each predicate operation has one documented contract.
-- [ ] Negation rules are explicit and non-duplicated.
-- [ ] Composite predicate path rules are documented.
-- [ ] String, numeric, and type predicates describe the actual payload fields they accept.
+- Each predicate follows the payload, negation, Unicode-coordinate, and error rules in this spec. Verification: `op/*_test.go` and `tests/predicates/`.
+- Composite predicates accept only predicates, keep unary `not`, and preserve parent-relative wire paths. Verification: `codec_coordinate_test.go` and JSON, compact, and binary composite tests.
+- Regex construction failures occur during compilation and preserve their causes. Verification: `TestCompileRejectsInvalidRegex` and matcher tests in `op/matches_test.go`.

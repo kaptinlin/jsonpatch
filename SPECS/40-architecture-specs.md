@@ -19,8 +19,7 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 
 | Interface | Contract |
 |-----------|----------|
-| `internal.Op` | Executable operation with `Op`, `Path`, `Apply`, and `Validate`. |
-| `internal.CloneOp` | `Op` plus `Clone` for compile-time freezing into a reusable `Patch`. |
+| `internal.Op` | Executable operation with `Op`, `Path`, `Apply`, `Validate`, and `Clone` for freezing into a reusable `Patch`. |
 | `internal.JSONOp` | `Op` plus `ToJSON` for JSON projection. |
 | `internal.CompactOp` | `Op` plus `Code` and `ToCompact` for compact-array projection. |
 | `internal.PredicateOp` | `Op` plus `Test` and `Not`. |
@@ -56,12 +55,18 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 ## Codec Wire Contract
 
 - Compact and binary codecs use path segment arrays as their only path representation.
+- JSON encoding emits only fields owned by the concrete operation; required null, empty string, and zero values remain present according to that operation's grammar.
 - Compact and binary operation arrays are `[code, path, ...payload]`; `move` and `copy` use `[code, path, from]`.
 - `test_string` uses `[code, path, pos, str, not?]`.
 - Optional boolean fields are emitted only when true: `test.not`, `test_string.not`, `test_string_len.not`, and `ignore_case` for `matches`, `contains`, `starts`, and `ends`. `extend.deleteNull` is likewise omitted when false.
+- Compact encodes every present optional true flag as integer `1`; its decoder rejects alternate truthy representations.
 - Optional structural payloads such as `split.props` and `merge.props` are omitted when absent.
+- Remove and replace preserve optional `oldValue` in JSON, compact, and binary forms. Executable `HasOldValue` is the presence source of truth, including explicit null.
+- `str_del` preserves its string and length variants in both compact and binary forms; empty string remains string mode.
 - Composite predicates encode child predicate paths relative to the containing predicate path. Decoding merges those paths into executable absolute paths.
 - Binary supports the same operation tree as compact, including `and`, `or`, and unary `not`.
+- Binary operation array headers are exact grammar boundaries; the decoder rejects every arity not emitted by the encoder, including malformed nested predicate frames.
+- Binary `Codec.Decode` consumes exactly one top-level patch value and rejects any trailing byte or second MessagePack value.
 
 ## Dependency Rules
 
@@ -84,7 +89,7 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 
 ## Acceptance Criteria
 
-- [ ] Each package has one documented responsibility.
-- [ ] The path from compilation to operation execution is explicit.
-- [ ] Document-shape conversion rules are defined once.
-- [ ] Codec responsibilities stay separate from operation behavior.
+- Compilation, clone isolation, capability policy, document dispatch, and sequential execution follow the pipeline above. Verification: root package tests and `task test`.
+- Codec packages translate wire forms without owning execution semantics. Verification: codec round-trip suites and operation contract tests.
+- Compact and binary decoders enforce canonical markers, exact operation arity, nested frame boundaries, and single-value input exhaustion. Verification: `codec/compact/strict_decode_test.go` and `codec/binary/strict_decode_test.go`.
+- Package dependency direction remains cycle-free and lint-clean. Verification: `go vet ./...`, `task lint`, and Go compilation.

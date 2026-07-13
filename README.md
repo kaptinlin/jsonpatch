@@ -8,7 +8,7 @@ A Go-native JSON Patch+ library with compiled patches, type-preserving results, 
 
 ## Features
 
-- **Compiled patch path**: Compile operation vocabulary once, then reuse the resulting `Patch`.
+- **Compiled patch path**: Validate, capability-check, and freeze operations once, then reuse an isolated `Patch`.
 - **Type-preserving results**: `Apply` converts patched documents back to the caller's original Go type when safe.
 - **Immutable by default**: `Apply` clones before execution; `ApplyInPlace` makes mutation explicit.
 - **Capability-gated vocabulary**: RFC 6902 is the default; predicates, regex predicates, and extended operations opt in at compile time.
@@ -25,6 +25,8 @@ go get github.com/kaptinlin/jsonpatch
 Requires **Go 1.26.3+**.
 
 ## Quick Start
+
+Use this path when you have Go-built operations and want an immutable result while preserving the original document.
 
 ```go
 package main
@@ -54,8 +56,8 @@ func main() {
         log.Fatal(err)
     }
 
-    fmt.Println(result.Doc["name"])
-    fmt.Println(doc["name"])
+    fmt.Println(result.Doc["name"]) // Jane
+    fmt.Println(doc["name"])        // John
 }
 ```
 
@@ -136,7 +138,7 @@ fmt.Println(doc["name"])
 
 ## Structured Errors
 
-Compile and apply failures wrap stable sentinel errors and expose operation context.
+Compile and apply failures wrap stable sentinel errors and expose operation context. A failed apply returns a nil result; inspect `*jsonpatch.Error` for the failing operation index and fields.
 
 ```go
 result, err := jsonpatch.Apply(patch, doc)
@@ -204,7 +206,7 @@ fmt.Println(len(decoded))
 
 ### Binary Codec
 
-Use `codec/binary` for MessagePack encoding.
+Use `codec/binary` for MessagePack encoding. `Decode` accepts exactly one complete patch value and rejects malformed operation frame lengths, trailing bytes, and concatenated values.
 
 ```go
 codec := binary.New()
@@ -253,6 +255,7 @@ task golangci-lint  # Run golangci-lint
 task lint           # Run golangci-lint and tidy checks
 task vet            # Run go vet
 task bench          # Run benchmarks
+task verify         # Run the complete release gate
 ```
 
 For development guidelines, see [AGENTS.md](AGENTS.md).
