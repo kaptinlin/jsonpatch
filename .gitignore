@@ -64,6 +64,7 @@ ANALYSIS.md
 
 # Additional scratch/planning patterns
 improve*.md
+improves/
 refactor*.md
 plan*.md
 .plan/*.md
