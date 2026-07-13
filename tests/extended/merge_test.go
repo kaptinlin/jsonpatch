@@ -21,7 +21,7 @@ func TestMergeOp(t *testing.T) {
 		operations := []internal.Operation{
 			{
 				Op:   "merge",
-				Path: "",
+				Path: "/1",
 				Pos:  1,
 			},
 		}
@@ -44,7 +44,7 @@ func TestMergeOp(t *testing.T) {
 		operations := []internal.Operation{
 			{
 				Op:   "merge",
-				Path: "",
+				Path: "/0",
 				Pos:  0,
 			},
 		}
@@ -66,7 +66,7 @@ func TestMergeOp(t *testing.T) {
 		operations := []internal.Operation{
 			{
 				Op:   "merge",
-				Path: "/foo",
+				Path: "/foo/2",
 				Pos:  2,
 			},
 		}
@@ -88,7 +88,7 @@ func TestMergeOp(t *testing.T) {
 		operations := []internal.Operation{
 			{
 				Op:   "merge",
-				Path: "",
+				Path: "/1",
 				Pos:  1,
 			},
 		}
@@ -104,7 +104,7 @@ func TestMergeOp(t *testing.T) {
 		operations := []internal.Operation{
 			{
 				Op:   "merge",
-				Path: "",
+				Path: "/1",
 				Pos:  1,
 			},
 		}
@@ -122,7 +122,7 @@ func TestMergeOp(t *testing.T) {
 		operations := []internal.Operation{
 			{
 				Op:   "merge",
-				Path: "",
+				Path: "/1",
 				Pos:  1,
 			},
 		}
@@ -140,7 +140,7 @@ func TestMergeOp(t *testing.T) {
 		operations := []internal.Operation{
 			{
 				Op:   "merge",
-				Path: "",
+				Path: "/1",
 				Pos:  1,
 			},
 		}

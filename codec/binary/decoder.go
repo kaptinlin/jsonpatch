@@ -43,6 +43,9 @@ func decodeOpWithParent(r *msgp.Reader, parent []string) (internal.Op, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := validateFrameArity(code, arrSize); err != nil {
+		return nil, err
+	}
 	path, err := decodePath(r)
 	if err != nil {
 		return nil, err
@@ -72,6 +75,13 @@ func decodeOpWithParent(r *msgp.Reader, parent []string) (internal.Op, error) {
 		value, err := decodeValue(r)
 		if err != nil {
 			return nil, err
+		}
+		if arrSize >= 4 {
+			oldValue, err := decodeValue(r)
+			if err != nil {
+				return nil, err
+			}
+			return op.NewReplaceWithOldValue(path, value, oldValue), nil
 		}
 		return op.NewReplace(path, value), nil
 	case internal.OpMoveCode:
@@ -175,7 +185,7 @@ func decodeOpWithParent(r *msgp.Reader, parent []string) (internal.Op, error) {
 	case internal.OpStrInsCode:
 		return decodeStrIns(r, path)
 	case internal.OpStrDelCode:
-		return decodeStrDel(r, path)
+		return decodeStrDel(r, path, arrSize)
 	case internal.OpSplitCode:
 		return decodeSplit(r, path, arrSize)
 	case internal.OpExtendCode:
@@ -187,6 +197,39 @@ func decodeOpWithParent(r *msgp.Reader, parent []string) (internal.Op, error) {
 		return nil, fmt.Errorf("unsupported op code %d: %w",
 			code, ErrUnsupportedOp)
 	}
+}
+
+func validateFrameArity(code uint8, size uint32) error {
+	var minArity, maxArity uint32
+	switch code {
+	case internal.OpDefinedCode, internal.OpUndefinedCode, internal.OpFlipCode:
+		minArity, maxArity = 2, 2
+	case internal.OpAddCode, internal.OpMoveCode, internal.OpCopyCode,
+		internal.OpTestTypeCode, internal.OpTypeCode, internal.OpInCode,
+		internal.OpLessCode, internal.OpMoreCode, internal.OpIncCode,
+		internal.OpAndCode, internal.OpOrCode, internal.OpNotCode:
+		minArity, maxArity = 3, 3
+	case internal.OpStrInsCode:
+		minArity, maxArity = 4, 4
+	case internal.OpRemoveCode:
+		minArity, maxArity = 2, 3
+	case internal.OpReplaceCode, internal.OpTestCode,
+		internal.OpContainsCode, internal.OpStartsCode, internal.OpEndsCode,
+		internal.OpMatchesCode, internal.OpTestStringLenCode,
+		internal.OpSplitCode, internal.OpMergeCode, internal.OpExtendCode:
+		minArity, maxArity = 3, 4
+	case internal.OpTestStringCode, internal.OpStrDelCode:
+		minArity, maxArity = 4, 5
+	default:
+		return nil
+	}
+	if size < minArity || size > maxArity {
+		return fmt.Errorf(
+			"operation code %d has frame arity %d, want %d..%d: %w",
+			code, size, minArity, maxArity, ErrInvalidFrameArity,
+		)
+	}
+	return nil
 }
 
 // decodeTestType decodes a test_type operation.
@@ -289,10 +332,24 @@ func decodeStrIns(r *msgp.Reader, path []string) (internal.Op, error) {
 }
 
 // decodeStrDel decodes a str_del operation.
-func decodeStrDel(r *msgp.Reader, path []string) (internal.Op, error) {
+func decodeStrDel(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, error) {
 	pos, err := r.ReadFloat64()
 	if err != nil {
 		return nil, err
+	}
+	if arrSize < 5 {
+		str, err := r.ReadString()
+		if err != nil {
+			return nil, err
+		}
+		return op.NewStrDelWithStr(path, pos, str), nil
+	}
+	discriminator, err := r.ReadUint8()
+	if err != nil {
+		return nil, err
+	}
+	if discriminator != 0 {
+		return nil, fmt.Errorf("str_del length discriminator must be zero: %w", ErrInvalidValueType)
 	}
 	length, err := r.ReadFloat64()
 	if err != nil {
@@ -419,12 +476,6 @@ func decodePath(r *msgp.Reader) ([]string, error) {
 }
 
 func mergePaths(base, child []string) []string {
-	if len(child) == 0 {
-		return slices.Clone(base)
-	}
-	if slices.Equal(base, child) {
-		return slices.Clone(child)
-	}
 	return slices.Concat(base, child)
 }
 

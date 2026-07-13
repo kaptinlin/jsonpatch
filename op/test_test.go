@@ -2,6 +2,7 @@ package op
 
 import (
 	"fmt"
+	"math"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -36,6 +37,55 @@ func TestTest_Basic(t *testing.T) {
 	if ok {
 		assert.Fail(t, "Test() = true, want false for different values")
 	}
+}
+
+func TestTest_UsesExactNumericEquality(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		left  any
+		right any
+		want  bool
+	}{
+		{name: "adjacent integers above float precision", left: int64(1 << 53), right: int64(1<<53 + 1), want: false},
+		{name: "adjacent maximum unsigned integers", left: uint64(math.MaxUint64), right: uint64(math.MaxUint64 - 1), want: false},
+		{name: "maximum signed versus rounded float", left: int64(math.MaxInt64), right: float64(math.MaxInt64), want: false},
+		{name: "negative signed versus unsigned", left: int64(-1), right: uint64(math.MaxUint64), want: false},
+		{name: "exact signed and unsigned", left: int64(1), right: uint64(1), want: true},
+		{name: "exact integer and float", left: int64(1), right: float64(1), want: true},
+		{name: "fractional floats", left: float32(1.5), right: float64(1.5), want: true},
+		{name: "positive infinity", left: math.Inf(1), right: math.Inf(1), want: true},
+		{name: "not a number", left: math.NaN(), right: math.NaN(), want: false},
+		{
+			name:  "nested large integers",
+			left:  map[string]any{"values": []any{int64(1 << 53)}},
+			right: map[string]any{"values": []any{int64(1<<53 + 1)}},
+			want:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			matched, err := NewTest(nil, tt.right).Test(tt.left)
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, matched)
+		})
+	}
+}
+
+func TestIn_UsesExactNumericEquality(t *testing.T) {
+	t.Parallel()
+
+	matched, err := NewIn(nil, []any{int64(1<<53 + 1)}).Test(int64(1 << 53))
+	require.NoError(t, err)
+	assert.False(t, matched)
+
+	matched, err = NewIn(nil, []any{float64(1)}).Test(uint64(1))
+	require.NoError(t, err)
+	assert.True(t, matched)
 }
 
 func TestTest_Apply(t *testing.T) {
@@ -154,4 +204,17 @@ func TestTest_InterfaceMethods(t *testing.T) {
 		assert.Equal(t, internal.OpTestCode, got, "Code()")
 	}
 	assert.Equal(t, []string{"foo"}, testOp.Path(), "Path()")
+}
+
+func FuzzDeepEqualIntegers(f *testing.F) {
+	f.Add(int64(0), int64(0), uint64(0))
+	f.Add(int64(1<<53), int64(1<<53+1), uint64(1<<53))
+	f.Add(int64(math.MaxInt64), int64(math.MaxInt64-1), uint64(math.MaxUint64))
+	f.Add(int64(-1), int64(0), uint64(math.MaxUint64))
+
+	f.Fuzz(func(t *testing.T, left, right int64, unsigned uint64) {
+		assert.Equal(t, left == right, deepEqual(left, right))
+		assert.Equal(t, left >= 0 && uint64(left) == unsigned, deepEqual(left, unsigned))
+		assert.Equal(t, right >= 0 && uint64(right) == unsigned, deepEqual(unsigned, right))
+	})
 }

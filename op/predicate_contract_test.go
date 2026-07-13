@@ -37,8 +37,8 @@ func TestOperationSerializationContracts(t *testing.T) {
 			op:          NewRemoveWithOldValue([]string{"name"}, "Ada"),
 			wantType:    internal.OpRemoveType,
 			wantCode:    internal.OpRemoveCode,
-			wantJSON:    internal.Operation{Op: "remove", Path: "/name", OldValue: "Ada"},
-			wantCompact: internal.CompactOperation{internal.OpRemoveCode, []string{"name"}},
+			wantJSON:    internal.Operation{Op: "remove", Path: "/name", OldValue: "Ada", HasOldValue: true},
+			wantCompact: internal.CompactOperation{internal.OpRemoveCode, []string{"name"}, "Ada"},
 		},
 		{
 			name:        "copy",
@@ -85,7 +85,7 @@ func TestOperationSerializationContracts(t *testing.T) {
 			op:          NewStrDelWithStr([]string{"name"}, 1, "da"),
 			wantType:    internal.OpStrDelType,
 			wantCode:    internal.OpStrDelCode,
-			wantJSON:    internal.Operation{Op: "str_del", Path: "/name", Pos: 1, Str: "da"},
+			wantJSON:    internal.Operation{Op: "str_del", Path: "/name", Pos: 1, Str: "da", HasStr: true},
 			wantCompact: internal.CompactOperation{internal.OpStrDelCode, []string{"name"}, 1, "da"},
 		},
 		{
@@ -110,7 +110,7 @@ func TestOperationSerializationContracts(t *testing.T) {
 			wantType:    internal.OpExtendType,
 			wantCode:    internal.OpExtendCode,
 			wantJSON:    internal.Operation{Op: "extend", Path: "/profile", Props: map[string]any{"name": "Ada"}, DeleteNull: true},
-			wantCompact: internal.CompactOperation{internal.OpExtendCode, []string{"profile"}, map[string]any{"name": "Ada"}, true},
+			wantCompact: internal.CompactOperation{internal.OpExtendCode, []string{"profile"}, map[string]any{"name": "Ada"}, 1},
 		},
 	}
 
@@ -146,10 +146,7 @@ func TestOperationValidateRejectsInvalidOperands(t *testing.T) {
 		op      internal.Op
 		wantErr error
 	}{
-		{name: "copy identical paths", op: NewCopy([]string{"name"}, []string{"name"}), wantErr: ErrPathsIdentical},
 		{name: "extend nil properties", op: NewExtend([]string{"profile"}, nil, false), wantErr: ErrPropertiesNil},
-		{name: "merge negative position", op: NewMerge([]string{"nodes"}, -1, nil), wantErr: ErrPositionNegative},
-		{name: "merge zero position", op: NewMerge([]string{"nodes"}, 0, nil), wantErr: ErrPositionOutOfBounds},
 		{name: "str_del missing length", op: NewStrDel([]string{"name"}, 1, 0), wantErr: ErrMissingStrOrLen},
 		{name: "test_string_len negative length", op: NewTestStringLen([]string{"name"}, -1), wantErr: ErrLengthNegative},
 		{name: "test_string_len fractional length", op: NewTestStringLen([]string{"name"}, 1.5), wantErr: ErrInvalidLength},
@@ -208,18 +205,18 @@ func TestSlateNodeSplitAndMergeContracts(t *testing.T) {
 		}
 	})
 
-	t.Run("merge text nodes preserves later marks and applies props", func(t *testing.T) {
+	t.Run("merge text nodes preserves later marks and ignores metadata props", func(t *testing.T) {
 		t.Parallel()
 
 		doc := map[string]any{"nodes": []any{
 			map[string]any{"text": "A", "bold": true},
 			map[string]any{"text": "da", "italic": true},
 		}}
-		result, err := NewMerge([]string{"nodes"}, 1, map[string]any{"merged": true}).Apply(doc)
+		result, err := NewMerge([]string{"nodes", "1"}, 1, map[string]any{"merged": true}).Apply(doc)
 		require.NoError(t, err)
 
 		wantDoc := map[string]any{"nodes": []any{
-			map[string]any{"text": "Ada", "bold": true, "italic": true, "merged": true},
+			map[string]any{"text": "Ada", "bold": true, "italic": true},
 		}}
 		if diff := cmp.Diff(wantDoc, result.Doc); diff != "" {
 			t.Errorf("Apply() document mismatch (-want +got):\n%s", diff)
@@ -233,11 +230,11 @@ func TestSlateNodeSplitAndMergeContracts(t *testing.T) {
 			map[string]any{"type": "paragraph", "children": []any{map[string]any{"text": "A"}}},
 			map[string]any{"align": "center", "children": []any{map[string]any{"text": "B"}}},
 		}}
-		result, err := NewMerge([]string{"nodes"}, 1, map[string]any{"merged": true}).Apply(doc)
+		result, err := NewMerge([]string{"nodes", "1"}, 1, map[string]any{"merged": true}).Apply(doc)
 		require.NoError(t, err)
 
 		wantDoc := map[string]any{"nodes": []any{
-			map[string]any{"type": "paragraph", "align": "center", "merged": true, "children": []any{map[string]any{"text": "A"}, map[string]any{"text": "B"}}},
+			map[string]any{"type": "paragraph", "align": "center", "children": []any{map[string]any{"text": "A"}, map[string]any{"text": "B"}}},
 		}}
 		if diff := cmp.Diff(wantDoc, result.Doc); diff != "" {
 			t.Errorf("Apply() document mismatch (-want +got):\n%s", diff)
@@ -268,19 +265,19 @@ func TestPredicateOperationContracts(t *testing.T) {
 			name:        "contains ignore case",
 			op:          NewContainsWithIgnoreCase([]string{"name"}, "lovelace", true),
 			wantJSON:    internal.Operation{Op: "contains", Path: "/name", Value: "lovelace", IgnoreCase: true},
-			wantCompact: internal.CompactOperation{internal.OpContainsCode, []string{"name"}, "lovelace", true},
+			wantCompact: internal.CompactOperation{internal.OpContainsCode, []string{"name"}, "lovelace", 1},
 		},
 		{
 			name:        "starts ignore case",
 			op:          NewStartsWithIgnoreCase([]string{"name"}, "ada", true),
 			wantJSON:    internal.Operation{Op: "starts", Path: "/name", Value: "ada", IgnoreCase: true},
-			wantCompact: internal.CompactOperation{internal.OpStartsCode, []string{"name"}, "ada", true},
+			wantCompact: internal.CompactOperation{internal.OpStartsCode, []string{"name"}, "ada", 1},
 		},
 		{
 			name:        "ends ignore case",
 			op:          NewEndsWithIgnoreCase([]string{"name"}, "LOVELACE", true),
 			wantJSON:    internal.Operation{Op: "ends", Path: "/name", Value: "LOVELACE", IgnoreCase: true},
-			wantCompact: internal.CompactOperation{internal.OpEndsCode, []string{"name"}, "LOVELACE", true},
+			wantCompact: internal.CompactOperation{internal.OpEndsCode, []string{"name"}, "LOVELACE", 1},
 		},
 		{
 			name:        "in",
@@ -310,7 +307,7 @@ func TestPredicateOperationContracts(t *testing.T) {
 			name:        "matches ignore case",
 			op:          NewMatches([]string{"name"}, `^ada\s+lovelace$`, true, nil),
 			wantJSON:    internal.Operation{Op: "matches", Path: "/name", Value: `^ada\s+lovelace$`, IgnoreCase: true},
-			wantCompact: internal.CompactOperation{internal.OpMatchesCode, []string{"name"}, `^ada\s+lovelace$`, true},
+			wantCompact: internal.CompactOperation{internal.OpMatchesCode, []string{"name"}, `^ada\s+lovelace$`, 1},
 		},
 		{
 			name:        "test type multiple",

@@ -4,11 +4,51 @@ import (
 	"fmt"
 	"testing"
 
+	jsonv2 "github.com/go-json-experiment/json"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/kaptinlin/jsonpatch/codec/json"
 	"github.com/kaptinlin/jsonpatch/internal"
 )
+
+func TestEncodeJSONMatchesCanonicalSampleObjects(t *testing.T) {
+	t.Parallel()
+
+	for name, operation := range SampleOperations {
+		opType, _ := operation["op"].(string)
+		if opType == "and" || opType == "or" || opType == "not" {
+			continue
+		}
+
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ops, err := json.Decode([]map[string]any{operation}, json.PatchOptions{})
+			require.NoError(t, err)
+			encoded, err := json.EncodeJSON(ops)
+			require.NoError(t, err)
+
+			var got []map[string]any
+			require.NoError(t, jsonv2.Unmarshal(encoded, &got))
+			want := normalizeJSONOperations(t, []map[string]any{operation})
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("encoded JSON mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func normalizeJSONOperations(t *testing.T, operations []map[string]any) []map[string]any {
+	t.Helper()
+
+	data, err := jsonv2.Marshal(operations)
+	require.NoError(t, err)
+	var normalized []map[string]any
+	require.NoError(t, jsonv2.Unmarshal(data, &normalized))
+	return normalized
+}
 
 func TestAutomaticCodec(t *testing.T) {
 	t.Parallel()
@@ -153,6 +193,9 @@ func mapToOperation(opMap map[string]any) internal.Operation {
 	}
 	if val, ok := opMap["str"].(string); ok {
 		op.Str = val
+		if op.Op == "str_del" {
+			op.HasStr = true
+		}
 	}
 	if val, ok := opMap["len"].(float64); ok {
 		op.Len = int(val)
@@ -171,6 +214,7 @@ func mapToOperation(opMap map[string]any) internal.Operation {
 	}
 	if val, exists := opMap["oldValue"]; exists {
 		op.OldValue = val
+		op.HasOldValue = true
 	}
 
 	if op.Op == "test_type" {

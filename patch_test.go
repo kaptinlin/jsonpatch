@@ -2,6 +2,7 @@ package jsonpatch_test
 
 import (
 	"errors"
+	"regexp/syntax"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -55,10 +56,64 @@ func TestCompileJSONPayloadErrorIncludesOperationContext(t *testing.T) {
 	assert.Equal(t, "json", patchErr.Codec())
 }
 
+func TestCompileRejectsInvalidRegex(t *testing.T) {
+	t.Parallel()
+
+	t.Run("JSON operation", func(t *testing.T) {
+		t.Parallel()
+
+		patch, err := jsonpatch.CompileJSON(
+			[]byte(`[{"op":"matches","path":"/name","value":"["}]`),
+			jsonpatch.WithCapabilities(jsonpatch.RegexPredicate),
+		)
+
+		require.ErrorIs(t, err, jsonpatch.ErrPayloadInvalid)
+		assert.Nil(t, patch)
+		var syntaxErr *syntax.Error
+		require.ErrorAs(t, err, &syntaxErr)
+	})
+
+	t.Run("Go operation", func(t *testing.T) {
+		t.Parallel()
+
+		patch, err := jsonpatch.CompileOps(
+			[]jsonpatch.Op{op.NewMatches([]string{"name"}, "[", false, nil)},
+			jsonpatch.WithCapabilities(jsonpatch.RegexPredicate),
+		)
+
+		require.ErrorIs(t, err, jsonpatch.ErrPayloadInvalid)
+		assert.Nil(t, patch)
+		var syntaxErr *syntax.Error
+		require.ErrorAs(t, err, &syntaxErr)
+	})
+
+	t.Run("custom matcher factory", func(t *testing.T) {
+		t.Parallel()
+
+		factoryErr := errors.New("custom matcher rejected pattern")
+		operation := op.NewMatches([]string{"name"}, "custom", false,
+			func(string, bool) (internal.RegexMatcher, error) {
+				return nil, factoryErr
+			},
+		)
+		patch, err := jsonpatch.CompileOps(
+			[]jsonpatch.Op{operation},
+			jsonpatch.WithCapabilities(jsonpatch.RegexPredicate),
+		)
+
+		require.ErrorIs(t, err, jsonpatch.ErrPayloadInvalid)
+		require.ErrorIs(t, err, factoryErr)
+		assert.Nil(t, patch)
+	})
+}
+
 func TestPatchApplyReportsStepFactsAndPreservesInput(t *testing.T) {
 	t.Parallel()
 
-	patch, err := jsonpatch.Compile(op.NewReplace([]string{"name"}, "Grace"))
+	patch, err := jsonpatch.Compile(
+		op.NewReplace([]string{"name"}, "Grace"),
+		op.NewCopy([]string{"displayName"}, []string{"name"}),
+	)
 	require.NoError(t, err)
 
 	doc := map[string]any{"name": "Ada"}
@@ -67,15 +122,20 @@ func TestPatchApplyReportsStepFactsAndPreservesInput(t *testing.T) {
 
 	assert.Equal(t, "Ada", doc["name"])
 	assert.Equal(t, "Grace", result.Doc["name"])
-	require.Len(t, result.Steps, 1)
+	assert.Equal(t, "Grace", result.Doc["displayName"])
+	require.Len(t, result.Steps, 2)
 
-	step := result.Steps[0]
-	assert.Equal(t, 0, step.Index())
-	assert.Equal(t, "replace", step.Op())
-	assert.Equal(t, "/name", step.Path())
-	assert.Empty(t, step.From())
-	assert.Equal(t, "Ada", step.Old())
-	assert.True(t, step.Applied())
+	assert.Equal(t, 0, result.Steps[0].Index())
+	assert.Equal(t, "replace", result.Steps[0].Op())
+	assert.Equal(t, "/name", result.Steps[0].Path())
+	assert.Empty(t, result.Steps[0].From())
+	assert.Equal(t, "Ada", result.Steps[0].Old())
+
+	assert.Equal(t, 1, result.Steps[1].Index())
+	assert.Equal(t, "copy", result.Steps[1].Op())
+	assert.Equal(t, "/displayName", result.Steps[1].Path())
+	assert.Equal(t, "/name", result.Steps[1].From())
+	assert.Nil(t, result.Steps[1].Old())
 }
 
 func TestCompileClonesOperationPayloads(t *testing.T) {
@@ -101,6 +161,18 @@ func TestCompileClonesOperationPayloads(t *testing.T) {
 	}
 }
 
+func TestOperationContractIncludesClone(t *testing.T) {
+	t.Parallel()
+
+	path := []string{"name"}
+	var operation jsonpatch.Op = op.NewAdd(path, "Ada")
+	cloned, err := operation.Clone()
+	require.NoError(t, err)
+
+	path[0] = "changed"
+	assert.Equal(t, []string{"name"}, cloned.Path())
+}
+
 func TestCompileClonesCompositePredicateOperands(t *testing.T) {
 	t.Parallel()
 
@@ -119,16 +191,64 @@ func TestCompileClonesCompositePredicateOperands(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestPatchSamePathCopyUsesAddSemantics(t *testing.T) {
+	t.Parallel()
+
+	t.Run("object member", func(t *testing.T) {
+		t.Parallel()
+
+		patch, err := jsonpatch.Compile(op.NewCopy([]string{"name"}, []string{"name"}))
+		require.NoError(t, err)
+
+		doc := map[string]any{"name": "Ada"}
+		result, err := jsonpatch.Apply(patch, doc)
+		require.NoError(t, err)
+		assert.Equal(t, map[string]any{"name": "Ada"}, result.Doc)
+		assert.Equal(t, map[string]any{"name": "Ada"}, doc)
+	})
+
+	t.Run("array element", func(t *testing.T) {
+		t.Parallel()
+
+		patch, err := jsonpatch.Compile(op.NewCopy([]string{"0"}, []string{"0"}))
+		require.NoError(t, err)
+
+		doc := []any{map[string]any{"name": "Ada"}}
+		result, err := jsonpatch.Apply(patch, doc)
+		require.NoError(t, err)
+		require.Len(t, result.Doc, 2)
+
+		copied := result.Doc[0].(map[string]any)
+		source := result.Doc[1].(map[string]any)
+		copied["name"] = "Grace"
+		assert.Equal(t, "Ada", source["name"])
+		assert.Equal(t, []any{map[string]any{"name": "Ada"}}, doc)
+	})
+
+	t.Run("root", func(t *testing.T) {
+		t.Parallel()
+
+		patch, err := jsonpatch.Compile(op.NewCopy(nil, nil))
+		require.NoError(t, err)
+
+		doc := map[string]any{"name": "Ada"}
+		result, err := jsonpatch.Apply(patch, doc)
+		require.NoError(t, err)
+		assert.Equal(t, map[string]any{"name": "Ada"}, result.Doc)
+		assert.Equal(t, map[string]any{"name": "Ada"}, doc)
+	})
+}
+
 func TestCompilePreservesCustomRegexMatcher(t *testing.T) {
 	t.Parallel()
 
 	matcherUsed := false
 	operation := op.NewMatches([]string{"name"}, "not-a-real-pattern-contract", false,
-		func(_ string, _ bool) internal.RegexMatcher {
+		func(_ string, _ bool) (internal.RegexMatcher, error) {
 			return func(value string) bool {
 				matcherUsed = true
 				return value == "custom"
-			}
+			}, nil
 		},
 	)
 
@@ -205,8 +325,9 @@ func TestPatchApplyStructuredErrors(t *testing.T) {
 	patch, err := jsonpatch.Compile(op.NewTest([]string{"name"}, "Grace"))
 	require.NoError(t, err)
 
-	_, err = jsonpatch.Apply(patch, map[string]any{"name": "Ada"})
+	result, err := jsonpatch.Apply(patch, map[string]any{"name": "Ada"})
 	require.Error(t, err)
+	assert.Nil(t, result)
 	assert.ErrorIs(t, err, jsonpatch.ErrTestFailed)
 
 	var patchErr *jsonpatch.Error
@@ -218,36 +339,26 @@ func TestPatchApplyStructuredErrors(t *testing.T) {
 	assert.Empty(t, cmp.Diff(jsonpatch.ErrTestFailed, patchErr.Kind(), cmp.Comparer(errors.Is)))
 }
 
-func TestCompileRejectsOperationWithoutClone(t *testing.T) {
-	t.Parallel()
+func FuzzApplyPositionedOperationsDoesNotPanic(f *testing.F) {
+	f.Add("abc", "a", 0, 1)
+	f.Add("", "", -1, 1)
+	f.Add("text", "value", 100, 100)
 
-	patch, err := jsonpatch.Compile(applyOnlyOp{})
-	require.Error(t, err)
-	assert.Nil(t, patch)
-	assert.ErrorIs(t, err, jsonpatch.ErrPayloadInvalid)
+	f.Fuzz(func(_ *testing.T, text, needle string, testPos, mergePos int) {
+		testPatch, err := jsonpatch.CompileOps(
+			[]jsonpatch.Op{op.NewTestString(nil, needle, float64(testPos), false, false)},
+			jsonpatch.WithCapabilities(jsonpatch.Predicate),
+		)
+		if err == nil {
+			_, _ = jsonpatch.Apply(testPatch, text)
+		}
 
-	var patchErr *jsonpatch.Error
-	require.True(t, errors.As(err, &patchErr))
-	assert.Equal(t, 0, patchErr.Index())
-	assert.Equal(t, "add", patchErr.Op())
-	assert.Equal(t, "/name", patchErr.Path())
-	assert.Error(t, patchErr.Cause())
-}
-
-type applyOnlyOp struct{}
-
-func (applyOnlyOp) Op() jsonpatch.OpType {
-	return jsonpatch.OpAddType
-}
-
-func (applyOnlyOp) Path() []string {
-	return []string{"name"}
-}
-
-func (applyOnlyOp) Apply(doc any) (internal.OpResult[any], error) {
-	return internal.OpResult[any]{Doc: doc}, nil
-}
-
-func (applyOnlyOp) Validate() error {
-	return nil
+		mergePatch, err := jsonpatch.CompileOps(
+			[]jsonpatch.Op{op.NewMerge([]string{"1"}, float64(mergePos), nil)},
+			jsonpatch.WithCapabilities(jsonpatch.Extended),
+		)
+		if err == nil {
+			_, _ = jsonpatch.Apply(mergePatch, []any{text, needle})
+		}
+	})
 }

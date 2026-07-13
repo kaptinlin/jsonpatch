@@ -188,7 +188,7 @@ func TestAllOperationTypes(t *testing.T) {
 		{Op: "str_ins", Path: "/string", Pos: 1, Str: "prefix"},
 		{Op: "str_del", Path: "/string", Pos: 1, Len: 5},
 		{Op: "split", Path: "/array", Pos: 1, Props: map[string]any{"key": "value"}},
-		{Op: "merge", Path: "/object", Props: map[string]any{"key": "value"}},
+		{Op: "merge", Path: "/array/1", Props: map[string]any{"key": "value"}},
 		{Op: "extend", Path: "/object", Props: map[string]any{"newKey": "newValue"}},
 	}
 

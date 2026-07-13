@@ -53,7 +53,7 @@ func (tl *TestStringLenOperation) Test(doc any) (bool, error) {
 		return false, nil
 	}
 
-	lengthMatches := len(str) >= int(tl.Length)
+	lengthMatches := codePointCount(str) >= int(tl.Length)
 	return tl.NotFlag != lengthMatches, nil
 }
 
@@ -72,16 +72,17 @@ func (tl *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error)
 	}
 
 	length := int(tl.Length)
-	lengthMatches := len(actualValue) >= length
+	actualLength := codePointCount(actualValue)
+	lengthMatches := actualLength >= length
 	shouldPass := lengthMatches != tl.NotFlag
 	if !shouldPass {
 		// Test failed
 		if tl.NotFlag {
 			// When Not is true and test fails, it means the length DID match when we expected it not to
-			return internal.OpResult[any]{}, fmt.Errorf("%w: string length %d matched condition (>= %d) when NOT expected", ErrStringLengthMismatch, len(actualValue), length)
+			return internal.OpResult[any]{}, fmt.Errorf("%w: string length %d matched condition (>= %d) when NOT expected", ErrStringLengthMismatch, actualLength, length)
 		}
 		// When Not is false and test fails, it means the length didn't match when we expected it to
-		return internal.OpResult[any]{}, fmt.Errorf("%w: expected length >= %d, got %d", ErrStringLengthMismatch, length, len(actualValue))
+		return internal.OpResult[any]{}, fmt.Errorf("%w: expected length >= %d, got %d", ErrStringLengthMismatch, length, actualLength)
 	}
 
 	// Test operations don't modify the document

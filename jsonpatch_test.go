@@ -1146,12 +1146,14 @@ func TestPublicHelpersAndOps(t *testing.T) {
 	t.Run("create matcher default honors ignore case and invalid patterns", func(t *testing.T) {
 		t.Parallel()
 
-		matcher := jsonpatch.CreateMatcherDefault("^hello$", true)
+		matcher, err := jsonpatch.CreateMatcherDefault("^hello$", true)
+		require.NoError(t, err)
 		assert.True(t, matcher("HELLO"))
 		assert.False(t, matcher("HELLO!"))
 
-		invalid := jsonpatch.CreateMatcherDefault("(", false)
-		assert.False(t, invalid("anything"))
+		invalid, err := jsonpatch.CreateMatcherDefault("(", false)
+		assert.Error(t, err)
+		assert.Nil(t, invalid)
 	})
 
 	t.Run("compile operations covers public error paths", func(t *testing.T) {
@@ -1200,12 +1202,6 @@ func TestPublicHelpersAndOps(t *testing.T) {
 			{
 				name:    "in requires array",
 				ops:     []jsoncodec.Operation{{Op: "in", Path: "/kind", Value: "admin"}},
-				opts:    allCapabilities(),
-				wantErr: jsonpatch.ErrPayloadInvalid,
-			},
-			{
-				name:    "merge position must be positive",
-				ops:     []jsoncodec.Operation{{Op: "merge", Path: "/items/1"}},
 				opts:    allCapabilities(),
 				wantErr: jsonpatch.ErrPayloadInvalid,
 			},

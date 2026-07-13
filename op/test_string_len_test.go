@@ -46,7 +46,7 @@ func TestTestStringLen_Apply(t *testing.T) {
 			name:           "unicode string length",
 			doc:            map[string]any{"text": "你好世界"},
 			path:           []string{"text"},
-			expectedLength: 12.0, // 4 Chinese characters = 12 bytes in UTF-8
+			expectedLength: 4.0,
 			expectError:    false,
 		},
 		{
@@ -165,7 +165,7 @@ func TestTestStringLen_Contracts(t *testing.T) {
 
 	compactOp, err := op.ToCompact()
 	assert.NoError(t, err)
-	wantCompact := internal.CompactOperation{internal.OpTestStringLenCode, []string{"name"}, 3.0, true}
+	wantCompact := internal.CompactOperation{internal.OpTestStringLenCode, []string{"name"}, 3.0, 1}
 	if diff := cmp.Diff(wantCompact, compactOp); diff != "" {
 		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
 	}

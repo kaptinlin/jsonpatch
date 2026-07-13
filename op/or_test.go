@@ -110,6 +110,23 @@ func TestOr_Apply_Fails(t *testing.T) {
 	}
 }
 
+func TestOr_ApplyPropagatesChildError(t *testing.T) {
+	t.Parallel()
+
+	childErr := errors.New("child predicate error")
+	firstCalls := 0
+	secondCalls := 0
+	first := &predicateProbe{testCalls: &firstCalls, testErr: childErr, applyErr: childErr}
+	second := &predicateProbe{testCalls: &secondCalls, testResult: true}
+
+	result, err := NewOr(nil, []any{first, second}).Apply(map[string]any{"name": "Ada"})
+
+	require.ErrorIs(t, err, childErr)
+	assert.Equal(t, internal.OpResult[any]{}, result)
+	assert.Equal(t, 1, firstCalls)
+	assert.Zero(t, secondCalls)
+}
+
 func TestOr_InterfaceMethods(t *testing.T) {
 	t.Parallel()
 	test1 := NewTest([]string{"test", "foo"}, "bar")
@@ -139,8 +156,8 @@ func TestOr_InterfaceMethods(t *testing.T) {
 
 func TestOr_ToJSON(t *testing.T) {
 	t.Parallel()
-	test1 := NewTest([]string{"foo"}, "bar")
-	test2 := NewTest([]string{"baz"}, 123)
+	test1 := NewTest([]string{"test", "foo"}, "bar")
+	test2 := NewTest([]string{"test", "baz"}, 123)
 
 	orOp := NewOr([]string{"test"}, []any{test1, test2})
 
@@ -160,6 +177,8 @@ func TestOr_ToJSON(t *testing.T) {
 	if len(got.Apply) != 2 {
 		assert.Fail(t, fmt.Sprintf("len(ToJSON().Apply) = %d, want 2", len(got.Apply)))
 	}
+	assert.Equal(t, "/foo", got.Apply[0].Path)
+	assert.Equal(t, "/baz", got.Apply[1].Path)
 }
 
 func TestOr_ToCompact(t *testing.T) {
@@ -195,4 +214,46 @@ func TestOr_Validate(t *testing.T) {
 
 	orOp = NewOr([]string{"test"}, []any{})
 	assert.ErrorIs(t, orOp.Validate(), ErrInvalidPredicateInOr)
+}
+
+type predicateProbe struct {
+	testCalls  *int
+	testResult bool
+	testErr    error
+	applyErr   error
+}
+
+func (*predicateProbe) Op() internal.OpType {
+	return internal.OpTestType
+}
+
+func (*predicateProbe) Path() []string {
+	return nil
+}
+
+func (p *predicateProbe) Apply(doc any) (internal.OpResult[any], error) {
+	if p.applyErr != nil {
+		return internal.OpResult[any]{}, p.applyErr
+	}
+	return internal.OpResult[any]{Doc: doc}, nil
+}
+
+func (*predicateProbe) Validate() error {
+	return nil
+}
+
+func (p *predicateProbe) Clone() (internal.Op, error) {
+	cloned := *p
+	return &cloned, nil
+}
+
+func (p *predicateProbe) Test(any) (bool, error) {
+	if p.testCalls != nil {
+		*p.testCalls++
+	}
+	return p.testResult, p.testErr
+}
+
+func (*predicateProbe) Not() bool {
+	return false
 }

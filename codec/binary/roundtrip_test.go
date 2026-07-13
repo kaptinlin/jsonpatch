@@ -321,12 +321,12 @@ func TestCodecDecodeCompositePredicates(t *testing.T) {
 				require.NoError(t, writer.WriteString("admin"))
 			}),
 			want: internal.Operation{Op: "and", Path: "/profile", Apply: []internal.Operation{
-				{Op: "defined", Path: "/profile/name"},
-				{Op: "contains", Path: "/profile/role", Value: "admin"},
+				{Op: "defined", Path: "/name"},
+				{Op: "contains", Path: "/role", Value: "admin"},
 			}},
 		},
 		{
-			name: "or keeps child path equal to parent unchanged",
+			name: "or treats repeated parent segment as relative",
 			data: binaryFixture(t, func(writer *msgp.Writer) {
 				require.NoError(t, writer.WriteArrayHeader(1))
 				writeBinaryHeader(t, writer, 3, internal.OpOrCode, "profile")
@@ -346,7 +346,7 @@ func TestCodecDecodeCompositePredicates(t *testing.T) {
 				writeBinaryHeader(t, writer, 2, internal.OpUndefinedCode)
 			}),
 			want: internal.Operation{Op: "not", Path: "/profile", Apply: []internal.Operation{
-				{Op: "undefined", Path: "/profile"},
+				{Op: "undefined", Path: ""},
 			}},
 		},
 	}
@@ -910,10 +910,11 @@ func TestCodecDecodeRejectsMalformedFieldTypes(t *testing.T) {
 			write: func(t *testing.T, writer *msgp.Writer) {
 				t.Helper()
 				require.NoError(t, writer.WriteArrayHeader(1))
-				require.NoError(t, writer.WriteArrayHeader(4))
+				require.NoError(t, writer.WriteArrayHeader(5))
 				require.NoError(t, writer.WriteUint8(internal.OpStrDelCode))
 				writeBinaryPath(t, writer, "name")
 				require.NoError(t, writer.WriteFloat64(1))
+				require.NoError(t, writer.WriteUint8(0))
 				require.NoError(t, writer.WriteString("two"))
 			},
 		},
@@ -957,6 +958,68 @@ func binaryFixture(t *testing.T, write func(*msgp.Writer)) []byte {
 	write(writer)
 	require.NoError(t, writer.Flush())
 	return buf.Bytes()
+}
+
+func TestCodecPreservesStrDelVariants(t *testing.T) {
+	t.Parallel()
+
+	operations := []internal.Op{
+		op.NewStrDelWithStr([]string{"text"}, 1, "da"),
+		op.NewStrDelWithStr([]string{"text"}, 2, ""),
+		op.NewStrDel([]string{"text"}, 3, 4),
+	}
+	codec := New()
+	encoded, err := codec.Encode(operations)
+	require.NoError(t, err)
+
+	reader := msgp.NewReader(bytes.NewReader(encoded))
+	count, err := reader.ReadArrayHeader()
+	require.NoError(t, err)
+	assert.Equal(t, uint32(3), count)
+
+	readBinaryOpHeader(t, reader, 4, internal.OpStrDelCode, []string{"text"})
+	pos, err := reader.ReadFloat64()
+	require.NoError(t, err)
+	assert.Equal(t, 1.0, pos)
+	str, err := reader.ReadString()
+	require.NoError(t, err)
+	assert.Equal(t, "da", str)
+
+	readBinaryOpHeader(t, reader, 4, internal.OpStrDelCode, []string{"text"})
+	pos, err = reader.ReadFloat64()
+	require.NoError(t, err)
+	assert.Equal(t, 2.0, pos)
+	str, err = reader.ReadString()
+	require.NoError(t, err)
+	assert.Empty(t, str)
+
+	readBinaryOpHeader(t, reader, 5, internal.OpStrDelCode, []string{"text"})
+	pos, err = reader.ReadFloat64()
+	require.NoError(t, err)
+	assert.Equal(t, 3.0, pos)
+	discriminator, err := reader.ReadUint8()
+	require.NoError(t, err)
+	assert.Zero(t, discriminator)
+	length, err := reader.ReadFloat64()
+	require.NoError(t, err)
+	assert.Equal(t, 4.0, length)
+
+	decoded, err := codec.Decode(encoded)
+	require.NoError(t, err)
+	require.Len(t, decoded, 3)
+	assertStrDelVariant(t, decoded[0], true, "da", 2)
+	assertStrDelVariant(t, decoded[1], true, "", 0)
+	assertStrDelVariant(t, decoded[2], false, "", 4)
+}
+
+func assertStrDelVariant(t *testing.T, operation internal.Op, wantHasStr bool, wantStr string, wantLen int) {
+	t.Helper()
+
+	strDel, ok := operation.(*op.StrDelOperation)
+	require.True(t, ok)
+	assert.Equal(t, wantHasStr, strDel.HasStr)
+	assert.Equal(t, wantStr, strDel.Str)
+	assert.Equal(t, wantLen, strDel.Len)
 }
 
 func writeBinaryPath(t *testing.T, writer *msgp.Writer, path ...string) {
@@ -1044,6 +1107,7 @@ func (unsupportedOp) Apply(doc any) (internal.OpResult[any], error) {
 func (unsupportedOp) ToJSON() (internal.Operation, error)           { return internal.Operation{}, nil }
 func (unsupportedOp) ToCompact() (internal.CompactOperation, error) { return nil, nil }
 func (unsupportedOp) Validate() error                               { return nil }
+func (unsupportedOp) Clone() (internal.Op, error)                   { return unsupportedOp{}, nil }
 
 func TestCodecEncodeRejectsUnsupportedOperation(t *testing.T) {
 	t.Parallel()

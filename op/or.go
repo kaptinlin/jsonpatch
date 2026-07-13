@@ -52,17 +52,14 @@ func (oo *OrOperation) Test(doc any) (bool, error) {
 
 // Apply applies the OR operation to the document.
 func (oo *OrOperation) Apply(doc any) (internal.OpResult[any], error) {
-	for _, predicateInterface := range oo.Operations {
-		predicate, ok := predicateInterface.(internal.PredicateOp)
-		if !ok {
-			return internal.OpResult[any]{}, ErrInvalidPredicateInOr
-		}
-		result, err := predicate.Apply(doc)
-		if err == nil {
-			return result, nil
-		}
+	ok, err := oo.Test(doc)
+	if err != nil {
+		return internal.OpResult[any]{}, err
 	}
-	return internal.OpResult[any]{}, ErrOrTestFailed
+	if !ok {
+		return internal.OpResult[any]{}, ErrOrTestFailed
+	}
+	return internal.OpResult[any]{Doc: doc}, nil
 }
 
 // Validate validates the OR operation.

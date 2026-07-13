@@ -88,6 +88,11 @@ var SampleOperations = map[string]map[string]any{
 			"foo": "bar",
 		},
 	},
+	"replace4": {
+		"op":    "replace",
+		"path":  "/nullable",
+		"value": nil,
+	},
 
 	"copy1": {
 		"op":   "copy",
@@ -167,7 +172,7 @@ var SampleOperations = map[string]map[string]any{
 	"test_type1": {
 		"op":   "test_type",
 		"path": "",
-		"type": []string{"array"},
+		"type": "array",
 	},
 	"test_type2": {
 		"op":   "test_type",
@@ -203,6 +208,11 @@ var SampleOperations = map[string]map[string]any{
 		"path": "/a/bb/ccc",
 		"len":  5.0,
 		"not":  true,
+	},
+	"test_string_len3": {
+		"op":   "test_string_len",
+		"path": "/empty",
+		"len":  0.0,
 	},
 
 	"contains1": {
@@ -449,6 +459,12 @@ var SampleOperations = map[string]map[string]any{
 		"pos":  92303948.0,
 		"str":  "asdfasdfasdfasdflkasdjflakjsdf",
 	},
+	"str_del4": {
+		"op":   "str_del",
+		"path": "/empty",
+		"pos":  0.0,
+		"str":  "",
+	},
 
 	"flip1": {
 		"op":   "flip",
@@ -468,6 +484,11 @@ var SampleOperations = map[string]map[string]any{
 		"op":   "inc",
 		"path": "/asdf/sd/d/f",
 		"inc":  -123.0,
+	},
+	"inc3": {
+		"op":   "inc",
+		"path": "/counter",
+		"inc":  0.0,
 	},
 
 	"split1": {

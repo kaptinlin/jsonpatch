@@ -136,8 +136,8 @@ func TestAnd_InterfaceMethods(t *testing.T) {
 
 func TestAnd_ToJSON(t *testing.T) {
 	t.Parallel()
-	test1 := NewTest([]string{"foo"}, "bar")
-	test2 := NewTest([]string{"baz"}, 123)
+	test1 := NewTest([]string{"test", "foo"}, "bar")
+	test2 := NewTest([]string{"test", "baz"}, 123)
 
 	andOp := NewAnd([]string{"test"}, []any{test1, test2})
 
@@ -154,6 +154,8 @@ func TestAnd_ToJSON(t *testing.T) {
 	if len(got.Apply) != 2 {
 		assert.Fail(t, fmt.Sprintf("len(ToJSON().Apply) = %d, want 2", len(got.Apply)))
 	}
+	assert.Equal(t, "/foo", got.Apply[0].Path)
+	assert.Equal(t, "/baz", got.Apply[1].Path)
 }
 
 func TestAnd_ToCompact(t *testing.T) {

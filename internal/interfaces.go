@@ -10,11 +10,6 @@ type Op interface {
 	Apply(doc any) (OpResult[any], error)
 	// Validate checks that the operation parameters are valid.
 	Validate() error
-}
-
-// CloneOp is an operation that can freeze itself for compiled patch storage.
-type CloneOp interface {
-	Op
 	// Clone returns an independent executable copy of the operation.
 	Clone() (Op, error)
 }

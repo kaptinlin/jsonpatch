@@ -22,15 +22,15 @@ func TestDecodeOperationFamilies(t *testing.T) {
 	}{
 		{name: "add", raw: map[string]any{"op": "add", "path": "/profile/name", "value": "Ada"}, want: internal.Operation{Op: "add", Path: "/profile/name", Value: "Ada"}},
 		{name: "remove", raw: map[string]any{"op": "remove", "path": "/profile/name"}, want: internal.Operation{Op: "remove", Path: "/profile/name"}},
-		{name: "remove with old value", raw: map[string]any{"op": "remove", "path": "/profile/name", "oldValue": "Ada"}, want: internal.Operation{Op: "remove", Path: "/profile/name", OldValue: "Ada"}},
-		{name: "replace with old value", raw: map[string]any{"op": "replace", "path": "/profile/name", "value": "Grace", "oldValue": "Ada"}, want: internal.Operation{Op: "replace", Path: "/profile/name", Value: "Grace", OldValue: "Ada"}},
+		{name: "remove with old value", raw: map[string]any{"op": "remove", "path": "/profile/name", "oldValue": "Ada"}, want: internal.Operation{Op: "remove", Path: "/profile/name", OldValue: "Ada", HasOldValue: true}},
+		{name: "replace with old value", raw: map[string]any{"op": "replace", "path": "/profile/name", "value": "Grace", "oldValue": "Ada"}, want: internal.Operation{Op: "replace", Path: "/profile/name", Value: "Grace", OldValue: "Ada", HasOldValue: true}},
 		{name: "move", raw: map[string]any{"op": "move", "path": "/profile/displayName", "from": "/profile/name"}, want: internal.Operation{Op: "move", Path: "/profile/displayName", From: "/profile/name"}},
 		{name: "copy", raw: map[string]any{"op": "copy", "path": "/profile/alias", "from": "/profile/name"}, want: internal.Operation{Op: "copy", Path: "/profile/alias", From: "/profile/name"}},
 		{name: "test with not", raw: map[string]any{"op": "test", "path": "/profile/name", "value": "Ada", "not": true}, want: internal.Operation{Op: "test", Path: "/profile/name", Value: "Ada", Not: true}},
 		{name: "flip", raw: map[string]any{"op": "flip", "path": "/enabled"}, want: internal.Operation{Op: "flip", Path: "/enabled"}},
 		{name: "inc", raw: map[string]any{"op": "inc", "path": "/count", "inc": 2}, want: internal.Operation{Op: "inc", Path: "/count", Inc: 2}},
 		{name: "str_ins", raw: map[string]any{"op": "str_ins", "path": "/profile/name", "pos": 1, "str": "d"}, want: internal.Operation{Op: "str_ins", Path: "/profile/name", Pos: 1, Str: "d"}},
-		{name: "str_del string mode", raw: map[string]any{"op": "str_del", "path": "/profile/name", "pos": 1, "str": "da"}, want: internal.Operation{Op: "str_del", Path: "/profile/name", Pos: 1, Str: "da"}},
+		{name: "str_del string mode", raw: map[string]any{"op": "str_del", "path": "/profile/name", "pos": 1, "str": "da"}, want: internal.Operation{Op: "str_del", Path: "/profile/name", Pos: 1, Str: "da", HasStr: true}},
 		{name: "str_del length mode", raw: map[string]any{"op": "str_del", "path": "/profile/name", "pos": 1, "len": 2}, want: internal.Operation{Op: "str_del", Path: "/profile/name", Pos: 1, Len: 2}},
 		{name: "split", raw: map[string]any{"op": "split", "path": "/nodes/0", "pos": 1, "props": map[string]any{"kind": "paragraph"}}, want: internal.Operation{Op: "split", Path: "/nodes/0", Pos: 1, Props: map[string]any{"kind": "paragraph"}}},
 		{name: "merge", raw: map[string]any{"op": "merge", "path": "/nodes/1", "pos": 1, "props": map[string]any{"merged": true}}, want: internal.Operation{Op: "merge", Path: "/nodes/1", Pos: 1, Props: map[string]any{"merged": true}}},
@@ -56,17 +56,17 @@ func TestDecodeOperationFamilies(t *testing.T) {
 				map[string]any{"op": "contains", "path": "/role", "value": "admin"},
 			}},
 			want: internal.Operation{Op: "and", Path: "/profile", Apply: []internal.Operation{
-				{Op: "defined", Path: "/profile/name"},
-				{Op: "contains", Path: "/profile/role", Value: "admin"},
+				{Op: "defined", Path: "/name"},
+				{Op: "contains", Path: "/role", Value: "admin"},
 			}},
 		},
 		{
-			name: "or equal path remains sub path",
+			name: "or empty path resolves to parent",
 			raw: map[string]any{"op": "or", "path": "/profile", "apply": []any{
-				map[string]any{"op": "defined", "path": "/profile"},
+				map[string]any{"op": "defined", "path": ""},
 			}},
 			want: internal.Operation{Op: "or", Path: "/profile", Apply: []internal.Operation{
-				{Op: "defined", Path: "/profile"},
+				{Op: "defined", Path: ""},
 			}},
 		},
 		{
@@ -77,8 +77,8 @@ func TestDecodeOperationFamilies(t *testing.T) {
 				}},
 			}},
 			want: internal.Operation{Op: "and", Path: "/profile", Apply: []internal.Operation{
-				{Op: "not", Path: "/profile/flags", Apply: []internal.Operation{
-					{Op: "contains", Path: "/profile/flags/role", Value: "admin"},
+				{Op: "not", Path: "/flags", Apply: []internal.Operation{
+					{Op: "contains", Path: "/role", Value: "admin"},
 				}},
 			}},
 		},

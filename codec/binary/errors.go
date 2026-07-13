@@ -13,4 +13,8 @@ var (
 	ErrInvalidTestTypeFormat = errors.New("invalid test_type types format")
 	// ErrInvalidValueType indicates the decoded value has an unexpected type.
 	ErrInvalidValueType = errors.New("invalid value type")
+	// ErrInvalidFrameArity indicates an operation frame has the wrong number of fields.
+	ErrInvalidFrameArity = errors.New("invalid operation frame arity")
+	// ErrTrailingData indicates bytes remain after a complete patch value.
+	ErrTrailingData = errors.New("trailing data after patch")
 )

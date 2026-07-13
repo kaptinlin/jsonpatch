@@ -130,11 +130,10 @@ func (sp *SplitOperation) splitString(s string) []any {
 	after := string(runes[pos:])
 
 	if propsMap, ok := sp.Props.(map[string]any); ok {
-		beforeNode := map[string]any{"text": before}
-		afterNode := map[string]any{"text": after}
-
-		maps.Copy(beforeNode, propsMap)
-		maps.Copy(afterNode, propsMap)
+		beforeNode := maps.Clone(propsMap)
+		afterNode := maps.Clone(propsMap)
+		beforeNode["text"] = before
+		afterNode["text"] = after
 
 		return []any{beforeNode, afterNode}
 	}

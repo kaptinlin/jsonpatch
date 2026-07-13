@@ -169,12 +169,27 @@ func TestTestString_Contracts(t *testing.T) {
 
 	compactOp, err := op.ToCompact()
 	assert.NoError(t, err)
-	wantCompact := internal.CompactOperation{internal.OpTestStringCode, []string{"name"}, 0, "ada", true}
+	wantCompact := internal.CompactOperation{internal.OpTestStringCode, []string{"name"}, 0, "ada", 1}
 	if diff := cmp.Diff(wantCompact, compactOp); diff != "" {
 		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
 	}
 	assert.NoError(t, op.Validate())
 	assert.NoError(t, NewTestString(nil, "Ada", 0, false, false).Validate())
+}
+
+func TestTestString_RejectsNegativePosition(t *testing.T) {
+	t.Parallel()
+
+	operation := NewTestString([]string{"text"}, "a", -1, false, false)
+	doc := map[string]any{"text": "abc"}
+
+	matched, err := operation.Test(doc)
+	assert.False(t, matched)
+	assert.ErrorIs(t, err, ErrPositionOutOfStringRange)
+
+	result, err := operation.Apply(doc)
+	assert.Equal(t, internal.OpResult[any]{}, result)
+	assert.ErrorIs(t, err, ErrPositionOutOfStringRange)
 }
 
 func TestToString(t *testing.T) {

@@ -1,6 +1,7 @@
 package compact
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 
@@ -69,6 +70,24 @@ func parseHeader(raw Op) (internal.OpType, []string, error) {
 	return opType, path, nil
 }
 
+func isNumericConstraintError(err error) bool {
+	return errors.Is(err, ErrNumberNotFinite) || errors.Is(err, ErrNumberNotInteger)
+}
+
+func predicateMaxArity(opType internal.OpType) int {
+	switch opType {
+	case internal.OpDefinedType, internal.OpUndefinedType:
+		return 2
+	case internal.OpContainsType, internal.OpStartsType, internal.OpEndsType,
+		internal.OpMatchesType, internal.OpTestStringLenType:
+		return 4
+	case internal.OpTestStringType:
+		return 5
+	default:
+		return 3
+	}
+}
+
 // parseOp converts a compact operation to an operation instance.
 func parseOp(raw Op) (internal.Op, error) {
 	opType, path, err := parseHeader(raw)
@@ -98,9 +117,15 @@ func parseCoreOp(opType internal.OpType, path []string, raw Op) (internal.Op, er
 		if len(raw) < 3 {
 			return nil, ErrAddMissingValue
 		}
+		if len(raw) != 3 {
+			return nil, ErrInvalidArity
+		}
 		return op.NewAdd(path, raw[2]), nil
 
 	case internal.OpRemoveType:
+		if len(raw) > 3 {
+			return nil, ErrInvalidArity
+		}
 		if len(raw) >= 3 {
 			return op.NewRemoveWithOldValue(path, raw[2]), nil
 		}
@@ -109,6 +134,9 @@ func parseCoreOp(opType internal.OpType, path []string, raw Op) (internal.Op, er
 	case internal.OpReplaceType:
 		if len(raw) < 3 {
 			return nil, ErrReplaceMissingValue
+		}
+		if len(raw) > 4 {
+			return nil, ErrInvalidArity
 		}
 		if len(raw) >= 4 {
 			return op.NewReplaceWithOldValue(path, raw[2], raw[3]), nil
@@ -120,6 +148,9 @@ func parseCoreOp(opType internal.OpType, path []string, raw Op) (internal.Op, er
 		if err != nil {
 			return nil, err
 		}
+		if len(raw) != 3 {
+			return nil, ErrInvalidArity
+		}
 		return op.NewMove(path, from), nil
 
 	case internal.OpCopyType:
@@ -127,13 +158,22 @@ func parseCoreOp(opType internal.OpType, path []string, raw Op) (internal.Op, er
 		if err != nil {
 			return nil, err
 		}
+		if len(raw) != 3 {
+			return nil, ErrInvalidArity
+		}
 		return op.NewCopy(path, from), nil
 
 	case internal.OpTestType:
 		if len(raw) < 3 {
 			return nil, ErrTestMissingValue
 		}
-		not := boolAt(raw, 3)
+		if len(raw) > 4 {
+			return nil, ErrInvalidArity
+		}
+		not, err := trueMarkerAt(raw, 3)
+		if err != nil {
+			return nil, err
+		}
 		return op.NewTestWithNot(path, raw[2], not), nil
 
 	default:
@@ -145,14 +185,23 @@ func parseCoreOp(opType internal.OpType, path []string, raw Op) (internal.Op, er
 func parseExtendedOp(opType internal.OpType, path []string, raw Op) (internal.Op, error) {
 	switch opType {
 	case internal.OpFlipType:
+		if len(raw) != 2 {
+			return nil, ErrInvalidArity
+		}
 		return op.NewFlip(path), nil
 
 	case internal.OpIncType:
 		if len(raw) < 3 {
 			return nil, ErrIncMissingDelta
 		}
-		delta, err := toFloat64(raw[2])
+		if len(raw) != 3 {
+			return nil, ErrInvalidArity
+		}
+		delta, err := finiteNumber(raw[2])
 		if err != nil {
+			if errors.Is(err, ErrNumberNotFinite) {
+				return nil, err
+			}
 			return nil, ErrIncDeltaNotNumber
 		}
 		return op.NewInc(path, delta), nil
@@ -161,8 +210,14 @@ func parseExtendedOp(opType internal.OpType, path []string, raw Op) (internal.Op
 		if len(raw) < 4 {
 			return nil, ErrStrInsMissingFields
 		}
-		pos, err := toFloat64(raw[2])
+		if len(raw) != 4 {
+			return nil, ErrInvalidArity
+		}
+		pos, err := integerNumber(raw[2])
 		if err != nil {
+			if isNumericConstraintError(err) {
+				return nil, err
+			}
 			return nil, ErrStrInsPosNotNumber
 		}
 		str, ok := raw[3].(string)
@@ -175,22 +230,33 @@ func parseExtendedOp(opType internal.OpType, path []string, raw Op) (internal.Op
 		if len(raw) < 4 {
 			return nil, ErrStrDelMissingFields
 		}
-		pos, err := toFloat64(raw[2])
+		if len(raw) > 5 {
+			return nil, ErrInvalidArity
+		}
+		pos, err := integerNumber(raw[2])
 		if err != nil {
+			if isNumericConstraintError(err) {
+				return nil, err
+			}
 			return nil, ErrStrDelPosNotNumber
 		}
 		if str, ok := raw[3].(string); ok {
+			if len(raw) != 4 {
+				return nil, ErrInvalidArity
+			}
 			return op.NewStrDelWithStr(path, pos, str), nil
 		}
-		if len(raw) >= 5 {
-			length, err := toFloat64(raw[4])
-			if err != nil {
-				return nil, ErrStrDelLenNotNumber
-			}
-			return op.NewStrDel(path, pos, length), nil
+		if len(raw) != 5 {
+			return nil, ErrInvalidVariant
 		}
-		length, err := toFloat64(raw[3])
+		if !isZeroMarker(raw[3]) {
+			return nil, ErrInvalidVariant
+		}
+		length, err := integerNumber(raw[4])
 		if err != nil {
+			if isNumericConstraintError(err) {
+				return nil, err
+			}
 			return nil, ErrStrDelLenNotNumber
 		}
 		return op.NewStrDel(path, pos, length), nil
@@ -199,13 +265,23 @@ func parseExtendedOp(opType internal.OpType, path []string, raw Op) (internal.Op
 		if len(raw) < 3 {
 			return nil, ErrSplitMissingPos
 		}
-		pos, err := toFloat64(raw[2])
+		if len(raw) > 4 {
+			return nil, ErrInvalidArity
+		}
+		pos, err := finiteNumber(raw[2])
 		if err != nil {
+			if errors.Is(err, ErrNumberNotFinite) {
+				return nil, err
+			}
 			return nil, ErrSplitPosNotNumber
 		}
 		var props any
 		if len(raw) >= 4 {
-			props = raw[3]
+			var ok bool
+			props, ok = raw[3].(map[string]any)
+			if !ok {
+				return nil, ErrSplitPropsNotObject
+			}
 		}
 		return op.NewSplit(path, pos, props), nil
 
@@ -213,14 +289,22 @@ func parseExtendedOp(opType internal.OpType, path []string, raw Op) (internal.Op
 		if len(raw) < 3 {
 			return nil, ErrMergeMissingPos
 		}
-		pos, err := toFloat64(raw[2])
+		if len(raw) > 4 {
+			return nil, ErrInvalidArity
+		}
+		pos, err := finiteNumber(raw[2])
 		if err != nil {
+			if errors.Is(err, ErrNumberNotFinite) {
+				return nil, err
+			}
 			return nil, ErrMergePosNotNumber
 		}
 		var props map[string]any
 		if len(raw) >= 4 {
-			if p, ok := raw[3].(map[string]any); ok {
-				props = p
+			var ok bool
+			props, ok = raw[3].(map[string]any)
+			if !ok {
+				return nil, ErrMergePropsNotObject
 			}
 		}
 		return op.NewMerge(path, pos, props), nil
@@ -229,11 +313,17 @@ func parseExtendedOp(opType internal.OpType, path []string, raw Op) (internal.Op
 		if len(raw) < 3 {
 			return nil, ErrExtendMissingProps
 		}
+		if len(raw) > 4 {
+			return nil, ErrInvalidArity
+		}
 		props, ok := raw[2].(map[string]any)
 		if !ok {
 			return nil, ErrExtendPropsNotObject
 		}
-		deleteNull := boolAt(raw, 3)
+		deleteNull, err := trueMarkerAt(raw, 3)
+		if err != nil {
+			return nil, err
+		}
 		return op.NewExtend(path, props, deleteNull), nil
 
 	default:
@@ -243,6 +333,11 @@ func parseExtendedOp(opType internal.OpType, path []string, raw Op) (internal.Op
 
 // parsePredicateOp decodes JSON Predicate operations.
 func parsePredicateOp(opType internal.OpType, path []string, raw Op) (internal.Op, error) {
+	maxArity := predicateMaxArity(opType)
+	if len(raw) > maxArity {
+		return nil, ErrInvalidArity
+	}
+
 	switch opType {
 	case internal.OpDefinedType:
 		return op.NewDefined(path), nil
@@ -255,21 +350,33 @@ func parsePredicateOp(opType internal.OpType, path []string, raw Op) (internal.O
 		if err != nil {
 			return nil, err
 		}
-		return op.NewContainsWithIgnoreCase(path, value, boolAt(raw, 3)), nil
+		ignoreCase, err := trueMarkerAt(raw, 3)
+		if err != nil {
+			return nil, err
+		}
+		return op.NewContainsWithIgnoreCase(path, value, ignoreCase), nil
 
 	case internal.OpStartsType:
 		value, err := requireString(raw, 2, ErrStartsMissingValue, ErrStartsValueNotString)
 		if err != nil {
 			return nil, err
 		}
-		return op.NewStartsWithIgnoreCase(path, value, boolAt(raw, 3)), nil
+		ignoreCase, err := trueMarkerAt(raw, 3)
+		if err != nil {
+			return nil, err
+		}
+		return op.NewStartsWithIgnoreCase(path, value, ignoreCase), nil
 
 	case internal.OpEndsType:
 		value, err := requireString(raw, 2, ErrEndsMissingValue, ErrEndsValueNotString)
 		if err != nil {
 			return nil, err
 		}
-		return op.NewEndsWithIgnoreCase(path, value, boolAt(raw, 3)), nil
+		ignoreCase, err := trueMarkerAt(raw, 3)
+		if err != nil {
+			return nil, err
+		}
+		return op.NewEndsWithIgnoreCase(path, value, ignoreCase), nil
 
 	case internal.OpTypeType:
 		if len(raw) < 3 {
@@ -295,8 +402,11 @@ func parsePredicateOp(opType internal.OpType, path []string, raw Op) (internal.O
 		if len(raw) < 3 {
 			return nil, ErrTestStringMissingPos
 		}
-		pos, err := toFloat64(raw[2])
+		pos, err := integerNumber(raw[2])
 		if err != nil {
+			if isNumericConstraintError(err) {
+				return nil, err
+			}
 			return nil, ErrTestStringPosNotNumber
 		}
 		if len(raw) < 4 {
@@ -306,18 +416,27 @@ func parsePredicateOp(opType internal.OpType, path []string, raw Op) (internal.O
 		if !ok {
 			return nil, ErrTestStringNotString
 		}
-		not := boolAt(raw, 4)
+		not, err := trueMarkerAt(raw, 4)
+		if err != nil {
+			return nil, err
+		}
 		return op.NewTestString(path, str, pos, not, false), nil
 
 	case internal.OpTestStringLenType:
 		if len(raw) < 3 {
 			return nil, ErrTestStringLenMissingLen
 		}
-		length, err := toFloat64(raw[2])
+		length, err := integerNumber(raw[2])
 		if err != nil {
+			if isNumericConstraintError(err) {
+				return nil, err
+			}
 			return nil, ErrTestStringLenNotNumber
 		}
-		not := boolAt(raw, 3)
+		not, err := trueMarkerAt(raw, 3)
+		if err != nil {
+			return nil, err
+		}
 		return op.NewTestStringLenWithNot(path, length, not), nil
 
 	case internal.OpInType:
@@ -352,7 +471,10 @@ func parsePredicateOp(opType internal.OpType, path []string, raw Op) (internal.O
 		if !ok {
 			return nil, ErrMatchesPatternNotString
 		}
-		ignoreCase := boolAt(raw, 3)
+		ignoreCase, err := trueMarkerAt(raw, 3)
+		if err != nil {
+			return nil, err
+		}
 		return op.NewMatches(path, pattern, ignoreCase, nil), nil
 
 	default:
@@ -371,6 +493,9 @@ func parseCompositeOp(opType internal.OpType, path []string, raw Op) (internal.O
 		default:
 			return nil, ErrNotMissingOps
 		}
+	}
+	if len(raw) != 3 {
+		return nil, ErrInvalidArity
 	}
 
 	subOps, err := parsePredicateOps(raw[2], path)
@@ -488,11 +613,5 @@ func parsePathValue(value any, errInvalid error) ([]string, error) {
 
 // mergePaths combines parent and child predicate paths.
 func mergePaths(base, child []string) []string {
-	if len(child) == 0 {
-		return slices.Clone(base)
-	}
-	if slices.Equal(base, child) {
-		return slices.Clone(child)
-	}
 	return slices.Concat(base, child)
 }

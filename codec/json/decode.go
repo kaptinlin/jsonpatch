@@ -587,15 +587,8 @@ func requiredPointer(m map[string]any, field string, missingErr error) ([]string
 	return jsonpointer.Parse(value), nil
 }
 
-// mergePaths combines base and sub paths for composite operations.
-// Returns base if sub is empty, sub if equal, otherwise concatenates them.
+// mergePaths resolves a relative composite child path against its parent.
 func mergePaths(base, sub jsonpointer.Path) jsonpointer.Path {
-	if len(sub) == 0 {
-		return base
-	}
-	if slices.Equal(base, sub) {
-		return sub
-	}
 	return slices.Concat(base, sub)
 }
 
@@ -653,7 +646,7 @@ func setNumericFields(m map[string]any, o *internal.Operation, nested bool) {
 		m["str"] = o.Str
 	case "str_del":
 		m["pos"] = float64(o.Pos)
-		if o.Str != "" {
+		if o.HasStr || o.Str != "" {
 			m["str"] = o.Str
 		} else {
 			m["len"] = float64(o.Len)
@@ -697,7 +690,7 @@ func setTopLevelFields(m map[string]any, o *internal.Operation) {
 	if o.DeleteNull {
 		m["deleteNull"] = true
 	}
-	if o.OldValue != nil {
+	if o.HasOldValue || o.OldValue != nil {
 		m["oldValue"] = o.OldValue
 	}
 }

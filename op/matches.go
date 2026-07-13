@@ -13,12 +13,12 @@ type MatchesOperation struct {
 	Pattern    string                `json:"value"`       // The regex pattern string
 	IgnoreCase bool                  `json:"ignore_case"` // Case insensitive flag
 	matcher    internal.RegexMatcher // Compiled regex matcher function
+	matcherErr error
 }
 
 // createMatcherDefault is the default regex matcher factory using Go's regexp package.
 // It creates a RegexMatcher function from a pattern and ignoreCase flag.
-// If the pattern is invalid, returns a matcher that always returns false.
-func createMatcherDefault(pattern string, ignoreCase bool) internal.RegexMatcher {
+func createMatcherDefault(pattern string, ignoreCase bool) (internal.RegexMatcher, error) {
 	regexPattern := pattern
 	if ignoreCase {
 		regexPattern = "(?i)" + pattern
@@ -26,10 +26,10 @@ func createMatcherDefault(pattern string, ignoreCase bool) internal.RegexMatcher
 
 	re, err := regexp.Compile(regexPattern)
 	if err != nil {
-		return func(_ string) bool { return false }
+		return nil, err
 	}
 
-	return re.MatchString
+	return re.MatchString, nil
 }
 
 // NewMatches creates a new matches operation.
@@ -38,12 +38,19 @@ func NewMatches(path []string, pattern string, ignoreCase bool, createMatcher in
 	if createMatcher == nil {
 		createMatcher = createMatcherDefault
 	}
+	matcher, err := createMatcher(pattern, ignoreCase)
+	if err != nil {
+		err = fmt.Errorf("%w: %w", ErrRegexPattern, err)
+	} else if matcher == nil {
+		err = fmt.Errorf("%w: matcher factory returned nil", ErrRegexPattern)
+	}
 
 	return &MatchesOperation{
 		BaseOp:     NewBaseOp(path),
 		Pattern:    pattern,
 		IgnoreCase: ignoreCase,
-		matcher:    createMatcher(pattern, ignoreCase),
+		matcher:    matcher,
+		matcherErr: err,
 	}
 }
 
@@ -54,6 +61,9 @@ func (ma *MatchesOperation) Op() internal.OpType {
 
 // Test evaluates the matches predicate condition.
 func (ma *MatchesOperation) Test(doc any) (bool, error) {
+	if err := ma.matcherError(); err != nil {
+		return false, err
+	}
 	_, str, err := validateString(doc, ma.Path())
 	if err != nil {
 		//nolint:nilerr // intentional: path not found or wrong type means test fails
@@ -64,6 +74,9 @@ func (ma *MatchesOperation) Test(doc any) (bool, error) {
 
 // Apply applies the matches operation.
 func (ma *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
+	if err := ma.matcherError(); err != nil {
+		return internal.OpResult[any]{}, err
+	}
 	val, str, err := validateString(doc, ma.Path())
 	if err != nil {
 		return internal.OpResult[any]{}, err
@@ -80,6 +93,16 @@ func (ma *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
 func (ma *MatchesOperation) Validate() error {
 	if ma.Pattern == "" {
 		return ErrPatternEmpty
+	}
+	return ma.matcherError()
+}
+
+func (ma *MatchesOperation) matcherError() error {
+	if ma.matcherErr != nil {
+		return ma.matcherErr
+	}
+	if ma.matcher == nil {
+		return fmt.Errorf("%w: matcher is nil", ErrRegexPattern)
 	}
 	return nil
 }

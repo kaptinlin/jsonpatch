@@ -95,7 +95,7 @@ var (
 	ErrInvalidPredicateInNot = errors.New("invalid predicate in not operation")
 	// ErrInvalidPredicateInOr reports that or received a non-predicate operand.
 	ErrInvalidPredicateInOr = errors.New("invalid predicate in or operation")
-	// ErrPredicatePathOutsideParent reports that a compact child predicate cannot be represented relative to its parent.
+	// ErrPredicatePathOutsideParent reports that a child predicate cannot be represented relative to its parent.
 	ErrPredicatePathOutsideParent = errors.New("predicate path is outside parent path")
 	// ErrNotNoOperands reports that not received no operands.
 	ErrNotNoOperands = errors.New("not operation requires operands")

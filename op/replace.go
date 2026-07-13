@@ -9,8 +9,9 @@ import (
 // ReplaceOperation represents a replace operation that replaces a value at a specified path.
 type ReplaceOperation struct {
 	BaseOp
-	Value    any `json:"value"`              // New value
-	OldValue any `json:"oldValue,omitempty"` // The value that was replaced (optional)
+	Value       any  `json:"value"`              // New value
+	OldValue    any  `json:"oldValue,omitempty"` // The value that was replaced (optional)
+	HasOldValue bool // Whether oldValue is explicitly set
 }
 
 // NewReplace creates a new replace operation.
@@ -24,9 +25,10 @@ func NewReplace(path []string, value any) *ReplaceOperation {
 // NewReplaceWithOldValue creates a new replace operation with oldValue.
 func NewReplaceWithOldValue(path []string, value any, oldValue any) *ReplaceOperation {
 	return &ReplaceOperation{
-		BaseOp:   NewBaseOp(path),
-		Value:    value,
-		OldValue: oldValue,
+		BaseOp:      NewBaseOp(path),
+		Value:       value,
+		OldValue:    oldValue,
+		HasOldValue: true,
 	}
 }
 
@@ -39,55 +41,11 @@ func (rp *ReplaceOperation) Op() internal.OpType {
 func (rp *ReplaceOperation) Apply(doc any) (internal.OpResult[any], error) {
 	newValue := deepclone.Clone(rp.Value)
 
-	if len(rp.path) == 0 {
-		// Replace entire document
-		oldValue := doc
-		return internal.OpResult[any]{Doc: newValue, Old: oldValue}, nil
-	}
-	if len(rp.path) == 1 && rp.path[0] == "" {
-		// Special case: path "/" refers to the key "" in the root object
-		switch v := doc.(type) {
-		case map[string]any:
-			oldValue := v[""]
-			v[""] = newValue
-			return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
-		default:
-			return internal.OpResult[any]{}, ErrCannotReplace
-		}
-	}
-
-	parent, key, err := navigateToParent(doc, rp.path)
+	newDoc, oldValue, err := replaceAtPath(doc, rp.path, newValue)
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
-
-	switch p := parent.(type) {
-	case map[string]any:
-		k, ok := key.(string)
-		if !ok {
-			return internal.OpResult[any]{}, ErrInvalidKeyTypeMap
-		}
-		if oldValue, exists := p[k]; exists {
-			p[k] = newValue
-			return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
-		}
-		return internal.OpResult[any]{}, ErrPathNotFound
-
-	case []any:
-		k, ok := key.(int)
-		if !ok {
-			return internal.OpResult[any]{}, ErrInvalidKeyTypeSlice
-		}
-		if k >= 0 && k < len(p) {
-			oldValue := p[k]
-			p[k] = newValue
-			return internal.OpResult[any]{Doc: doc, Old: oldValue}, nil
-		}
-		return internal.OpResult[any]{}, ErrPathNotFound
-
-	default:
-		return internal.OpResult[any]{}, ErrUnsupportedParentType
-	}
+	return internal.OpResult[any]{Doc: newDoc, Old: oldValue}, nil
 }
 
 // Validate validates the replace operation.

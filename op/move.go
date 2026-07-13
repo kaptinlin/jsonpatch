@@ -26,6 +26,9 @@ func (m *MoveOperation) Op() internal.OpType {
 // Apply applies the move operation following RFC 6902: remove then add.
 func (m *MoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if slices.Equal(m.path, m.from) {
+		if _, err := value(doc, m.from); err != nil {
+			return internal.OpResult[any]{}, err
+		}
 		return internal.OpResult[any]{Doc: doc, Old: nil}, nil
 	}
 

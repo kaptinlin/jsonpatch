@@ -4,8 +4,13 @@ import "errors"
 
 // Base errors for compact operation validation.
 var (
-	ErrMinLength     = errors.New("compact operation must have at least opcode and path")
-	ErrPathNotString = errors.New("compact operation path must be a string array")
+	ErrMinLength         = errors.New("compact operation must have at least opcode and path")
+	ErrPathNotString     = errors.New("compact operation path must be a string array")
+	ErrInvalidArity      = errors.New("compact operation has invalid arity")
+	ErrInvalidTrueMarker = errors.New("compact optional true marker must be 1")
+	ErrNumberNotFinite   = errors.New("compact numeric field must be finite")
+	ErrNumberNotInteger  = errors.New("compact positional field must be an integer")
+	ErrInvalidVariant    = errors.New("compact operation variant is invalid")
 )
 
 // Core operation (RFC 6902) errors.
@@ -31,8 +36,10 @@ var (
 	ErrStrDelLenNotNumber   = errors.New("str_del operation len must be a number")
 	ErrSplitMissingPos      = errors.New("split operation requires pos")
 	ErrSplitPosNotNumber    = errors.New("split operation pos must be a number")
+	ErrSplitPropsNotObject  = errors.New("split operation props must be an object")
 	ErrMergeMissingPos      = errors.New("merge operation requires pos")
 	ErrMergePosNotNumber    = errors.New("merge operation pos must be a number")
+	ErrMergePropsNotObject  = errors.New("merge operation props must be an object")
 	ErrExtendMissingProps   = errors.New("extend operation requires props")
 	ErrExtendPropsNotObject = errors.New("extend operation props must be an object")
 )

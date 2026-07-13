@@ -28,7 +28,7 @@ var benchmarkOps = []internal.Op{
 	op.NewStrDel([]string{"text"}, 0, 5),
 	op.NewSplit([]string{"text"}, 5, nil),
 	op.NewExtend([]string{"object"}, map[string]any{"key": "value"}, false),
-	op.NewMerge([]string{"array"}, 1, map[string]any{"merged": true}),
+	op.NewMerge([]string{"array", "1"}, 1, map[string]any{"merged": true}),
 }
 
 func BenchmarkEncode(b *testing.B) {
@@ -103,7 +103,7 @@ func BenchmarkSingleOperationTypes(b *testing.B) {
 		{"StrDel", op.NewStrDel([]string{"text"}, 0, 5)},
 		{"Split", op.NewSplit([]string{"text"}, 5, nil)},
 		{"Extend", op.NewExtend([]string{"object"}, map[string]any{"key": "value"}, false)},
-		{"Merge", op.NewMerge([]string{"array"}, 1, map[string]any{"merged": true})},
+		{"Merge", op.NewMerge([]string{"array", "1"}, 1, map[string]any{"merged": true})},
 	}
 
 	for _, tt := range tests {

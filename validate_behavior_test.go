@@ -112,15 +112,6 @@ func TestCompileOperationsRejectsInvalidPayloads(t *testing.T) {
 			wantPath:  "/name",
 		},
 		{
-			name:      "merge position must be positive",
-			data:      []byte(`[{"op":"merge","path":"/nodes/1","pos":0}]`),
-			opts:      allCapabilities(),
-			wantKind:  jsonpatch.ErrPayloadInvalid,
-			wantCause: op.ErrPositionOutOfBounds,
-			wantOp:    "merge",
-			wantPath:  "/nodes/1",
-		},
-		{
 			name:      "and requires predicate operands",
 			data:      []byte(`[{"op":"and","path":"/profile","apply":[]}]`),
 			opts:      allCapabilities(),

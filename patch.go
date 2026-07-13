@@ -186,21 +186,13 @@ func compileOps(ops []Op, options compileOptions) (*Patch, error) {
 		if !operationAllowed(operation, options.capabilities) {
 			return nil, newError(ErrUnsupportedCapability, i, operation, options.codec, nil)
 		}
-		cloned, err := cloneCompiledOperation(operation)
+		cloned, err := operation.Clone()
 		if err != nil {
 			return nil, newError(ErrPayloadInvalid, i, operation, options.codec, err)
 		}
 		compiled[i] = cloned
 	}
 	return &Patch{ops: compiled}, nil
-}
-
-func cloneCompiledOperation(operation Op) (Op, error) {
-	cloneOp, ok := operation.(internal.CloneOp)
-	if !ok {
-		return nil, fmt.Errorf("operation %T cannot be cloned for compilation", operation)
-	}
-	return cloneOp.Clone()
 }
 
 func operationAllowed(operation Op, capabilities Capability) bool {
@@ -238,12 +230,11 @@ type Result[T internal.Document] struct {
 
 // Step describes one applied operation.
 type Step struct {
-	index   int
-	op      string
-	path    string
-	from    string
-	old     any
-	applied bool
+	index int
+	op    string
+	path  string
+	from  string
+	old   any
 }
 
 // Index returns the operation index.
@@ -269,11 +260,6 @@ func (s *Step) From() string {
 // Old returns the previous value reported by the operation.
 func (s *Step) Old() any {
 	return s.old
-}
-
-// Applied reports whether the operation completed.
-func (s *Step) Applied() bool {
-	return s.applied
 }
 
 // Apply applies patch immutably to doc.
@@ -527,11 +513,10 @@ func stepsFromResults(ops []Op, results []internal.OpResult[any]) []Step {
 	for i := range results {
 		operation := ops[i]
 		step := Step{
-			index:   i,
-			op:      string(operation.Op()),
-			path:    jsonpointer.Format(operation.Path()...),
-			old:     results[i].Old,
-			applied: true,
+			index: i,
+			op:    string(operation.Op()),
+			path:  jsonpointer.Format(operation.Path()...),
+			old:   results[i].Old,
 		}
 		if from, ok := operation.(interface{ From() []string }); ok {
 			step.from = jsonpointer.Format(from.From()...)

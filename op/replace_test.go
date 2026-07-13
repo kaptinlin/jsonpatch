@@ -105,6 +105,21 @@ func TestReplace_EmptyStringRootKey(t *testing.T) {
 	assert.Equal(t, "root-key", result.Old)
 }
 
+func TestReplace_EmptyStringRootKeyMustExist(t *testing.T) {
+	t.Parallel()
+
+	doc := map[string]any{"name": "Ada"}
+	want := map[string]any{"name": "Ada"}
+
+	result, err := NewReplace([]string{""}, "new-root-key").Apply(doc)
+
+	require.ErrorIs(t, err, ErrPathNotFound)
+	assert.Equal(t, internal.OpResult[any]{}, result)
+	if diff := cmp.Diff(want, doc); diff != "" {
+		t.Errorf("Apply() mutated missing empty key (-want +got):\n%s", diff)
+	}
+}
+
 func TestReplaceClonesInsertedValue(t *testing.T) {
 	t.Parallel()
 
@@ -127,10 +142,27 @@ func TestReplace_WithOldValueSerializesOldValue(t *testing.T) {
 	replaceOp := NewReplaceWithOldValue([]string{"name"}, "Grace", "Ada")
 	jsonOp, err := replaceOp.ToJSON()
 	require.NoError(t, err)
-	wantJSON := internal.Operation{Op: "replace", Path: "/name", Value: "Grace", OldValue: "Ada"}
+	wantJSON := internal.Operation{Op: "replace", Path: "/name", Value: "Grace", OldValue: "Ada", HasOldValue: true}
 	if diff := cmp.Diff(wantJSON, jsonOp); diff != "" {
 		t.Errorf("ToJSON() mismatch (-want +got):\n%s", diff)
 	}
+}
+
+func TestReplace_OldValuePresenceSurvivesClone(t *testing.T) {
+	t.Parallel()
+
+	withoutOldValue := NewReplace([]string{"name"}, "Grace")
+	assert.False(t, withoutOldValue.HasOldValue)
+
+	withNullOldValue := NewReplaceWithOldValue([]string{"name"}, "Grace", nil)
+	assert.True(t, withNullOldValue.HasOldValue)
+	assert.Nil(t, withNullOldValue.OldValue)
+
+	cloned, err := withNullOldValue.Clone()
+	require.NoError(t, err)
+	clonedReplace := cloned.(*ReplaceOperation)
+	assert.True(t, clonedReplace.HasOldValue)
+	assert.Nil(t, clonedReplace.OldValue)
 }
 
 func TestReplace_NonExistent(t *testing.T) {

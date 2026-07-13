@@ -2,6 +2,7 @@ package op
 
 import (
 	"fmt"
+	"math/big"
 	"reflect"
 	"slices"
 	"strconv"
@@ -94,13 +95,16 @@ func deepEqual(a, b any) bool {
 	}
 
 	// Fast path: numeric types
-	aFloat, aIsNum := toNumericValue(a)
-	bFloat, bIsNum := toNumericValue(b)
+	aNumber, aNonFinite, aIsNum := exactNumericValue(a)
+	bNumber, bNonFinite, bIsNum := exactNumericValue(b)
 	if aIsNum != bIsNum {
 		return false
 	}
 	if aIsNum {
-		return aFloat == bFloat
+		if aNumber == nil || bNumber == nil {
+			return aNumber == nil && bNumber == nil && aNonFinite == bNonFinite
+		}
+		return aNumber.Cmp(bNumber) == 0
 	}
 
 	if aMap, ok := a.(map[string]any); ok {
@@ -139,37 +143,37 @@ func deepEqual(a, b any) bool {
 	return reflect.DeepEqual(a, b)
 }
 
-// toNumericValue converts a value to float64 if it's an actual numeric type
-// (not a string that could be parsed as a number).
-// Returns the float64 value and true if successful, 0 and false otherwise.
-func toNumericValue(val any) (float64, bool) {
+// exactNumericValue converts a Go number to its exact mathematical value.
+// Non-finite floats are returned separately because they are not rational values.
+func exactNumericValue(val any) (*big.Rat, float64, bool) {
 	switch v := val.(type) {
 	case float64:
-		return v, true
+		return new(big.Rat).SetFloat64(v), v, true
 	case float32:
-		return float64(v), true
+		f := float64(v)
+		return new(big.Rat).SetFloat64(f), f, true
 	case int:
-		return float64(v), true
+		return new(big.Rat).SetInt64(int64(v)), 0, true
 	case int8:
-		return float64(v), true
+		return new(big.Rat).SetInt64(int64(v)), 0, true
 	case int16:
-		return float64(v), true
+		return new(big.Rat).SetInt64(int64(v)), 0, true
 	case int32:
-		return float64(v), true
+		return new(big.Rat).SetInt64(int64(v)), 0, true
 	case int64:
-		return float64(v), true
+		return new(big.Rat).SetInt64(v), 0, true
 	case uint:
-		return float64(v), true
+		return new(big.Rat).SetUint64(uint64(v)), 0, true
 	case uint8:
-		return float64(v), true
+		return new(big.Rat).SetUint64(uint64(v)), 0, true
 	case uint16:
-		return float64(v), true
+		return new(big.Rat).SetUint64(uint64(v)), 0, true
 	case uint32:
-		return float64(v), true
+		return new(big.Rat).SetUint64(uint64(v)), 0, true
 	case uint64:
-		return float64(v), true
+		return new(big.Rat).SetUint64(v), 0, true
 	default:
-		return 0, false
+		return nil, 0, false
 	}
 }
 
@@ -181,11 +185,14 @@ func DeepClone(value any) (any, error) {
 
 // parseArrayIndex parses a string token as an array index.
 func parseArrayIndex(token string) (int, error) {
-	index, err := strconv.Atoi(token)
+	if token == "-" || !jsonpointer.IsValidIndex(token) {
+		return 0, ErrPathNotFound
+	}
+	parsed, err := strconv.ParseInt(token, 10, strconv.IntSize)
 	if err != nil {
 		return 0, ErrPathNotFound
 	}
-	return index, nil
+	return int(parsed), nil
 }
 
 // navigateToParent navigates to the parent of the target path and returns the parent, key, and any error
@@ -478,7 +485,7 @@ func floatToJSONValue(f float64) any {
 
 // predicateOpsToJSON converts a slice of predicate operations to JSON format.
 // Used by composite predicates (And, Or, Not) to serialize their sub-operations.
-func predicateOpsToJSON(operations []any, errInvalid error) ([]internal.Operation, error) {
+func predicateOpsToJSON(operations []any, base []string, errInvalid error) ([]internal.Operation, error) {
 	result := make([]internal.Operation, 0, len(operations))
 	for _, op := range operations {
 		predicateOp, ok := op.(internal.PredicateOp)
@@ -493,6 +500,11 @@ func predicateOpsToJSON(operations []any, errInvalid error) ([]internal.Operatio
 		if err != nil {
 			return nil, err
 		}
+		relative, err := relativePredicatePath(base, predicateOp.Path())
+		if err != nil {
+			return nil, err
+		}
+		jsonVal.Path = formatPath(relative)
 		result = append(result, jsonVal)
 	}
 	return result, nil

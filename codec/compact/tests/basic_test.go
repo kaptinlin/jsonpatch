@@ -167,6 +167,11 @@ func (o staticCompactOp) Validate() error {
 	return nil
 }
 
+func (o staticCompactOp) Clone() (internal.Op, error) {
+	cloned := append(compact.Op(nil), o.compact...)
+	return staticCompactOp{compact: cloned}, nil
+}
+
 func TestSliceOperations(t *testing.T) {
 	t.Parallel()
 	ops := []internal.Op{

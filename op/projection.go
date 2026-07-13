@@ -36,7 +36,7 @@ func (ao *AndOperation) Code() int {
 
 // ToJSON serializes the operation to JSON format.
 func (ao *AndOperation) ToJSON() (internal.Operation, error) {
-	operations, err := predicateOpsToJSON(ao.Operations, ErrInvalidPredicateInAnd)
+	operations, err := predicateOpsToJSON(ao.Operations, ao.Path(), ErrInvalidPredicateInAnd)
 	if err != nil {
 		return internal.Operation{}, err
 	}
@@ -75,7 +75,7 @@ func (co *ContainsOperation) ToJSON() (internal.Operation, error) {
 func (co *ContainsOperation) ToCompact() (internal.CompactOperation, error) {
 	compact := internal.CompactOperation{codeFor(internal.OpContainsType), co.Path(), co.Value}
 	if co.IgnoreCase {
-		compact = append(compact, true)
+		compact = append(compact, 1)
 	}
 	return compact, nil
 }
@@ -136,7 +136,7 @@ func (e *EndsOperation) ToJSON() (internal.Operation, error) {
 func (e *EndsOperation) ToCompact() (internal.CompactOperation, error) {
 	compact := internal.CompactOperation{codeFor(internal.OpEndsType), e.Path(), e.Value}
 	if e.IgnoreCase {
-		compact = append(compact, true)
+		compact = append(compact, 1)
 	}
 	return compact, nil
 }
@@ -160,7 +160,7 @@ func (ex *ExtendOperation) ToJSON() (internal.Operation, error) {
 func (ex *ExtendOperation) ToCompact() (internal.CompactOperation, error) {
 	compact := internal.CompactOperation{codeFor(internal.OpExtendType), ex.Path(), ex.Properties}
 	if ex.DeleteNull {
-		compact = append(compact, true)
+		compact = append(compact, 1)
 	}
 	return compact, nil
 }
@@ -259,7 +259,7 @@ func (ma *MatchesOperation) ToJSON() (internal.Operation, error) {
 func (ma *MatchesOperation) ToCompact() (internal.CompactOperation, error) {
 	compact := internal.CompactOperation{codeFor(internal.OpMatchesType), ma.Path(), ma.Pattern}
 	if ma.IgnoreCase {
-		compact = append(compact, true)
+		compact = append(compact, 1)
 	}
 	return compact, nil
 }
@@ -339,7 +339,7 @@ func (n *NotOperation) ToJSON() (internal.Operation, error) {
 	if _, err := n.operand(); err != nil {
 		return internal.Operation{}, err
 	}
-	opsJSON, err := predicateOpsToJSON(n.Operations, ErrInvalidPredicateInNot)
+	opsJSON, err := predicateOpsToJSON(n.Operations, n.Path(), ErrInvalidPredicateInNot)
 	if err != nil {
 		return internal.Operation{}, err
 	}
@@ -371,7 +371,7 @@ func (oo *OrOperation) Code() int {
 
 // ToJSON serializes the operation to JSON format.
 func (oo *OrOperation) ToJSON() (internal.Operation, error) {
-	opsJSON, err := predicateOpsToJSON(oo.Operations, ErrInvalidPredicateInOr)
+	opsJSON, err := predicateOpsToJSON(oo.Operations, oo.Path(), ErrInvalidPredicateInOr)
 	if err != nil {
 		return internal.Operation{}, err
 	}
@@ -405,6 +405,7 @@ func (r *RemoveOperation) ToJSON() (internal.Operation, error) {
 
 	if r.HasOldValue {
 		result.OldValue = r.OldValue
+		result.HasOldValue = true
 	}
 
 	return result, nil
@@ -412,7 +413,11 @@ func (r *RemoveOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (r *RemoveOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{codeFor(internal.OpRemoveType), r.path}, nil
+	compact := internal.CompactOperation{codeFor(internal.OpRemoveType), r.path}
+	if r.HasOldValue {
+		compact = append(compact, r.OldValue)
+	}
+	return compact, nil
 }
 
 // Code returns the operation code.
@@ -428,8 +433,9 @@ func (rp *ReplaceOperation) ToJSON() (internal.Operation, error) {
 		Value: rp.Value,
 	}
 
-	if rp.OldValue != nil {
+	if rp.HasOldValue {
 		result.OldValue = rp.OldValue
+		result.HasOldValue = true
 	}
 
 	return result, nil
@@ -437,7 +443,11 @@ func (rp *ReplaceOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (rp *ReplaceOperation) ToCompact() (internal.CompactOperation, error) {
-	return internal.CompactOperation{codeFor(internal.OpReplaceType), rp.path, rp.Value}, nil
+	compact := internal.CompactOperation{codeFor(internal.OpReplaceType), rp.path, rp.Value}
+	if rp.HasOldValue {
+		compact = append(compact, rp.OldValue)
+	}
+	return compact, nil
 }
 
 // Code returns the operation code.
@@ -488,7 +498,7 @@ func (s *StartsOperation) ToJSON() (internal.Operation, error) {
 func (s *StartsOperation) ToCompact() (internal.CompactOperation, error) {
 	compact := internal.CompactOperation{codeFor(internal.OpStartsType), s.Path(), s.Value}
 	if s.IgnoreCase {
-		compact = append(compact, true)
+		compact = append(compact, 1)
 	}
 	return compact, nil
 }
@@ -509,6 +519,7 @@ func (sd *StrDelOperation) ToJSON() (internal.Operation, error) {
 
 	if sd.HasStr {
 		result.Str = sd.Str
+		result.HasStr = true
 		result.Len = 0
 	}
 
@@ -590,7 +601,7 @@ func (ts *TestStringOperation) ToJSON() (internal.Operation, error) {
 func (ts *TestStringOperation) ToCompact() (internal.CompactOperation, error) {
 	compact := internal.CompactOperation{codeFor(internal.OpTestStringType), ts.Path(), ts.Pos, ts.Str}
 	if ts.NotFlag {
-		compact = append(compact, true)
+		compact = append(compact, 1)
 	}
 	return compact, nil
 }
@@ -614,7 +625,7 @@ func (tl *TestStringLenOperation) ToJSON() (internal.Operation, error) {
 func (tl *TestStringLenOperation) ToCompact() (internal.CompactOperation, error) {
 	compact := internal.CompactOperation{codeFor(internal.OpTestStringLenType), tl.Path(), tl.Length}
 	if tl.NotFlag {
-		compact = append(compact, true)
+		compact = append(compact, 1)
 	}
 	return compact, nil
 }

@@ -2,6 +2,8 @@ package binary
 
 import (
 	"bytes"
+	"errors"
+	"io"
 
 	"github.com/tinylib/msgp/msgp"
 
@@ -33,5 +35,12 @@ func (c *Codec) Encode(ops []internal.Op) ([]byte, error) {
 // Decode deserializes operations from MessagePack binary format.
 func (c *Codec) Decode(data []byte) ([]internal.Op, error) {
 	r := msgp.NewReader(bytes.NewReader(data))
-	return decodeOps(r)
+	ops, err := decodeOps(r)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := r.NextType(); !errors.Is(err, io.EOF) {
+		return nil, ErrTrailingData
+	}
+	return ops, nil
 }

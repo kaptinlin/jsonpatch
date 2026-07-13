@@ -73,7 +73,7 @@ func TestApplyPreservesAdditionalDocumentShapes(t *testing.T) {
 			t.Errorf("Apply() document mismatch (-want +got):\n%s", diff)
 		}
 		require.Len(t, result.Steps, 1)
-		assert.True(t, result.Steps[0].Applied())
+		assert.Equal(t, "add", result.Steps[0].Op())
 	})
 
 	t.Run("interface slice is patched as primitive shape", func(t *testing.T) {

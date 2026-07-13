@@ -3,9 +3,8 @@ package jsonpatch
 import "regexp"
 
 // CreateMatcherDefault creates a regex matcher from a pattern and case sensitivity flag.
-// Returns a matcher that always returns false if pattern compilation fails.
-// This aligns with json-joy's createMatcherDefault behavior.
-func CreateMatcherDefault(pattern string, ignoreCase bool) RegexMatcher {
+// It returns a regexp syntax error when pattern is invalid.
+func CreateMatcherDefault(pattern string, ignoreCase bool) (RegexMatcher, error) {
 	flags := ""
 	if ignoreCase {
 		flags = "(?i)"
@@ -13,9 +12,8 @@ func CreateMatcherDefault(pattern string, ignoreCase bool) RegexMatcher {
 
 	regex, err := regexp.Compile(flags + pattern)
 	if err != nil {
-		// Return a matcher that always returns false if compilation fails
-		return func(_ string) bool { return false }
+		return nil, err
 	}
 
-	return regex.MatchString
+	return regex.MatchString, nil
 }

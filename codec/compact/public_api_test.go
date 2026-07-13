@@ -106,3 +106,7 @@ func (applyOnlyOp) Apply(doc any) (internal.OpResult[any], error) {
 func (applyOnlyOp) Validate() error {
 	return nil
 }
+
+func (applyOnlyOp) Clone() (internal.Op, error) {
+	return applyOnlyOp{}, nil
+}

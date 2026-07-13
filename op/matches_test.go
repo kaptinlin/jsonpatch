@@ -128,15 +128,38 @@ func TestMatches_InvalidPattern(t *testing.T) {
 	path := []string{"email"}
 	invalidPattern := `[invalid-regex`
 
-	// Invalid patterns create a matcher that always returns false.
 	matchesOp := NewMatches(path, invalidPattern, false, nil)
 	if matchesOp == nil {
 		require.FailNow(t, "NewMatches() = nil, want non-nil")
 	}
 
-	result, _ := matchesOp.Test(map[string]any{"email": "test@example.com"})
-	if result {
-		assert.Fail(t, "Test() with invalid pattern = true, want false")
+	result, err := matchesOp.Test(map[string]any{"email": "test@example.com"})
+	assert.False(t, result)
+	assert.ErrorIs(t, err, ErrRegexPattern)
+}
+
+func TestMatches_NilMatcherIsInvalid(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]*MatchesOperation{
+		"factory returned nil": NewMatches(nil, "pattern", false, func(string, bool) (internal.RegexMatcher, error) {
+			return nil, nil
+		}),
+		"zero value matcher": {Pattern: "pattern"},
+	}
+
+	for name, matchesOp := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.ErrorIs(t, matchesOp.Validate(), ErrRegexPattern)
+			matched, err := matchesOp.Test("pattern")
+			assert.False(t, matched)
+			assert.ErrorIs(t, err, ErrRegexPattern)
+			result, err := matchesOp.Apply("pattern")
+			assert.Equal(t, internal.OpResult[any]{}, result)
+			assert.ErrorIs(t, err, ErrRegexPattern)
+		})
 	}
 }
 
@@ -170,7 +193,7 @@ func TestMatches_ToCompact(t *testing.T) {
 	if err != nil {
 		assert.Fail(t, fmt.Sprintf("ToCompact() failed: %v", err))
 	}
-	want := []any{internal.OpMatchesCode, []string{"name"}, "john", true}
+	want := []any{internal.OpMatchesCode, []string{"name"}, "john", 1}
 	assert.Equal(t, want, compact)
 }
 

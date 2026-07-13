@@ -44,7 +44,7 @@ func encodeOpWithParent(w *msgp.Writer, v internal.Op, parent []string) error {
 		}
 		return encodePathOnly(w, o.Code(), path)
 	case *op.ReplaceOperation:
-		return encodePathValue(w, o.Code(), path, o.Value)
+		return encodeReplace(w, o, path)
 	case *op.MoveOperation:
 		return encodePathPaths(w, o.Code(), path, o.From())
 	case *op.CopyOperation:
@@ -143,6 +143,26 @@ func encodePathValue(w *msgp.Writer, code int, path []string, value any) error {
 		return err
 	}
 	return w.WriteIntf(value)
+}
+
+func encodeReplace(w *msgp.Writer, o *op.ReplaceOperation, path []string) error {
+	size := uint32(3)
+	if o.HasOldValue {
+		size = 4
+	}
+	if err := writeHeader(w, size, o.Code()); err != nil {
+		return err
+	}
+	if err := encodePath(w, path); err != nil {
+		return err
+	}
+	if err := w.WriteIntf(o.Value); err != nil {
+		return err
+	}
+	if o.HasOldValue {
+		return w.WriteIntf(o.OldValue)
+	}
+	return nil
 }
 
 // encodePathPaths encodes operations with format: [code, path, from].
@@ -300,15 +320,25 @@ func encodeStrIns(w *msgp.Writer, o *op.StrInsOperation, path []string) error {
 	return w.WriteString(o.Str)
 }
 
-// encodeStrDel encodes a str_del operation: [code, path, pos, len].
+// encodeStrDel encodes a str_del string or length variant.
 func encodeStrDel(w *msgp.Writer, o *op.StrDelOperation, path []string) error {
-	if err := writeHeader(w, 4, o.Code()); err != nil {
+	size := uint32(5)
+	if o.HasStr {
+		size = 4
+	}
+	if err := writeHeader(w, size, o.Code()); err != nil {
 		return err
 	}
 	if err := encodePath(w, path); err != nil {
 		return err
 	}
 	if err := w.WriteFloat64(float64(o.Pos)); err != nil {
+		return err
+	}
+	if o.HasStr {
+		return w.WriteString(o.Str)
+	}
+	if err := w.WriteUint8(0); err != nil {
 		return err
 	}
 	return w.WriteFloat64(float64(o.Len))

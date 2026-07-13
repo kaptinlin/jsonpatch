@@ -56,12 +56,11 @@ func (ts *TestStringOperation) Test(doc any) (bool, error) {
 	if !ok {
 		return false, nil
 	}
-
-	length := len(str)
-	start := min(ts.Pos, length)
-	end := min(ts.Pos+len(ts.Str), length)
-
-	return ts.NotFlag != ts.matches(str[start:end]), nil
+	substring, err := codePointSubstring(str, ts.Pos, codePointCount(ts.Str))
+	if err != nil {
+		return false, err
+	}
+	return ts.NotFlag != ts.matches(substring), nil
 }
 
 // Apply applies the test string operation to the document.
@@ -77,16 +76,10 @@ func (ts *TestStringOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	pos := ts.Pos
-	if pos < 0 || pos > len(str) {
-		return internal.OpResult[any]{}, ErrPositionOutOfStringRange
+	substring, err := codePointSubstring(str, pos, codePointCount(ts.Str))
+	if err != nil {
+		return internal.OpResult[any]{}, err
 	}
-
-	endPos := pos + len(ts.Str)
-	if endPos > len(str) {
-		return internal.OpResult[any]{}, ErrSubstringTooLong
-	}
-
-	substring := str[pos:endPos]
 	shouldPass := ts.matches(substring) != ts.NotFlag
 	if !shouldPass {
 		if ts.NotFlag {

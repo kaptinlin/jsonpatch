@@ -8,10 +8,7 @@ import (
 )
 
 // MergeOperation represents an array merge operation.
-// path: target path
-// pos: merge position (array index)
-// props: properties to apply after merge (can be nil)
-// Only supports array type fields.
+// Path identifies the second element; Pos and Props carry reverse-split metadata.
 type MergeOperation struct {
 	BaseOp
 	Pos   float64        `json:"pos"`   // Merge position
@@ -34,63 +31,33 @@ func (mg *MergeOperation) Op() internal.OpType {
 
 // Apply applies the merge operation to the document.
 func (mg *MergeOperation) Apply(doc any) (internal.OpResult[any], error) {
-	var targetArray []any
-
-	if len(mg.Path()) == 0 {
-		// Root level array
-		slice, ok := doc.([]any)
-		if !ok {
-			return internal.OpResult[any]{}, ErrInvalidTarget
-		}
-		targetArray = slice
-	} else {
-		// Get array at path
-		target, err := value(doc, mg.Path())
-		if err != nil {
-			return internal.OpResult[any]{}, err
-		}
-		slice, ok := target.([]any)
-		if !ok {
-			return internal.OpResult[any]{}, ErrInvalidTarget
-		}
-		targetArray = slice
-	}
-
-	pos := int(mg.Pos)
-	if pos <= 0 {
-		return internal.OpResult[any]{}, ErrInvalidIndex
-	}
-
-	// Get elements to merge (pos-1 and pos)
-	// In JS, out-of-bounds array access returns undefined (nil in Go)
-	var one, two any
-	if pos-1 < len(targetArray) {
-		one = targetArray[pos-1]
-	}
-	if pos < len(targetArray) {
-		two = targetArray[pos]
-	}
-	merged := mg.mergeElements(one, two)
-
-	// Create new array with merged result
-	newSlice := slices.Clone(targetArray)
-	newSlice[pos-1] = merged
-	if pos < len(newSlice) {
-		newSlice = slices.Delete(newSlice, pos, pos+1)
-	}
-
-	// Update the document
-	if len(mg.Path()) == 0 {
-		// Root array
-		return internal.OpResult[any]{Doc: newSlice, Old: []any{one, two}}, nil
-	}
-
-	err := setValueAtPath(doc, mg.Path(), newSlice)
+	target, err := resolveTarget(doc, mg.Path(), targetPolicy{
+		mustExist:     true,
+		invalidParent: ErrInvalidTarget,
+	})
 	if err != nil {
 		return internal.OpResult[any]{}, err
 	}
+	if target.root || !target.array {
+		return internal.OpResult[any]{}, ErrInvalidTarget
+	}
+	if target.index == 0 {
+		return internal.OpResult[any]{}, ErrInvalidIndex
+	}
 
-	return internal.OpResult[any]{Doc: doc, Old: []any{one, two}}, nil
+	targetArray := target.container.([]any)
+	one := targetArray[target.index-1]
+	two := target.value
+	merged := mg.mergeElements(one, two)
+
+	newSlice := slices.Clone(targetArray)
+	newSlice[target.index-1] = merged
+	newSlice = slices.Delete(newSlice, target.index, target.index+1)
+	newDoc, err := rebindContainer(doc, target.containerRef, newSlice)
+	if err != nil {
+		return internal.OpResult[any]{}, err
+	}
+	return internal.OpResult[any]{Doc: newDoc, Old: []any{one, two}}, nil
 }
 
 // mergeElements merges two elements based on their type.
@@ -140,19 +107,11 @@ func (mg *MergeOperation) mergeElements(one, two any) any {
 }
 
 func (mg *MergeOperation) mergeSlateNodes(one, two any, merge func(map[string]any, map[string]any) map[string]any) map[string]any {
-	merged := merge(one.(map[string]any), two.(map[string]any))
-	maps.Copy(merged, mg.Props)
-	return merged
+	return merge(one.(map[string]any), two.(map[string]any))
 }
 
 // Validate validates the merge operation.
 func (mg *MergeOperation) Validate() error {
-	if mg.Pos < 0 {
-		return ErrPositionNegative
-	}
-	if mg.Pos == 0 {
-		return ErrPositionOutOfBounds
-	}
 	return nil
 }
 

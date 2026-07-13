@@ -27,9 +27,13 @@ func Encode(ops []internal.Op) ([]internal.Operation, error) {
 
 // EncodeJSON converts Op instances to JSON bytes.
 func EncodeJSON(ops []internal.Op) ([]byte, error) {
-	result, err := Encode(ops)
+	operations, err := Encode(ops)
 	if err != nil {
 		return nil, err
+	}
+	result := make([]map[string]any, len(operations))
+	for i := range operations {
+		result[i] = operationToMap(&operations[i], false)
 	}
 	return json.Marshal(result)
 }

@@ -19,18 +19,6 @@ func TestAutomaticRoundtrip(t *testing.T) {
 	options := internal.JSONPatchOptions{CreateMatcher: jsonpatch.CreateMatcherDefault}
 
 	for name, opMap := range jsonsamples.SampleOperations {
-		if opType, ok := opMap["op"].(string); ok {
-			// Skip operations with features not yet preserved by binary codec
-			if _, hasOld := opMap["oldValue"]; hasOld {
-				continue
-			}
-			if opType == "str_del" {
-				if _, hasStr := opMap["str"]; hasStr {
-					continue
-				}
-			}
-		}
-
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			// Step 1: JSON -> Op (json codec)

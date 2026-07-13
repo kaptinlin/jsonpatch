@@ -121,7 +121,7 @@ var (
 		},
 		{
 			name:  "MergeOperation",
-			patch: []internal.Op{op.NewMerge([]string{"a", "arr"}, 1, map[string]any{"merged": true})},
+			patch: []internal.Op{op.NewMerge([]string{"a", "arr", "1"}, 1, map[string]any{"merged": true})},
 		},
 	}
 )
@@ -221,6 +221,9 @@ func areOperationsEqual(a, b *internal.Operation) bool {
 		return false
 	}
 	if !areValuesEqual(a.OldValue, b.OldValue) {
+		return false
+	}
+	if a.HasOldValue != b.HasOldValue {
 		return false
 	}
 	if len(a.Apply) != len(b.Apply) {

@@ -22,6 +22,8 @@ type Operation struct {
 	Pos int `json:"pos"`
 	// Str is the string operand for string-editing operations. It is never omitted because the empty string is valid.
 	Str string `json:"str"`
+	// HasStr distinguishes an explicit empty str_del string from length mode.
+	HasStr bool `json:"-"`
 	// Len is the requested length for operations that use one. It is never omitted because 0 is valid.
 	Len int `json:"len"`
 
@@ -40,6 +42,8 @@ type Operation struct {
 	DeleteNull bool `json:"deleteNull,omitempty"`
 	// OldValue carries the expected previous value for operations that use it.
 	OldValue any `json:"oldValue,omitempty"`
+	// HasOldValue distinguishes an explicit null oldValue from an absent field.
+	HasOldValue bool `json:"-"`
 }
 
 // CompactOperation is the array representation used by the compact codec.
@@ -57,4 +61,4 @@ type OpResult[T Document] struct {
 type RegexMatcher func(value string) bool
 
 // CreateRegexMatcher builds a RegexMatcher from pattern and ignoreCase.
-type CreateRegexMatcher func(pattern string, ignoreCase bool) RegexMatcher
+type CreateRegexMatcher func(pattern string, ignoreCase bool) (RegexMatcher, error)

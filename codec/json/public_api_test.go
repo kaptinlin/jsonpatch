@@ -45,7 +45,7 @@ func TestDecodeCompositeNotAndApplyValidation(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "not", encoded[0].Op)
 	require.Len(t, encoded[0].Apply, 1)
-	assert.Equal(t, "/user/name", encoded[0].Apply[0].Path)
+	assert.Equal(t, "/name", encoded[0].Apply[0].Path)
 
 	_, err = Decode([]map[string]any{{
 		"op":    "not",
@@ -89,4 +89,8 @@ func (applyOnlyOp) Apply(doc any) (internal.OpResult[any], error) {
 
 func (applyOnlyOp) Validate() error {
 	return nil
+}
+
+func (applyOnlyOp) Clone() (internal.Op, error) {
+	return applyOnlyOp{}, nil
 }

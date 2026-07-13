@@ -2,6 +2,7 @@ package compact
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 )
@@ -20,7 +21,13 @@ func resolveOpType(opcode any) (internal.OpType, error) {
 	case int:
 		code = v
 	case float64:
+		if math.IsNaN(v) || math.IsInf(v, 0) || v != math.Trunc(v) {
+			return "", fmt.Errorf("%w: %v", ErrInvalidCodeType, v)
+		}
 		code = int(v)
+		if float64(code) != v {
+			return "", fmt.Errorf("%w: %v", ErrInvalidCodeType, v)
+		}
 	case Code:
 		code = int(v)
 	default:
