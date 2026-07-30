@@ -32,6 +32,9 @@ var (
 	ErrMergeOpMissingPos     = errors.New("merge operation missing 'pos' field")
 	ErrValueNotObject        = errors.New("value is not an object")
 	ErrInvalidBooleanField   = errors.New("boolean field has invalid type")
+	ErrNumberNotFinite       = errors.New("numeric field must be finite")
+	ErrNumberNotInteger      = errors.New("coordinate field must be an integer")
+	ErrNumberOutOfRange      = errors.New("coordinate field is outside the int range")
 )
 
 // Errors for predicate operation decoding.
@@ -39,6 +42,7 @@ var (
 	ErrTypeOpMissingValue        = errors.New("type operation missing string 'value' field")
 	ErrTestTypeOpMissingType     = errors.New("test_type operation missing 'type' field")
 	ErrTestStringOpMissingStr    = errors.New("test_string operation missing 'str' field")
+	ErrTestStringIgnoreCase      = errors.New("test_string operation does not support 'ignore_case'")
 	ErrTestStringLenOpMissingLen = errors.New("test_string_len operation missing 'len' field")
 	ErrContainsOpMissingValue    = errors.New("contains operation missing 'value' field")
 	ErrEndsOpMissingValue        = errors.New("ends operation missing 'value' field")

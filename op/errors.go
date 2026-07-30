@@ -1,6 +1,9 @@
 package op
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	// ErrPathNotFound reports that a JSON Pointer does not resolve.
@@ -83,9 +86,7 @@ var (
 	ErrPatternEmpty = errors.New("pattern cannot be empty")
 	// ErrLengthNegative reports that a length is negative.
 	ErrLengthNegative = errors.New("length cannot be negative")
-	// ErrInvalidLength reports that a length is not an integer.
-	ErrInvalidLength = errors.New("length must be an integer")
-	// ErrTypeMismatch reports that two values have mismatched JSON types.
+	// ErrTypeMismatch reports that a runtime value has the wrong type for an operation.
 	ErrTypeMismatch = errors.New("type mismatch")
 	// ErrContainsMismatch reports that a contains predicate failed.
 	ErrContainsMismatch = errors.New("contains check failed")
@@ -95,10 +96,10 @@ var (
 	ErrInvalidPredicateInNot = errors.New("invalid predicate in not operation")
 	// ErrInvalidPredicateInOr reports that or received a non-predicate operand.
 	ErrInvalidPredicateInOr = errors.New("invalid predicate in or operation")
+	// ErrPredicateCycle reports a cycle in a composite predicate graph.
+	ErrPredicateCycle = errors.New("composite predicate cycle")
 	// ErrPredicatePathOutsideParent reports that a child predicate cannot be represented relative to its parent.
 	ErrPredicatePathOutsideParent = errors.New("predicate path is outside parent path")
-	// ErrNotNoOperands reports that not received no operands.
-	ErrNotNoOperands = errors.New("not operation requires operands")
 	// ErrCannotModifyRootArray reports that the root array cannot be edited in place.
 	ErrCannotModifyRootArray = errors.New("cannot modify root array directly")
 	// ErrCannotUpdateParent reports that the parent container could not be updated.
@@ -126,3 +127,11 @@ var (
 	// ErrOperationFailed is the base error for wrapped operation failures.
 	ErrOperationFailed = errors.New("operation failed")
 )
+
+func predicateFailure(cause error) error {
+	return fmt.Errorf("%w: %w", ErrTestFailed, cause)
+}
+
+func typeFailure(cause error) error {
+	return fmt.Errorf("%w: %w", ErrTypeMismatch, cause)
+}

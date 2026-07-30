@@ -9,12 +9,12 @@ import (
 // TestStringLenOperation represents a test operation that checks if a string value has a specific length.
 type TestStringLenOperation struct {
 	BaseOp
-	Length  float64 `json:"len"` // Expected string length
-	NotFlag bool    `json:"not"` // Whether to negate the result
+	Length  int  `json:"len"` // Expected string length
+	NotFlag bool `json:"not"` // Whether to negate the result
 }
 
 // NewTestStringLen creates a new test string length operation.
-func NewTestStringLen(path []string, expectedLength float64) *TestStringLenOperation {
+func NewTestStringLen(path []string, expectedLength int) *TestStringLenOperation {
 	return &TestStringLenOperation{
 		BaseOp: NewBaseOp(path),
 		Length: expectedLength,
@@ -22,7 +22,7 @@ func NewTestStringLen(path []string, expectedLength float64) *TestStringLenOpera
 }
 
 // NewTestStringLenWithNot creates a new test string length operation with not flag.
-func NewTestStringLenWithNot(path []string, expectedLength float64, not bool) *TestStringLenOperation {
+func NewTestStringLenWithNot(path []string, expectedLength int, not bool) *TestStringLenOperation {
 	return &TestStringLenOperation{
 		BaseOp:  NewBaseOp(path),
 		Length:  expectedLength,
@@ -53,7 +53,7 @@ func (tl *TestStringLenOperation) Test(doc any) (bool, error) {
 		return false, nil
 	}
 
-	lengthMatches := codePointCount(str) >= int(tl.Length)
+	lengthMatches := codePointCount(str) >= tl.Length
 	return tl.NotFlag != lengthMatches, nil
 }
 
@@ -62,16 +62,16 @@ func (tl *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error)
 	// Get the value at the path
 	value, err := value(doc, tl.Path())
 	if err != nil {
-		return internal.OpResult[any]{}, ErrPathNotFound
+		return internal.OpResult[any]{}, predicateFailure(ErrPathNotFound)
 	}
 
 	// Convert value to string
 	actualValue, err := toString(value)
 	if err != nil {
-		return internal.OpResult[any]{}, ErrNotString
+		return internal.OpResult[any]{}, predicateFailure(ErrNotString)
 	}
 
-	length := int(tl.Length)
+	length := tl.Length
 	actualLength := codePointCount(actualValue)
 	lengthMatches := actualLength >= length
 	shouldPass := lengthMatches != tl.NotFlag
@@ -79,10 +79,10 @@ func (tl *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error)
 		// Test failed
 		if tl.NotFlag {
 			// When Not is true and test fails, it means the length DID match when we expected it not to
-			return internal.OpResult[any]{}, fmt.Errorf("%w: string length %d matched condition (>= %d) when NOT expected", ErrStringLengthMismatch, actualLength, length)
+			return internal.OpResult[any]{}, predicateFailure(fmt.Errorf("%w: string length %d matched condition (>= %d) when NOT expected", ErrStringLengthMismatch, actualLength, length))
 		}
 		// When Not is false and test fails, it means the length didn't match when we expected it to
-		return internal.OpResult[any]{}, fmt.Errorf("%w: expected length >= %d, got %d", ErrStringLengthMismatch, length, actualLength)
+		return internal.OpResult[any]{}, predicateFailure(fmt.Errorf("%w: expected length >= %d, got %d", ErrStringLengthMismatch, length, actualLength))
 	}
 
 	// Test operations don't modify the document
@@ -96,9 +96,6 @@ func (tl *TestStringLenOperation) Apply(doc any) (internal.OpResult[any], error)
 func (tl *TestStringLenOperation) Validate() error {
 	if tl.Length < 0 {
 		return ErrLengthNegative
-	}
-	if tl.Length != float64(int(tl.Length)) {
-		return ErrInvalidLength
 	}
 	return nil
 }

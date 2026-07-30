@@ -85,7 +85,7 @@ var (
 		},
 		{
 			name:  "TestStringOperationWithPos",
-			patch: []internal.Op{op.NewTestString([]string{"a", "str"}, "lo", 3, false, false)},
+			patch: []internal.Op{op.NewTestString([]string{"a", "str"}, "lo", 3, false)},
 		},
 		{
 			name:  "TestStringLenOperationWithNot",

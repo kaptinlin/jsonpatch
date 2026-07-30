@@ -15,6 +15,12 @@ import (
 
 type namedJSONString string
 
+type namedAnySlice []any
+
+type namedStringSlice []string
+
+type namedStringMap map[string]string
+
 type account struct {
 	Name string `json:"name"`
 	Age  int    `json:"age"`
@@ -93,6 +99,68 @@ func TestApplyPreservesAdditionalDocumentShapes(t *testing.T) {
 func TestCompileOpsPreservesAdditionalDocumentShapes(t *testing.T) {
 	t.Parallel()
 
+	t.Run("typed slice", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := applyOps(t, []string{"Ada", "remove"},
+			op.NewReplace([]string{"0"}, "Grace"),
+			op.NewAdd([]string{"-"}, "Byron"),
+			op.NewRemove([]string{"1"}),
+		)
+		require.NoError(t, err)
+		assert.Equal(t, []string{"Grace", "Byron"}, result.Doc)
+		require.Len(t, result.Steps, 3)
+		assert.Equal(t, "Ada", result.Steps[0].Old())
+	})
+
+	t.Run("named any slice", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := applyOps(t, namedAnySlice{"Ada", "remove"},
+			op.NewReplace([]string{"0"}, "Grace"),
+			op.NewAdd([]string{"-"}, "Byron"),
+			op.NewRemove([]string{"1"}),
+		)
+		require.NoError(t, err)
+		assert.Equal(t, namedAnySlice{"Grace", "Byron"}, result.Doc)
+	})
+
+	t.Run("named string slice", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := applyOps(t, namedStringSlice{"Ada", "remove"},
+			op.NewReplace([]string{"0"}, "Grace"),
+			op.NewAdd([]string{"-"}, "Byron"),
+			op.NewRemove([]string{"1"}),
+		)
+		require.NoError(t, err)
+		assert.Equal(t, namedStringSlice{"Grace", "Byron"}, result.Doc)
+	})
+
+	t.Run("typed map", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := applyOps(t, map[string]string{"name": "Ada", "remove": "value"},
+			op.NewReplace([]string{"name"}, "Grace"),
+			op.NewAdd([]string{"role"}, "admin"),
+			op.NewRemove([]string{"remove"}),
+		)
+		require.NoError(t, err)
+		assert.Equal(t, map[string]string{"name": "Grace", "role": "admin"}, result.Doc)
+	})
+
+	t.Run("named map", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := applyOps(t, namedStringMap{"name": "Ada", "remove": "value"},
+			op.NewReplace([]string{"name"}, "Grace"),
+			op.NewAdd([]string{"role"}, "admin"),
+			op.NewRemove([]string{"remove"}),
+		)
+		require.NoError(t, err)
+		assert.Equal(t, namedStringMap{"name": "Grace", "role": "admin"}, result.Doc)
+	})
+
 	t.Run("JSON bytes remain bytes", func(t *testing.T) {
 		t.Parallel()
 
@@ -148,6 +216,30 @@ func TestCompileOpsPreservesAdditionalDocumentShapes(t *testing.T) {
 	})
 }
 
+func TestApplyCanonicalContainersRemainCopySafe(t *testing.T) {
+	t.Parallel()
+
+	t.Run("map", func(t *testing.T) {
+		t.Parallel()
+
+		doc := map[string]any{"profile": map[string]any{"name": "Ada"}}
+		result, err := applyOps(t, doc, op.NewReplace([]string{"profile", "name"}, "Grace"))
+		require.NoError(t, err)
+		assert.Equal(t, map[string]any{"profile": map[string]any{"name": "Grace"}}, result.Doc)
+		assert.Equal(t, map[string]any{"profile": map[string]any{"name": "Ada"}}, doc)
+	})
+
+	t.Run("slice", func(t *testing.T) {
+		t.Parallel()
+
+		doc := []any{map[string]any{"name": "Ada"}}
+		result, err := applyOps(t, doc, op.NewReplace([]string{"0", "name"}, "Grace"))
+		require.NoError(t, err)
+		assert.Equal(t, []any{map[string]any{"name": "Grace"}}, result.Doc)
+		assert.Equal(t, []any{map[string]any{"name": "Ada"}}, doc)
+	})
+}
+
 func TestApplyReportsConversionFailures(t *testing.T) {
 	t.Parallel()
 
@@ -182,6 +274,24 @@ func TestApplyReportsConversionFailures(t *testing.T) {
 		t.Parallel()
 
 		result, err := applyOperations(t, "Ada", []jsoncodec.Operation{{Op: "replace", Path: "", Value: nil}})
+		require.Error(t, err)
+		assert.Nil(t, result)
+		assert.ErrorIs(t, err, jsonpatch.ErrConversionFailed)
+	})
+
+	t.Run("typed slice result restoration failure is classified", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := applyOps(t, []string{"Ada"}, op.NewReplace([]string{"0"}, 1))
+		require.Error(t, err)
+		assert.Nil(t, result)
+		assert.ErrorIs(t, err, jsonpatch.ErrConversionFailed)
+	})
+
+	t.Run("typed map marshal failure is classified", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := applyOps(t, map[string]chan int{"value": make(chan int)})
 		require.Error(t, err)
 		assert.Nil(t, result)
 		assert.ErrorIs(t, err, jsonpatch.ErrConversionFailed)

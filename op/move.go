@@ -1,6 +1,8 @@
 package op
 
 import (
+	"errors"
+	"fmt"
 	"slices"
 
 	"github.com/kaptinlin/jsonpatch/internal"
@@ -44,7 +46,14 @@ func (m *MoveOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 
 	addOp := NewAdd(m.path, removeResult.Old)
-	return addOp.Apply(removeResult.Doc)
+	result, err := addOp.Apply(removeResult.Doc)
+	if err == nil {
+		return result, nil
+	}
+	if _, _, restoreErr := addAtPath(removeResult.Doc, m.from, removeResult.Old); restoreErr != nil {
+		return internal.OpResult[any]{}, errors.Join(err, fmt.Errorf("restore move source: %w", restoreErr))
+	}
+	return internal.OpResult[any]{}, err
 }
 
 // isPrefix checks if prefix is a prefix of path.

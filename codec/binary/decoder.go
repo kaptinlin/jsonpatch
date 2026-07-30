@@ -1,8 +1,11 @@
 package binary
 
 import (
+	"errors"
 	"fmt"
+	"math"
 	"slices"
+	"strconv"
 
 	"github.com/tinylib/msgp/msgp"
 
@@ -101,7 +104,7 @@ func decodeOpWithParent(r *msgp.Reader, parent []string) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
-		not, err := decodeOptionalBool(r, arrSize, 4)
+		not, err := decodeOptionalTrueMarker(r, arrSize, 4)
 		if err != nil {
 			return nil, err
 		}
@@ -131,7 +134,7 @@ func decodeOpWithParent(r *msgp.Reader, parent []string) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
-		ignoreCase, err := decodeOptionalBool(r, arrSize, 4)
+		ignoreCase, err := decodeOptionalTrueMarker(r, arrSize, 4)
 		if err != nil {
 			return nil, err
 		}
@@ -141,7 +144,7 @@ func decodeOpWithParent(r *msgp.Reader, parent []string) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
-		ignoreCase, err := decodeOptionalBool(r, arrSize, 4)
+		ignoreCase, err := decodeOptionalTrueMarker(r, arrSize, 4)
 		if err != nil {
 			return nil, err
 		}
@@ -151,7 +154,7 @@ func decodeOpWithParent(r *msgp.Reader, parent []string) (internal.Op, error) {
 		if err != nil {
 			return nil, err
 		}
-		ignoreCase, err := decodeOptionalBool(r, arrSize, 4)
+		ignoreCase, err := decodeOptionalTrueMarker(r, arrSize, 4)
 		if err != nil {
 			return nil, err
 		}
@@ -272,7 +275,7 @@ func decodeMatches(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, 
 	if err != nil {
 		return nil, err
 	}
-	ignoreCase, err := decodeOptionalBool(r, arrSize, 4)
+	ignoreCase, err := decodeOptionalTrueMarker(r, arrSize, 4)
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +284,7 @@ func decodeMatches(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, 
 
 // decodeTestString decodes a test_string operation.
 func decodeTestString(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, error) {
-	pos, err := r.ReadFloat64()
+	pos, err := readInteger(r)
 	if err != nil {
 		return nil, err
 	}
@@ -289,20 +292,20 @@ func decodeTestString(r *msgp.Reader, path []string, arrSize uint32) (internal.O
 	if err != nil {
 		return nil, err
 	}
-	not, err := decodeOptionalBool(r, arrSize, 5)
+	not, err := decodeOptionalTrueMarker(r, arrSize, 5)
 	if err != nil {
 		return nil, err
 	}
-	return op.NewTestString(path, str, pos, not, false), nil
+	return op.NewTestString(path, str, pos, not), nil
 }
 
 // decodeTestStringLen decodes a test_string_len operation.
 func decodeTestStringLen(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, error) {
-	length, err := r.ReadFloat64()
+	length, err := readInteger(r)
 	if err != nil {
 		return nil, err
 	}
-	not, err := decodeOptionalBool(r, arrSize, 4)
+	not, err := decodeOptionalTrueMarker(r, arrSize, 4)
 	if err != nil {
 		return nil, err
 	}
@@ -320,7 +323,7 @@ func decodeType(r *msgp.Reader, path []string) (internal.Op, error) {
 
 // decodeStrIns decodes a str_ins operation.
 func decodeStrIns(r *msgp.Reader, path []string) (internal.Op, error) {
-	pos, err := r.ReadFloat64()
+	pos, err := readInteger(r)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +336,7 @@ func decodeStrIns(r *msgp.Reader, path []string) (internal.Op, error) {
 
 // decodeStrDel decodes a str_del operation.
 func decodeStrDel(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, error) {
-	pos, err := r.ReadFloat64()
+	pos, err := readInteger(r)
 	if err != nil {
 		return nil, err
 	}
@@ -351,16 +354,65 @@ func decodeStrDel(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, e
 	if discriminator != 0 {
 		return nil, fmt.Errorf("str_del length discriminator must be zero: %w", ErrInvalidValueType)
 	}
-	length, err := r.ReadFloat64()
+	length, err := readInteger(r)
 	if err != nil {
 		return nil, err
 	}
 	return op.NewStrDel(path, pos, length), nil
 }
 
+func readInteger(r *msgp.Reader) (int, error) {
+	next, err := r.NextType()
+	if err != nil {
+		return 0, err
+	}
+	switch next {
+	case msgp.IntType:
+		value, err := r.ReadInt64()
+		if err != nil {
+			return 0, err
+		}
+		if strconv.IntSize == 32 && (value < math.MinInt32 || value > math.MaxInt32) {
+			return 0, ErrNumberOutOfRange
+		}
+		return int(value), nil
+	case msgp.UintType:
+		value, err := r.ReadUint64()
+		if err != nil {
+			return 0, err
+		}
+		if value > uint64(^uint(0)>>1) {
+			return 0, ErrNumberOutOfRange
+		}
+		return int(value), nil
+	case msgp.Float32Type, msgp.Float64Type:
+		number, err := r.ReadFloat64()
+		if err != nil {
+			return 0, err
+		}
+		return integerFromFloat(number)
+	default:
+		return 0, ErrInvalidValueType
+	}
+}
+
+func integerFromFloat(number float64) (int, error) {
+	if math.IsNaN(number) || math.IsInf(number, 0) {
+		return 0, ErrNumberNotFinite
+	}
+	if number != math.Trunc(number) {
+		return 0, ErrNumberNotInteger
+	}
+	limit := math.Ldexp(1, strconv.IntSize-1)
+	if number < -limit || number >= limit {
+		return 0, ErrNumberOutOfRange
+	}
+	return int(number), nil
+}
+
 // decodeSplit decodes a split operation.
 func decodeSplit(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, error) {
-	pos, err := r.ReadFloat64()
+	pos, err := readInteger(r)
 	if err != nil {
 		return nil, err
 	}
@@ -384,7 +436,7 @@ func decodeExtend(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, e
 	if !ok {
 		return nil, fmt.Errorf("extend properties must be an object, got %T: %w", raw, ErrInvalidValueType)
 	}
-	deleteNull, err := decodeOptionalBool(r, arrSize, 4)
+	deleteNull, err := decodeOptionalTrueMarker(r, arrSize, 4)
 	if err != nil {
 		return nil, err
 	}
@@ -399,23 +451,23 @@ func decodeComposite(r *msgp.Reader, path []string, opType internal.OpType) (int
 
 	switch opType {
 	case internal.OpAndType:
-		return op.NewAnd(path, ops), nil
+		return op.NewAnd(path, ops...), nil
 	case internal.OpOrType:
-		return op.NewOr(path, ops), nil
+		return op.NewOr(path, ops...), nil
 	default:
 		if len(ops) != 1 {
 			return nil, ErrNotSinglePredicate
 		}
-		return op.NewNotMultiple(path, ops), nil
+		return op.NewNot(path, ops[0]), nil
 	}
 }
 
-func decodePredicateOps(r *msgp.Reader, parent []string) ([]any, error) {
+func decodePredicateOps(r *msgp.Reader, parent []string) ([]internal.PredicateOp, error) {
 	size, err := r.ReadArrayHeader()
 	if err != nil {
 		return nil, err
 	}
-	ops := make([]any, int(size))
+	ops := make([]internal.PredicateOp, int(size))
 	for i := range ops {
 		decoded, err := decodeOpWithParent(r, parent)
 		if err != nil {
@@ -430,16 +482,23 @@ func decodePredicateOps(r *msgp.Reader, parent []string) ([]any, error) {
 	return ops, nil
 }
 
-func decodeOptionalBool(r *msgp.Reader, arrSize, presentAt uint32) (bool, error) {
+func decodeOptionalTrueMarker(r *msgp.Reader, arrSize, presentAt uint32) (bool, error) {
 	if arrSize < presentAt {
 		return false, nil
 	}
-	return r.ReadBool()
+	marker, err := r.ReadUint8()
+	if err != nil {
+		return false, fmt.Errorf("%w: %w", ErrInvalidTrueMarker, err)
+	}
+	if marker != 1 {
+		return false, ErrInvalidTrueMarker
+	}
+	return true, nil
 }
 
 // decodeMerge decodes a merge operation.
 func decodeMerge(r *msgp.Reader, path []string, arrSize uint32) (internal.Op, error) {
-	pos, err := r.ReadFloat64()
+	pos, err := readInteger(r)
 	if err != nil {
 		return nil, err
 	}
@@ -479,11 +538,15 @@ func mergePaths(base, child []string) []string {
 	return slices.Concat(base, child)
 }
 
-// decodeValue reads an arbitrary msgp value and normalizes map types.
+// decodeValue reads an arbitrary MessagePack value.
 func decodeValue(r *msgp.Reader) (any, error) {
 	v, err := r.ReadIntf()
 	if err != nil {
+		var typeErr msgp.TypeError
+		if errors.As(err, &typeErr) && typeErr.Method == msgp.StrType {
+			return nil, fmt.Errorf("%w: %w", ErrMapKeyNotString, err)
+		}
 		return nil, err
 	}
-	return normalizeMap(v), nil
+	return v, nil
 }

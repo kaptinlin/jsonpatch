@@ -60,7 +60,7 @@ func (t *TestOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if err != nil {
 		shouldPass := t.NotFlag
 		if !shouldPass {
-			return internal.OpResult[any]{}, fmt.Errorf("%w: path not found", ErrTestOperationFailed)
+			return internal.OpResult[any]{}, predicateFailure(fmt.Errorf("%w: path not found", ErrTestOperationFailed))
 		}
 		return internal.OpResult[any]{Doc: doc, Old: nil}, nil
 	}
@@ -73,16 +73,16 @@ func (t *TestOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if !shouldPass {
 		// Test failed
 		if t.NotFlag {
-			return internal.OpResult[any]{}, fmt.Errorf("%w: expected not %v, but got %v", ErrTestOperationFailed, t.Value, value)
+			return internal.OpResult[any]{}, predicateFailure(fmt.Errorf("%w: expected not %v, but got %v", ErrTestOperationFailed, t.Value, value))
 		}
 		// Check if it's a string vs number comparison for specific error message
 		if _, ok := t.Value.(string); ok {
 			if _, ok := value.(float64); ok {
-				return internal.OpResult[any]{}, ErrTestOperationNumberStringMismatch
+				return internal.OpResult[any]{}, predicateFailure(ErrTestOperationNumberStringMismatch)
 			}
-			return internal.OpResult[any]{}, ErrTestOperationStringNotEquivalent
+			return internal.OpResult[any]{}, predicateFailure(ErrTestOperationStringNotEquivalent)
 		}
-		return internal.OpResult[any]{}, fmt.Errorf("%w: expected %v, got %v", ErrTestOperationFailed, t.Value, value)
+		return internal.OpResult[any]{}, predicateFailure(fmt.Errorf("%w: expected %v, got %v", ErrTestOperationFailed, t.Value, value))
 	}
 
 	// Test operations don't modify the document and return nil for old value

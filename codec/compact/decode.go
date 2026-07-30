@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"github.com/go-json-experiment/json"
+	"github.com/go-json-experiment/json/jsontext"
 
 	"github.com/kaptinlin/jsonpatch/internal"
 	"github.com/kaptinlin/jsonpatch/op"
@@ -48,7 +49,71 @@ func DecodeJSON(data []byte) ([]internal.Op, error) {
 	if err := json.Unmarshal(data, &ops); err != nil {
 		return nil, fmt.Errorf("unmarshal compact ops: %w", err)
 	}
+	var rawOps []jsontext.Value
+	if err := json.Unmarshal(data, &rawOps); err != nil {
+		return nil, fmt.Errorf("unmarshal compact ops: %w", err)
+	}
+	for i := range ops {
+		if err := preserveJSONIntegerCoordinates(ops[i], rawOps[i]); err != nil {
+			return nil, fmt.Errorf("compact operation %d: %w", i, err)
+		}
+	}
 	return Decode(ops)
+}
+
+func preserveJSONIntegerCoordinates(operation Op, raw jsontext.Value) error {
+	var fields []jsontext.Value
+	if err := json.Unmarshal(raw, &fields); err != nil {
+		return err
+	}
+	if len(operation) < 3 || len(fields) < 3 {
+		return nil
+	}
+	opType, err := resolveOpType(operation[0])
+	if err != nil {
+		return err
+	}
+
+	switch opType {
+	case internal.OpStrInsType, internal.OpSplitType, internal.OpMergeType,
+		internal.OpTestStringType, internal.OpTestStringLenType:
+		preserveJSONIntegerAt(operation, fields, 2)
+	case internal.OpStrDelType:
+		preserveJSONIntegerAt(operation, fields, 2)
+		if len(operation) == 5 {
+			preserveJSONIntegerAt(operation, fields, 4)
+		}
+	case internal.OpAndType, internal.OpOrType, internal.OpNotType:
+		children, ok := operation[2].([]any)
+		if !ok {
+			return nil
+		}
+		var rawChildren []jsontext.Value
+		if err := json.Unmarshal(fields[2], &rawChildren); err != nil {
+			return err
+		}
+		if len(children) != len(rawChildren) {
+			return nil
+		}
+		for i, child := range children {
+			childFields, ok := child.([]any)
+			if !ok {
+				continue
+			}
+			if err := preserveJSONIntegerCoordinates(Op(childFields), rawChildren[i]); err != nil {
+				return err
+			}
+		}
+	default:
+		return nil
+	}
+	return nil
+}
+
+func preserveJSONIntegerAt(operation Op, fields []jsontext.Value, index int) {
+	if len(operation) > index && len(fields) > index && fields[index].Kind() == '0' {
+		operation[index] = fields[index].Clone()
+	}
 }
 
 // parseHeader extracts and validates the opcode and path from a compact operation.
@@ -71,7 +136,7 @@ func parseHeader(raw Op) (internal.OpType, []string, error) {
 }
 
 func isNumericConstraintError(err error) bool {
-	return errors.Is(err, ErrNumberNotFinite) || errors.Is(err, ErrNumberNotInteger)
+	return errors.Is(err, ErrNumberNotFinite) || errors.Is(err, ErrNumberNotInteger) || errors.Is(err, ErrNumberOutOfRange)
 }
 
 func predicateMaxArity(opType internal.OpType) int {
@@ -268,9 +333,9 @@ func parseExtendedOp(opType internal.OpType, path []string, raw Op) (internal.Op
 		if len(raw) > 4 {
 			return nil, ErrInvalidArity
 		}
-		pos, err := finiteNumber(raw[2])
+		pos, err := integerNumber(raw[2])
 		if err != nil {
-			if errors.Is(err, ErrNumberNotFinite) {
+			if isNumericConstraintError(err) {
 				return nil, err
 			}
 			return nil, ErrSplitPosNotNumber
@@ -292,9 +357,9 @@ func parseExtendedOp(opType internal.OpType, path []string, raw Op) (internal.Op
 		if len(raw) > 4 {
 			return nil, ErrInvalidArity
 		}
-		pos, err := finiteNumber(raw[2])
+		pos, err := integerNumber(raw[2])
 		if err != nil {
-			if errors.Is(err, ErrNumberNotFinite) {
+			if isNumericConstraintError(err) {
 				return nil, err
 			}
 			return nil, ErrMergePosNotNumber
@@ -420,7 +485,7 @@ func parsePredicateOp(opType internal.OpType, path []string, raw Op) (internal.O
 		if err != nil {
 			return nil, err
 		}
-		return op.NewTestString(path, str, pos, not, false), nil
+		return op.NewTestString(path, str, pos, not), nil
 
 	case internal.OpTestStringLenType:
 		if len(raw) < 3 {
@@ -505,14 +570,14 @@ func parseCompositeOp(opType internal.OpType, path []string, raw Op) (internal.O
 
 	switch opType {
 	case internal.OpAndType:
-		return op.NewAnd(path, subOps), nil
+		return op.NewAnd(path, subOps...), nil
 	case internal.OpOrType:
-		return op.NewOr(path, subOps), nil
+		return op.NewOr(path, subOps...), nil
 	default:
 		if len(subOps) != 1 {
 			return nil, ErrNotSinglePredicate
 		}
-		return op.NewNotMultiple(path, subOps), nil
+		return op.NewNot(path, subOps[0]), nil
 	}
 }
 
@@ -549,13 +614,13 @@ func requireFloat64(raw Op, index int, errMissing, errNotNumber error) (float64,
 }
 
 // parsePredicateOps decodes an array of compact operations into predicate ops.
-func parsePredicateOps(value any, base []string) ([]any, error) {
+func parsePredicateOps(value any, base []string) ([]internal.PredicateOp, error) {
 	arr, ok := value.([]any)
 	if !ok {
 		return nil, ErrPredicateNotArray
 	}
 
-	result := make([]any, len(arr))
+	result := make([]internal.PredicateOp, len(arr))
 	for i, item := range arr {
 		raw, ok := item.([]any)
 		if !ok {
@@ -569,10 +634,11 @@ func parsePredicateOps(value any, base []string) ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		if _, ok := decoded.(internal.PredicateOp); !ok {
+		predicate, ok := decoded.(internal.PredicateOp)
+		if !ok {
 			return nil, ErrNotPredicate
 		}
-		result[i] = decoded
+		result[i] = predicate
 	}
 	return result, nil
 }

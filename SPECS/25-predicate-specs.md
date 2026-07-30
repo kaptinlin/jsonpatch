@@ -35,8 +35,8 @@ Covered operations: `test`, `contains`, `defined`, `undefined`, `starts`, `ends`
 | `less` | `value` number | Compare after coercing the target through JavaScript-like `Number()` semantics. |
 | `more` | `value` number | Compare after coercing the target through JavaScript-like `Number()` semantics. |
 | `matches` | `value` regex pattern, optional `ignore_case` | Match a string or `[]byte` target against a regex. The default matcher uses Go's `regexp` package; `WithCompileMatcher` overrides it during compilation. Invalid patterns and factory rejections fail compilation instead of becoming a false predicate. |
-| `test_string` | `str`, `pos`, optional `not`, optional `ignore_case` | Compare the substring starting at Unicode code-point position `pos` against `str`. |
-| `test_string_len` | `len`, optional `not` | Check whether the target string has at least `len` Unicode code points; `not` inverts that result. |
+| `test_string` | `str`, integer `pos`, optional `not` | Compare the substring starting at Unicode code-point position `pos` against `str` using case-sensitive equality. |
+| `test_string_len` | integer `len`, optional `not` | Check whether the target string has at least `len` Unicode code points; `not` inverts that result. |
 
 ## Second-Order Predicates
 
@@ -56,6 +56,14 @@ Covered operations: `test`, `contains`, `defined`, `undefined`, `starts`, `ends`
 - Use `in` for membership in a provided array of acceptable values.
 - Use `WithCompileMatcher` only when the default Go regex implementation is not sufficient.
 - Positional string fields count Unicode code points. They do not count UTF-8 bytes, UTF-16 code units, or grapheme clusters; a combining sequence therefore occupies multiple positions.
+- `test_string` and `test_string_len` constructors use Go `int` coordinates. JSON, compact, and binary decoders reject fractional, non-finite, and out-of-range coordinates. Binary uses MessagePack integers so the full Go `int` domain round-trips without float conversion.
+
+## Error Contract
+
+- A predicate condition that evaluates normally but does not match returns `(false, nil)` from `Test`.
+- Applying that same false predicate returns an error that matches `op.ErrTestFailed` and the concrete cause owned by the operation, including missing-path and wrong-target-type causes.
+- A non-nil error returned by `Test`, such as regex matcher construction or positional evaluation failure, is propagated without adding `op.ErrTestFailed`.
+- Root application maps only the operation-layer base to `jsonpatch.ErrTestFailed`; it does not enumerate concrete predicate sentinels.
 
 ## Forbidden
 
@@ -68,6 +76,6 @@ Covered operations: `test`, `contains`, `defined`, `undefined`, `starts`, `ends`
 
 ## Acceptance Criteria
 
-- Each predicate follows the payload, negation, Unicode-coordinate, and error rules in this spec. Verification: `op/*_test.go` and `tests/predicates/`.
+- Each predicate follows the payload, negation, Unicode-coordinate, and error rules in this spec. Verification: `op/predicate_contract_test.go`, `op/*_test.go`, `patch_test.go`, and `tests/predicates/`.
 - Composite predicates accept only predicates, keep unary `not`, and preserve parent-relative wire paths. Verification: `codec_coordinate_test.go` and JSON, compact, and binary composite tests.
 - Regex construction failures occur during compilation and preserve their causes. Verification: `TestCompileRejectsInvalidRegex` and matcher tests in `op/matches_test.go`.

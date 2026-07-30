@@ -27,7 +27,7 @@ func (ic *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 		// Root level increment
 		oldValue, ok := ToFloat64(doc)
 		if !ok {
-			return internal.OpResult[any]{}, ErrNotNumber
+			return internal.OpResult[any]{}, typeFailure(ErrNotNumber)
 		}
 		result := oldValue + ic.Inc
 		return internal.OpResult[any]{Doc: result, Old: oldValue}, nil
@@ -46,7 +46,7 @@ func (ic *IncOperation) Apply(doc any) (internal.OpResult[any], error) {
 		var ok bool
 		oldValue, ok = ToFloat64(currentValue)
 		if !ok {
-			return internal.OpResult[any]{}, ErrNotNumber
+			return internal.OpResult[any]{}, typeFailure(ErrNotNumber)
 		}
 	}
 	result := oldValue + ic.Inc

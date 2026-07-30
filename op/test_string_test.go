@@ -17,7 +17,7 @@ func TestTestString_Apply(t *testing.T) {
 		name          string
 		doc           any
 		path          []string
-		pos           float64
+		pos           int
 		expectedValue string
 		expectError   bool
 		expectedError error
@@ -119,7 +119,7 @@ func TestTestString_Apply(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			testStringOp := NewTestString(tt.path, tt.expectedValue, tt.pos, false, false)
+			testStringOp := NewTestString(tt.path, tt.expectedValue, tt.pos, false)
 			result, err := testStringOp.Apply(tt.doc)
 
 			if tt.expectError {
@@ -146,7 +146,7 @@ func TestTestString_Apply(t *testing.T) {
 func TestTestString_Contracts(t *testing.T) {
 	t.Parallel()
 
-	op := NewTestString([]string{"name"}, "ada", 0, true, true)
+	op := NewTestString([]string{"name"}, "ada", 0, true)
 	assert.Equal(t, internal.OpTestStringType, op.Op())
 	assert.Equal(t, internal.OpTestStringCode, op.Code())
 	assert.True(t, op.Not())
@@ -154,7 +154,7 @@ func TestTestString_Contracts(t *testing.T) {
 	doc := map[string]any{"name": "Ada"}
 	matched, err := op.Test(doc)
 	assert.NoError(t, err)
-	assert.False(t, matched)
+	assert.True(t, matched)
 
 	matched, err = op.Test(map[string]any{"other": "Ada"})
 	assert.NoError(t, err)
@@ -162,7 +162,7 @@ func TestTestString_Contracts(t *testing.T) {
 
 	jsonOp, err := op.ToJSON()
 	assert.NoError(t, err)
-	wantJSON := internal.Operation{Op: "test_string", Path: "/name", Str: "ada", Pos: 0, Not: true, IgnoreCase: true}
+	wantJSON := internal.Operation{Op: "test_string", Path: "/name", Str: "ada", Pos: 0, Not: true}
 	if diff := cmp.Diff(wantJSON, jsonOp); diff != "" {
 		t.Errorf("ToJSON() mismatch (-want +got):\n%s", diff)
 	}
@@ -174,13 +174,13 @@ func TestTestString_Contracts(t *testing.T) {
 		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
 	}
 	assert.NoError(t, op.Validate())
-	assert.NoError(t, NewTestString(nil, "Ada", 0, false, false).Validate())
+	assert.NoError(t, NewTestString(nil, "Ada", 0, false).Validate())
 }
 
 func TestTestString_RejectsNegativePosition(t *testing.T) {
 	t.Parallel()
 
-	operation := NewTestString([]string{"text"}, "a", -1, false, false)
+	operation := NewTestString([]string{"text"}, "a", -1, false)
 	doc := map[string]any{"text": "abc"}
 
 	matched, err := operation.Test(doc)

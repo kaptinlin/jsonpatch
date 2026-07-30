@@ -90,6 +90,55 @@ func TestMove_FromNonExistent(t *testing.T) {
 	}
 }
 
+func TestMoveFailureRestoresSource(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		doc  any
+		from []string
+		path []string
+	}{
+		{
+			name: "missing destination parent",
+			doc:  map[string]any{"source": "Ada"},
+			from: []string{"source"},
+			path: []string{"missing", "name"},
+		},
+		{
+			name: "scalar destination parent",
+			doc:  map[string]any{"source": "Ada", "target": "scalar"},
+			from: []string{"source"},
+			path: []string{"target", "name"},
+		},
+		{
+			name: "array destination out of range",
+			doc:  map[string]any{"source": "Ada", "items": []any{"first"}},
+			from: []string{"source"},
+			path: []string{"items", "2"},
+		},
+		{
+			name: "array source",
+			doc:  map[string]any{"items": []any{"first", "second"}, "target": "scalar"},
+			from: []string{"items", "0"},
+			path: []string{"target", "name"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			want, err := DeepClone(tc.doc)
+			require.NoError(t, err)
+			result, err := NewMove(tc.path, tc.from).Apply(tc.doc)
+			require.Error(t, err)
+			assert.Equal(t, internal.OpResult[any]{}, result)
+			assert.Equal(t, want, tc.doc)
+		})
+	}
+}
+
 func TestMove_SamePath(t *testing.T) {
 	t.Parallel()
 	doc := map[string]any{"foo": 1}

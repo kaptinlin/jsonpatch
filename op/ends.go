@@ -59,11 +59,11 @@ func (e *EndsOperation) Test(doc any) (bool, error) {
 func (e *EndsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, str, err := validateString(doc, e.Path())
 	if err != nil {
-		return internal.OpResult[any]{}, err
+		return internal.OpResult[any]{}, predicateFailure(err)
 	}
 
 	if !e.hasSuffix(str) {
-		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not end with %q", ErrStringMismatch, str, e.Value)
+		return internal.OpResult[any]{}, predicateFailure(fmt.Errorf("%w: string %q does not end with %q", ErrStringMismatch, str, e.Value))
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: value}, nil

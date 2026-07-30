@@ -1,18 +1,22 @@
 package op
 
-import "github.com/kaptinlin/jsonpatch/internal"
+import (
+	"slices"
+
+	"github.com/kaptinlin/jsonpatch/internal"
+)
 
 // AndOperation represents an and operation that combines multiple predicate operations.
 type AndOperation struct {
 	BaseOp
-	Operations []any `json:"apply"` // Array of operations to apply
+	Operations []PredicateOp `json:"apply"`
 }
 
 // NewAnd creates a new AND operation.
-func NewAnd(path []string, ops []any) *AndOperation {
+func NewAnd(path []string, predicates ...PredicateOp) *AndOperation {
 	return &AndOperation{
 		BaseOp:     NewBaseOp(path),
-		Operations: ops,
+		Operations: slices.Clone(predicates),
 	}
 }
 
@@ -23,7 +27,7 @@ func (ao *AndOperation) Op() internal.OpType {
 
 // Ops returns the predicate operations.
 func (ao *AndOperation) Ops() []internal.PredicateOp {
-	return extractPredicateOps(ao.Operations)
+	return slices.Clone(ao.Operations)
 }
 
 // Test performs the AND operation.
@@ -33,12 +37,11 @@ func (ao *AndOperation) Test(doc any) (bool, error) {
 		return true, nil
 	}
 
-	for _, op := range ao.Operations {
-		predicateOp, ok := op.(internal.PredicateOp)
-		if !ok {
+	for _, predicate := range ao.Operations {
+		if isNilPredicate(predicate) {
 			return false, ErrInvalidPredicateInAnd
 		}
-		ok, err := predicateOp.Test(doc)
+		ok, err := predicate.Test(doc)
 		if err != nil {
 			return false, err
 		}
@@ -57,7 +60,7 @@ func (ao *AndOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, err
 	}
 	if !ok {
-		return internal.OpResult[any]{}, ErrAndTestFailed
+		return internal.OpResult[any]{}, predicateFailure(ErrAndTestFailed)
 	}
 	return internal.OpResult[any]{Doc: doc}, nil
 }

@@ -59,7 +59,7 @@ func TestCompositeJSONPathProjection(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			encoded, err := Encode([]internal.Op{op.NewAnd(tc.parent, []any{op.NewDefined(tc.child)})})
+			encoded, err := Encode([]internal.Op{op.NewAnd(tc.parent, op.NewDefined(tc.child))})
 			require.NoError(t, err)
 			require.Len(t, encoded, 1)
 			require.Len(t, encoded[0].Apply, 1)
@@ -73,7 +73,7 @@ func TestCompositeJSONPathProjectionRejectsChildOutsideParent(t *testing.T) {
 	t.Parallel()
 
 	encoded, err := Encode([]internal.Op{
-		op.NewAnd([]string{"profile"}, []any{op.NewDefined([]string{"account", "name"})}),
+		op.NewAnd([]string{"profile"}, op.NewDefined([]string{"account", "name"})),
 	})
 	require.Error(t, err)
 	assert.Nil(t, encoded)

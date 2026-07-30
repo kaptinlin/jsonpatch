@@ -136,9 +136,11 @@ if err := jsonpatch.ApplyInPlace(patch, &doc); err != nil {
 fmt.Println(doc["name"])
 ```
 
+If a later operation fails, `ApplyInPlace` keeps the successful prefix when it can be represented by the input type. The failing operation itself is atomic; for example, a failed `move` does not leave its source removed. Use `Apply` when the caller must remain unchanged on any failure.
+
 ## Structured Errors
 
-Compile and apply failures wrap stable sentinel errors and expose operation context. A failed apply returns a nil result; inspect `*jsonpatch.Error` for the failing operation index and fields.
+Compile and apply failures wrap stable sentinel errors and expose operation context. A failed apply returns a nil result; inspect `*jsonpatch.Error` for the failing operation index and fields. Predicate mismatches match `jsonpatch.ErrTestFailed` and retain their operation-layer cause for callers that need finer diagnostics.
 
 ```go
 result, err := jsonpatch.Apply(patch, doc)

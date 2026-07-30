@@ -79,11 +79,11 @@ func (ma *MatchesOperation) Apply(doc any) (internal.OpResult[any], error) {
 	}
 	val, str, err := validateString(doc, ma.Path())
 	if err != nil {
-		return internal.OpResult[any]{}, err
+		return internal.OpResult[any]{}, predicateFailure(err)
 	}
 
 	if !ma.matcher(str) {
-		return internal.OpResult[any]{}, fmt.Errorf("%w: string '%s' does not match pattern", ErrStringMismatch, str)
+		return internal.OpResult[any]{}, predicateFailure(fmt.Errorf("%w: string '%s' does not match pattern", ErrStringMismatch, str))
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: val}, nil

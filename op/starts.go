@@ -59,11 +59,11 @@ func (s *StartsOperation) Test(doc any) (bool, error) {
 func (s *StartsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, str, err := validateString(doc, s.Path())
 	if err != nil {
-		return internal.OpResult[any]{}, err
+		return internal.OpResult[any]{}, predicateFailure(err)
 	}
 
 	if !s.hasPrefix(str) {
-		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not start with %q", ErrStringMismatch, str, s.Value)
+		return internal.OpResult[any]{}, predicateFailure(fmt.Errorf("%w: string %q does not start with %q", ErrStringMismatch, str, s.Value))
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: value}, nil

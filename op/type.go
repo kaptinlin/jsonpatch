@@ -47,14 +47,14 @@ func (tp *TypeOperation) Test(doc any) (bool, error) {
 func (tp *TypeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	val, err := value(doc, tp.Path())
 	if err != nil {
-		return internal.OpResult[any]{}, ErrPathNotFound
+		return internal.OpResult[any]{}, predicateFailure(ErrPathNotFound)
 	}
 
 	actualType := getTypeName(val)
 	matched := actualType == tp.TypeValue ||
 		(tp.TypeValue == "integer" && isWholeNumber(val))
 	if !matched {
-		return internal.OpResult[any]{}, fmt.Errorf("%w: expected type %s, got %s", ErrTypeMismatch, tp.TypeValue, actualType)
+		return internal.OpResult[any]{}, predicateFailure(fmt.Errorf("%w: expected type %s, got %s", ErrTypeMismatch, tp.TypeValue, actualType))
 	}
 
 	return internal.OpResult[any]{Doc: doc}, nil

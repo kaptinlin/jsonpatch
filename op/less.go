@@ -39,11 +39,11 @@ func (l *LessOperation) Test(doc any) (bool, error) {
 func (l *LessOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, actualValue, err := numericValue(doc, l.Path())
 	if err != nil {
-		return internal.OpResult[any]{}, err
+		return internal.OpResult[any]{}, predicateFailure(err)
 	}
 
 	if actualValue >= l.Value {
-		return internal.OpResult[any]{}, fmt.Errorf("%w: value %f is not less than %f", ErrComparisonFailed, actualValue, l.Value)
+		return internal.OpResult[any]{}, predicateFailure(fmt.Errorf("%w: value %f is not less than %f", ErrComparisonFailed, actualValue, l.Value))
 	}
 	return internal.OpResult[any]{Doc: doc, Old: value}, nil
 }

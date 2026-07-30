@@ -27,7 +27,7 @@ func (d *DefinedOperation) Test(doc any) (bool, error) {
 // Apply applies the defined operation.
 func (d *DefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if !pathExists(doc, d.path) {
-		return internal.OpResult[any]{}, ErrDefinedTestFailed
+		return internal.OpResult[any]{}, predicateFailure(ErrDefinedTestFailed)
 	}
 	return internal.OpResult[any]{Doc: doc}, nil
 }

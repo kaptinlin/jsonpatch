@@ -59,14 +59,17 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 - Compact and binary operation arrays are `[code, path, ...payload]`; `move` and `copy` use `[code, path, from]`.
 - `test_string` uses `[code, path, pos, str, not?]`.
 - Optional boolean fields are emitted only when true: `test.not`, `test_string.not`, `test_string_len.not`, and `ignore_case` for `matches`, `contains`, `starts`, and `ends`. `extend.deleteNull` is likewise omitted when false.
-- Compact encodes every present optional true flag as integer `1`; its decoder rejects alternate truthy representations.
+- Compact and binary encode every present optional true flag as integer `1`; their decoders reject alternate truthy representations.
 - Optional structural payloads such as `split.props` and `merge.props` are omitted when absent.
 - Remove and replace preserve optional `oldValue` in JSON, compact, and binary forms. Executable `HasOldValue` is the presence source of truth, including explicit null.
 - `str_del` preserves its string and length variants in both compact and binary forms; empty string remains string mode.
+- Compact and binary encode `str_ins`, `str_del`, `split`, `merge`, `test_string`, and `test_string_len` positions and lengths as integers. Binary uses MessagePack integer frames; decoders may accept integer-valued floats but reject fractional, non-finite, and out-of-`int` coordinates.
+- `CompileJSON`, JSON `DecodeJSON`, and compact `DecodeJSON` preserve coordinate number tokens until they are checked and converted to `int`; JSON byte entry points therefore do not lose integers above float64's exact range.
 - Composite predicates encode child predicate paths relative to the containing predicate path. Decoding merges those paths into executable absolute paths.
 - Binary supports the same operation tree as compact, including `and`, `or`, and unary `not`.
 - Binary operation array headers are exact grammar boundaries; the decoder rejects every arity not emitted by the encoder, including malformed nested predicate frames.
 - Binary `Codec.Decode` consumes exactly one top-level patch value and rejects any trailing byte or second MessagePack value.
+- Binary objects require string keys at every depth. Non-string keys fail with `binary.ErrMapKeyNotString`, preserve the underlying MessagePack type error, and never return partial operations.
 
 ## Dependency Rules
 
@@ -91,5 +94,5 @@ This spec defines the package boundaries and execution pipeline of `jsonpatch`.
 
 - Compilation, clone isolation, capability policy, document dispatch, and sequential execution follow the pipeline above. Verification: root package tests and `task test`.
 - Codec packages translate wire forms without owning execution semantics. Verification: codec round-trip suites and operation contract tests.
-- Compact and binary decoders enforce canonical markers, exact operation arity, nested frame boundaries, and single-value input exhaustion. Verification: `codec/compact/strict_decode_test.go` and `codec/binary/strict_decode_test.go`.
+- Compact and binary decoders enforce canonical markers, exact operation arity, nested frame boundaries, binary string-key objects, and single-value input exhaustion. Verification: `codec/compact/strict_decode_test.go` and `codec/binary/strict_decode_test.go`.
 - Package dependency direction remains cycle-free and lint-clean. Verification: `go vet ./...`, `task lint`, and Go compilation.

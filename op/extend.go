@@ -43,7 +43,7 @@ func (ex *ExtendOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 	targetObj, ok := target.(map[string]any)
 	if !ok {
-		return internal.OpResult[any]{}, ErrNotObject
+		return internal.OpResult[any]{}, typeFailure(ErrNotObject)
 	}
 
 	extendedObj := extendObject(targetObj, ex.Properties, ex.DeleteNull)

@@ -117,6 +117,7 @@ func TestREADMEExamples(t *testing.T) {
 		require.Error(t, err)
 		assert.Nil(t, result)
 		assert.ErrorIs(t, err, jsonpatch.ErrTestFailed)
+		assert.ErrorIs(t, err, op.ErrTestOperationStringNotEquivalent)
 
 		var patchErr *jsonpatch.Error
 		require.ErrorAs(t, err, &patchErr)
@@ -185,7 +186,7 @@ func TestREADMEExamples(t *testing.T) {
 
 		codec := binary.New()
 		ops := []jsonpatch.Op{
-			op.NewNot(op.NewTest([]string{"active"}, true)),
+			op.NewNot([]string{"active"}, op.NewTest([]string{"active"}, true)),
 		}
 		data, err := codec.Encode(ops)
 		require.NoError(t, err)

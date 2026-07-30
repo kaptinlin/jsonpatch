@@ -16,7 +16,7 @@ func TestStrIns_Apply(t *testing.T) {
 		name     string
 		path     []string
 		doc      any
-		pos      float64
+		pos      int
 		str      string
 		expected any
 		oldValue any
@@ -164,11 +164,11 @@ func TestStrIns_Apply(t *testing.T) {
 func TestStrIns_Constructor(t *testing.T) {
 	t.Parallel()
 	path := []string{"user", "bio"}
-	pos := 2.0
+	pos := 2
 	str := "abc"
 	strInsOp := NewStrIns(path, pos, str)
 	assert.Empty(t, cmp.Diff(path, strInsOp.Path()), "NewStrIns() Path mismatch")
-	assert.Equal(t, int(pos), strInsOp.Pos, "NewStrIns() Pos")
+	assert.Equal(t, pos, strInsOp.Pos, "NewStrIns() Pos")
 	assert.Equal(t, str, strInsOp.Str, "NewStrIns() Str")
 	assert.Equal(t, internal.OpStrInsType, strInsOp.Op(), "Op()")
 	assert.Equal(t, internal.OpStrInsCode, strInsOp.Code(), "Code()")

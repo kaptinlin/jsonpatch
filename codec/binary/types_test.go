@@ -18,7 +18,7 @@ func TestCodec_RoundTripViaPublicAPI(t *testing.T) {
 
 	ops := []internal.Op{
 		op.NewAdd([]string{"profile", "name"}, "Ada"),
-		op.NewTestString([]string{"profile", "name"}, "Ad", 0, false, false),
+		op.NewTestString([]string{"profile", "name"}, "Ad", 0, false),
 		op.NewMatches([]string{"profile", "name"}, "^Ada$", false, nil),
 		op.NewTestStringLenWithNot([]string{"profile", "name"}, 3, false),
 		op.NewMerge([]string{"nodes"}, 1, map[string]any{"joined": true}),

@@ -39,11 +39,11 @@ func (mo *MoreOperation) Test(doc any) (bool, error) {
 func (mo *MoreOperation) Apply(doc any) (internal.OpResult[any], error) {
 	val, num, err := numericValue(doc, mo.Path())
 	if err != nil {
-		return internal.OpResult[any]{}, err
+		return internal.OpResult[any]{}, predicateFailure(err)
 	}
 
 	if num <= mo.Value {
-		return internal.OpResult[any]{}, fmt.Errorf("%w: value %f is not greater than %f", ErrComparisonFailed, num, mo.Value)
+		return internal.OpResult[any]{}, predicateFailure(fmt.Errorf("%w: value %f is not greater than %f", ErrComparisonFailed, num, mo.Value))
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: val}, nil

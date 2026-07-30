@@ -31,7 +31,7 @@ task verify         # Run deps, fmt, vet, lint, test, vuln
 | `internal/` | Shared interfaces, constants, and codec payload types |
 | `codec/json/` | JSON-shaped operation encoding and decoding |
 | `codec/compact/` | Compact array codec with segment-array paths |
-| `codec/binary/` | MessagePack codec for executable operations |
+| `codec/binary/` | MessagePack transport over the canonical compact operation tree |
 | `tests/` | Scenario, predicate, reference, benchmark, and test utility coverage |
 | `examples/` | Runnable user-facing examples |
 
@@ -98,10 +98,11 @@ When reference behavior matters, inspect `.reference/README.md` and `.reference/
 ## API Design Principles
 
 - **Progressive disclosure:** use `Compile`/`CompileJSON`, then `Apply`; reach for `ApplyInPlace` only when mutation is intentional; use `codec/*` only for wire-format control.
-- **Capability honesty:** default compilation accepts RFC 6902 only; predicates, regex predicates, and extended operations require explicit capabilities.
-- **Compiled isolation:** every executable `Op` clones itself; compilation stores independent operations without a JSON round trip.
+- **Capability honesty:** default compilation accepts RFC 6902 only; predicates, regex predicates, and extended operations require explicit capabilities, including operations nested inside composite predicates.
+- **Compiled isolation:** every executable `Op` clones itself; compilation stores independent operations without a JSON round trip and rejects cycles in composite predicate graphs.
 - **Explicit document shape:** plain `string` is scalar text; use `JSONText` or `[]byte` for JSON text.
 - **Structured failure:** callers match stable failure classes with `errors.Is` and inspect `*Error` for index, op, path, from, codec, and cause.
+- **Failure boundaries:** `ApplyInPlace` retains a representable successful prefix, while each failing operation must leave no partial mutation of its own.
 
 ## Coding Rules
 
@@ -115,7 +116,7 @@ When reference behavior matters, inspect `.reference/README.md` and `.reference/
 - Keep the library pure: return errors and leave logging to callers.
 - Use sentinel errors for stable failure classes and match with `errors.Is`.
 - Keep compile and execution errors separate: compile checks payload shape and capability policy; execution checks document state.
-- Preserve one canonical wire grammar: compact true markers are integer `1`, and binary decoding requires exact frame arity and complete input consumption.
+- Preserve one canonical wire grammar: compact and binary share one operation tree, true markers are integer `1`, coordinates are checked Go `int` values, and binary decoding requires exact frame arity, string-key maps, and complete input consumption.
 - Record durable behavior in `SPECS/`; keep `README.md` user-facing and `CLAUDE.md` operational.
 
 ### Go 1.26 Patterns In Use

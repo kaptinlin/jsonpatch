@@ -10,6 +10,7 @@ var (
 	ErrInvalidTrueMarker = errors.New("compact optional true marker must be 1")
 	ErrNumberNotFinite   = errors.New("compact numeric field must be finite")
 	ErrNumberNotInteger  = errors.New("compact positional field must be an integer")
+	ErrNumberOutOfRange  = errors.New("compact positional field is outside the int range")
 	ErrInvalidVariant    = errors.New("compact operation variant is invalid")
 )
 

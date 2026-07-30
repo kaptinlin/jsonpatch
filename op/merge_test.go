@@ -38,9 +38,9 @@ func TestMergeElementPathContract(t *testing.T) {
 
 	t.Run("pos is metadata", func(t *testing.T) {
 		t.Parallel()
-		for _, pos := range []float64{-7, 0, 3} {
+		for _, pos := range []int{-7, 0, 3} {
 			pos := pos
-			t.Run(fmt.Sprintf("%g", pos), func(t *testing.T) {
+			t.Run(fmt.Sprintf("%d", pos), func(t *testing.T) {
 				t.Parallel()
 				result, err := NewMerge([]string{"1"}, pos, nil).Apply([]any{"a", "b", "c"})
 				require.NoError(t, err)
@@ -123,7 +123,7 @@ func TestMerge_Apply(t *testing.T) {
 		name     string
 		path     []string
 		doc      any
-		pos      float64
+		pos      int
 		props    any
 		expected any
 		oldValue any
@@ -313,7 +313,7 @@ func TestMerge_RejectsMissingElement(t *testing.T) {
 func TestMerge_Constructor(t *testing.T) {
 	t.Parallel()
 	path := []string{"user", "tags", "1"}
-	pos := 1.0
+	pos := 1
 	props := map[string]any{"type": "merge"}
 	mergeOp := NewMerge(path, pos, props)
 	assert.Equal(t, path, mergeOp.Path(), "Path()")

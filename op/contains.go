@@ -35,11 +35,11 @@ func NewContainsWithIgnoreCase(path []string, substring string, ignoreCase bool)
 func (co *ContainsOperation) Apply(doc any) (internal.OpResult[any], error) {
 	val, actualValue, testValue, testString, err := co.prepareStrings(doc)
 	if err != nil {
-		return internal.OpResult[any]{}, err
+		return internal.OpResult[any]{}, predicateFailure(err)
 	}
 
 	if !strings.Contains(testValue, testString) {
-		return internal.OpResult[any]{}, fmt.Errorf("%w: string %q does not contain %q", ErrStringMismatch, actualValue, co.Value)
+		return internal.OpResult[any]{}, predicateFailure(fmt.Errorf("%w: string %q does not contain %q", ErrStringMismatch, actualValue, co.Value))
 	}
 	return internal.OpResult[any]{Doc: doc, Old: val}, nil
 }

@@ -13,13 +13,13 @@ import (
 	"github.com/kaptinlin/jsonpatch/op"
 )
 
-func TestCodecRoundTripPreservesOperationJSON(t *testing.T) {
-	t.Parallel()
+type binaryOperationCase struct {
+	name string
+	op   internal.Op
+}
 
-	tests := []struct {
-		name string
-		op   internal.Op
-	}{
+func binaryOperationCases() []binaryOperationCase {
+	return []binaryOperationCase{
 		{name: "add nested object", op: op.NewAdd([]string{"profile"}, map[string]any{"name": "Ada", "tags": []any{"go"}})},
 		{name: "remove without old value", op: op.NewRemove([]string{"profile", "name"})},
 		{name: "remove with old value", op: op.NewRemoveWithOldValue([]string{"profile", "name"}, "Ada")},
@@ -37,7 +37,7 @@ func TestCodecRoundTripPreservesOperationJSON(t *testing.T) {
 		{name: "ends predicate", op: op.NewEnds([]string{"profile", "name"}, "a")},
 		{name: "in predicate", op: op.NewIn([]string{"role"}, []any{"admin", "editor"})},
 		{name: "matches predicate", op: op.NewMatches([]string{"profile", "name"}, "^ad", true, nil)},
-		{name: "test string predicate", op: op.NewTestString([]string{"profile", "name"}, "da", 1, false, false)},
+		{name: "test string predicate", op: op.NewTestString([]string{"profile", "name"}, "da", 1, false)},
 		{name: "test string length predicate", op: op.NewTestStringLenWithNot([]string{"profile", "name"}, 3, true)},
 		{name: "type predicate", op: op.NewType([]string{"profile", "name"}, "string")},
 		{name: "flip operation", op: op.NewFlip([]string{"enabled"})},
@@ -49,21 +49,26 @@ func TestCodecRoundTripPreservesOperationJSON(t *testing.T) {
 		{name: "extend operation", op: op.NewExtend([]string{"profile"}, map[string]any{"name": "Ada", "nested": map[string]any{"ok": true}}, true)},
 		{name: "merge without props", op: op.NewMerge([]string{"nodes", "1"}, 1, nil)},
 		{name: "merge with props", op: op.NewMerge([]string{"nodes", "1"}, 1, map[string]any{"merged": true})},
-		{name: "and predicate", op: op.NewAnd([]string{"profile"}, []any{
+		{name: "and predicate", op: op.NewAnd([]string{"profile"},
 			op.NewDefined([]string{"profile", "name"}),
 			op.NewContains([]string{"profile", "role"}, "admin"),
-		})},
-		{name: "or predicate", op: op.NewOr([]string{"profile"}, []any{
+		)},
+		{name: "or predicate", op: op.NewOr([]string{"profile"},
 			op.NewUndefined([]string{"profile", "deleted"}),
 			op.NewContainsWithIgnoreCase([]string{"profile", "role"}, "ADMIN", true),
-		})},
-		{name: "not predicate", op: op.NewNotMultiple([]string{"profile"}, []any{
+		)},
+		{name: "not predicate", op: op.NewNot(
+			[]string{"profile"},
 			op.NewUndefined([]string{"profile", "deleted"}),
-		})},
+		)},
 	}
+}
+
+func TestCodecRoundTripPreservesOperationJSON(t *testing.T) {
+	t.Parallel()
 
 	codec := New()
-	for _, tc := range tests {
+	for _, tc := range binaryOperationCases() {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -84,6 +89,67 @@ func TestCodecRoundTripPreservesOperationJSON(t *testing.T) {
 	}
 }
 
+func TestCodecEncodeUsesCanonicalIntegerTrueMarkers(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		present     internal.Op
+		absent      internal.Op
+		presentSize int
+	}{
+		{name: "test not", present: op.NewTestWithNot([]string{"status"}, "ready", true), absent: op.NewTest([]string{"status"}, "ready"), presentSize: 4},
+		{name: "contains ignore case", present: op.NewContainsWithIgnoreCase([]string{"name"}, "ada", true), absent: op.NewContains([]string{"name"}, "Ada"), presentSize: 4},
+		{name: "starts ignore case", present: op.NewStartsWithIgnoreCase([]string{"name"}, "a", true), absent: op.NewStarts([]string{"name"}, "A"), presentSize: 4},
+		{name: "ends ignore case", present: op.NewEndsWithIgnoreCase([]string{"name"}, "a", true), absent: op.NewEnds([]string{"name"}, "a"), presentSize: 4},
+		{name: "matches ignore case", present: op.NewMatches([]string{"name"}, "^a", true, nil), absent: op.NewMatches([]string{"name"}, "^A", false, nil), presentSize: 4},
+		{name: "test string not", present: op.NewTestString([]string{"name"}, "ad", 0, true), absent: op.NewTestString([]string{"name"}, "Ad", 0, false), presentSize: 5},
+		{name: "test string length not", present: op.NewTestStringLenWithNot([]string{"name"}, 3, true), absent: op.NewTestStringLen([]string{"name"}, 3), presentSize: 4},
+		{name: "extend delete null", present: op.NewExtend([]string{"profile"}, map[string]any{"name": nil}, true), absent: op.NewExtend([]string{"profile"}, map[string]any{"name": "Ada"}, false), presentSize: 4},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			present := decodeSingleMessagePackOperation(t, tc.present)
+			require.Len(t, present, tc.presentSize)
+			assertMessagePackIntegerOne(t, present[len(present)-1])
+
+			absent := decodeSingleMessagePackOperation(t, tc.absent)
+			require.Len(t, absent, tc.presentSize-1)
+		})
+	}
+}
+
+func decodeSingleMessagePackOperation(t *testing.T, operation internal.Op) []any {
+	t.Helper()
+
+	encoded, err := New().Encode([]internal.Op{operation})
+	require.NoError(t, err)
+	decoded, err := msgp.NewReader(bytes.NewReader(encoded)).ReadIntf()
+	require.NoError(t, err)
+	patch, ok := decoded.([]any)
+	require.True(t, ok, "decoded patch has type %T", decoded)
+	require.Len(t, patch, 1)
+	frame, ok := patch[0].([]any)
+	require.True(t, ok, "decoded operation has type %T", patch[0])
+	return frame
+}
+
+func assertMessagePackIntegerOne(t *testing.T, value any) {
+	t.Helper()
+
+	switch marker := value.(type) {
+	case int64:
+		assert.Equal(t, int64(1), marker)
+	case uint64:
+		assert.Equal(t, uint64(1), marker)
+	default:
+		t.Errorf("true marker has type %T, want MessagePack integer", value)
+	}
+}
+
 func TestCodecEncodeCanonicalOptionalFields(t *testing.T) {
 	t.Parallel()
 
@@ -92,7 +158,7 @@ func TestCodecEncodeCanonicalOptionalFields(t *testing.T) {
 		op.NewTestWithNot([]string{"profile", "name"}, "Grace", true),
 		op.NewMatches([]string{"profile", "name"}, "^A", false, nil),
 		op.NewContainsWithIgnoreCase([]string{"profile", "name"}, "ada", true),
-		op.NewTestString([]string{"profile", "name"}, "da", 1, true, false),
+		op.NewTestString([]string{"profile", "name"}, "da", 1, true),
 		op.NewTestStringLenWithNot([]string{"profile", "name"}, 3, false),
 		op.NewExtend([]string{"profile"}, map[string]any{"name": "Ada"}, true),
 	})
@@ -112,9 +178,9 @@ func TestCodecEncodeCanonicalOptionalFields(t *testing.T) {
 	value, err = reader.ReadString()
 	require.NoError(t, err)
 	assert.Equal(t, "Grace", value)
-	not, err := reader.ReadBool()
+	not, err := reader.ReadUint8()
 	require.NoError(t, err)
-	assert.True(t, not)
+	assert.Equal(t, uint8(1), not)
 
 	readBinaryOpHeader(t, reader, 3, internal.OpMatchesCode, []string{"profile", "name"})
 	pattern, err := reader.ReadString()
@@ -125,33 +191,33 @@ func TestCodecEncodeCanonicalOptionalFields(t *testing.T) {
 	needle, err := reader.ReadString()
 	require.NoError(t, err)
 	assert.Equal(t, "ada", needle)
-	ignoreCase, err := reader.ReadBool()
+	ignoreCase, err := reader.ReadUint8()
 	require.NoError(t, err)
-	assert.True(t, ignoreCase)
+	assert.Equal(t, uint8(1), ignoreCase)
 
 	readBinaryOpHeader(t, reader, 5, internal.OpTestStringCode, []string{"profile", "name"})
-	pos, err := reader.ReadFloat64()
+	pos, err := reader.ReadInt64()
 	require.NoError(t, err)
-	assert.Equal(t, 1.0, pos)
+	assert.Equal(t, int64(1), pos)
 	str, err := reader.ReadString()
 	require.NoError(t, err)
 	assert.Equal(t, "da", str)
-	not, err = reader.ReadBool()
+	not, err = reader.ReadUint8()
 	require.NoError(t, err)
-	assert.True(t, not)
+	assert.Equal(t, uint8(1), not)
 
 	readBinaryOpHeader(t, reader, 3, internal.OpTestStringLenCode, []string{"profile", "name"})
-	length, err := reader.ReadFloat64()
+	length, err := reader.ReadInt64()
 	require.NoError(t, err)
-	assert.Equal(t, 3.0, length)
+	assert.Equal(t, int64(3), length)
 
 	readBinaryOpHeader(t, reader, 4, internal.OpExtendCode, []string{"profile"})
 	props, err := reader.ReadIntf()
 	require.NoError(t, err)
-	assert.Equal(t, map[string]any{"name": "Ada"}, normalizeMap(props))
-	deleteNull, err := reader.ReadBool()
+	assert.Equal(t, map[string]any{"name": "Ada"}, props)
+	deleteNull, err := reader.ReadUint8()
 	require.NoError(t, err)
-	assert.True(t, deleteNull)
+	assert.Equal(t, uint8(1), deleteNull)
 }
 
 func TestCodecEncodeCanonicalWireBytesGolden(t *testing.T) {
@@ -168,8 +234,8 @@ func TestCodecEncodeCanonicalWireBytesGolden(t *testing.T) {
 		op.NewEndsWithIgnoreCase([]string{"name"}, "A", true),
 		op.NewMatches([]string{"name"}, "^A", false, nil),
 		op.NewMatches([]string{"name"}, "^a", true, nil),
-		op.NewTestString([]string{"name"}, "Ad", 0, false, false),
-		op.NewTestString([]string{"name"}, "ad", 0, true, false),
+		op.NewTestString([]string{"name"}, "Ad", 0, false),
+		op.NewTestString([]string{"name"}, "ad", 0, true),
 		op.NewTestStringLen([]string{"name"}, 3),
 		op.NewTestStringLenWithNot([]string{"name"}, 4, true),
 		op.NewSplit([]string{"nodes", "0"}, 1, nil),
@@ -178,13 +244,13 @@ func TestCodecEncodeCanonicalWireBytesGolden(t *testing.T) {
 		op.NewMerge([]string{"nodes", "1"}, 1, map[string]any{"merged": true}),
 		op.NewExtend([]string{"profile"}, map[string]any{"name": "Ada"}, false),
 		op.NewExtend([]string{"profile"}, map[string]any{"name": "Ada"}, true),
-		op.NewAnd([]string{"profile"}, []any{
+		op.NewAnd([]string{"profile"},
 			op.NewDefined([]string{"profile", "name"}),
-			op.NewOr([]string{"profile", "flags"}, []any{
+			op.NewOr([]string{"profile", "flags"},
 				op.NewUndefined([]string{"profile", "flags", "deleted"}),
 				op.NewContains([]string{"profile", "flags", "role"}, "admin"),
-			}),
-		}),
+			),
+		),
 	})
 	require.NoError(t, err)
 
@@ -195,56 +261,56 @@ func TestCodecEncodeCanonicalWireBytesGolden(t *testing.T) {
 		require.NoError(t, writer.WriteBool(true))
 		writeBinaryHeader(t, writer, 4, internal.OpTestCode, "flag")
 		require.NoError(t, writer.WriteBool(false))
-		require.NoError(t, writer.WriteBool(true))
+		require.NoError(t, writer.WriteUint8(1))
 
 		writeBinaryHeader(t, writer, 3, internal.OpContainsCode, "name")
 		require.NoError(t, writer.WriteString("Ada"))
 		writeBinaryHeader(t, writer, 4, internal.OpContainsCode, "name")
 		require.NoError(t, writer.WriteString("ada"))
-		require.NoError(t, writer.WriteBool(true))
+		require.NoError(t, writer.WriteUint8(1))
 
 		writeBinaryHeader(t, writer, 3, internal.OpStartsCode, "name")
 		require.NoError(t, writer.WriteString("A"))
 		writeBinaryHeader(t, writer, 4, internal.OpStartsCode, "name")
 		require.NoError(t, writer.WriteString("a"))
-		require.NoError(t, writer.WriteBool(true))
+		require.NoError(t, writer.WriteUint8(1))
 
 		writeBinaryHeader(t, writer, 3, internal.OpEndsCode, "name")
 		require.NoError(t, writer.WriteString("a"))
 		writeBinaryHeader(t, writer, 4, internal.OpEndsCode, "name")
 		require.NoError(t, writer.WriteString("A"))
-		require.NoError(t, writer.WriteBool(true))
+		require.NoError(t, writer.WriteUint8(1))
 
 		writeBinaryHeader(t, writer, 3, internal.OpMatchesCode, "name")
 		require.NoError(t, writer.WriteString("^A"))
 		writeBinaryHeader(t, writer, 4, internal.OpMatchesCode, "name")
 		require.NoError(t, writer.WriteString("^a"))
-		require.NoError(t, writer.WriteBool(true))
+		require.NoError(t, writer.WriteUint8(1))
 
 		writeBinaryHeader(t, writer, 4, internal.OpTestStringCode, "name")
-		require.NoError(t, writer.WriteFloat64(0))
+		require.NoError(t, writer.WriteInt64(0))
 		require.NoError(t, writer.WriteString("Ad"))
 		writeBinaryHeader(t, writer, 5, internal.OpTestStringCode, "name")
-		require.NoError(t, writer.WriteFloat64(0))
+		require.NoError(t, writer.WriteInt64(0))
 		require.NoError(t, writer.WriteString("ad"))
-		require.NoError(t, writer.WriteBool(true))
+		require.NoError(t, writer.WriteUint8(1))
 
 		writeBinaryHeader(t, writer, 3, internal.OpTestStringLenCode, "name")
-		require.NoError(t, writer.WriteFloat64(3))
+		require.NoError(t, writer.WriteInt64(3))
 		writeBinaryHeader(t, writer, 4, internal.OpTestStringLenCode, "name")
-		require.NoError(t, writer.WriteFloat64(4))
-		require.NoError(t, writer.WriteBool(true))
+		require.NoError(t, writer.WriteInt64(4))
+		require.NoError(t, writer.WriteUint8(1))
 
 		writeBinaryHeader(t, writer, 3, internal.OpSplitCode, "nodes", "0")
-		require.NoError(t, writer.WriteFloat64(1))
+		require.NoError(t, writer.WriteInt64(1))
 		writeBinaryHeader(t, writer, 4, internal.OpSplitCode, "nodes", "0")
-		require.NoError(t, writer.WriteFloat64(1))
+		require.NoError(t, writer.WriteInt64(1))
 		writeBinaryStringMap(t, writer, "kind", "paragraph")
 
 		writeBinaryHeader(t, writer, 3, internal.OpMergeCode, "nodes", "1")
-		require.NoError(t, writer.WriteFloat64(1))
+		require.NoError(t, writer.WriteInt64(1))
 		writeBinaryHeader(t, writer, 4, internal.OpMergeCode, "nodes", "1")
-		require.NoError(t, writer.WriteFloat64(1))
+		require.NoError(t, writer.WriteInt64(1))
 		require.NoError(t, writer.WriteMapHeader(1))
 		require.NoError(t, writer.WriteString("merged"))
 		require.NoError(t, writer.WriteBool(true))
@@ -253,7 +319,7 @@ func TestCodecEncodeCanonicalWireBytesGolden(t *testing.T) {
 		writeBinaryStringMap(t, writer, "name", "Ada")
 		writeBinaryHeader(t, writer, 4, internal.OpExtendCode, "profile")
 		writeBinaryStringMap(t, writer, "name", "Ada")
-		require.NoError(t, writer.WriteBool(true))
+		require.NoError(t, writer.WriteUint8(1))
 
 		writeBinaryHeader(t, writer, 3, internal.OpAndCode, "profile")
 		require.NoError(t, writer.WriteArrayHeader(2))
@@ -274,12 +340,13 @@ func TestCodecEncodeCompositeUsesParentRelativePaths(t *testing.T) {
 	t.Parallel()
 
 	encoded, err := New().Encode([]internal.Op{
-		op.NewAnd([]string{"profile"}, []any{
+		op.NewAnd([]string{"profile"},
 			op.NewDefined([]string{"profile", "name"}),
-			op.NewNotMultiple([]string{"profile", "meta"}, []any{
+			op.NewNot(
+				[]string{"profile", "meta"},
 				op.NewUndefined([]string{"profile", "meta", "deleted"}),
-			}),
-		}),
+			),
+		),
 	})
 	require.NoError(t, err)
 
@@ -409,6 +476,16 @@ func TestCodecDecodeRejectsInvalidCompositePredicates(t *testing.T) {
 			wantErr: ErrInvalidPredicate,
 		},
 		{
+			name: "not contains no predicate",
+			write: func(t *testing.T, writer *msgp.Writer) {
+				t.Helper()
+				require.NoError(t, writer.WriteArrayHeader(1))
+				writeBinaryHeader(t, writer, 3, internal.OpNotCode, "profile")
+				require.NoError(t, writer.WriteArrayHeader(0))
+			},
+			wantErr: ErrNotSinglePredicate,
+		},
+		{
 			name: "not contains more than one predicate",
 			write: func(t *testing.T, writer *msgp.Writer) {
 				t.Helper()
@@ -447,18 +524,8 @@ func TestCodecEncodeRejectsInvalidCompositePredicates(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name:    "not with multiple predicates fails validation before encoding",
-			op:      op.NewNotMultiple([]string{"profile"}, []any{op.NewDefined([]string{"profile", "name"}), op.NewUndefined([]string{"profile", "deleted"})}),
-			wantErr: op.ErrInvalidPredicateInNot,
-		},
-		{
-			name:    "and rejects non-predicate child",
-			op:      op.NewAnd([]string{"profile"}, []any{op.NewAdd([]string{"profile", "name"}, "Ada")}),
-			wantErr: op.ErrInvalidPredicateInAnd,
-		},
-		{
 			name:    "or rejects child outside parent path",
-			op:      op.NewOr([]string{"profile"}, []any{op.NewDefined([]string{"settings", "enabled"})}),
+			op:      op.NewOr([]string{"profile"}, op.NewDefined([]string{"settings", "enabled"})),
 			wantErr: op.ErrPredicatePathOutsideParent,
 		},
 	}
@@ -858,7 +925,7 @@ func TestCodecDecodeRejectsMalformedFieldTypes(t *testing.T) {
 			},
 		},
 		{
-			name: "matches ignore case is not bool",
+			name: "matches ignore case marker is string",
 			write: func(t *testing.T, writer *msgp.Writer) {
 				t.Helper()
 				require.NoError(t, writer.WriteArrayHeader(1))
@@ -868,6 +935,7 @@ func TestCodecDecodeRejectsMalformedFieldTypes(t *testing.T) {
 				require.NoError(t, writer.WriteString("^A"))
 				require.NoError(t, writer.WriteString("true"))
 			},
+			wantErr: ErrInvalidTrueMarker,
 		},
 		{
 			name: "test string position is not float",
@@ -882,7 +950,7 @@ func TestCodecDecodeRejectsMalformedFieldTypes(t *testing.T) {
 			},
 		},
 		{
-			name: "test string len not flag is not bool",
+			name: "test string len marker is string",
 			write: func(t *testing.T, writer *msgp.Writer) {
 				t.Helper()
 				require.NoError(t, writer.WriteArrayHeader(1))
@@ -892,6 +960,7 @@ func TestCodecDecodeRejectsMalformedFieldTypes(t *testing.T) {
 				require.NoError(t, writer.WriteFloat64(3))
 				require.NoError(t, writer.WriteString("false"))
 			},
+			wantErr: ErrInvalidTrueMarker,
 		},
 		{
 			name: "str ins string is not string",
@@ -919,7 +988,7 @@ func TestCodecDecodeRejectsMalformedFieldTypes(t *testing.T) {
 			},
 		},
 		{
-			name: "extend delete null is not bool",
+			name: "extend delete null marker is string",
 			write: func(t *testing.T, writer *msgp.Writer) {
 				t.Helper()
 				require.NoError(t, writer.WriteArrayHeader(1))
@@ -931,6 +1000,7 @@ func TestCodecDecodeRejectsMalformedFieldTypes(t *testing.T) {
 				require.NoError(t, writer.WriteString("Ada"))
 				require.NoError(t, writer.WriteString("false"))
 			},
+			wantErr: ErrInvalidTrueMarker,
 		},
 	}
 
@@ -978,31 +1048,31 @@ func TestCodecPreservesStrDelVariants(t *testing.T) {
 	assert.Equal(t, uint32(3), count)
 
 	readBinaryOpHeader(t, reader, 4, internal.OpStrDelCode, []string{"text"})
-	pos, err := reader.ReadFloat64()
+	pos, err := reader.ReadInt64()
 	require.NoError(t, err)
-	assert.Equal(t, 1.0, pos)
+	assert.Equal(t, int64(1), pos)
 	str, err := reader.ReadString()
 	require.NoError(t, err)
 	assert.Equal(t, "da", str)
 
 	readBinaryOpHeader(t, reader, 4, internal.OpStrDelCode, []string{"text"})
-	pos, err = reader.ReadFloat64()
+	pos, err = reader.ReadInt64()
 	require.NoError(t, err)
-	assert.Equal(t, 2.0, pos)
+	assert.Equal(t, int64(2), pos)
 	str, err = reader.ReadString()
 	require.NoError(t, err)
 	assert.Empty(t, str)
 
 	readBinaryOpHeader(t, reader, 5, internal.OpStrDelCode, []string{"text"})
-	pos, err = reader.ReadFloat64()
+	pos, err = reader.ReadInt64()
 	require.NoError(t, err)
-	assert.Equal(t, 3.0, pos)
+	assert.Equal(t, int64(3), pos)
 	discriminator, err := reader.ReadUint8()
 	require.NoError(t, err)
 	assert.Zero(t, discriminator)
-	length, err := reader.ReadFloat64()
+	length, err := reader.ReadInt64()
 	require.NoError(t, err)
-	assert.Equal(t, 4.0, length)
+	assert.Equal(t, int64(4), length)
 
 	decoded, err := codec.Decode(encoded)
 	require.NoError(t, err)
@@ -1099,15 +1169,12 @@ func writeBinaryMalformedValueOp(t *testing.T, writer *msgp.Writer, code uint8, 
 type unsupportedOp struct{}
 
 func (unsupportedOp) Op() internal.OpType { return "unsupported" }
-func (unsupportedOp) Code() int           { return 254 }
 func (unsupportedOp) Path() []string      { return nil }
 func (unsupportedOp) Apply(doc any) (internal.OpResult[any], error) {
 	return internal.OpResult[any]{Doc: doc}, nil
 }
-func (unsupportedOp) ToJSON() (internal.Operation, error)           { return internal.Operation{}, nil }
-func (unsupportedOp) ToCompact() (internal.CompactOperation, error) { return nil, nil }
-func (unsupportedOp) Validate() error                               { return nil }
-func (unsupportedOp) Clone() (internal.Op, error)                   { return unsupportedOp{}, nil }
+func (unsupportedOp) Validate() error             { return nil }
+func (unsupportedOp) Clone() (internal.Op, error) { return unsupportedOp{}, nil }
 
 func TestCodecEncodeRejectsUnsupportedOperation(t *testing.T) {
 	t.Parallel()

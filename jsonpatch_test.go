@@ -172,7 +172,7 @@ func TestOperationInterfacesExposeCanonicalMethods(t *testing.T) {
 	assert.True(t, ok)
 	assert.True(t, predicate.Not())
 
-	secondOrder := op.NewNot(op.NewDefined([]string{"active"}))
+	secondOrder := op.NewNot([]string{"active"}, op.NewDefined([]string{"active"}))
 	assert.True(t, secondOrder.Not())
 	assert.Len(t, secondOrder.Ops(), 1)
 	assert.Equal(t, []string{"active"}, secondOrder.Ops()[0].Path())

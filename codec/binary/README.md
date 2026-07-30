@@ -13,6 +13,8 @@ The binary codec uses **MessagePack arrays** with the same structure as the comp
 ```
 
 The payload is encoded as MessagePack bytes instead of JSON arrays.
+Present optional true flags are encoded as MessagePack integer `1`; false flags are omitted.
+The decoder rejects booleans and other values in those marker slots.
 
 ## Usage
 
@@ -146,4 +148,4 @@ func (c *Codec) Decode(data []byte) ([]jsonpatch.Op, error)
 
 ## Testing Contract
 
-The codec has golden coverage for MessagePack bytes, optional-field omission, and parent-relative composite predicate paths. `Decode` rejects invalid operation frame lengths with `ErrInvalidFrameArity` and rejects trailing bytes or concatenated values with `ErrTrailingData`.
+The codec has golden coverage for MessagePack bytes, optional-field omission, integer `1` true markers, and parent-relative composite predicate paths. `Decode` rejects invalid true markers with `ErrInvalidTrueMarker`, invalid operation frame lengths with `ErrInvalidFrameArity`, and trailing bytes or concatenated values with `ErrTrailingData`.

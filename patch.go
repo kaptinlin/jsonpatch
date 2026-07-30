@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	"github.com/go-json-experiment/json"
+	"github.com/go-json-experiment/json/jsontext"
 
 	"github.com/kaptinlin/deepclone"
 	"github.com/kaptinlin/jsonpointer"
@@ -143,23 +144,31 @@ func CompileJSON(data []byte, opts ...CompileOption) (*Patch, error) {
 	options := buildCompileOptions(opts)
 	options.codec = "json"
 
-	var operations []map[string]any
-	if err := json.Unmarshal(data, &operations); err != nil {
+	var rawOperations []jsontext.Value
+	if err := json.Unmarshal(data, &rawOperations); err != nil {
 		return nil, newPayloadError(options.codec, err)
 	}
 
-	ops := make([]Op, len(operations))
-	for i := range operations {
-		decoded, err := jsoncodec.Decode([]map[string]any{operations[i]}, internal.JSONPatchOptions{
+	ops := make([]Op, len(rawOperations))
+	for i, raw := range rawOperations {
+		var fields map[string]any
+		if err := json.Unmarshal(raw, &fields); err != nil {
+			return nil, newFieldError(ErrPayloadInvalid, i, "", "", "", options.codec, err)
+		}
+		encoded, err := json.Marshal([]jsontext.Value{raw})
+		if err != nil {
+			return nil, newFieldError(ErrPayloadInvalid, i, "", "", "", options.codec, err)
+		}
+		decoded, err := jsoncodec.DecodeJSON(encoded, internal.JSONPatchOptions{
 			CreateMatcher: options.createMatcher,
 		})
 		if err != nil {
 			return nil, newFieldError(
 				ErrPayloadInvalid,
 				i,
-				stringMapValue(operations[i], "op"),
-				stringMapValue(operations[i], "path"),
-				stringMapValue(operations[i], "from"),
+				stringMapValue(fields, "op"),
+				stringMapValue(fields, "path"),
+				stringMapValue(fields, "from"),
 				options.codec,
 				err,
 			)
@@ -177,22 +186,54 @@ func stringMapValue(values map[string]any, key string) string {
 func compileOps(ops []Op, options compileOptions) (*Patch, error) {
 	compiled := make([]Op, len(ops))
 	for i, operation := range ops {
-		if operation == nil {
+		if isNilOperation(operation) {
 			return nil, newError(ErrPayloadInvalid, i, nil, options.codec, errNilOperation)
-		}
-		if err := operation.Validate(); err != nil {
-			return nil, newError(ErrPayloadInvalid, i, operation, options.codec, err)
-		}
-		if !operationAllowed(operation, options.capabilities) {
-			return nil, newError(ErrUnsupportedCapability, i, operation, options.codec, nil)
 		}
 		cloned, err := operation.Clone()
 		if err != nil {
 			return nil, newError(ErrPayloadInvalid, i, operation, options.codec, err)
 		}
+		if isNilOperation(cloned) {
+			return nil, newError(ErrPayloadInvalid, i, operation, options.codec, errNilOperation)
+		}
+		if err := cloned.Validate(); err != nil {
+			return nil, newError(ErrPayloadInvalid, i, cloned, options.codec, err)
+		}
+		if rejected := disallowedOperation(cloned, options.capabilities); rejected != nil {
+			return nil, newError(ErrUnsupportedCapability, i, rejected, options.codec, nil)
+		}
 		compiled[i] = cloned
 	}
 	return &Patch{ops: compiled}, nil
+}
+
+func isNilOperation(operation Op) bool {
+	if operation == nil {
+		return true
+	}
+	value := reflect.ValueOf(operation)
+	switch value.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
+		return value.IsNil()
+	default:
+		return false
+	}
+}
+
+func disallowedOperation(operation Op, capabilities Capability) Op {
+	if !operationAllowed(operation, capabilities) {
+		return operation
+	}
+	composite, ok := operation.(internal.SecondOrderPredicateOp)
+	if !ok {
+		return nil
+	}
+	for _, child := range composite.Ops() {
+		if rejected := disallowedOperation(child, capabilities); rejected != nil {
+			return rejected
+		}
+	}
+	return nil
 }
 
 func operationAllowed(operation Op, capabilities Capability) bool {
@@ -267,7 +308,11 @@ func Apply[T internal.Document](patch *Patch, doc T) (*Result[T], error) {
 	if patch == nil {
 		return nil, newPayloadError("", errors.New("nil patch"))
 	}
-	return applyCompiledByDocumentType(patch, doc, &applyOptions{})
+	result, err := applyCompiledByDocumentType(patch, doc, &applyOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 // ApplyInPlace applies patch and stores the result back in doc.
@@ -279,11 +324,10 @@ func ApplyInPlace[T internal.Document](patch *Patch, doc *T) error {
 		return newPayloadError("", errors.New("nil document pointer"))
 	}
 	result, err := applyCompiledByDocumentType(patch, *doc, &applyOptions{mutate: true})
-	if err != nil {
-		return err
+	if result != nil {
+		*doc = result.Doc
 	}
-	*doc = result.Doc
-	return nil
+	return err
 }
 
 func applyCompiledByDocumentType[T internal.Document](patch *Patch, doc T, options *applyOptions) (*Result[T], error) {
@@ -341,7 +385,7 @@ func classifyDocumentByReflection[T internal.Document](doc T) documentClass {
 			}
 			return documentClass{kind: documentJSONBytes, working: bytes}
 		}
-		return documentClass{kind: documentDirect, working: any(doc)}
+		return documentClass{kind: documentStructLike}
 	case reflect.Interface:
 		return documentClass{kind: documentDirect, working: any(doc)}
 	default:
@@ -355,16 +399,17 @@ func applyJSONTextDocument[T internal.Document](patch *Patch, doc JSONText, orig
 		return nil, newPayloadError("json", err)
 	}
 
-	resultDoc, opResults, err := patch.apply(parsed, options)
-	if err != nil {
-		return nil, err
+	resultDoc, opResults, applyErr := patch.apply(parsed, options)
+	if shouldReturnApplyError(options, opResults, applyErr) {
+		return nil, applyErr
 	}
 
 	resultBytes, err := json.Marshal(resultDoc)
 	if err != nil {
-		return nil, conversionError(original, err)
+		return finishDocumentApply[T](nil, conversionError(original, err), applyErr)
 	}
-	return resultFromRaw(patch, string(resultBytes), opResults, original)
+	result, err := resultFromRaw(patch, string(resultBytes), opResults, original)
+	return finishDocumentApply(result, err, applyErr)
 }
 
 func applyJSONBytesDocument[T internal.Document](patch *Patch, doc []byte, original T, options *applyOptions) (*Result[T], error) {
@@ -373,16 +418,17 @@ func applyJSONBytesDocument[T internal.Document](patch *Patch, doc []byte, origi
 		return nil, newPayloadError("json", err)
 	}
 
-	resultDoc, opResults, err := patch.apply(parsed, options)
-	if err != nil {
-		return nil, err
+	resultDoc, opResults, applyErr := patch.apply(parsed, options)
+	if shouldReturnApplyError(options, opResults, applyErr) {
+		return nil, applyErr
 	}
 
 	resultBytes, err := json.Marshal(resultDoc)
 	if err != nil {
-		return nil, conversionError(original, err)
+		return finishDocumentApply[T](nil, conversionError(original, err), applyErr)
 	}
-	return resultFromRaw(patch, resultBytes, opResults, original)
+	result, err := resultFromRaw(patch, resultBytes, opResults, original)
+	return finishDocumentApply(result, err, applyErr)
 }
 
 func applyStructLikeDocument[T internal.Document](patch *Patch, doc T, options *applyOptions) (*Result[T], error) {
@@ -396,29 +442,44 @@ func applyStructLikeDocument[T internal.Document](patch *Patch, doc T, options *
 		return nil, conversionError(doc, err)
 	}
 
-	resultDoc, opResults, err := patch.apply(parsed, options)
-	if err != nil {
-		return nil, err
+	resultDoc, opResults, applyErr := patch.apply(parsed, options)
+	if shouldReturnApplyError(options, opResults, applyErr) {
+		return nil, applyErr
 	}
 
 	resultData, err := json.Marshal(resultDoc)
 	if err != nil {
-		return nil, conversionError(doc, err)
+		return finishDocumentApply[T](nil, conversionError(doc, err), applyErr)
 	}
 
 	var result T
 	if err := json.Unmarshal(resultData, &result); err != nil {
-		return nil, conversionError(doc, err)
+		return finishDocumentApply[T](nil, conversionError(doc, err), applyErr)
 	}
-	return &Result[T]{Doc: result, Steps: stepsFromResults(patch.ops, opResults)}, nil
+	return &Result[T]{Doc: result, Steps: stepsFromResults(patch.ops, opResults)}, applyErr
 }
 
 func applyDirectDocument[T internal.Document](patch *Patch, working any, original T, options *applyOptions) (*Result[T], error) {
-	resultDoc, opResults, err := patch.apply(working, options)
-	if err != nil {
-		return nil, err
+	resultDoc, opResults, applyErr := patch.apply(working, options)
+	if shouldReturnApplyError(options, opResults, applyErr) {
+		return nil, applyErr
 	}
-	return resultFromRaw(patch, resultDoc, opResults, original)
+	result, err := resultFromRaw(patch, resultDoc, opResults, original)
+	return finishDocumentApply(result, err, applyErr)
+}
+
+func shouldReturnApplyError(options *applyOptions, opResults []internal.OpResult[any], applyErr error) bool {
+	return applyErr != nil && (!options.mutate || len(opResults) == 0)
+}
+
+func finishDocumentApply[T internal.Document](result *Result[T], resultErr, applyErr error) (*Result[T], error) {
+	if resultErr != nil {
+		if applyErr != nil {
+			return nil, errors.Join(applyErr, resultErr)
+		}
+		return nil, resultErr
+	}
+	return result, applyErr
 }
 
 func resultFromRaw[T internal.Document](patch *Patch, resultDoc any, opResults []internal.OpResult[any], original T) (*Result[T], error) {
@@ -471,11 +532,11 @@ func (p *Patch) apply(doc any, options *applyOptions) (any, []internal.OpResult[
 	results := make([]internal.OpResult[any], 0, len(p.ops))
 	for i, operation := range p.ops {
 		if operation == nil {
-			return nil, nil, newError(ErrPayloadInvalid, i, nil, "", errNilOperation)
+			return workingDoc, results, newError(ErrPayloadInvalid, i, nil, "", errNilOperation)
 		}
 		opResult, err := operation.Apply(workingDoc)
 		if err != nil {
-			return nil, nil, newError(kindForApplyError(err), i, operation, "", err)
+			return workingDoc, results, newError(kindForApplyError(err), i, operation, "", err)
 		}
 		workingDoc = opResult.Doc
 		results = append(results, opResult)
@@ -485,21 +546,7 @@ func (p *Patch) apply(doc any, options *applyOptions) (any, []internal.OpResult[
 
 func kindForApplyError(err error) error {
 	switch {
-	case errors.Is(err, oppkg.ErrTestFailed),
-		errors.Is(err, oppkg.ErrTestOperationFailed),
-		errors.Is(err, oppkg.ErrTestOperationNumberStringMismatch),
-		errors.Is(err, oppkg.ErrTestOperationStringNotEquivalent),
-		errors.Is(err, oppkg.ErrStringMismatch),
-		errors.Is(err, oppkg.ErrSubstringMismatch),
-		errors.Is(err, oppkg.ErrStringLengthMismatch),
-		errors.Is(err, oppkg.ErrContainsMismatch),
-		errors.Is(err, oppkg.ErrComparisonFailed),
-		errors.Is(err, oppkg.ErrOperationFailed),
-		errors.Is(err, oppkg.ErrDefinedTestFailed),
-		errors.Is(err, oppkg.ErrUndefinedTestFailed),
-		errors.Is(err, oppkg.ErrAndTestFailed),
-		errors.Is(err, oppkg.ErrOrTestFailed),
-		errors.Is(err, oppkg.ErrNotTestFailed):
+	case errors.Is(err, oppkg.ErrTestFailed):
 		return ErrTestFailed
 	case errors.Is(err, oppkg.ErrTypeMismatch):
 		return ErrTypeMismatch

@@ -42,7 +42,7 @@ func TestPositionalStringOperationsUseCodePointCoordinates(t *testing.T) {
 
 	t.Run("test_string supplementary code point", func(t *testing.T) {
 		t.Parallel()
-		operation := NewTestString(nil, "🙂", 2, false, false)
+		operation := NewTestString(nil, "🙂", 2, false)
 		matched, err := operation.Test(text)
 		require.NoError(t, err)
 		assert.True(t, matched)
@@ -52,7 +52,7 @@ func TestPositionalStringOperationsUseCodePointCoordinates(t *testing.T) {
 
 	t.Run("test_string combining sequence counts two code points", func(t *testing.T) {
 		t.Parallel()
-		operation := NewTestString(nil, "e\u0301", 3, false, false)
+		operation := NewTestString(nil, "e\u0301", 3, false)
 		matched, err := operation.Test(text)
 		require.NoError(t, err)
 		assert.True(t, matched)
@@ -83,7 +83,7 @@ func TestPositionalStringOperationBoundaries(t *testing.T) {
 
 	t.Run("ASCII", func(t *testing.T) {
 		t.Parallel()
-		operation := NewTestString(nil, "b", 1, false, false)
+		operation := NewTestString(nil, "b", 1, false)
 		matched, err := operation.Test("abc")
 		require.NoError(t, err)
 		assert.True(t, matched)
@@ -106,7 +106,7 @@ func TestPositionalStringOperationBoundaries(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, []any{"", ""}, split.Doc)
 
-		testString := NewTestString(nil, "", 0, false, false)
+		testString := NewTestString(nil, "", 0, false)
 		matched, err := testString.Test("")
 		require.NoError(t, err)
 		assert.True(t, matched)
@@ -136,7 +136,7 @@ func TestPositionalStringOperationBoundaries(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, []any{"A🙂", "Z"}, split.Doc)
 
-		testString := NewTestString(nil, "A", -1, false, false)
+		testString := NewTestString(nil, "A", -1, false)
 		matched, err := testString.Test("A🙂Z")
 		assert.False(t, matched)
 		require.ErrorIs(t, err, ErrPositionOutOfStringRange)
@@ -162,7 +162,7 @@ func TestPositionalStringOperationBoundaries(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, []any{text, ""}, split.Doc)
 
-		testString := NewTestString(nil, "", 2, false, false)
+		testString := NewTestString(nil, "", 2, false)
 		matched, err := testString.Test(text)
 		require.NoError(t, err)
 		assert.True(t, matched)
@@ -172,7 +172,7 @@ func TestPositionalStringOperationBoundaries(t *testing.T) {
 
 	t.Run("test_string out of range", func(t *testing.T) {
 		t.Parallel()
-		operation := NewTestString(nil, "", 3, false, false)
+		operation := NewTestString(nil, "", 3, false)
 		matched, err := operation.Test("A🙂")
 		assert.False(t, matched)
 		require.ErrorIs(t, err, ErrPositionOutOfStringRange)

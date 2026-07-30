@@ -14,12 +14,12 @@ import (
 // Only supports string type fields.
 type SplitOperation struct {
 	BaseOp
-	Pos   float64 `json:"pos"`   // Split position
-	Props any     `json:"props"` // Properties to apply after split
+	Pos   int `json:"pos"`   // Split position
+	Props any `json:"props"` // Properties to apply after split
 }
 
 // NewSplit creates a new split operation.
-func NewSplit(path []string, pos float64, props any) *SplitOperation {
+func NewSplit(path []string, pos int, props any) *SplitOperation {
 	return &SplitOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,
@@ -84,26 +84,27 @@ func (sp *SplitOperation) Apply(doc any) (internal.OpResult[any], error) {
 }
 
 func (sp *SplitOperation) splitValue(value any) any {
+	boundary := float64(sp.Pos)
 	switch v := value.(type) {
 	case string:
 		return sp.splitString(v)
 	case float64:
-		return []any{sp.Pos, v - sp.Pos}
+		return []any{boundary, v - boundary}
 	case int:
-		return []any{sp.Pos, float64(v) - sp.Pos}
+		return []any{boundary, float64(v) - boundary}
 	case bool:
 		return []any{v, v}
 	case map[string]any:
 		if isSlateTextNode(v) {
 			propsMap, _ := sp.Props.(map[string]any)
-			results := splitSlateTextNode(v, int(sp.Pos), propsMap)
+			results := splitSlateTextNode(v, sp.Pos, propsMap)
 			if results != nil {
 				return []any{results[0], results[1]}
 			}
 		}
 		if isSlateElementNode(v) {
 			propsMap, _ := sp.Props.(map[string]any)
-			results := splitSlateElementNode(v, int(sp.Pos), propsMap)
+			results := splitSlateElementNode(v, sp.Pos, propsMap)
 			if results != nil {
 				return []any{results[0], results[1]}
 			}
@@ -116,7 +117,7 @@ func (sp *SplitOperation) splitValue(value any) any {
 
 func (sp *SplitOperation) splitString(s string) []any {
 	runes := []rune(s)
-	pos := int(sp.Pos)
+	pos := sp.Pos
 
 	if pos < 0 {
 		pos = max(len(runes)+pos, 0)

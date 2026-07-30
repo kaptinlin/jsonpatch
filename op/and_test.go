@@ -21,7 +21,7 @@ func TestAnd_Basic(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
-	andOp := NewAnd([]string{}, []any{test1, test2})
+	andOp := NewAnd(nil, test1, test2)
 
 	ok, err := andOp.Test(doc)
 	if err != nil {
@@ -42,7 +42,7 @@ func TestAnd_OneFails(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 456)
 
-	andOp := NewAnd([]string{}, []any{test1, test2})
+	andOp := NewAnd(nil, test1, test2)
 
 	ok, err := andOp.Test(doc)
 	if err != nil {
@@ -55,7 +55,7 @@ func TestAnd_OneFails(t *testing.T) {
 
 func TestAnd_Empty(t *testing.T) {
 	t.Parallel()
-	andOp := NewAnd([]string{}, []any{})
+	andOp := NewAnd(nil)
 
 	doc := map[string]any{"foo": "bar"}
 	ok, err := andOp.Test(doc)
@@ -77,7 +77,7 @@ func TestAnd_Apply(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
-	andOp := NewAnd([]string{}, []any{test1, test2})
+	andOp := NewAnd(nil, test1, test2)
 
 	result, err := andOp.Apply(doc)
 	if err != nil {
@@ -96,7 +96,7 @@ func TestAnd_Apply_Fails(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 456)
 
-	andOp := NewAnd([]string{}, []any{test1, test2})
+	andOp := NewAnd(nil, test1, test2)
 
 	_, err := andOp.Apply(doc)
 	if err == nil {
@@ -112,7 +112,7 @@ func TestAnd_InterfaceMethods(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
-	andOp := NewAnd([]string{"test"}, []any{test1, test2})
+	andOp := NewAnd([]string{"test"}, test1, test2)
 
 	if got := andOp.Op(); got != internal.OpAndType {
 		assert.Equal(t, internal.OpAndType, got, "Op()")
@@ -139,7 +139,7 @@ func TestAnd_ToJSON(t *testing.T) {
 	test1 := NewTest([]string{"test", "foo"}, "bar")
 	test2 := NewTest([]string{"test", "baz"}, 123)
 
-	andOp := NewAnd([]string{"test"}, []any{test1, test2})
+	andOp := NewAnd([]string{"test"}, test1, test2)
 
 	got, err := andOp.ToJSON()
 	if err != nil {
@@ -163,7 +163,7 @@ func TestAnd_ToCompact(t *testing.T) {
 	test1 := NewTest([]string{"test", "foo"}, "bar")
 	test2 := NewTest([]string{"test", "baz"}, 123)
 
-	andOp := NewAnd([]string{"test"}, []any{test1, test2})
+	andOp := NewAnd([]string{"test"}, test1, test2)
 
 	compact, err := andOp.ToCompact()
 	if err != nil {
@@ -184,11 +184,11 @@ func TestAnd_Validate(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
-	andOp := NewAnd([]string{"test"}, []any{test1, test2})
+	andOp := NewAnd([]string{"test"}, test1, test2)
 	if err := andOp.Validate(); err != nil {
 		assert.Fail(t, fmt.Sprintf("Validate() = %v, want nil for valid operation", err))
 	}
 
-	andOp = NewAnd([]string{"test"}, []any{})
+	andOp = NewAnd([]string{"test"})
 	assert.ErrorIs(t, andOp.Validate(), ErrInvalidPredicateInAnd)
 }

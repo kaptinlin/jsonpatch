@@ -119,13 +119,14 @@ func TestEncodeCanonicalCompactForm(t *testing.T) {
 		op.NewTestWithNot([]string{"profile", "name"}, "Grace", true),
 		op.NewContainsWithIgnoreCase([]string{"profile", "name"}, "ada", true),
 		op.NewMatches([]string{"profile", "name"}, "^A", false, nil),
-		op.NewTestString([]string{"profile", "name"}, "da", 1, true, false),
-		op.NewAnd([]string{"profile"}, []any{
+		op.NewTestString([]string{"profile", "name"}, "da", 1, true),
+		op.NewAnd([]string{"profile"},
 			op.NewDefined([]string{"profile", "name"}),
-			op.NewNotMultiple([]string{"profile", "meta"}, []any{
+			op.NewNot(
+				[]string{"profile", "meta"},
 				op.NewUndefined([]string{"profile", "meta", "deleted"}),
-			}),
-		}),
+			),
+		),
 	})
 	require.NoError(t, err)
 
@@ -161,8 +162,8 @@ func TestEncodeCanonicalOptionalFieldGolden(t *testing.T) {
 		op.NewEndsWithIgnoreCase([]string{"name"}, "A", true),
 		op.NewMatches([]string{"name"}, "^A", false, nil),
 		op.NewMatches([]string{"name"}, "^a", true, nil),
-		op.NewTestString([]string{"name"}, "Ad", 0, false, false),
-		op.NewTestString([]string{"name"}, "ad", 0, true, false),
+		op.NewTestString([]string{"name"}, "Ad", 0, false),
+		op.NewTestString([]string{"name"}, "ad", 0, true),
 		op.NewTestStringLen([]string{"name"}, 3),
 		op.NewTestStringLenWithNot([]string{"name"}, 4, true),
 		op.NewSplit([]string{"nodes", "0"}, 1, nil),
@@ -187,12 +188,12 @@ func TestEncodeCanonicalOptionalFieldGolden(t *testing.T) {
 		{internal.OpMatchesCode, []string{"name"}, "^a", 1},
 		{internal.OpTestStringCode, []string{"name"}, 0, "Ad"},
 		{internal.OpTestStringCode, []string{"name"}, 0, "ad", 1},
-		{internal.OpTestStringLenCode, []string{"name"}, 3.0},
-		{internal.OpTestStringLenCode, []string{"name"}, 4.0, 1},
-		{internal.OpSplitCode, []string{"nodes", "0"}, 1.0},
-		{internal.OpSplitCode, []string{"nodes", "0"}, 1.0, map[string]any{"kind": "paragraph"}},
-		{internal.OpMergeCode, []string{"nodes", "1"}, 1.0},
-		{internal.OpMergeCode, []string{"nodes", "1"}, 1.0, map[string]any{"merged": true}},
+		{internal.OpTestStringLenCode, []string{"name"}, 3},
+		{internal.OpTestStringLenCode, []string{"name"}, 4, 1},
+		{internal.OpSplitCode, []string{"nodes", "0"}, 1},
+		{internal.OpSplitCode, []string{"nodes", "0"}, 1, map[string]any{"kind": "paragraph"}},
+		{internal.OpMergeCode, []string{"nodes", "1"}, 1},
+		{internal.OpMergeCode, []string{"nodes", "1"}, 1, map[string]any{"merged": true}},
 		{internal.OpExtendCode, []string{"profile"}, map[string]any{"name": "Ada"}},
 		{internal.OpExtendCode, []string{"profile"}, map[string]any{"name": "Ada"}, 1},
 	}
@@ -205,13 +206,13 @@ func TestEncodeCanonicalCompositeRelativePathGolden(t *testing.T) {
 	t.Parallel()
 
 	encoded, err := Encode([]internal.Op{
-		op.NewAnd([]string{"profile"}, []any{
+		op.NewAnd([]string{"profile"},
 			op.NewDefined([]string{"profile", "name"}),
-			op.NewOr([]string{"profile", "flags"}, []any{
+			op.NewOr([]string{"profile", "flags"},
 				op.NewUndefined([]string{"profile", "flags", "deleted"}),
 				op.NewContains([]string{"profile", "flags", "role"}, "admin"),
-			}),
-		}),
+			),
+		),
 	})
 	require.NoError(t, err)
 

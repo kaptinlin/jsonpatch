@@ -274,7 +274,7 @@ func (mg *MergeOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		Op:   string(internal.OpMergeType),
 		Path: formatPath(mg.Path()),
-		Pos:  int(mg.Pos),
+		Pos:  mg.Pos,
 	}
 	if len(mg.Props) > 0 {
 		result.Props = mg.Props
@@ -336,10 +336,11 @@ func (n *NotOperation) Code() int {
 
 // ToJSON serializes the operation to JSON format.
 func (n *NotOperation) ToJSON() (internal.Operation, error) {
-	if _, err := n.operand(); err != nil {
+	operand, err := n.operand()
+	if err != nil {
 		return internal.Operation{}, err
 	}
-	opsJSON, err := predicateOpsToJSON(n.Operations, n.Path(), ErrInvalidPredicateInNot)
+	opsJSON, err := predicateOpsToJSON([]PredicateOp{operand}, n.Path(), ErrInvalidPredicateInNot)
 	if err != nil {
 		return internal.Operation{}, err
 	}
@@ -353,10 +354,11 @@ func (n *NotOperation) ToJSON() (internal.Operation, error) {
 
 // ToCompact serializes the operation to compact format.
 func (n *NotOperation) ToCompact() (internal.CompactOperation, error) {
-	if _, err := n.operand(); err != nil {
+	operand, err := n.operand()
+	if err != nil {
 		return nil, err
 	}
-	opsCompact, err := predicateOpsToCompact(n.Operations, n.Path(), ErrInvalidPredicateInNot)
+	opsCompact, err := predicateOpsToCompact([]PredicateOp{operand}, n.Path(), ErrInvalidPredicateInNot)
 	if err != nil {
 		return nil, err
 	}
@@ -460,7 +462,7 @@ func (sp *SplitOperation) ToJSON() (internal.Operation, error) {
 	result := internal.Operation{
 		Op:   string(internal.OpSplitType),
 		Path: formatPath(sp.Path()),
-		Pos:  int(sp.Pos),
+		Pos:  sp.Pos,
 	}
 	if sp.Props != nil {
 		if props, ok := sp.Props.(map[string]any); ok {
@@ -588,12 +590,11 @@ func (ts *TestStringOperation) Code() int {
 // ToJSON serializes the operation to JSON format.
 func (ts *TestStringOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
-		Op:         string(internal.OpTestStringType),
-		Path:       formatPath(ts.Path()),
-		Str:        ts.Str,
-		Pos:        ts.Pos,
-		Not:        ts.NotFlag,
-		IgnoreCase: ts.IgnoreCase,
+		Op:   string(internal.OpTestStringType),
+		Path: formatPath(ts.Path()),
+		Str:  ts.Str,
+		Pos:  ts.Pos,
+		Not:  ts.NotFlag,
 	}, nil
 }
 
@@ -616,7 +617,7 @@ func (tl *TestStringLenOperation) ToJSON() (internal.Operation, error) {
 	return internal.Operation{
 		Op:   string(internal.OpTestStringLenType),
 		Path: formatPath(tl.Path()),
-		Len:  int(tl.Length),
+		Len:  tl.Length,
 		Not:  tl.NotFlag,
 	}, nil
 }

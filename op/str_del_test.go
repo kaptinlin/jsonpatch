@@ -16,8 +16,8 @@ func TestStrDel_Apply(t *testing.T) {
 		name     string
 		path     []string
 		doc      any
-		pos      float64
-		length   float64
+		pos      int
+		length   int
 		expected any
 		oldValue any
 		wantErr  bool
@@ -145,6 +145,15 @@ func TestStrDel_Apply(t *testing.T) {
 			expected: map[string]any{"text": "a"},
 			oldValue: "abc",
 		},
+		{
+			name:     "delete maximum int length",
+			path:     []string{"text"},
+			doc:      map[string]any{"text": "abc"},
+			pos:      1,
+			length:   int(^uint(0) >> 1),
+			expected: map[string]any{"text": "a"},
+			oldValue: "abc",
+		},
 	}
 
 	for _, tt := range tests {
@@ -186,12 +195,12 @@ func TestStrDel_Apply_WithStrTakesPrecedence(t *testing.T) {
 func TestStrDel_Constructor(t *testing.T) {
 	t.Parallel()
 	path := []string{"user", "bio"}
-	pos := 2.0
-	length := 3.0
+	pos := 2
+	length := 3
 	strDelOp := NewStrDel(path, pos, length)
 	assert.Empty(t, cmp.Diff(path, strDelOp.Path()), "NewStrDel() Path mismatch")
-	assert.Equal(t, int(pos), strDelOp.Pos, "NewStrDel() Pos")
-	assert.Equal(t, int(length), strDelOp.Len, "NewStrDel() Len")
+	assert.Equal(t, pos, strDelOp.Pos, "NewStrDel() Pos")
+	assert.Equal(t, length, strDelOp.Len, "NewStrDel() Len")
 	assert.Equal(t, internal.OpStrDelType, strDelOp.Op(), "Op()")
 	assert.Equal(t, internal.OpStrDelCode, strDelOp.Code(), "Code()")
 }

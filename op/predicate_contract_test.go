@@ -1,6 +1,7 @@
 package op
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -94,7 +95,7 @@ func TestOperationSerializationContracts(t *testing.T) {
 			wantType:    internal.OpSplitType,
 			wantCode:    internal.OpSplitCode,
 			wantJSON:    internal.Operation{Op: "split", Path: "/nodes/0", Pos: 1, Props: map[string]any{"kind": "paragraph"}},
-			wantCompact: internal.CompactOperation{internal.OpSplitCode, []string{"nodes", "0"}, 1.0, map[string]any{"kind": "paragraph"}},
+			wantCompact: internal.CompactOperation{internal.OpSplitCode, []string{"nodes", "0"}, 1, map[string]any{"kind": "paragraph"}},
 		},
 		{
 			name:        "merge with props",
@@ -102,7 +103,7 @@ func TestOperationSerializationContracts(t *testing.T) {
 			wantType:    internal.OpMergeType,
 			wantCode:    internal.OpMergeCode,
 			wantJSON:    internal.Operation{Op: "merge", Path: "/nodes/1", Pos: 1, Props: map[string]any{"merged": true}},
-			wantCompact: internal.CompactOperation{internal.OpMergeCode, []string{"nodes", "1"}, 1.0, map[string]any{"merged": true}},
+			wantCompact: internal.CompactOperation{internal.OpMergeCode, []string{"nodes", "1"}, 1, map[string]any{"merged": true}},
 		},
 		{
 			name:        "extend with delete null",
@@ -149,7 +150,6 @@ func TestOperationValidateRejectsInvalidOperands(t *testing.T) {
 		{name: "extend nil properties", op: NewExtend([]string{"profile"}, nil, false), wantErr: ErrPropertiesNil},
 		{name: "str_del missing length", op: NewStrDel([]string{"name"}, 1, 0), wantErr: ErrMissingStrOrLen},
 		{name: "test_string_len negative length", op: NewTestStringLen([]string{"name"}, -1), wantErr: ErrLengthNegative},
-		{name: "test_string_len fractional length", op: NewTestStringLen([]string{"name"}, 1.5), wantErr: ErrInvalidLength},
 	}
 
 	for _, tc := range tests {
@@ -351,44 +351,75 @@ func TestPredicateOperationContracts(t *testing.T) {
 func TestPredicateOperationsReportFailures(t *testing.T) {
 	t.Parallel()
 
-	doc := map[string]any{
+	defaultDoc := map[string]any{
 		"name":  "Ada",
 		"role":  "viewer",
 		"score": 5.0,
+		"count": 5.0,
 	}
 
 	tests := []struct {
 		name    string
 		op      internal.PredicateOp
+		doc     any
 		wantErr error
 	}{
-		{name: "contains mismatch", op: NewContains([]string{"name"}, "Grace"), wantErr: ErrStringMismatch},
-		{name: "starts mismatch", op: NewStarts([]string{"name"}, "Grace"), wantErr: ErrStringMismatch},
-		{name: "ends mismatch", op: NewEnds([]string{"name"}, "Grace"), wantErr: ErrStringMismatch},
-		{name: "in mismatch", op: NewIn([]string{"role"}, []any{"admin"}), wantErr: ErrOperationFailed},
-		{name: "less mismatch", op: NewLess([]string{"score"}, 5), wantErr: ErrComparisonFailed},
-		{name: "more mismatch", op: NewMore([]string{"score"}, 5), wantErr: ErrComparisonFailed},
-		{name: "matches mismatch", op: NewMatches([]string{"name"}, `^Grace$`, false, nil), wantErr: ErrStringMismatch},
-		{name: "type mismatch", op: NewType([]string{"name"}, "number"), wantErr: ErrTypeMismatch},
-		{name: "test_type mismatch", op: NewTestType([]string{"name"}, "number"), wantErr: ErrTypeMismatch},
+		{name: "test mismatch", op: NewTest([]string{"name"}, "Grace"), doc: defaultDoc, wantErr: ErrTestOperationStringNotEquivalent},
+		{name: "contains mismatch", op: NewContains([]string{"name"}, "Grace"), doc: defaultDoc, wantErr: ErrStringMismatch},
+		{name: "defined missing", op: NewDefined([]string{"missing"}), doc: defaultDoc, wantErr: ErrDefinedTestFailed},
+		{name: "undefined existing", op: NewUndefined([]string{"name"}), doc: defaultDoc, wantErr: ErrUndefinedTestFailed},
+		{name: "starts mismatch", op: NewStarts([]string{"name"}, "Grace"), doc: defaultDoc, wantErr: ErrStringMismatch},
+		{name: "ends mismatch", op: NewEnds([]string{"name"}, "Grace"), doc: defaultDoc, wantErr: ErrStringMismatch},
+		{name: "in mismatch", op: NewIn([]string{"role"}, []any{"admin"}), doc: defaultDoc, wantErr: ErrOperationFailed},
+		{name: "less mismatch", op: NewLess([]string{"score"}, 5), doc: defaultDoc, wantErr: ErrComparisonFailed},
+		{name: "more mismatch", op: NewMore([]string{"score"}, 5), doc: defaultDoc, wantErr: ErrComparisonFailed},
+		{name: "matches mismatch", op: NewMatches([]string{"name"}, `^Grace$`, false, nil), doc: defaultDoc, wantErr: ErrStringMismatch},
+		{name: "type mismatch", op: NewType([]string{"name"}, "number"), doc: defaultDoc, wantErr: ErrTypeMismatch},
+		{name: "test_type mismatch", op: NewTestType([]string{"name"}, "number"), doc: defaultDoc, wantErr: ErrTypeMismatch},
+		{name: "test_string mismatch", op: NewTestString([]string{"name"}, "Gra", 0, false), doc: defaultDoc, wantErr: ErrSubstringMismatch},
+		{name: "test_string_len mismatch", op: NewTestStringLen([]string{"name"}, 4), doc: defaultDoc, wantErr: ErrStringLengthMismatch},
+		{name: "and mismatch", op: NewAnd(nil, NewDefined([]string{"missing"})), doc: defaultDoc, wantErr: ErrAndTestFailed},
+		{name: "or mismatch", op: NewOr(nil, NewDefined([]string{"missing"})), doc: defaultDoc, wantErr: ErrOrTestFailed},
+		{name: "not mismatch", op: NewNot(nil, NewDefined([]string{"name"})), doc: defaultDoc, wantErr: ErrNotTestFailed},
+		{name: "missing path", op: NewContains([]string{"missing"}, "Ada"), doc: defaultDoc, wantErr: ErrPathNotFound},
+		{name: "wrong target type", op: NewContains([]string{"count"}, "5"), doc: defaultDoc, wantErr: ErrNotString},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			matched, err := tc.op.Test(doc)
+			matched, err := tc.op.Test(tc.doc)
 			require.NoError(t, err)
 			assert.False(t, matched)
 
-			result, err := tc.op.Apply(doc)
+			result, err := tc.op.Apply(tc.doc)
 			require.Error(t, err)
+			assert.ErrorIs(t, err, ErrTestFailed)
 			assert.ErrorIs(t, err, tc.wantErr)
 			if diff := cmp.Diff(internal.OpResult[any]{}, result); diff != "" {
 				t.Errorf("Apply() result mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
+
+	t.Run("matcher error is not a predicate mismatch", func(t *testing.T) {
+		t.Parallel()
+
+		cause := errors.New("matcher unavailable")
+		operation := NewMatches(nil, "pattern", false, func(string, bool) (internal.RegexMatcher, error) {
+			return nil, cause
+		})
+		matched, err := operation.Test("value")
+		assert.False(t, matched)
+		require.ErrorIs(t, err, cause)
+		assert.NotErrorIs(t, err, ErrTestFailed)
+
+		result, err := operation.Apply("value")
+		assert.Equal(t, internal.OpResult[any]{}, result)
+		require.ErrorIs(t, err, cause)
+		assert.NotErrorIs(t, err, ErrTestFailed)
+	})
 }
 
 func TestPredicateOperationValidateRejectsInvalidOperands(t *testing.T) {
@@ -412,6 +443,50 @@ func TestPredicateOperationValidateRejectsInvalidOperands(t *testing.T) {
 
 			err := tc.op.Validate()
 			require.Error(t, err)
+			assert.ErrorIs(t, err, tc.wantErr)
+		})
+	}
+}
+
+func TestCompositePredicatesRejectNilOperands(t *testing.T) {
+	t.Parallel()
+
+	var typedNil *TestOperation
+	tests := []struct {
+		name string
+		op   interface {
+			internal.PredicateOp
+			internal.JSONOp
+			internal.CompactOp
+		}
+		wantErr error
+	}{
+		{name: "and nil", op: NewAnd(nil, nil), wantErr: ErrInvalidPredicateInAnd},
+		{name: "and typed nil", op: NewAnd(nil, typedNil), wantErr: ErrInvalidPredicateInAnd},
+		{name: "or nil", op: NewOr(nil, nil), wantErr: ErrInvalidPredicateInOr},
+		{name: "or typed nil", op: NewOr(nil, typedNil), wantErr: ErrInvalidPredicateInOr},
+		{name: "not nil", op: NewNot(nil, nil), wantErr: ErrInvalidPredicateInNot},
+		{name: "not typed nil", op: NewNot(nil, typedNil), wantErr: ErrInvalidPredicateInNot},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			matched, err := tc.op.Test(map[string]any{})
+			assert.False(t, matched)
+			assert.ErrorIs(t, err, tc.wantErr)
+
+			result, err := tc.op.Apply(map[string]any{})
+			assert.Equal(t, internal.OpResult[any]{}, result)
+			assert.ErrorIs(t, err, tc.wantErr)
+			assert.ErrorIs(t, tc.op.Validate(), tc.wantErr)
+
+			_, err = tc.op.Clone()
+			assert.ErrorIs(t, err, tc.wantErr)
+			_, err = tc.op.ToJSON()
+			assert.ErrorIs(t, err, tc.wantErr)
+			_, err = tc.op.ToCompact()
 			assert.ErrorIs(t, err, tc.wantErr)
 		})
 	}

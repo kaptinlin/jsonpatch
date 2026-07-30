@@ -27,7 +27,7 @@ func (u *UndefinedOperation) Test(doc any) (bool, error) {
 // Apply applies the undefined operation.
 func (u *UndefinedOperation) Apply(doc any) (internal.OpResult[any], error) {
 	if pathExists(doc, u.path) {
-		return internal.OpResult[any]{}, ErrUndefinedTestFailed
+		return internal.OpResult[any]{}, predicateFailure(ErrUndefinedTestFailed)
 	}
 	return internal.OpResult[any]{Doc: doc}, nil
 }

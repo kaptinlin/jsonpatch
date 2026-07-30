@@ -17,7 +17,7 @@ func TestTestStringLen_Apply(t *testing.T) {
 		name           string
 		doc            any
 		path           []string
-		expectedLength float64
+		expectedLength int
 		expectError    bool
 		expectedError  error
 	}{
@@ -165,12 +165,11 @@ func TestTestStringLen_Contracts(t *testing.T) {
 
 	compactOp, err := op.ToCompact()
 	assert.NoError(t, err)
-	wantCompact := internal.CompactOperation{internal.OpTestStringLenCode, []string{"name"}, 3.0, 1}
+	wantCompact := internal.CompactOperation{internal.OpTestStringLenCode, []string{"name"}, 3, 1}
 	if diff := cmp.Diff(wantCompact, compactOp); diff != "" {
 		t.Errorf("ToCompact() mismatch (-want +got):\n%s", diff)
 	}
 	assert.NoError(t, op.Validate())
 	assert.NoError(t, NewTestStringLen(nil, 3).Validate())
 	assert.ErrorIs(t, NewTestStringLen([]string{"name"}, -1).Validate(), ErrLengthNegative)
-	assert.ErrorIs(t, NewTestStringLen([]string{"name"}, 1.5).Validate(), ErrInvalidLength)
 }

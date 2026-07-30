@@ -11,12 +11,12 @@ import (
 // Path identifies the second element; Pos and Props carry reverse-split metadata.
 type MergeOperation struct {
 	BaseOp
-	Pos   float64        `json:"pos"`   // Merge position
+	Pos   int            `json:"pos"`   // Merge position
 	Props map[string]any `json:"props"` // Properties to apply after merge
 }
 
 // NewMerge creates a new merge operation.
-func NewMerge(path []string, pos float64, props map[string]any) *MergeOperation {
+func NewMerge(path []string, pos int, props map[string]any) *MergeOperation {
 	return &MergeOperation{
 		BaseOp: NewBaseOp(path),
 		Pos:    pos,

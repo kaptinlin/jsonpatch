@@ -18,7 +18,7 @@ func TestNot_Basic(t *testing.T) {
 	}
 
 	testOp := NewTest([]string{"foo"}, "bar")
-	notOp := NewNot(testOp)
+	notOp := NewNot(testOp.Path(), testOp)
 
 	ok, err := notOp.Test(doc)
 	if err != nil {
@@ -36,7 +36,7 @@ func TestNot_Negation(t *testing.T) {
 	}
 
 	testOp := NewTest([]string{"foo"}, "qux")
-	notOp := NewNot(testOp)
+	notOp := NewNot(testOp.Path(), testOp)
 
 	ok, err := notOp.Test(doc)
 	if err != nil {
@@ -54,7 +54,7 @@ func TestNot_Apply(t *testing.T) {
 	}
 
 	testOp := NewTest([]string{"foo"}, "qux")
-	notOp := NewNot(testOp)
+	notOp := NewNot(testOp.Path(), testOp)
 
 	result, err := notOp.Apply(doc)
 	if err != nil {
@@ -70,7 +70,7 @@ func TestNot_Apply_Fails(t *testing.T) {
 	}
 
 	testOp := NewTest([]string{"foo"}, "bar")
-	notOp := NewNot(testOp)
+	notOp := NewNot(testOp.Path(), testOp)
 
 	_, err := notOp.Apply(doc)
 	if err == nil {
@@ -84,7 +84,7 @@ func TestNot_Apply_Fails(t *testing.T) {
 func TestNot_InterfaceMethods(t *testing.T) {
 	t.Parallel()
 	testOp := NewTest([]string{"foo"}, "bar")
-	notOp := NewNot(testOp)
+	notOp := NewNot(testOp.Path(), testOp)
 
 	if got := notOp.Op(); got != internal.OpNotType {
 		assert.Equal(t, internal.OpNotType, got, "Op()")
@@ -106,7 +106,7 @@ func TestNot_InterfaceMethods(t *testing.T) {
 func TestNot_ToJSON(t *testing.T) {
 	t.Parallel()
 	test1 := NewTest([]string{"foo"}, "bar")
-	notOp := NewNot(test1)
+	notOp := NewNot(test1.Path(), test1)
 
 	got, err := notOp.ToJSON()
 	if err != nil {
@@ -126,7 +126,7 @@ func TestNot_ToJSON(t *testing.T) {
 func TestNot_ToCompact(t *testing.T) {
 	t.Parallel()
 	test1 := NewTest([]string{"foo"}, "bar")
-	notOp := NewNot(test1)
+	notOp := NewNot(test1.Path(), test1)
 
 	compact, err := notOp.ToCompact()
 	if err != nil {
@@ -146,50 +146,17 @@ func TestNot_Validate(t *testing.T) {
 	t.Parallel()
 	testOp := NewTest([]string{"foo"}, "bar")
 
-	notOp := NewNot(testOp)
+	notOp := NewNot(testOp.Path(), testOp)
 	if err := notOp.Validate(); err != nil {
 		assert.Fail(t, fmt.Sprintf("Validate() = %v, want nil for valid operation", err))
 	}
 
-	notOp = &NotOperation{BaseOp: NewBaseOp([]string{"test"}), Operations: []any{}}
+	notOp = NewNot([]string{"test"}, nil)
 	err := notOp.Validate()
 	if err == nil {
 		assert.Fail(t, "Validate() = nil, want error for empty operations")
 	}
-	if !errors.Is(err, ErrNotNoOperands) {
-		assert.Equal(t, ErrNotNoOperands, err, "Validate() error")
+	if !errors.Is(err, ErrInvalidPredicateInNot) {
+		assert.Equal(t, ErrInvalidPredicateInNot, err, "Validate() error")
 	}
-}
-
-func TestNot_MultipleOperandsContract(t *testing.T) {
-	t.Parallel()
-
-	first := NewTest([]string{"name"}, "Grace")
-	second := NewTest([]string{"role"}, "owner")
-	notOp := NewNotMultiple([]string{"profile"}, []any{first, second})
-	assert.True(t, notOp.Not())
-
-	ops := notOp.Ops()
-	require.Len(t, ops, 2)
-	assert.Same(t, first, ops[0])
-	assert.Same(t, second, ops[1])
-
-	_, err := notOp.Test(map[string]any{"name": "Ada", "role": "admin"})
-	assert.ErrorIs(t, err, ErrInvalidPredicateInNot)
-	_, err = notOp.Apply(map[string]any{"name": "Grace", "role": "admin"})
-	assert.ErrorIs(t, err, ErrInvalidPredicateInNot)
-	assert.ErrorIs(t, notOp.Validate(), ErrInvalidPredicateInNot)
-	_, err = notOp.ToJSON()
-	assert.ErrorIs(t, err, ErrInvalidPredicateInNot)
-	_, err = notOp.ToCompact()
-	assert.ErrorIs(t, err, ErrInvalidPredicateInNot)
-
-	invalid := NewNotMultiple([]string{"profile"}, []any{"not a predicate"})
-	assert.ErrorIs(t, invalid.Validate(), ErrInvalidPredicateInNot)
-	_, err = invalid.Test(map[string]any{})
-	assert.ErrorIs(t, err, ErrInvalidPredicateInNot)
-	_, err = invalid.ToJSON()
-	assert.ErrorIs(t, err, ErrInvalidPredicateInNot)
-	_, err = invalid.ToCompact()
-	assert.ErrorIs(t, err, ErrInvalidPredicateInNot)
 }

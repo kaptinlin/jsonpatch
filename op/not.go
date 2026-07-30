@@ -5,26 +5,14 @@ import "github.com/kaptinlin/jsonpatch/internal"
 // NotOperation represents a logical NOT operation that negates predicates.
 type NotOperation struct {
 	BaseOp
-	Operations []any `json:"apply"` // Array of operations to apply (then negate)
+	Operand PredicateOp `json:"-"`
 }
 
 // NewNot creates a new NOT operation.
-func NewNot(operand internal.PredicateOp) *NotOperation {
-	var path []string
-	if operand != nil {
-		path = operand.Path()
-	}
+func NewNot(path []string, operand PredicateOp) *NotOperation {
 	return &NotOperation{
-		BaseOp:     NewBaseOp(path),
-		Operations: []any{operand},
-	}
-}
-
-// NewNotMultiple creates a new NOT operation with multiple operands.
-func NewNotMultiple(path []string, ops []any) *NotOperation {
-	return &NotOperation{
-		BaseOp:     NewBaseOp(path),
-		Operations: ops,
+		BaseOp:  NewBaseOp(path),
+		Operand: operand,
 	}
 }
 
@@ -35,11 +23,11 @@ func (n *NotOperation) Op() internal.OpType {
 
 // Test evaluates the NOT predicate condition.
 func (n *NotOperation) Test(doc any) (bool, error) {
-	predicateOp, err := n.operand()
+	operand, err := n.operand()
 	if err != nil {
 		return false, err
 	}
-	result, err := predicateOp.Test(doc)
+	result, err := operand.Test(doc)
 	if err != nil {
 		return false, err
 	}
@@ -58,32 +46,28 @@ func (n *NotOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, err
 	}
 	if !ok {
-		return internal.OpResult[any]{}, ErrNotTestFailed
+		return internal.OpResult[any]{}, predicateFailure(ErrNotTestFailed)
 	}
 	return internal.OpResult[any]{Doc: doc}, nil
 }
 
 // Ops returns the operand operations.
 func (n *NotOperation) Ops() []internal.PredicateOp {
-	return extractPredicateOps(n.Operations)
+	return []internal.PredicateOp{n.Operand}
 }
 
 // Validate validates the NOT operation.
 func (n *NotOperation) Validate() error {
-	_, err := n.operand()
-	return err
+	operand, err := n.operand()
+	if err != nil {
+		return err
+	}
+	return operand.Validate()
 }
 
 func (n *NotOperation) operand() (internal.PredicateOp, error) {
-	if len(n.Operations) == 0 {
-		return nil, ErrNotNoOperands
-	}
-	if len(n.Operations) != 1 {
+	if isNilPredicate(n.Operand) {
 		return nil, ErrInvalidPredicateInNot
 	}
-	predicateOp, ok := n.Operations[0].(internal.PredicateOp)
-	if !ok {
-		return nil, ErrInvalidPredicateInNot
-	}
-	return predicateOp, nil
+	return n.Operand, nil
 }

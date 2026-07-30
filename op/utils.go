@@ -27,15 +27,17 @@ func extractString(val any) (string, bool) {
 	}
 }
 
-// extractPredicateOps converts a slice of any to []internal.PredicateOp.
-func extractPredicateOps(operations []any) []internal.PredicateOp {
-	ops := make([]internal.PredicateOp, 0, len(operations))
-	for _, op := range operations {
-		if predicateOp, ok := op.(internal.PredicateOp); ok {
-			ops = append(ops, predicateOp)
-		}
+func isNilPredicate(predicate PredicateOp) bool {
+	if predicate == nil {
+		return true
 	}
-	return ops
+	value := reflect.ValueOf(predicate)
+	switch value.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
+		return value.IsNil()
+	default:
+		return false
+	}
 }
 
 // formatPath formats path segments as a JSON Pointer string.
@@ -485,22 +487,21 @@ func floatToJSONValue(f float64) any {
 
 // predicateOpsToJSON converts a slice of predicate operations to JSON format.
 // Used by composite predicates (And, Or, Not) to serialize their sub-operations.
-func predicateOpsToJSON(operations []any, base []string, errInvalid error) ([]internal.Operation, error) {
+func predicateOpsToJSON(operations []PredicateOp, base []string, errInvalid error) ([]internal.Operation, error) {
 	result := make([]internal.Operation, 0, len(operations))
-	for _, op := range operations {
-		predicateOp, ok := op.(internal.PredicateOp)
-		if !ok {
+	for _, predicate := range operations {
+		if isNilPredicate(predicate) {
 			return nil, errInvalid
 		}
-		jsonOp, ok := predicateOp.(internal.JSONOp)
+		jsonOp, ok := predicate.(internal.JSONOp)
 		if !ok {
-			return nil, fmt.Errorf("%w: predicate %T cannot encode to JSON", errInvalid, op)
+			return nil, fmt.Errorf("%w: predicate %T cannot encode to JSON", errInvalid, predicate)
 		}
 		jsonVal, err := jsonOp.ToJSON()
 		if err != nil {
 			return nil, err
 		}
-		relative, err := relativePredicatePath(base, predicateOp.Path())
+		relative, err := relativePredicatePath(base, predicate.Path())
 		if err != nil {
 			return nil, err
 		}
@@ -512,22 +513,21 @@ func predicateOpsToJSON(operations []any, base []string, errInvalid error) ([]in
 
 // predicateOpsToCompact converts a slice of predicate operations to compact format.
 // Used by composite predicates (And, Or, Not) to serialize their sub-operations.
-func predicateOpsToCompact(operations []any, base []string, errInvalid error) ([]any, error) {
+func predicateOpsToCompact(operations []PredicateOp, base []string, errInvalid error) ([]any, error) {
 	result := make([]any, 0, len(operations))
-	for _, op := range operations {
-		predicateOp, ok := op.(internal.PredicateOp)
-		if !ok {
+	for _, predicate := range operations {
+		if isNilPredicate(predicate) {
 			return nil, errInvalid
 		}
-		compactOp, ok := predicateOp.(internal.CompactOp)
+		compactOp, ok := predicate.(internal.CompactOp)
 		if !ok {
-			return nil, fmt.Errorf("%w: predicate %T cannot encode to compact", errInvalid, op)
+			return nil, fmt.Errorf("%w: predicate %T cannot encode to compact", errInvalid, predicate)
 		}
 		compact, err := compactOp.ToCompact()
 		if err != nil {
 			return nil, err
 		}
-		relative, err := relativePredicatePath(base, predicateOp.Path())
+		relative, err := relativePredicatePath(base, predicate.Path())
 		if err != nil {
 			return nil, err
 		}
@@ -549,16 +549,15 @@ func relativePredicatePath(base, path []string) ([]string, error) {
 
 // validatePredicateOps validates a slice of predicate operations.
 // Used by composite predicates (And, Or, Not) to validate their sub-operations.
-func validatePredicateOps(operations []any, errInvalid error) error {
+func validatePredicateOps(operations []PredicateOp, errInvalid error) error {
 	if len(operations) == 0 {
 		return errInvalid
 	}
-	for _, op := range operations {
-		predicateOp, ok := op.(internal.PredicateOp)
-		if !ok {
+	for _, predicate := range operations {
+		if isNilPredicate(predicate) {
 			return errInvalid
 		}
-		if err := predicateOp.Validate(); err != nil {
+		if err := predicate.Validate(); err != nil {
 			return err
 		}
 	}

@@ -4,9 +4,13 @@ package json
 
 import (
 	"fmt"
+	"math"
+	"math/big"
 	"slices"
+	"strconv"
 
 	"github.com/go-json-experiment/json"
+	"github.com/go-json-experiment/json/jsontext"
 
 	"github.com/kaptinlin/jsonpointer"
 
@@ -42,7 +46,93 @@ func DecodeJSON(data []byte, opts internal.JSONPatchOptions) ([]internal.Op, err
 	if err := json.Unmarshal(data, &operations); err != nil {
 		return nil, err
 	}
+	var rawOperations []map[string]jsontext.Value
+	if err := json.Unmarshal(data, &rawOperations); err != nil {
+		return nil, err
+	}
+	for i := range operations {
+		if err := preserveIntegerCoordinates(operations[i], rawOperations[i]); err != nil {
+			return nil, fmt.Errorf("%s: %w", decodeOperationContext(i, operations[i]), err)
+		}
+	}
 	return Decode(operations, opts)
+}
+
+func preserveIntegerCoordinates(operation map[string]any, raw map[string]jsontext.Value) error {
+	opType, _ := operation["op"].(string)
+	var fields []string
+	switch opType {
+	case "str_ins", "split", "merge", "test_string":
+		fields = []string{"pos"}
+	case "str_del":
+		fields = []string{"pos", "len"}
+	case "test_string_len":
+		fields = []string{"len"}
+	}
+	for _, field := range fields {
+		value, present := raw[field]
+		if !present || value.Kind() != '0' {
+			continue
+		}
+		integer, err := parseJSONInteger(value)
+		if err != nil {
+			return err
+		}
+		operation[field] = integer
+	}
+	if opType != "and" && opType != "or" && opType != "not" {
+		return nil
+	}
+
+	children, ok := operation["apply"].([]any)
+	rawApply, present := raw["apply"]
+	if !ok || !present {
+		return nil
+	}
+	var rawChildren []jsontext.Value
+	if err := json.Unmarshal(rawApply, &rawChildren); err != nil {
+		return err
+	}
+	if len(rawChildren) != len(children) {
+		return nil
+	}
+	for i, child := range children {
+		childMap, ok := child.(map[string]any)
+		if !ok {
+			continue
+		}
+		var rawChild map[string]jsontext.Value
+		if err := json.Unmarshal(rawChildren[i], &rawChild); err != nil {
+			return err
+		}
+		if err := preserveIntegerCoordinates(childMap, rawChild); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func parseJSONInteger(raw jsontext.Value) (int, error) {
+	text := string(raw)
+	if value, err := strconv.ParseInt(text, 10, strconv.IntSize); err == nil {
+		return int(value), nil
+	}
+	number, ok := new(big.Rat).SetString(text)
+	if !ok {
+		return 0, ErrNumberNotInteger
+	}
+	if !number.IsInt() {
+		return 0, ErrNumberNotInteger
+	}
+	integer := number.Num()
+	if !integer.IsInt64() {
+		return 0, ErrNumberOutOfRange
+	}
+	value := integer.Int64()
+	if strconv.IntSize == 32 && (value < math.MinInt32 || value > math.MaxInt32) {
+		return 0, ErrNumberOutOfRange
+	}
+	return int(value), nil
 }
 
 func decodeOperationContext(index int, m map[string]any) string {
@@ -169,7 +259,10 @@ func decodeExtendedOp(opType string, path []string, m map[string]any) (internal.
 		return op.NewInc(path, val), nil
 
 	case "str_ins":
-		pos, ok := requiredFloat64(m, "pos")
+		pos, ok, err := integerField(m, "pos")
+		if err != nil {
+			return nil, err
+		}
 		if !ok {
 			return nil, ErrStrInsOpMissingPos
 		}
@@ -180,27 +273,40 @@ func decodeExtendedOp(opType string, path []string, m map[string]any) (internal.
 		return op.NewStrIns(path, pos, str), nil
 
 	case "str_del":
-		pos, ok := requiredFloat64(m, "pos")
+		pos, ok, err := integerField(m, "pos")
+		if err != nil {
+			return nil, err
+		}
 		if !ok {
 			return nil, ErrStrDelOpMissingPos
 		}
 		if str, ok := m["str"].(string); ok {
 			return op.NewStrDelWithStr(path, pos, str), nil
 		}
-		if lenVal, ok := op.ToFloat64(m["len"]); ok {
+		lenVal, ok, err := integerField(m, "len")
+		if err != nil {
+			return nil, err
+		}
+		if ok {
 			return op.NewStrDel(path, pos, lenVal), nil
 		}
 		return nil, ErrStrDelOpMissingFields
 
 	case "split":
-		pos, ok := requiredFloat64(m, "pos")
+		pos, ok, err := integerField(m, "pos")
+		if err != nil {
+			return nil, err
+		}
 		if !ok {
 			return nil, ErrSplitOpMissingPos
 		}
 		return op.NewSplit(path, pos, m["props"]), nil
 
 	case "merge":
-		pos, ok := requiredFloat64(m, "pos")
+		pos, ok, err := integerField(m, "pos")
+		if err != nil {
+			return nil, err
+		}
 		if !ok {
 			return nil, ErrMergeOpMissingPos
 		}
@@ -341,14 +447,14 @@ func decodePredicateOp(opType string, path []string, m map[string]any, opts inte
 		if err != nil {
 			return nil, err
 		}
-		return op.NewAnd(path, preds), nil
+		return op.NewAnd(path, preds...), nil
 
 	case "or":
 		preds, err := decodeApplyField(m, path, ErrOrOpMissingApply, opts)
 		if err != nil {
 			return nil, err
 		}
-		return op.NewOr(path, preds), nil
+		return op.NewOr(path, preds...), nil
 
 	case "not":
 		return decodePredicateNot(path, m, opts)
@@ -404,11 +510,17 @@ func newTestTypeMultiple(path []string, types []string) (internal.Op, error) {
 
 // decodeTestString decodes a test_string operation.
 func decodeTestString(path []string, m map[string]any) (internal.Op, error) {
+	if _, present := m["ignore_case"]; present {
+		return nil, ErrTestStringIgnoreCase
+	}
 	str, ok := m["str"].(string)
 	if !ok {
 		return nil, ErrTestStringOpMissingStr
 	}
-	pos, ok := requiredFloat64(m, "pos")
+	pos, ok, err := integerField(m, "pos")
+	if err != nil {
+		return nil, err
+	}
 	if !ok {
 		return nil, ErrTestStringOpMissingPos
 	}
@@ -416,17 +528,15 @@ func decodeTestString(path []string, m map[string]any) (internal.Op, error) {
 	if err != nil {
 		return nil, err
 	}
-	ignoreCase, err := optionalBool(m, "ignore_case")
-	if err != nil {
-		return nil, err
-	}
-
-	return op.NewTestString(path, str, pos, notFlag, ignoreCase), nil
+	return op.NewTestString(path, str, pos, notFlag), nil
 }
 
 // decodeTestStringLen decodes a test_string_len operation.
 func decodeTestStringLen(path []string, m map[string]any) (internal.Op, error) {
-	lenVal, ok := op.ToFloat64(m["len"])
+	lenVal, ok, err := integerField(m, "len")
+	if err != nil {
+		return nil, err
+	}
 	if !ok {
 		return nil, ErrTestStringLenOpMissingLen
 	}
@@ -450,7 +560,7 @@ func extractApplyField(m map[string]any) ([]any, error) {
 }
 
 // decodeApplyField extracts the "apply" array and decodes its sub-predicates.
-func decodeApplyField(m map[string]any, path []string, missingErr error, opts internal.JSONPatchOptions) ([]any, error) {
+func decodeApplyField(m map[string]any, path []string, missingErr error, opts internal.JSONPatchOptions) ([]internal.PredicateOp, error) {
 	apply, ok := m["apply"].([]any)
 	if !ok {
 		return nil, missingErr
@@ -471,7 +581,7 @@ func decodeNotOp(path []string, m map[string]any, opts internal.JSONPatchOptions
 	if err != nil {
 		return nil, err
 	}
-	return op.NewNotMultiple(path, []any{pred}), nil
+	return op.NewNot(path, pred), nil
 }
 
 // decodePredicateNot decodes a not predicate with a single operand.
@@ -487,13 +597,13 @@ func decodePredicateNot(path []string, m map[string]any, opts internal.JSONPatch
 	if err != nil {
 		return nil, err
 	}
-	return op.NewNotMultiple(path, []any{pred}), nil
+	return op.NewNot(path, pred), nil
 }
 
 // decodeSubPredicates decodes an array of sub-operations for and/or/not operations,
 // handling path merging and recursive predicate decoding.
-func decodeSubPredicates(apply []any, base jsonpointer.Path, opts internal.JSONPatchOptions) ([]any, error) {
-	preds := make([]any, 0, len(apply))
+func decodeSubPredicates(apply []any, base jsonpointer.Path, opts internal.JSONPatchOptions) ([]internal.PredicateOp, error) {
+	preds := make([]internal.PredicateOp, 0, len(apply))
 	for _, raw := range apply {
 		pred, err := decodeSubPredicate(raw, base, opts)
 		if err != nil {
@@ -552,12 +662,67 @@ func optionalBool(m map[string]any, field string) (bool, error) {
 	return value, nil
 }
 
-func requiredFloat64(m map[string]any, field string) (float64, bool) {
-	raw, ok := m[field]
-	if !ok {
-		return 0, false
+func integerField(m map[string]any, field string) (int, bool, error) {
+	raw, present := m[field]
+	if !present {
+		return 0, false, nil
 	}
-	return op.ToFloat64(raw)
+	switch value := raw.(type) {
+	case int:
+		return value, true, nil
+	case int8:
+		return int(value), true, nil
+	case int16:
+		return int(value), true, nil
+	case int32:
+		return int(value), true, nil
+	case int64:
+		if strconv.IntSize == 32 && (value < math.MinInt32 || value > math.MaxInt32) {
+			return 0, true, ErrNumberOutOfRange
+		}
+		return int(value), true, nil
+	case uint:
+		if uint64(value) > uint64(^uint(0)>>1) {
+			return 0, true, ErrNumberOutOfRange
+		}
+		return int(value), true, nil
+	case uint8:
+		return int(value), true, nil
+	case uint16:
+		return int(value), true, nil
+	case uint32:
+		if strconv.IntSize == 32 && uint64(value) > math.MaxInt32 {
+			return 0, true, ErrNumberOutOfRange
+		}
+		return int(value), true, nil
+	case uint64:
+		if value > uint64(^uint(0)>>1) {
+			return 0, true, ErrNumberOutOfRange
+		}
+		return int(value), true, nil
+	case float32:
+		integer, err := integerFromFloat(float64(value))
+		return integer, true, err
+	case float64:
+		integer, err := integerFromFloat(value)
+		return integer, true, err
+	default:
+		return 0, false, nil
+	}
+}
+
+func integerFromFloat(number float64) (int, error) {
+	if math.IsNaN(number) || math.IsInf(number, 0) {
+		return 0, ErrNumberNotFinite
+	}
+	if number != math.Trunc(number) {
+		return 0, ErrNumberNotInteger
+	}
+	limit := math.Ldexp(1, strconv.IntSize-1)
+	if number < -limit || number >= limit {
+		return 0, ErrNumberOutOfRange
+	}
+	return int(number), nil
 }
 
 func requiredString(m map[string]any, field string, missingErr, typeErr error) (string, error) {
@@ -641,20 +806,23 @@ func setNumericFields(m map[string]any, o *internal.Operation, nested bool) {
 	switch o.Op {
 	case "inc":
 		m["inc"] = o.Inc
-	case "str_ins", "test_string":
-		m["pos"] = float64(o.Pos)
+	case "str_ins":
+		m["pos"] = o.Pos
+		m["str"] = o.Str
+	case "test_string":
+		m["pos"] = o.Pos
 		m["str"] = o.Str
 	case "str_del":
-		m["pos"] = float64(o.Pos)
+		m["pos"] = o.Pos
 		if o.HasStr || o.Str != "" {
 			m["str"] = o.Str
 		} else {
-			m["len"] = float64(o.Len)
+			m["len"] = o.Len
 		}
 	case "split", "merge":
-		m["pos"] = float64(o.Pos)
+		m["pos"] = o.Pos
 	case "test_string_len":
-		m["len"] = float64(o.Len)
+		m["len"] = o.Len
 	}
 }
 

@@ -22,7 +22,7 @@ func TestOr_Basic(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 456)
 
-	orOp := NewOr([]string{}, []any{test1, test2})
+	orOp := NewOr(nil, test1, test2)
 
 	ok, err := orOp.Test(doc)
 	if err != nil {
@@ -43,7 +43,7 @@ func TestOr_AllFail(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "qux")
 	test2 := NewTest([]string{"baz"}, 456)
 
-	orOp := NewOr([]string{}, []any{test1, test2})
+	orOp := NewOr(nil, test1, test2)
 
 	ok, err := orOp.Test(doc)
 	if err != nil {
@@ -56,7 +56,7 @@ func TestOr_AllFail(t *testing.T) {
 
 func TestOr_Empty(t *testing.T) {
 	t.Parallel()
-	orOp := NewOr([]string{}, []any{})
+	orOp := NewOr(nil)
 
 	doc := map[string]any{"foo": "bar"}
 	ok, err := orOp.Test(doc)
@@ -78,7 +78,7 @@ func TestOr_Apply(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 456)
 
-	orOp := NewOr([]string{}, []any{test1, test2})
+	orOp := NewOr(nil, test1, test2)
 
 	result, err := orOp.Apply(doc)
 	if err != nil {
@@ -99,7 +99,7 @@ func TestOr_Apply_Fails(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "qux")
 	test2 := NewTest([]string{"baz"}, 456)
 
-	orOp := NewOr([]string{}, []any{test1, test2})
+	orOp := NewOr(nil, test1, test2)
 
 	_, err := orOp.Apply(doc)
 	if err == nil {
@@ -119,7 +119,7 @@ func TestOr_ApplyPropagatesChildError(t *testing.T) {
 	first := &predicateProbe{testCalls: &firstCalls, testErr: childErr, applyErr: childErr}
 	second := &predicateProbe{testCalls: &secondCalls, testResult: true}
 
-	result, err := NewOr(nil, []any{first, second}).Apply(map[string]any{"name": "Ada"})
+	result, err := NewOr(nil, first, second).Apply(map[string]any{"name": "Ada"})
 
 	require.ErrorIs(t, err, childErr)
 	assert.Equal(t, internal.OpResult[any]{}, result)
@@ -132,7 +132,7 @@ func TestOr_InterfaceMethods(t *testing.T) {
 	test1 := NewTest([]string{"test", "foo"}, "bar")
 	test2 := NewTest([]string{"test", "baz"}, 123)
 
-	orOp := NewOr([]string{"test"}, []any{test1, test2})
+	orOp := NewOr([]string{"test"}, test1, test2)
 
 	if got := orOp.Op(); got != internal.OpOrType {
 		assert.Equal(t, internal.OpOrType, got, "Op()")
@@ -159,7 +159,7 @@ func TestOr_ToJSON(t *testing.T) {
 	test1 := NewTest([]string{"test", "foo"}, "bar")
 	test2 := NewTest([]string{"test", "baz"}, 123)
 
-	orOp := NewOr([]string{"test"}, []any{test1, test2})
+	orOp := NewOr([]string{"test"}, test1, test2)
 
 	got, err := orOp.ToJSON()
 	if err != nil {
@@ -186,7 +186,7 @@ func TestOr_ToCompact(t *testing.T) {
 	test1 := NewTest([]string{"test", "foo"}, "bar")
 	test2 := NewTest([]string{"test", "baz"}, 123)
 
-	orOp := NewOr([]string{"test"}, []any{test1, test2})
+	orOp := NewOr([]string{"test"}, test1, test2)
 
 	compact, err := orOp.ToCompact()
 	if err != nil {
@@ -207,12 +207,12 @@ func TestOr_Validate(t *testing.T) {
 	test1 := NewTest([]string{"foo"}, "bar")
 	test2 := NewTest([]string{"baz"}, 123)
 
-	orOp := NewOr([]string{"test"}, []any{test1, test2})
+	orOp := NewOr([]string{"test"}, test1, test2)
 	if err := orOp.Validate(); err != nil {
 		assert.Fail(t, fmt.Sprintf("Validate() = %v, want nil for valid operation", err))
 	}
 
-	orOp = NewOr([]string{"test"}, []any{})
+	orOp = NewOr([]string{"test"})
 	assert.ErrorIs(t, orOp.Validate(), ErrInvalidPredicateInOr)
 }
 

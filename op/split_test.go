@@ -17,7 +17,7 @@ func TestSplit_Apply(t *testing.T) {
 		name     string
 		path     []string
 		doc      any
-		pos      float64
+		pos      int
 		props    any
 		expected any
 		oldValue any
@@ -171,7 +171,7 @@ func TestSplit_Apply(t *testing.T) {
 func TestSplit_Constructor(t *testing.T) {
 	t.Parallel()
 	path := []string{"user", "bio"}
-	pos := 2.0
+	pos := 2
 	props := map[string]any{"type": "split"}
 	splitOp := NewSplit(path, pos, props)
 	assert.Empty(t, cmp.Diff(path, splitOp.Path()), "NewSplit() Path mismatch")
@@ -211,7 +211,7 @@ func TestSplitReferenceBehavior(t *testing.T) {
 		name     string
 		doc      any
 		path     []string
-		pos      float64
+		pos      int
 		props    any
 		expected any
 	}{

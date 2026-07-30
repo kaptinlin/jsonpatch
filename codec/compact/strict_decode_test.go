@@ -2,10 +2,13 @@ package compact
 
 import (
 	"math"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kaptinlin/jsonpatch/op"
 )
 
 func TestDecodeRejectsMalformedCoreOperations(t *testing.T) {
@@ -118,17 +121,23 @@ func TestDecodeRejectsMalformedExtendedOperations(t *testing.T) {
 		{name: "str_ins extra field", raw: Op{CodeStrIns, []string{"x"}, 1, "a", "extra"}, wantErr: ErrInvalidArity},
 		{name: "str_ins fractional pos", raw: Op{CodeStrIns, []string{"x"}, 1.5, "a"}, wantErr: ErrNumberNotInteger},
 		{name: "str_ins infinite pos", raw: Op{CodeStrIns, []string{"x"}, math.Inf(1), "a"}, wantErr: ErrNumberNotFinite},
+		{name: "str_ins overflowing pos", raw: Op{CodeStrIns, []string{"x"}, math.MaxFloat64, "a"}, wantErr: ErrNumberOutOfRange},
 		{name: "str_del string extra field", raw: Op{CodeStrDel, []string{"x"}, 1, "a", "extra"}, wantErr: ErrInvalidArity},
 		{name: "str_del short numeric variant", raw: Op{CodeStrDel, []string{"x"}, 1, 2}, wantErr: ErrInvalidVariant},
 		{name: "str_del wrong length marker", raw: Op{CodeStrDel, []string{"x"}, 1, 1, 2}, wantErr: ErrInvalidVariant},
 		{name: "str_del length extra field", raw: Op{CodeStrDel, []string{"x"}, 1, 0, 2, "extra"}, wantErr: ErrInvalidArity},
 		{name: "str_del fractional pos", raw: Op{CodeStrDel, []string{"x"}, 1.5, "a"}, wantErr: ErrNumberNotInteger},
 		{name: "str_del fractional length", raw: Op{CodeStrDel, []string{"x"}, 1, 0, 1.5}, wantErr: ErrNumberNotInteger},
+		{name: "str_del overflowing length", raw: Op{CodeStrDel, []string{"x"}, 1, 0, math.MaxFloat64}, wantErr: ErrNumberOutOfRange},
 		{name: "split extra field", raw: Op{CodeSplit, []string{"x"}, 1, map[string]any{}, "extra"}, wantErr: ErrInvalidArity},
+		{name: "split fractional pos", raw: Op{CodeSplit, []string{"x"}, 1.5}, wantErr: ErrNumberNotInteger},
 		{name: "split non-finite pos", raw: Op{CodeSplit, []string{"x"}, math.NaN()}, wantErr: ErrNumberNotFinite},
+		{name: "split overflowing pos", raw: Op{CodeSplit, []string{"x"}, math.MaxFloat64}, wantErr: ErrNumberOutOfRange},
 		{name: "split props wrong type", raw: Op{CodeSplit, []string{"x"}, 1, "props"}, wantErr: ErrSplitPropsNotObject},
 		{name: "merge extra field", raw: Op{CodeMerge, []string{"x"}, 1, map[string]any{}, "extra"}, wantErr: ErrInvalidArity},
+		{name: "merge fractional pos", raw: Op{CodeMerge, []string{"x"}, -1.5}, wantErr: ErrNumberNotInteger},
 		{name: "merge non-finite pos", raw: Op{CodeMerge, []string{"x"}, math.Inf(-1)}, wantErr: ErrNumberNotFinite},
+		{name: "merge overflowing pos", raw: Op{CodeMerge, []string{"x"}, math.MaxFloat64}, wantErr: ErrNumberOutOfRange},
 		{name: "merge props wrong type", raw: Op{CodeMerge, []string{"x"}, 1, "props"}, wantErr: ErrMergePropsNotObject},
 		{name: "extend extra field", raw: Op{CodeExtend, []string{"x"}, map[string]any{}, 1, "extra"}, wantErr: ErrInvalidArity},
 		{name: "extend boolean marker", raw: Op{CodeExtend, []string{"x"}, map[string]any{}, true}, wantErr: ErrInvalidTrueMarker},
@@ -144,14 +153,42 @@ func TestDecodeRejectsMalformedExtendedOperations(t *testing.T) {
 			assert.ErrorIs(t, err, tc.wantErr)
 		})
 	}
+}
 
-	for _, raw := range []Op{
-		{CodeSplit, []string{"x"}, 1.5},
-		{CodeMerge, []string{"x"}, -1.5},
-	} {
-		decoded, err := decoder.Decode(raw)
-		require.NoError(t, err)
-		assert.NotNil(t, decoded)
+func TestDecodeJSONHandlesExactIntBoundaryTokens(t *testing.T) {
+	t.Parallel()
+	if strconv.IntSize < 64 {
+		t.Skip("requires a 64-bit int")
+	}
+
+	tests := []struct {
+		name    string
+		token   string
+		want    int
+		wantErr error
+	}{
+		{name: "maximum decimal", token: "9223372036854775807.0", want: math.MaxInt},
+		{name: "maximum exponent", token: "9.223372036854775807e18", want: math.MaxInt},
+		{name: "minimum decimal", token: "-9223372036854775808.0", want: math.MinInt},
+		{name: "minimum exponent", token: "-9.223372036854775808e18", want: math.MinInt},
+		{name: "above maximum", token: "9223372036854775808.0", wantErr: ErrNumberOutOfRange},
+		{name: "fractional boundary", token: "9223372036854775807.5", wantErr: ErrNumberNotInteger},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			raw := []byte(`[["str_ins",["text"],` + tc.token + `,"x"]]`)
+			decoded, err := DecodeJSON(raw)
+			if tc.wantErr != nil {
+				require.ErrorIs(t, err, tc.wantErr)
+				assert.Nil(t, decoded)
+				return
+			}
+			require.NoError(t, err)
+			require.Len(t, decoded, 1)
+			assert.Equal(t, tc.want, decoded[0].(*op.StrInsOperation).Pos)
+		})
 	}
 }
 

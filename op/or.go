@@ -1,18 +1,22 @@
 package op
 
-import "github.com/kaptinlin/jsonpatch/internal"
+import (
+	"slices"
+
+	"github.com/kaptinlin/jsonpatch/internal"
+)
 
 // OrOperation represents an OR operation that combines multiple predicate operations.
 type OrOperation struct {
 	BaseOp
-	Operations []any `json:"apply"` // Array of operations to apply
+	Operations []PredicateOp `json:"apply"`
 }
 
 // NewOr creates a new OR operation.
-func NewOr(path []string, ops []any) *OrOperation {
+func NewOr(path []string, predicates ...PredicateOp) *OrOperation {
 	return &OrOperation{
 		BaseOp:     NewBaseOp(path),
-		Operations: ops,
+		Operations: slices.Clone(predicates),
 	}
 }
 
@@ -23,7 +27,7 @@ func (oo *OrOperation) Op() internal.OpType {
 
 // Ops returns the predicate operations.
 func (oo *OrOperation) Ops() []internal.PredicateOp {
-	return extractPredicateOps(oo.Operations)
+	return slices.Clone(oo.Operations)
 }
 
 // Test performs the OR operation.
@@ -33,12 +37,11 @@ func (oo *OrOperation) Test(doc any) (bool, error) {
 		return false, nil
 	}
 
-	for _, op := range oo.Operations {
-		predicateOp, ok := op.(internal.PredicateOp)
-		if !ok {
+	for _, predicate := range oo.Operations {
+		if isNilPredicate(predicate) {
 			return false, ErrInvalidPredicateInOr
 		}
-		ok, err := predicateOp.Test(doc)
+		ok, err := predicate.Test(doc)
 		if err != nil {
 			return false, err
 		}
@@ -57,7 +60,7 @@ func (oo *OrOperation) Apply(doc any) (internal.OpResult[any], error) {
 		return internal.OpResult[any]{}, err
 	}
 	if !ok {
-		return internal.OpResult[any]{}, ErrOrTestFailed
+		return internal.OpResult[any]{}, predicateFailure(ErrOrTestFailed)
 	}
 	return internal.OpResult[any]{Doc: doc}, nil
 }

@@ -1,7 +1,9 @@
 package json
 
 import (
+	"math"
 	"os"
+	"strconv"
 	"testing"
 
 	jsonv2 "github.com/go-json-experiment/json"
@@ -10,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/kaptinlin/jsonpatch/internal"
+	"github.com/kaptinlin/jsonpatch/op"
 )
 
 func TestDecodeOperationFamilies(t *testing.T) {
@@ -40,7 +43,7 @@ func TestDecodeOperationFamilies(t *testing.T) {
 		{name: "type", raw: map[string]any{"op": "type", "path": "/profile/name", "value": "string"}, want: internal.Operation{Op: "type", Path: "/profile/name", Value: "string"}},
 		{name: "test_type single", raw: map[string]any{"op": "test_type", "path": "/profile/name", "type": "string"}, want: internal.Operation{Op: "test_type", Path: "/profile/name", Type: "string"}},
 		{name: "test_type type list", raw: map[string]any{"op": "test_type", "path": "/profile/name", "type": []any{"string", "null"}}, want: internal.Operation{Op: "test_type", Path: "/profile/name", Type: []string{"string", "null"}}},
-		{name: "test_string", raw: map[string]any{"op": "test_string", "path": "/profile/name", "str": "da", "pos": 1, "not": true, "ignore_case": true}, want: internal.Operation{Op: "test_string", Path: "/profile/name", Str: "da", Pos: 1, Not: true, IgnoreCase: true}},
+		{name: "test_string", raw: map[string]any{"op": "test_string", "path": "/profile/name", "str": "da", "pos": 1, "not": true}, want: internal.Operation{Op: "test_string", Path: "/profile/name", Str: "da", Pos: 1, Not: true}},
 		{name: "test_string_len", raw: map[string]any{"op": "test_string_len", "path": "/profile/name", "len": 3, "not": true}, want: internal.Operation{Op: "test_string_len", Path: "/profile/name", Len: 3, Not: true}},
 		{name: "contains", raw: map[string]any{"op": "contains", "path": "/profile/name", "value": "Ad", "ignore_case": true}, want: internal.Operation{Op: "contains", Path: "/profile/name", Value: "Ad", IgnoreCase: true}},
 		{name: "starts", raw: map[string]any{"op": "starts", "path": "/profile/name", "value": "A", "ignore_case": true}, want: internal.Operation{Op: "starts", Path: "/profile/name", Value: "A", IgnoreCase: true}},
@@ -227,6 +230,8 @@ func TestDecodeRejectsInvalidOperationPayloads(t *testing.T) {
 		{name: "test_string missing str", raw: map[string]any{"op": "test_string", "path": "/x"}, wantErr: ErrTestStringOpMissingStr},
 		{name: "test_string missing pos", raw: map[string]any{"op": "test_string", "path": "/x", "str": ""}, wantErr: ErrTestStringOpMissingPos},
 		{name: "test_string zero pos", raw: map[string]any{"op": "test_string", "path": "/x", "str": "", "pos": 0}},
+		{name: "test_string rejects true ignore_case", raw: map[string]any{"op": "test_string", "path": "/x", "str": "x", "pos": 0, "ignore_case": true}, wantErr: ErrTestStringIgnoreCase},
+		{name: "test_string rejects false ignore_case", raw: map[string]any{"op": "test_string", "path": "/x", "str": "x", "pos": 0, "ignore_case": false}, wantErr: ErrTestStringIgnoreCase},
 		{name: "test_string_len invalid len", raw: map[string]any{"op": "test_string_len", "path": "/x", "len": struct{}{}}, wantErr: ErrTestStringLenOpMissingLen},
 		{name: "contains missing value", raw: map[string]any{"op": "contains", "path": "/x"}, wantErr: ErrContainsOpMissingValue},
 		{name: "ends missing value", raw: map[string]any{"op": "ends", "path": "/x"}, wantErr: ErrEndsOpMissingValue},
@@ -256,6 +261,263 @@ func TestDecodeRejectsInvalidOperationPayloads(t *testing.T) {
 				require.Len(t, decoded, 1)
 				return
 			}
+			require.Error(t, err)
+			assert.Nil(t, decoded)
+			assert.ErrorIs(t, err, tc.wantErr)
+		})
+	}
+}
+
+func TestDecodeJSONRejectsTestStringIgnoreCasePresence(t *testing.T) {
+	t.Parallel()
+
+	for _, value := range []string{"true", "false"} {
+		t.Run(value, func(t *testing.T) {
+			t.Parallel()
+
+			decoded, err := DecodeJSON([]byte(`[{"op":"test_string","path":"/name","str":"Ada","pos":0,"ignore_case":`+value+`}]`), PatchOptions{})
+			require.Error(t, err)
+			assert.Nil(t, decoded)
+			assert.ErrorIs(t, err, ErrTestStringIgnoreCase)
+		})
+	}
+}
+
+func TestDecodeOperationsRejectsTestStringIgnoreCase(t *testing.T) {
+	t.Parallel()
+
+	decoded, err := DecodeOperations([]internal.Operation{{
+		Op:         "test_string",
+		Path:       "/name",
+		Str:        "Ada",
+		IgnoreCase: true,
+	}}, PatchOptions{})
+	require.Error(t, err)
+	assert.Nil(t, decoded)
+	assert.ErrorIs(t, err, ErrTestStringIgnoreCase)
+}
+
+func TestDecodeRejectsInvalidStringEditCoordinates(t *testing.T) {
+	t.Parallel()
+
+	maps := []struct {
+		name    string
+		raw     map[string]any
+		wantErr error
+	}{
+		{name: "str_ins fractional position", raw: map[string]any{"op": "str_ins", "path": "/text", "pos": 1.5, "str": "x"}, wantErr: ErrNumberNotInteger},
+		{name: "str_ins NaN position", raw: map[string]any{"op": "str_ins", "path": "/text", "pos": math.NaN(), "str": "x"}, wantErr: ErrNumberNotFinite},
+		{name: "str_ins infinite position", raw: map[string]any{"op": "str_ins", "path": "/text", "pos": math.Inf(1), "str": "x"}, wantErr: ErrNumberNotFinite},
+		{name: "str_ins overflowing position", raw: map[string]any{"op": "str_ins", "path": "/text", "pos": math.MaxFloat64, "str": "x"}, wantErr: ErrNumberOutOfRange},
+		{name: "str_del fractional position", raw: map[string]any{"op": "str_del", "path": "/text", "pos": 1.5, "str": "x"}, wantErr: ErrNumberNotInteger},
+		{name: "str_del infinite position", raw: map[string]any{"op": "str_del", "path": "/text", "pos": math.Inf(-1), "str": "x"}, wantErr: ErrNumberNotFinite},
+		{name: "str_del fractional length", raw: map[string]any{"op": "str_del", "path": "/text", "pos": 0, "len": 1.5}, wantErr: ErrNumberNotInteger},
+		{name: "str_del NaN length", raw: map[string]any{"op": "str_del", "path": "/text", "pos": 0, "len": math.NaN()}, wantErr: ErrNumberNotFinite},
+		{name: "str_del overflowing length", raw: map[string]any{"op": "str_del", "path": "/text", "pos": 0, "len": math.MaxFloat64}, wantErr: ErrNumberOutOfRange},
+	}
+	for _, tc := range maps {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			decoded, err := Decode([]map[string]any{tc.raw}, PatchOptions{})
+			require.Error(t, err)
+			assert.Nil(t, decoded)
+			assert.ErrorIs(t, err, tc.wantErr)
+		})
+	}
+
+	jsonPayloads := []struct {
+		name    string
+		raw     string
+		wantErr error
+	}{
+		{name: "str_ins fractional JSON position", raw: `[{"op":"str_ins","path":"/text","pos":1.5,"str":"x"}]`, wantErr: ErrNumberNotInteger},
+		{name: "str_ins overflowing JSON position", raw: `[{"op":"str_ins","path":"/text","pos":1e100,"str":"x"}]`, wantErr: ErrNumberOutOfRange},
+		{name: "str_del fractional JSON length", raw: `[{"op":"str_del","path":"/text","pos":0,"len":1.5}]`, wantErr: ErrNumberNotInteger},
+		{name: "str_del overflowing JSON length", raw: `[{"op":"str_del","path":"/text","pos":0,"len":1e100}]`, wantErr: ErrNumberOutOfRange},
+	}
+	for _, tc := range jsonPayloads {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			decoded, err := DecodeJSON([]byte(tc.raw), PatchOptions{})
+			require.Error(t, err)
+			assert.Nil(t, decoded)
+			assert.ErrorIs(t, err, tc.wantErr)
+		})
+	}
+}
+
+func TestDecodeRejectsInvalidStringPredicateCoordinates(t *testing.T) {
+	t.Parallel()
+
+	maps := []struct {
+		name    string
+		raw     map[string]any
+		wantErr error
+	}{
+		{name: "test_string fractional position", raw: map[string]any{"op": "test_string", "path": "/text", "pos": 1.5, "str": "x"}, wantErr: ErrNumberNotInteger},
+		{name: "test_string NaN position", raw: map[string]any{"op": "test_string", "path": "/text", "pos": math.NaN(), "str": "x"}, wantErr: ErrNumberNotFinite},
+		{name: "test_string overflowing position", raw: map[string]any{"op": "test_string", "path": "/text", "pos": math.MaxFloat64, "str": "x"}, wantErr: ErrNumberOutOfRange},
+		{name: "test_string_len fractional length", raw: map[string]any{"op": "test_string_len", "path": "/text", "len": 1.5}, wantErr: ErrNumberNotInteger},
+		{name: "test_string_len infinite length", raw: map[string]any{"op": "test_string_len", "path": "/text", "len": math.Inf(1)}, wantErr: ErrNumberNotFinite},
+		{name: "test_string_len overflowing length", raw: map[string]any{"op": "test_string_len", "path": "/text", "len": math.MaxFloat64}, wantErr: ErrNumberOutOfRange},
+	}
+	for _, tc := range maps {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			decoded, err := Decode([]map[string]any{tc.raw}, PatchOptions{})
+			require.Error(t, err)
+			assert.Nil(t, decoded)
+			assert.ErrorIs(t, err, tc.wantErr)
+		})
+	}
+
+	jsonPayloads := []struct {
+		name    string
+		raw     string
+		wantErr error
+	}{
+		{name: "test_string fractional JSON position", raw: `[{"op":"test_string","path":"/text","pos":1.5,"str":"x"}]`, wantErr: ErrNumberNotInteger},
+		{name: "test_string overflowing JSON position", raw: `[{"op":"test_string","path":"/text","pos":1e100,"str":"x"}]`, wantErr: ErrNumberOutOfRange},
+		{name: "test_string_len fractional JSON length", raw: `[{"op":"test_string_len","path":"/text","len":1.5}]`, wantErr: ErrNumberNotInteger},
+		{name: "test_string_len overflowing JSON length", raw: `[{"op":"test_string_len","path":"/text","len":1e100}]`, wantErr: ErrNumberOutOfRange},
+	}
+	for _, tc := range jsonPayloads {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			decoded, err := DecodeJSON([]byte(tc.raw), PatchOptions{})
+			require.Error(t, err)
+			assert.Nil(t, decoded)
+			assert.ErrorIs(t, err, tc.wantErr)
+		})
+	}
+}
+
+func TestDecodeJSONPreservesNestedLargePredicateCoordinate(t *testing.T) {
+	t.Parallel()
+	if strconv.IntSize < 64 {
+		t.Skip("requires a 64-bit int")
+	}
+
+	decoded, err := DecodeJSON([]byte(`[{"op":"and","path":"/profile","apply":[{"op":"test_string","path":"/name","pos":9007199254740993,"str":"A"}]}]`), PatchOptions{})
+	require.NoError(t, err)
+	require.Len(t, decoded, 1)
+	and, ok := decoded[0].(*op.AndOperation)
+	require.True(t, ok)
+	require.Len(t, and.Operations, 1)
+	testString, ok := and.Operations[0].(*op.TestStringOperation)
+	require.True(t, ok)
+	large := int64(9007199254740993)
+	assert.Equal(t, int(large), testString.Pos)
+}
+
+func TestDecodeJSONHandlesExactIntBoundaryTokens(t *testing.T) {
+	t.Parallel()
+	if strconv.IntSize < 64 {
+		t.Skip("requires a 64-bit int")
+	}
+
+	tests := []struct {
+		name    string
+		token   string
+		want    int
+		wantErr error
+	}{
+		{name: "maximum decimal", token: "9223372036854775807.0", want: math.MaxInt},
+		{name: "maximum exponent", token: "9.223372036854775807e18", want: math.MaxInt},
+		{name: "minimum decimal", token: "-9223372036854775808.0", want: math.MinInt},
+		{name: "minimum exponent", token: "-9.223372036854775808e18", want: math.MinInt},
+		{name: "above maximum", token: "9223372036854775808.0", wantErr: ErrNumberOutOfRange},
+		{name: "fractional boundary", token: "9223372036854775807.5", wantErr: ErrNumberNotInteger},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			raw := []byte(`[{"op":"str_ins","path":"/text","pos":` + tc.token + `,"str":"x"}]`)
+			decoded, err := DecodeJSON(raw, PatchOptions{})
+			if tc.wantErr != nil {
+				require.ErrorIs(t, err, tc.wantErr)
+				assert.Nil(t, decoded)
+				return
+			}
+			require.NoError(t, err)
+			require.Len(t, decoded, 1)
+			assert.Equal(t, tc.want, decoded[0].(*op.StrInsOperation).Pos)
+		})
+	}
+
+	t.Run("nested predicate exponent", func(t *testing.T) {
+		t.Parallel()
+
+		decoded, err := DecodeJSON([]byte(`[{"op":"and","path":"/profile","apply":[{"op":"test_string","path":"/name","pos":9.223372036854775807e18,"str":"A"}]}]`), PatchOptions{})
+		require.NoError(t, err)
+		require.Len(t, decoded, 1)
+		and := decoded[0].(*op.AndOperation)
+		require.Len(t, and.Operations, 1)
+		assert.Equal(t, math.MaxInt, and.Operations[0].(*op.TestStringOperation).Pos)
+	})
+}
+
+func TestDecodeJSONRejectsNonObjectPredicateOperand(t *testing.T) {
+	t.Parallel()
+
+	decoded, err := DecodeJSON([]byte(`[{"op":"and","path":"/profile","apply":["bad"]}]`), PatchOptions{})
+	require.Error(t, err)
+	assert.Nil(t, decoded)
+	assert.ErrorIs(t, err, ErrInvalidPredicateOperand)
+}
+
+func TestDecodeJSONIgnoresApplyOnNonCompositeOperation(t *testing.T) {
+	t.Parallel()
+
+	decoded, err := DecodeJSON([]byte(`[{"op":"add","path":"/name","value":"Ada","apply":[{"op":"test_string","path":"","pos":1.5,"str":"A"}]}]`), PatchOptions{})
+	require.NoError(t, err)
+	require.Len(t, decoded, 1)
+	assert.IsType(t, &op.AddOperation{}, decoded[0])
+}
+
+func TestDecodeRejectsInvalidSplitMergeCoordinates(t *testing.T) {
+	t.Parallel()
+
+	maps := []struct {
+		name    string
+		raw     map[string]any
+		wantErr error
+	}{
+		{name: "split fractional position", raw: map[string]any{"op": "split", "path": "/node", "pos": 1.5}, wantErr: ErrNumberNotInteger},
+		{name: "split non-finite position", raw: map[string]any{"op": "split", "path": "/node", "pos": math.Inf(1)}, wantErr: ErrNumberNotFinite},
+		{name: "split overflowing position", raw: map[string]any{"op": "split", "path": "/node", "pos": math.MaxFloat64}, wantErr: ErrNumberOutOfRange},
+		{name: "merge fractional position", raw: map[string]any{"op": "merge", "path": "/node", "pos": -1.5}, wantErr: ErrNumberNotInteger},
+		{name: "merge non-finite position", raw: map[string]any{"op": "merge", "path": "/node", "pos": math.NaN()}, wantErr: ErrNumberNotFinite},
+		{name: "merge overflowing position", raw: map[string]any{"op": "merge", "path": "/node", "pos": math.MaxFloat64}, wantErr: ErrNumberOutOfRange},
+	}
+	for _, tc := range maps {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			decoded, err := Decode([]map[string]any{tc.raw}, PatchOptions{})
+			require.Error(t, err)
+			assert.Nil(t, decoded)
+			assert.ErrorIs(t, err, tc.wantErr)
+		})
+	}
+
+	for _, tc := range []struct {
+		name    string
+		raw     string
+		wantErr error
+	}{
+		{name: "split fractional JSON position", raw: `[{"op":"split","path":"/node","pos":1.5}]`, wantErr: ErrNumberNotInteger},
+		{name: "split overflowing JSON position", raw: `[{"op":"split","path":"/node","pos":1e100}]`, wantErr: ErrNumberOutOfRange},
+		{name: "merge fractional JSON position", raw: `[{"op":"merge","path":"/node","pos":-1.5}]`, wantErr: ErrNumberNotInteger},
+		{name: "merge overflowing JSON position", raw: `[{"op":"merge","path":"/node","pos":1e100}]`, wantErr: ErrNumberOutOfRange},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			decoded, err := DecodeJSON([]byte(tc.raw), PatchOptions{})
 			require.Error(t, err)
 			assert.Nil(t, decoded)
 			assert.ErrorIs(t, err, tc.wantErr)

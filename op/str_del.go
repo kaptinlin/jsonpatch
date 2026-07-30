@@ -21,20 +21,20 @@ type StrDelOperation struct {
 }
 
 // NewStrDel creates a new string delete operation with length.
-func NewStrDel(path []string, pos, length float64) *StrDelOperation {
+func NewStrDel(path []string, pos, length int) *StrDelOperation {
 	return &StrDelOperation{
 		BaseOp: NewBaseOp(path),
-		Pos:    int(pos),
-		Len:    int(length),
+		Pos:    pos,
+		Len:    length,
 		Str:    "",
 	}
 }
 
 // NewStrDelWithStr creates a new string delete operation with specific string.
-func NewStrDelWithStr(path []string, pos float64, str string) *StrDelOperation {
+func NewStrDelWithStr(path []string, pos int, str string) *StrDelOperation {
 	return &StrDelOperation{
 		BaseOp: NewBaseOp(path),
-		Pos:    int(pos),
+		Pos:    pos,
 		Len:    len([]rune(str)),
 		Str:    str,
 		HasStr: true,
@@ -56,7 +56,7 @@ func (sd *StrDelOperation) Apply(doc any) (internal.OpResult[any], error) {
 
 	targetStr, ok := target.(string)
 	if !ok {
-		return internal.OpResult[any]{}, ErrNotString
+		return internal.OpResult[any]{}, typeFailure(ErrNotString)
 	}
 
 	result := sd.applyStrDel(targetStr)
@@ -84,7 +84,7 @@ func (sd *StrDelOperation) applyStrDel(val string) string {
 		return val
 	}
 
-	end := min(pos+deletionLength, length)
+	end := pos + min(deletionLength, length-pos)
 	if pos >= length || pos == end {
 		return val
 	}

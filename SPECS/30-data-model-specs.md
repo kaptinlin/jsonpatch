@@ -17,12 +17,12 @@ Because `codec/json.Operation` is a Go struct, it cannot represent raw JSON fiel
 | `value` | `add`, `replace`, `test`, `type`, `contains`, `starts`, `ends`, `in`, `less`, `more`, `matches` | Primary payload field for operations that consume one value. |
 | `from` | `move`, `copy` | Source JSON Pointer. |
 | `inc` | `inc` | Numeric delta. `0` is meaningful and therefore not omitted. |
-| `pos` | `str_ins`, `str_del`, `split`, `merge`, `test_string` | Position field. For string operations it counts Unicode code points; for `merge` it is reverse-split metadata. `0` is meaningful and therefore not omitted. |
+| `pos` | `str_ins`, `str_del`, `split`, `merge`, `test_string` | Position field in the Go `int` domain. For string operations it counts Unicode code points; for `merge` it is reverse-split metadata. `0` is meaningful and therefore not omitted. |
 | `str` | `str_ins`, `str_del`, `test_string` | String operand. Empty string is meaningful and therefore not omitted. |
-| `len` | `str_del`, `test_string_len` | Unicode code-point length for string operations. `0` is meaningful and therefore not omitted. |
+| `len` | `str_del`, `test_string_len` | Unicode code-point length for string operations. Both operations use the Go `int` domain. `0` is meaningful and therefore not omitted. |
 | `not` | `test`, `test_string`, `test_string_len` | Direct negation flag. |
 | `type` | `test_type` | One JSON type name or a list of type names. |
-| `ignore_case` | string and regex predicates | Case-insensitive matching flag when supported. |
+| `ignore_case` | `contains`, `starts`, `ends`, `matches` | Case-insensitive matching flag. `test_string` does not support this field. |
 | `apply` | `and`, `or`, `not` | Nested predicate operations. |
 | `props` | `extend`, `split`, `merge` | Object properties used by structural extended operations. |
 | `deleteNull` | `extend` | Delete keys whose incoming property value is `nil` instead of storing them. |
@@ -46,7 +46,7 @@ Because `codec/json.Operation` is a Go struct, it cannot represent raw JSON fiel
 | `[code, path, pos, str, not?]` | `test_string`; `not` appears only when true. |
 | `[code, path, apply]` | `and`, `or`, and `not`; child paths inside `apply` are parent-relative. |
 
-Optional compact booleans have one canonical true marker: integer `1`. False values are omitted; Go booleans, zero, other numbers, and strings are invalid marker values.
+Optional booleans in the shared compact/binary operation tree have one canonical true marker: integer `1`. False values are omitted. Compact and binary decoders reject booleans, zero, other numeric values, and strings in marker slots; binary preserves integer-width interoperability without accepting float `1.0`.
 
 ## Supported JSON Type Names
 
@@ -70,8 +70,9 @@ Document dispatch is a closed classifier:
 
 - `JSONText`, `[]byte`, and byte-slice aliases are JSON text and must parse as JSON.
 - Plain `string` and string aliases are scalar string documents.
-- `map[string]any`, `[]any`, interface values, numbers, and booleans apply directly.
-- Struct-like values are marshaled to JSON-shaped data, patched, and unmarshaled back to the original type.
+- Exact `map[string]any` and `[]any` values, interface-held canonical values, numbers, and booleans apply directly.
+- Other map and non-byte slice types, including named containers, are marshaled to canonical JSON-shaped data,
+  patched, and unmarshaled back to the original static type. Struct-like values use the same adapter path.
 
 ### `JSONText`
 
@@ -132,3 +133,6 @@ Operation family, capability, and compact/binary code share one internal vocabul
 - JSON-shaped payloads preserve required null, empty-string, zero, and optional presence semantics. Verification: `codec_presence_test.go`, `codec/json/decode_test.go`, and codec round-trip tests.
 - Compact payloads use segment-array paths, canonical integer `1` true markers, and the documented operation variants. Verification: `codec/compact/strict_decode_test.go` and `codec/compact/roundtrip_test.go`.
 - Compiled patches are isolated from caller mutation, and successful results expose ordered operation facts without partial failure results. Verification: `compile_clone_test.go`, `op/clone_test.go`, and `patch_test.go`.
+- Typed and named containers are canonicalized before operation execution and restored without changing exact
+  canonical container, scalar string, or JSON-text dispatch. Verification: `apply_dispatch_test.go` and
+  `patch_test.go`.

@@ -65,11 +65,24 @@ func TestCloneIsolatesOperationState(t *testing.T) {
 		t.Parallel()
 
 		operand := NewContains([]string{"name"}, "Ada")
-		operation := NewAnd(nil, []any{operand})
+		operation := NewAnd(nil, operand)
 		cloned := mustClone[*AndOperation](t, operation)
 		operand.Value = "changed"
 
 		clonedOperand, ok := cloned.Operations[0].(*ContainsOperation)
+		require.True(t, ok)
+		assert.Equal(t, "Ada", clonedOperand.Value)
+	})
+
+	t.Run("not operand", func(t *testing.T) {
+		t.Parallel()
+
+		operand := NewContains([]string{"name"}, "Ada")
+		operation := NewNot(nil, operand)
+		cloned := mustClone[*NotOperation](t, operation)
+		operand.Value = "changed"
+
+		clonedOperand, ok := cloned.Operand.(*ContainsOperation)
 		require.True(t, ok)
 		assert.Equal(t, "Ada", clonedOperand.Value)
 	})

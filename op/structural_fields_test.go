@@ -13,7 +13,7 @@ func TestSplitComputedFieldsOverrideProps(t *testing.T) {
 	tests := []struct {
 		name  string
 		value any
-		pos   float64
+		pos   int
 		props map[string]any
 		want  any
 	}{
@@ -109,7 +109,7 @@ func TestSplitThenMergeRestoresSupportedValues(t *testing.T) {
 	tests := []struct {
 		name  string
 		value any
-		pos   float64
+		pos   int
 	}{
 		{name: "string", value: "Ada", pos: 1},
 		{name: "number", value: 7.0, pos: 3},

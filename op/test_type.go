@@ -75,12 +75,12 @@ func (tt *TestTypeOperation) Test(doc any) (bool, error) {
 func (tt *TestTypeOperation) Apply(doc any) (internal.OpResult[any], error) {
 	_, actualType, typeMatches, err := tt.getValueAndCheckType(doc)
 	if err != nil {
-		return internal.OpResult[any]{}, ErrPathNotFound
+		return internal.OpResult[any]{}, predicateFailure(ErrPathNotFound)
 	}
 
 	if !typeMatches {
 		expectedTypesStr := strings.Join(tt.Types, ", ")
-		return internal.OpResult[any]{}, fmt.Errorf("%w: expected type %s, got %s", ErrTypeMismatch, expectedTypesStr, actualType)
+		return internal.OpResult[any]{}, predicateFailure(fmt.Errorf("%w: expected type %s, got %s", ErrTypeMismatch, expectedTypesStr, actualType))
 	}
 
 	return internal.OpResult[any]{Doc: doc}, nil

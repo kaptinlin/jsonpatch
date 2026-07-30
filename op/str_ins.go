@@ -18,10 +18,10 @@ type StrInsOperation struct {
 }
 
 // NewStrIns creates a new string insert operation.
-func NewStrIns(path []string, pos float64, str string) *StrInsOperation {
+func NewStrIns(path []string, pos int, str string) *StrInsOperation {
 	return &StrInsOperation{
 		BaseOp: NewBaseOp(path),
-		Pos:    int(pos),
+		Pos:    pos,
 		Str:    str,
 	}
 }
@@ -45,7 +45,7 @@ func (si *StrInsOperation) Apply(doc any) (internal.OpResult[any], error) {
 			return internal.OpResult[any]{}, ErrInvalidPosition
 		}
 	} else if !ok {
-		return internal.OpResult[any]{}, ErrNotString
+		return internal.OpResult[any]{}, typeFailure(ErrNotString)
 	}
 
 	result := si.applyStrIns(targetStr)

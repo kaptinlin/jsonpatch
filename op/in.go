@@ -40,11 +40,11 @@ func (in *InOperation) Test(doc any) (bool, error) {
 func (in *InOperation) Apply(doc any) (internal.OpResult[any], error) {
 	value, found, err := in.getValueAndCheckInArray(doc)
 	if err != nil {
-		return internal.OpResult[any]{}, err
+		return internal.OpResult[any]{}, predicateFailure(err)
 	}
 
 	if !found {
-		return internal.OpResult[any]{}, fmt.Errorf("%w: value %v is not in array %v", ErrOperationFailed, value, in.Value)
+		return internal.OpResult[any]{}, predicateFailure(fmt.Errorf("%w: value %v is not in array %v", ErrOperationFailed, value, in.Value))
 	}
 
 	return internal.OpResult[any]{Doc: doc, Old: value}, nil

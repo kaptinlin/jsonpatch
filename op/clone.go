@@ -16,24 +16,103 @@ func cloneValue(value any) any {
 	return deepclone.Clone(value)
 }
 
-func clonePredicateOps(operations []any, errInvalid error) ([]any, error) {
-	result := make([]any, len(operations))
-	for i, operation := range operations {
-		predicateOp, ok := operation.(internal.PredicateOp)
-		if !ok {
+type predicateCloneState struct {
+	active map[PredicateOp]struct{}
+}
+
+func newPredicateCloneState() *predicateCloneState {
+	return &predicateCloneState{active: make(map[PredicateOp]struct{})}
+}
+
+func (s *predicateCloneState) enter(predicate PredicateOp) error {
+	if _, exists := s.active[predicate]; exists {
+		return ErrPredicateCycle
+	}
+	s.active[predicate] = struct{}{}
+	return nil
+}
+
+func (s *predicateCloneState) leave(predicate PredicateOp) {
+	delete(s.active, predicate)
+}
+
+func clonePredicateOps(operations []PredicateOp, errInvalid error, state *predicateCloneState) ([]PredicateOp, error) {
+	result := make([]PredicateOp, len(operations))
+	for i, predicate := range operations {
+		if isNilPredicate(predicate) {
 			return nil, errInvalid
 		}
-		cloned, err := predicateOp.Clone()
+		cloned, err := clonePredicate(predicate, errInvalid, state)
 		if err != nil {
 			return nil, err
 		}
-		clonedPredicate, ok := cloned.(internal.PredicateOp)
-		if !ok {
-			return nil, fmt.Errorf("%w: cloned predicate %T is not a predicate", errInvalid, cloned)
-		}
-		result[i] = clonedPredicate
+		result[i] = cloned
 	}
 	return result, nil
+}
+
+func clonePredicate(predicate PredicateOp, errInvalid error, state *predicateCloneState) (PredicateOp, error) {
+	var (
+		cloned internal.Op
+		err    error
+	)
+	switch operation := predicate.(type) {
+	case *AndOperation:
+		cloned, err = cloneAndOperation(operation, state)
+	case *OrOperation:
+		cloned, err = cloneOrOperation(operation, state)
+	case *NotOperation:
+		cloned, err = cloneNotOperation(operation, state)
+	default:
+		cloned, err = predicate.Clone()
+	}
+	if err != nil {
+		return nil, err
+	}
+	clonedPredicate, ok := cloned.(internal.PredicateOp)
+	if !ok {
+		return nil, fmt.Errorf("%w: cloned predicate %T is not a predicate", errInvalid, cloned)
+	}
+	return clonedPredicate, nil
+}
+
+func cloneAndOperation(operation *AndOperation, state *predicateCloneState) (*AndOperation, error) {
+	if err := state.enter(operation); err != nil {
+		return nil, err
+	}
+	defer state.leave(operation)
+
+	operations, err := clonePredicateOps(operation.Operations, ErrInvalidPredicateInAnd, state)
+	if err != nil {
+		return nil, err
+	}
+	return &AndOperation{BaseOp: cloneBaseOp(operation.BaseOp), Operations: operations}, nil
+}
+
+func cloneOrOperation(operation *OrOperation, state *predicateCloneState) (*OrOperation, error) {
+	if err := state.enter(operation); err != nil {
+		return nil, err
+	}
+	defer state.leave(operation)
+
+	operations, err := clonePredicateOps(operation.Operations, ErrInvalidPredicateInOr, state)
+	if err != nil {
+		return nil, err
+	}
+	return &OrOperation{BaseOp: cloneBaseOp(operation.BaseOp), Operations: operations}, nil
+}
+
+func cloneNotOperation(operation *NotOperation, state *predicateCloneState) (*NotOperation, error) {
+	if err := state.enter(operation); err != nil {
+		return nil, err
+	}
+	defer state.leave(operation)
+
+	operands, err := clonePredicateOps([]PredicateOp{operation.Operand}, ErrInvalidPredicateInNot, state)
+	if err != nil {
+		return nil, err
+	}
+	return &NotOperation{BaseOp: cloneBaseOp(operation.BaseOp), Operand: operands[0]}, nil
 }
 
 // Clone returns an independent copy of the operation.
@@ -103,11 +182,10 @@ func (tt *TestTypeOperation) Clone() (internal.Op, error) {
 // Clone returns an independent copy of the operation.
 func (ts *TestStringOperation) Clone() (internal.Op, error) {
 	return &TestStringOperation{
-		BaseOp:     cloneBaseOp(ts.BaseOp),
-		Str:        ts.Str,
-		Pos:        ts.Pos,
-		NotFlag:    ts.NotFlag,
-		IgnoreCase: ts.IgnoreCase,
+		BaseOp:  cloneBaseOp(ts.BaseOp),
+		Str:     ts.Str,
+		Pos:     ts.Pos,
+		NotFlag: ts.NotFlag,
 	}, nil
 }
 
@@ -154,29 +232,17 @@ func (ma *MatchesOperation) Clone() (internal.Op, error) {
 
 // Clone returns an independent copy of the operation.
 func (ao *AndOperation) Clone() (internal.Op, error) {
-	operations, err := clonePredicateOps(ao.Operations, ErrInvalidPredicateInAnd)
-	if err != nil {
-		return nil, err
-	}
-	return &AndOperation{BaseOp: cloneBaseOp(ao.BaseOp), Operations: operations}, nil
+	return cloneAndOperation(ao, newPredicateCloneState())
 }
 
 // Clone returns an independent copy of the operation.
 func (oo *OrOperation) Clone() (internal.Op, error) {
-	operations, err := clonePredicateOps(oo.Operations, ErrInvalidPredicateInOr)
-	if err != nil {
-		return nil, err
-	}
-	return &OrOperation{BaseOp: cloneBaseOp(oo.BaseOp), Operations: operations}, nil
+	return cloneOrOperation(oo, newPredicateCloneState())
 }
 
 // Clone returns an independent copy of the operation.
 func (n *NotOperation) Clone() (internal.Op, error) {
-	operations, err := clonePredicateOps(n.Operations, ErrInvalidPredicateInNot)
-	if err != nil {
-		return nil, err
-	}
-	return &NotOperation{BaseOp: cloneBaseOp(n.BaseOp), Operations: operations}, nil
+	return cloneNotOperation(n, newPredicateCloneState())
 }
 
 // Clone returns an independent copy of the operation.
